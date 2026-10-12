@@ -168,6 +168,59 @@ class MythicApp {
             this.saveServices();
           }
         }
+
+        const plevel = this.services.find(s => s.id === 'powerleveling-80');
+        if (plevel) {
+          if (!plevel.options || !plevel.options.gearingOptions || !plevel.options.additionalOptions) {
+            plevel.name = "WoW Powerleveling Personalizado (1 - 80 / 90)";
+            plevel.description = "Sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. Elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.";
+            plevel.badge = "Personalizable 1-90";
+            plevel.options = {
+              minLevel: 1,
+              maxLevel: 90,
+              defaultCurrentLevel: 1,
+              defaultDesiredLevel: 80,
+              heroBadges: [
+                "Fast Leveling",
+                "Best Price",
+                "1-90 Fully AFK Option"
+              ],
+              estimates: { start: "10-15 min", execution: "Flexible" },
+              review: {
+                stars: 5,
+                author: "Bestworld, hace 1 día",
+                quote: "\"I'm buying leveling here for the third expansion in a row. They level your character from lvl 1 to 80 insanely fast and completely safe.\"",
+                rating: "5.0",
+                count: "11,232"
+              },
+              completionMethods: [
+                { label: "Piloted (VPN)", price: 0, tag: "Incluido", recommended: true },
+                { label: "Self-play", price: 9.99, tag: "+$9.99" },
+                { label: "Self-play Remote", price: 14.99, tag: "+$14.99" }
+              ],
+              gearingOptions: [
+                { label: "Not Required", price: 0 },
+                { label: "Starter Gear 554+ (+$12.00)", price: 12.00 },
+                { label: "Honor PvP Gear (+$19.00)", price: 19.00 },
+                { label: "Full Dungeon Gear 580+ (+$29.00)", price: 29.00 },
+                { label: "Champion Raid Ready 593+ (+$45.00)", price: 45.00 }
+              ],
+              additionalOptions: [
+                { label: "The Venomous Abyss Heroic run", price: 32.99 },
+                { label: "8/8 M+0 Dungeons", price: 27.99 },
+                { label: "Midnight Campaign", price: 23.99 },
+                { label: "The War of Light and Shadow Campaign", price: 23.99 },
+                { label: "The Curse of Ula'tek Campaign", price: 16.99 },
+                { label: "The Promise of Tomorrow Campaign", price: 16.99 },
+                { label: "Haranir Allied Race Unlock", price: 14.99 },
+                { label: "All Skyriding Glyphs", price: 9.99 }
+              ],
+              volumeDiscount: 5,
+              cashbackPercent: 5
+            };
+            this.saveServices();
+          }
+        }
       }
     } catch (e) {
       console.warn('Fallback loading services:', e);
@@ -1484,6 +1537,11 @@ class MythicApp {
     this.currentPromoDiscount = 0;
     this.currentSpKeyPrice = svc.basePrice;
 
+    const isLeveling = (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling');
+    if (isLeveling) {
+      this.initLevelingState(svc);
+    }
+
     // Breadcrumbs & Title
     const titleEl = document.getElementById('sp-title');
     if (titleEl) titleEl.textContent = svc.name;
@@ -1506,11 +1564,64 @@ class MythicApp {
       `).join('');
     }
 
+    // Dynamic Review Widget
+    if (svc.options?.review) {
+      const rev = svc.options.review;
+      const authorEl = document.getElementById('sp-review-author');
+      if (authorEl && rev.author) authorEl.textContent = rev.author;
+      const textEl = document.getElementById('sp-review-text');
+      if (textEl && rev.quote) textEl.textContent = rev.quote;
+      const ratingEl = document.getElementById('sp-review-rating');
+      if (ratingEl && rev.rating && rev.count) {
+        ratingEl.innerHTML = `<strong class="text-white">${rev.rating}</strong> Basado en ${rev.count} opiniones`;
+      }
+    }
+
+    // Dynamic Checklist and Description Extra
+    const chkTitleEl = document.getElementById('sp-checklist-title');
+    const chkContainer = document.getElementById('sp-checklist-container');
+    if (isLeveling) {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con nuestro servicio de Powerleveling?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Subida de nivel garantizada para tu personaje hasta el nivel objetivo seleccionado (desde nivel 1 hasta 80/90).</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Método 100% manual y AFK con opción Self-play o Piloted seguro con VPN y streaming opcional en Discord.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Progreso en campaña de la expansión, puntos de talento y desbloqueo de contenido de nivel máximo.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+              <p class="text-xs text-stone-300 leading-snug">Todo el oro, piezas de equipo, monturas o materiales recolectados durante la subida quedan en tu personaje.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-stone-800 text-[11px] text-stone-400 space-y-1.5">
+            <strong class="text-[#eedaa2] block uppercase tracking-wider text-[10px]">Opciones de Equipamiento (Gearing):</strong>
+            <div>• <strong class="text-stone-300">Honor PvP Gear:</strong> Conjunto completo JcJ con versatilidad para saltar directo a campos de batalla y arenas.</div>
+            <div>• <strong class="text-stone-300">Full Dungeon Gear 580+:</strong> Equipo de mazmorras de temporada preparado para Míticas+ y bandas.</div>
+          </div>
+        `;
+      }
+    }
+
     // Dynamic Time Estimates
     const startEl = document.getElementById('sp-est-start');
     if (startEl && svc.options?.estimates?.start) startEl.textContent = svc.options.estimates.start;
     const execEl = document.getElementById('sp-est-execution');
     if (execEl && svc.options?.estimates?.execution) execEl.textContent = svc.options.estimates.execution;
+
+    // Stepper Title & Initial Hint
+    const stepperTitle = document.getElementById('sp-stepper-title');
+    if (stepperTitle) stepperTitle.textContent = isLeveling ? 'Número de Personajes' : 'Runs';
+    const hintEl = document.getElementById('sp-discount-hint');
+    if (hintEl) hintEl.textContent = isLeveling ? 'Añade 1 personaje más para 5% de descuento' : 'Añade 1 run más para 5% de descuento';
 
     this.renderSingleProductOptions(svc);
     this.recalculateSingleProductTotal();
@@ -1521,6 +1632,11 @@ class MythicApp {
   renderSingleProductOptions(svc) {
     const container = document.getElementById('sp-options-form');
     if (!container) return;
+
+    if (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling') {
+      this.renderLevelingProductOptions(svc);
+      return;
+    }
 
     if (svc.id === 'mplus-keystone' || svc.category === 'Míticas Plus') {
       const opts = svc.options || {};
@@ -1718,11 +1834,309 @@ class MythicApp {
     this.recalculateSingleProductTotal();
   }
 
+  initLevelingState(svc) {
+    const opts = svc?.options || {};
+    this.levelMin = Number(opts.minLevel) || 1;
+    this.levelMax = Number(opts.maxLevel) || 90;
+    this.levelCurrent = Number(opts.defaultCurrentLevel) || 1;
+    this.levelDesired = Number(opts.defaultDesiredLevel) || 80;
+  }
+
+  renderLevelingProductOptions(svc) {
+    const container = document.getElementById('sp-options-form');
+    if (!container) return;
+
+    const opts = svc.options || {};
+    const completionMethods = (opts.completionMethods && opts.completionMethods.length > 0) ? opts.completionMethods : [
+      { label: 'Piloted (VPN)', price: 0, tag: 'Incluido', recommended: true },
+      { label: 'Self-play', price: 9.99, tag: '+$9.99' },
+      { label: 'Self-play Remote', price: 14.99, tag: '+$14.99' }
+    ];
+
+    const gearingOptions = (opts.gearingOptions && opts.gearingOptions.length > 0) ? opts.gearingOptions : [
+      { label: 'Not Required', price: 0 },
+      { label: 'Starter Gear 554+ (+$12.00)', price: 12.00 },
+      { label: 'Honor PvP Gear (+$19.00)', price: 19.00 },
+      { label: 'Full Dungeon Gear 580+ (+$29.00)', price: 29.00 },
+      { label: 'Champion Raid Ready 593+ (+$45.00)', price: 45.00 }
+    ];
+
+    const additionalOptions = (opts.additionalOptions && opts.additionalOptions.length > 0) ? opts.additionalOptions : [
+      { label: 'The Venomous Abyss Heroic run', price: 32.99 },
+      { label: '8/8 M+0 Dungeons', price: 27.99 },
+      { label: 'Midnight Campaign', price: 23.99 },
+      { label: 'The War of Light and Shadow Campaign', price: 23.99 },
+      { label: 'The Curse of Ula\'tek Campaign', price: 16.99 },
+      { label: 'The Promise of Tomorrow Campaign', price: 16.99 },
+      { label: 'Haranir Allied Race Unlock', price: 14.99 },
+      { label: 'All Skyriding Glyphs', price: 9.99 }
+    ];
+
+    container.innerHTML = `
+      <div class="space-y-6">
+        <!-- Dual Numeric Level Inputs -->
+        <div>
+          <div class="grid grid-cols-11 gap-2 items-center">
+            <div class="col-span-5">
+              <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Nivel Actual</span>
+                <span class="text-[10px] text-stone-500 font-mono-gaming">Min 1</span>
+              </label>
+              <div class="relative">
+                <input type="number" id="sp-level-current" min="1" max="89" value="${this.levelCurrent}" oninput="app.onLevelNumberInput('current', this.value)" class="w-full bg-[#18110b] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3 py-2.5 text-center font-mono-gaming font-black text-lg text-white outline-none">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-stone-500 font-bold uppercase pointer-events-none">Lvl</span>
+              </div>
+            </div>
+
+            <div class="col-span-1 text-center font-bold text-stone-500 pt-5 text-lg">
+              -
+            </div>
+
+            <div class="col-span-5">
+              <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Nivel Deseado</span>
+                <span class="text-[10px] text-[#ee914f] font-mono-gaming font-bold">Max 90</span>
+              </label>
+              <div class="relative">
+                <input type="number" id="sp-level-desired" min="2" max="90" value="${this.levelDesired}" oninput="app.onLevelNumberInput('desired', this.value)" class="w-full bg-[#18110b] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3 py-2.5 text-center font-mono-gaming font-black text-lg text-[#fcefc2] outline-none">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#ee914f] font-bold uppercase pointer-events-none">Lvl</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dual Range Slider Track -->
+          <div class="mt-4 px-1">
+            <div class="dual-slider-wrap">
+              <div class="dual-slider-track"></div>
+              <div id="sp-dual-slider-highlight" class="dual-slider-highlight"></div>
+              <input type="range" id="sp-slider-min" min="1" max="90" value="${this.levelCurrent}" oninput="app.onLevelSliderInput('current', this.value)" class="dual-slider-input">
+              <input type="range" id="sp-slider-max" min="1" max="90" value="${this.levelDesired}" oninput="app.onLevelSliderInput('desired', this.value)" class="dual-slider-input">
+            </div>
+
+            <!-- Tick Marks (1 to 90) -->
+            <div class="flex items-center justify-between text-[11px] font-mono-gaming text-stone-400 mt-1 px-1">
+              ${[1, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(tk => `
+                <button type="button" onclick="app.onTickClick(${tk})" id="level-tick-${tk}" class="level-tick-mark text-stone-400 hover:text-[#ee914f] transition-colors cursor-pointer">
+                  ${tk}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Quick Route Presets -->
+          <div class="mt-4 pt-3 border-t border-stone-800/80">
+            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-2">Rutas Rápidas Populares:</span>
+            <div class="flex flex-wrap gap-1.5" id="level-preset-buttons">
+              <button type="button" onclick="app.setLevelRange(1, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+                <span>1 - 80</span> <span class="text-[9px] text-[#ee914f] font-bold">(Completo)</span>
+              </button>
+              <button type="button" onclick="app.setLevelRange(70, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+                <span>70 - 80</span> <span class="text-[9px] text-emerald-400 font-bold">(TWW)</span>
+              </button>
+              <button type="button" onclick="app.setLevelRange(1, 70)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+                <span>1 - 70</span> <span class="text-[9px] text-stone-400 font-bold">(Previo)</span>
+              </button>
+              <button type="button" onclick="app.setLevelRange(60, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+                <span>60 - 80</span> <span class="text-[9px] text-amber-400 font-bold">(Rápido)</span>
+              </button>
+              <button type="button" onclick="app.setLevelRange(80, 90)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+                <span>80 - 90</span> <span class="text-[9px] text-purple-400 font-bold">(Midnight)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completion Methods -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-2">
+            Método de Completado (Completion Methods):
+          </label>
+          <div class="space-y-2">
+            ${completionMethods.map((m, idx) => `
+              <label class="flex items-center justify-between p-3 rounded-xl bg-[#18110b] border border-stone-800 hover:border-stone-700 cursor-pointer transition-colors">
+                <div class="flex items-center gap-3 text-xs text-stone-200">
+                  <input type="radio" name="sp_mode" value="${m.label}" data-price="${m.price || 0}" ${idx === 0 ? 'checked' : ''} onchange="app.recalculateSingleProductTotal()" class="w-4 h-4 accent-[#ee914f]">
+                  <span class="font-semibold">${m.label}</span>
+                </div>
+                <span class="text-xs ${Number(m.price) > 0 ? 'text-[#ee914f] font-mono-gaming font-bold' : 'text-emerald-400 font-bold'}">
+                  ${m.tag || (Number(m.price) > 0 ? '+$' + Number(m.price).toFixed(2) : 'Incluido')}
+                </span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Gearing Options -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Opciones de Equipamiento (Gearing options):</span>
+            <span class="text-[10px] text-stone-500">Opcional</span>
+          </label>
+          <select id="sp-gearing-select" onchange="app.recalculateSingleProductTotal()" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-4 py-3 text-xs text-stone-200 outline-none focus:border-[#ee914f] font-semibold">
+            ${gearingOptions.map(g => `
+              <option value="${g.price}" data-label="${g.label}">
+                ${g.label}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <!-- Additional Options -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-2">
+            Opciones Adicionales (Additional Options):
+          </label>
+          <div class="space-y-2">
+            ${additionalOptions.map(opt => `
+              <label class="flex items-center justify-between p-3 rounded-xl bg-[#18110b] border border-stone-800 hover:border-stone-700 cursor-pointer transition-colors">
+                <div class="flex items-center gap-2.5 text-xs text-stone-200">
+                  <input type="checkbox" name="sp_extra_option" data-label="${opt.label}" data-price="${opt.price || 0}" onchange="app.recalculateSingleProductTotal()" class="w-4 h-4 accent-[#ee914f] rounded">
+                  <span>${opt.label}</span>
+                </div>
+                <span class="text-xs text-[#ee914f] font-mono-gaming font-bold">+$${Number(opt.price).toFixed(2)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      this.updateLevelSliderUI();
+    }, 10);
+  }
+
+  setLevelRange(curr, des) {
+    curr = Math.max(this.levelMin || 1, Math.min((this.levelMax || 90) - 1, Number(curr)));
+    des = Math.max(curr + 1, Math.min(this.levelMax || 90, Number(des)));
+    this.levelCurrent = curr;
+    this.levelDesired = des;
+    this.updateLevelSliderUI();
+    this.recalculateSingleProductTotal();
+  }
+
+  onLevelSliderInput(type, val) {
+    val = Number(val);
+    if (type === 'current') {
+      if (val >= this.levelDesired) {
+        val = this.levelDesired - 1;
+      }
+      this.levelCurrent = Math.max(this.levelMin || 1, val);
+    } else {
+      if (val <= this.levelCurrent) {
+        val = this.levelCurrent + 1;
+      }
+      this.levelDesired = Math.min(this.levelMax || 90, val);
+    }
+    this.updateLevelSliderUI();
+    this.recalculateSingleProductTotal();
+  }
+
+  onLevelNumberInput(type, val) {
+    val = Number(val);
+    if (isNaN(val)) return;
+    if (type === 'current') {
+      val = Math.max(this.levelMin || 1, Math.min((this.levelMax || 90) - 1, val));
+      if (val >= this.levelDesired) {
+        this.levelDesired = Math.min(this.levelMax || 90, val + 1);
+      }
+      this.levelCurrent = val;
+    } else {
+      val = Math.max((this.levelMin || 1) + 1, Math.min(this.levelMax || 90, val));
+      if (val <= this.levelCurrent) {
+        this.levelCurrent = Math.max(this.levelMin || 1, val - 1);
+      }
+      this.levelDesired = val;
+    }
+    this.updateLevelSliderUI();
+    this.recalculateSingleProductTotal();
+  }
+
+  onTickClick(val) {
+    val = Number(val);
+    if (val > this.levelCurrent) {
+      this.levelDesired = val;
+    } else if (val < this.levelDesired) {
+      this.levelCurrent = val;
+    } else {
+      this.levelCurrent = Math.max(this.levelMin || 1, val - 10);
+      this.levelDesired = val;
+    }
+    this.updateLevelSliderUI();
+    this.recalculateSingleProductTotal();
+  }
+
+  updateLevelSliderUI() {
+    const currInput = document.getElementById('sp-level-current');
+    const desInput = document.getElementById('sp-level-desired');
+    const minSlider = document.getElementById('sp-slider-min');
+    const maxSlider = document.getElementById('sp-slider-max');
+    const highlight = document.getElementById('sp-dual-slider-highlight');
+
+    if (currInput) currInput.value = this.levelCurrent;
+    if (desInput) desInput.value = this.levelDesired;
+    if (minSlider) minSlider.value = this.levelCurrent;
+    if (maxSlider) maxSlider.value = this.levelDesired;
+
+    if (highlight) {
+      const min = this.levelMin || 1;
+      const max = this.levelMax || 90;
+      const totalSpan = max - min;
+      const leftPct = ((this.levelCurrent - min) / totalSpan) * 100;
+      const widthPct = ((this.levelDesired - this.levelCurrent) / totalSpan) * 100;
+      highlight.style.left = `${Math.max(0, leftPct)}%`;
+      highlight.style.width = `${Math.min(100 - leftPct, widthPct)}%`;
+    }
+
+    // Highlight active ticks
+    const ticks = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+    ticks.forEach(t => {
+      const el = document.getElementById(`level-tick-${t}`);
+      if (el) {
+        if (t >= this.levelCurrent && t <= this.levelDesired) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      }
+    });
+
+    // Update preset chips active class
+    const chips = document.querySelectorAll('.level-preset-chip');
+    chips.forEach(chip => {
+      const text = chip.textContent || '';
+      if (text.includes(`${this.levelCurrent} - ${this.levelDesired}`)) {
+        chip.classList.add('active');
+      } else {
+        chip.classList.remove('active');
+      }
+    });
+  }
+
+  calculateLevelBasePrice(curr, des) {
+    if (des <= curr) return 8.00;
+    let price = 0;
+    for (let lvl = curr; lvl < des; lvl++) {
+      if (lvl < 70) {
+        price += 0.35; // 1 to 70: $0.35/lvl
+      } else if (lvl < 80) {
+        price += 2.50; // 70 to 80: $2.50/lvl (10 lvls = $25.00)
+      } else {
+        price += 1.60; // 80 to 90: $1.60/lvl (10 lvls = $16.00)
+      }
+    }
+    return Math.max(8.00, Math.round(price * 100) / 100);
+  }
+
   updateSpRunsQty(delta) {
     this.currentRunsQuantity = Math.max(1, this.currentRunsQuantity + delta);
     const qtyEl = document.getElementById('sp-runs-qty');
     if (qtyEl) qtyEl.textContent = this.currentRunsQuantity;
     
+    const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.category === 'Powerleveling');
+    const unitNoun = isLeveling ? 'personaje' : 'run';
+    const unitNounPlural = isLeveling ? 'personajes' : 'runs';
+
     // Update discount hint banner
     const volDisc = this.currentProduct?.options?.volumeDiscount !== undefined 
       ? Number(this.currentProduct.options.volumeDiscount) 
@@ -1730,9 +2144,9 @@ class MythicApp {
     const hintEl = document.getElementById('sp-discount-hint');
     if (hintEl) {
       if (this.currentRunsQuantity === 1) {
-        hintEl.textContent = `Añade 1 run más para ${volDisc}% de descuento`;
+        hintEl.textContent = `Añade 1 ${unitNoun} más para ${volDisc}% de descuento`;
       } else {
-        hintEl.textContent = `¡${this.currentRunsQuantity} runs seleccionadas! ${volDisc}% de descuento por volumen aplicado.`;
+        hintEl.textContent = `¡${this.currentRunsQuantity} ${unitNounPlural} seleccionados! ${volDisc}% de descuento por volumen aplicado.`;
       }
     }
 
@@ -1756,21 +2170,34 @@ class MythicApp {
   }
 
   recalculateSingleProductTotal() {
-    let unit = this.currentSpKeyPrice || this.currentProduct?.basePrice || 38.00;
+    const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.category === 'Powerleveling');
+    let unit = 0;
 
-    // Loot-traders extra
-    const traderInput = document.querySelector('input[name="sp_traders"]:checked');
-    if (traderInput) unit += Number(traderInput.value || 0);
+    if (isLeveling) {
+      unit = this.calculateLevelBasePrice(this.levelCurrent || 1, this.levelDesired || 80);
 
-    // Timer extra
-    const timerInput = document.getElementById('sp-opt-timer');
-    if (timerInput && timerInput.checked) unit += Number(timerInput.dataset.price || 0);
+      // Gearing options dropdown
+      const gearingSelect = document.getElementById('sp-gearing-select');
+      if (gearingSelect) {
+        unit += Number(gearingSelect.value || 0);
+      }
+    } else {
+      unit = this.currentSpKeyPrice || this.currentProduct?.basePrice || 38.00;
+
+      // Loot-traders extra
+      const traderInput = document.querySelector('input[name="sp_traders"]:checked');
+      if (traderInput) unit += Number(traderInput.value || 0);
+
+      // Timer extra
+      const timerInput = document.getElementById('sp-opt-timer');
+      if (timerInput && timerInput.checked) unit += Number(timerInput.dataset.price || 0);
+    }
 
     // Completion method extra
     const modeInput = document.querySelector('input[name="sp_mode"]:checked');
     if (modeInput) unit += Number(modeInput.dataset.price || 0);
 
-    // Extras checkboxes
+    // Extras / Additional options checkboxes
     const extraCheckboxes = document.querySelectorAll('input[name="sp_extra_option"]:checked');
     extraCheckboxes.forEach(cb => {
       unit += Number(cb.dataset.price || 0);
@@ -1809,12 +2236,51 @@ class MythicApp {
 
   addCurrentSingleProductToCart() {
     const svc = this.currentProduct || this.services[0];
+    const isLeveling = (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling');
     const char = document.getElementById('sp-character')?.value.trim() 
               || `${document.getElementById('sp-char-name')?.value.trim() || 'Heroe'}-${document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros'}`;
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
-    const dungeon = document.getElementById('sp-dungeon-select')?.value || 'Random Dungeon';
-    const selectedMode = document.querySelector('input[name="sp_mode"]:checked')?.value || 'Self-play';
+    const selectedMode = document.querySelector('input[name="sp_mode"]:checked')?.value || 'Piloted (VPN)';
 
+    if (isLeveling) {
+      const gearSelect = document.getElementById('sp-gearing-select');
+      const gearLabel = gearSelect ? (gearSelect.options[gearSelect.selectedIndex]?.dataset.label || gearSelect.options[gearSelect.selectedIndex]?.text) : 'Not Required';
+      const extraLabels = Array.from(document.querySelectorAll('input[name="sp_extra_option"]:checked')).map(cb => cb.dataset.label || cb.closest('label')?.querySelector('span')?.textContent?.trim()).filter(Boolean);
+
+      let detailsParts = [
+        `Nivel: ${this.levelCurrent || 1} - ${this.levelDesired || 80}`,
+        `Método: ${selectedMode}`,
+        `Región: ${region}`,
+        `Equipo: ${gearLabel}`
+      ];
+      if (extraLabels.length > 0) detailsParts.push('Extras: ' + extraLabels.join(', '));
+      detailsParts.push(`Personaje: ${char}`);
+
+      const item = {
+        cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        serviceId: svc.id,
+        serviceName: `WoW Powerleveling (${this.levelCurrent || 1} - ${this.levelDesired || 80})`,
+        category: svc.category,
+        unitPrice: this.currentUnitCalcPrice,
+        quantity: this.currentRunsQuantity || 1,
+        totalPrice: this.currentTotalCalculated || this.currentUnitCalcPrice,
+        character: char,
+        mode: selectedMode,
+        region: region,
+        levelCurrent: this.levelCurrent || 1,
+        levelDesired: this.levelDesired || 80,
+        gearing: gearLabel,
+        details: detailsParts.join(' | '),
+        referredBooster: sessionStorage.getItem('mp_upsell_booster') || null
+      };
+
+      this.addToCart(item, true); // Opens cart drawer
+      this.showToast(`¡Powerleveling (${item.levelCurrent} - ${item.levelDesired}) añadido al carrito!`, 'success');
+      return;
+    }
+
+    // Default for M+ and PvE
+    const dungeon = document.getElementById('sp-dungeon-select')?.value || 'Random Dungeon';
     const keySelect = document.getElementById('sp-key-level');
     const selectedKeyText = keySelect ? (keySelect.options[keySelect.selectedIndex]?.text || '') : '';
     const traderRadio = document.querySelector('input[name="sp_traders"]:checked');

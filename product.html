@@ -6,7 +6,7 @@
   <title>Servicio - Mythic Progression</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.3">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
 </head>
 <body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex flex-col selection:bg-[#ee914f] selection:text-[#140f0c]">
@@ -118,13 +118,13 @@
                 <i class="fa-solid fa-star"></i>
                 <i class="fa-solid fa-star"></i>
               </div>
-              <span class="text-[10px] text-stone-500">Marsh123, hace 1 día</span>
+              <span id="sp-review-author" class="text-[10px] text-stone-500">Marsh123, hace 1 día</span>
             </div>
-            <p class="text-xs text-stone-200 italic leading-snug">
+            <p id="sp-review-text" class="text-xs text-stone-200 italic leading-snug">
               "Needed a few 13 keys for KSL before reset and these guys handled it insanely fast"
             </p>
             <div class="flex items-center justify-between pt-1 border-t border-stone-800/80 text-[10px]">
-              <span class="text-stone-400 font-bold"><strong class="text-white">5.0</strong> Basado en 38,720 opiniones</span>
+              <span id="sp-review-rating" class="text-stone-400 font-bold"><strong class="text-white">5.0</strong> Basado en 38,720 opiniones</span>
               <a href="#reviews" class="text-[#ee914f] hover:underline font-semibold">Más opiniones ▾</a>
             </div>
           </div>
@@ -179,11 +179,11 @@
             Compra boost de mazmorras Míticas+ de WoW The War Within y completa piedras angulares de alto nivel con un equipo profesional sin lidiar con grupos aleatorios o piedras fallidas. Aumenta tu puntuación M+, equipa a tu personaje y asegura recompensas semanales valiosas en la Gran Cámara.
           </p>
 
-          <h3 class="text-xs font-bold text-[#eedaa2] uppercase tracking-wider pt-2">
+          <h3 id="sp-checklist-title" class="text-xs font-bold text-[#eedaa2] uppercase tracking-wider pt-2">
             ¿Qué obtienes con nuestro servicio de Míticas+?:
           </h3>
 
-          <div class="space-y-3 pt-1">
+          <div id="sp-checklist-container" class="space-y-3 pt-1">
             <div class="flex items-start gap-3">
               <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                 1
@@ -343,7 +343,7 @@
           
           <!-- Runs Stepper Section (Exact Image 4) -->
           <div class="space-y-2">
-            <span class="text-xs font-bold text-stone-300 uppercase tracking-wider block">Runs</span>
+            <span id="sp-stepper-title" class="text-xs font-bold text-stone-300 uppercase tracking-wider block">Runs</span>
             
             <div class="flex items-center justify-between bg-[#1f1610] border border-stone-700 rounded-2xl p-1.5">
               <button onclick="app.updateSpRunsQty(-1)" class="w-9 h-9 rounded-xl bg-stone-900 text-stone-300 hover:text-white flex items-center justify-center font-bold text-base transition-colors">-</button>
@@ -493,6 +493,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=2.3.2"></script>
+  <script src="assets/js/app.js?v=2.3.3"></script>
 </body>
 </html>

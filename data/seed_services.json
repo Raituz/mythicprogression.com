@@ -87,17 +87,56 @@
     "id": "powerleveling-80",
     "category": "Powerleveling",
     "page": "leveling.html",
-    "name": "Leveling 70 - 80 Rápido",
-    "description": "Lleva a tu personaje al nivel máximo en cuestión de horas. Campaña desbloqueada y equipo inicial para empezar a jugar de inmediato.",
+    "name": "WoW Powerleveling Personalizado (1 - 80 / 90)",
+    "description": "Sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. Elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.",
     "basePrice": 25.00,
     "icon": "fa-bolt",
-    "badge": "Express",
+    "badge": "Personalizable 1-90",
     "options": {
-      "speeds": [
-        {"name": "Estándar (12-24 horas)", "price": 25.00},
-        {"name": "Rápido (6-8 horas)", "price": 35.00},
-        {"name": "Super Express (3-4 horas)", "price": 50.00}
-      ]
+      "minLevel": 1,
+      "maxLevel": 90,
+      "defaultCurrentLevel": 1,
+      "defaultDesiredLevel": 80,
+      "heroBadges": [
+        "Fast Leveling",
+        "Best Price",
+        "1-90 Fully AFK Option"
+      ],
+      "estimates": {
+        "start": "10-15 min",
+        "execution": "Flexible"
+      },
+      "review": {
+        "stars": 5,
+        "author": "Bestworld, hace 1 día",
+        "quote": "\"I'm buying leveling here for the third expansion in a row. They level your character from lvl 1 to 80 insanely fast and completely safe.\"",
+        "rating": "5.0",
+        "count": "11,232"
+      },
+      "completionMethods": [
+        {"label": "Piloted (VPN)", "price": 0, "tag": "Incluido", "recommended": true},
+        {"label": "Self-play", "price": 9.99, "tag": "+$9.99"},
+        {"label": "Self-play Remote", "price": 14.99, "tag": "+$14.99"}
+      ],
+      "gearingOptions": [
+        {"label": "Not Required", "price": 0},
+        {"label": "Starter Gear 554+ (+$12.00)", "price": 12.00},
+        {"label": "Honor PvP Gear (+$19.00)", "price": 19.00},
+        {"label": "Full Dungeon Gear 580+ (+$29.00)", "price": 29.00},
+        {"label": "Champion Raid Ready 593+ (+$45.00)", "price": 45.00}
+      ],
+      "additionalOptions": [
+        {"label": "The Venomous Abyss Heroic run", "price": 32.99},
+        {"label": "8/8 M+0 Dungeons", "price": 27.99},
+        {"label": "Midnight Campaign", "price": 23.99},
+        {"label": "The War of Light and Shadow Campaign", "price": 23.99},
+        {"label": "The Curse of Ula'tek Campaign", "price": 16.99},
+        {"label": "The Promise of Tomorrow Campaign", "price": 16.99},
+        {"label": "Haranir Allied Race Unlock", "price": 14.99},
+        {"label": "All Skyriding Glyphs", "price": 9.99}
+      ],
+      "volumeDiscount": 5,
+      "cashbackPercent": 5
     }
   },
   {
