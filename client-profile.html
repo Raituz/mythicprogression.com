@@ -108,6 +108,21 @@
 
     <!-- TAB 2: ACCOUNT SETTINGS -->
     <section id="client-tab-settings" class="hidden max-w-2xl mx-auto space-y-6">
+      <!-- CUENTAS VINCULADAS (DISCORD & GOOGLE UNIFIED) -->
+      <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-stone-800 space-y-4 bg-[#120d09]">
+        <div>
+          <h2 class="text-base font-bold text-[#fcefc2] font-cinzel flex items-center gap-2">
+            <i class="fa-solid fa-link text-[#ee914f]"></i>
+            <span>Cuentas Vinculadas (Unificación de Perfil)</span>
+          </h2>
+          <p class="text-xs text-stone-400 mt-1">Vincula tus cuentas de Google y Discord para acceder indistintamente con cualquiera de las dos a tu mismo perfil, compras y saldo.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1" id="client-linked-accounts-container">
+          <!-- Dynamically populated by app.renderLinkedAccountsWidget() -->
+        </div>
+      </div>
+
       <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-stone-800">
         <h2 class="text-lg font-bold text-[#fcefc2] font-cinzel mb-4">Datos Personales y de Juego</h2>
         

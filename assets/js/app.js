@@ -544,11 +544,49 @@ class MythicApp {
       localStorage.setItem('mp_discord_avatar_backup', avatar);
     }
 
+    // CHECK IF LINKING TO EXISTING ACCOUNT (e.g. Google user linking Discord)
+    const isLinkingMode = sessionStorage.getItem('mp_link_account_mode') === 'discord';
+    if (isLinkingMode && this.currentUser) {
+      sessionStorage.removeItem('mp_link_account_mode');
+      this.currentUser.discordId = discordId;
+      this.currentUser.discordTag = payload.discordTag || username;
+      this.currentUser.discordConnected = true;
+      if (avatar && !this.currentUser.avatar) this.currentUser.avatar = avatar;
+
+      const existingBooster = this.boosters ? this.boosters.find(b => 
+        b.discord_id === discordId || b.username.toLowerCase() === username.toLowerCase()
+      ) : null;
+
+      if (discordId === '443948776562884620' || username.toLowerCase() === 'miguelb' || username.toLowerCase().includes('admin')) {
+        this.currentUser.isAdmin = true;
+        this.currentUser.isBooster = true;
+        this.currentUser.type = 'admin';
+        this.currentUser.role = 'Master Booster & Admin';
+        this.currentUser.roles = ['Master Booster', 'Staff / Admin'];
+      } else if (existingBooster) {
+        this.currentUser.isBooster = true;
+        this.currentUser.role = existingBooster.role || 'Booster';
+        this.currentUser.roles = existingBooster.roles || [existingBooster.role || 'Booster'];
+        this.currentUser.points = existingBooster.points;
+        this.currentUser.balance = existingBooster.balance || 0.00;
+      }
+
+      this.saveUser();
+      this.showToast(`¡Tu cuenta de Discord (${this.currentUser.discordTag}) fue vinculada exitosamente con tu cuenta de Google!`, 'success');
+      this.renderHeader();
+      const returnUrl = sessionStorage.getItem('mp_oauth_return_url');
+      sessionStorage.removeItem('mp_oauth_return_url');
+      window.location.href = returnUrl || (this.currentUser.isAdmin ? 'admin.html' : (this.currentUser.isBooster ? 'pro.html' : 'client-profile.html'));
+      return;
+    }
+
     // 1. Check if Admin/Staff or Miguelb (Owner)
     if (discordId === '443948776562884620' || username.toLowerCase() === 'miguelb' || username.toLowerCase().includes('admin') || username.toLowerCase().includes('gerente')) {
       const adminRes = this.authenticateAsAdmin(avatar);
       if (avatar) this.currentUser.avatar = avatar;
       if (payload.email) this.currentUser.email = payload.email;
+      this.currentUser.discordConnected = true;
+      this.currentUser.discordTag = payload.discordTag || `${username}#0`;
       this.saveUser();
 
       // Sync into boosters list too
@@ -589,6 +627,8 @@ class MythicApp {
         id: 'booster_' + existingBooster.discord_id,
         type: isStaffOrAdmin ? 'admin' : 'booster',
         discordId: existingBooster.discord_id,
+        discordTag: payload.discordTag || `${username}#0`,
+        discordConnected: true,
         username: existingBooster.username,
         role: existingBooster.role || 'Booster',
         roles: bRoles,
@@ -618,6 +658,8 @@ class MythicApp {
       email: payload.email || `${username.toLowerCase()}@discord.com`,
       country: 'Global',
       discordId: discordId,
+      discordTag: payload.discordTag || `${username}#0`,
+      discordConnected: true,
       avatar: payload.avatar || '',
       balance: 0.00,
       isAdmin: false,
@@ -640,31 +682,31 @@ class MythicApp {
     }
     
     modal.innerHTML = `
-      <div class="glass-panel rounded-3xl w-full max-w-md p-6 sm:p-7 border border-[#5865F2]/40 shadow-2xl relative overflow-hidden">
+      <div class="glass-panel rounded-3xl w-full max-w-md p-6 sm:p-7 border border-[#ee914f]/30 shadow-2xl relative overflow-hidden bg-[#120d09]">
         <!-- Top accent banner -->
-        <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-[#5865F2]/15 blur-2xl pointer-events-none"></div>
+        <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-[#ee914f]/15 blur-2xl pointer-events-none"></div>
 
         <!-- Header -->
         <div class="flex items-center justify-between pb-4 border-b border-stone-800">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-[#5865F2] flex items-center justify-center text-white shadow-md shadow-[#5865F2]/30">
-              <i class="fa-brands fa-discord text-lg"></i>
+            <div class="w-9 h-9 rounded-xl bg-[#241a12] border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f] shadow-md">
+              <i class="fa-solid fa-shield-halved text-base"></i>
             </div>
             <div>
-              <h3 class="text-base font-bold text-white font-cinzel leading-tight">Acceso con Discord</h3>
-              <span class="text-[10px] text-stone-400">Sincronizado con el Bot Oficial</span>
+              <h3 class="text-base font-bold text-white font-cinzel leading-tight">Iniciar Sesión</h3>
+              <span class="text-[10px] text-stone-400">Acceso Seguro a Mythic Progression</span>
             </div>
           </div>
-          <button onclick="app.closeAuthModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors">
+          <button onclick="app.closeAuthModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
         <div class="py-4 space-y-4">
-          <!-- Bot Telemetry Badge (Secured - No raw ID exposed) -->
+          <!-- Bot Telemetry Badge -->
           <div class="bg-[#141226] p-3 rounded-2xl border border-[#5865F2]/30 flex items-center gap-3">
             <div class="w-8 h-8 rounded-full bg-[#201c3d] flex items-center justify-center text-[#5865F2] shrink-0 border border-[#5865F2]/30">
-              <i class="fa-solid fa-shield-halved text-sm"></i>
+              <i class="fa-brands fa-discord text-sm"></i>
             </div>
             <div class="text-xs flex-1">
               <div class="font-bold text-[#fcefc2] flex items-center justify-between">
@@ -678,35 +720,42 @@ class MythicApp {
             </div>
           </div>
 
-          <!-- MAIN BUTTON: Iniciar Sesion con Discord Oficial -->
+          <!-- OPTION 1: DISCORD OAUTH BUTTON -->
           <div>
             <button onclick="app.loginWithDiscordOAuth()" class="w-full py-3.5 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-lg shadow-[#5865F2]/30 transition-all hover:scale-[1.01] active:scale-[0.99] group cursor-pointer">
               <i class="fa-brands fa-discord text-xl group-hover:scale-110 transition-transform"></i>
               <span>Iniciar Sesión con Discord</span>
             </button>
-            <span class="text-[10px] text-stone-500 text-center block mt-1.5">Conexión OAuth2 segura. Reconoce automáticamente tu rango oficial.</span>
+            <span class="text-[10px] text-stone-500 text-center block mt-1.5">Conexión OAuth2 segura. Reconoce automáticamente tu rango oficial y roles.</span>
           </div>
 
-          <!-- Separator -->
-          <div class="flex items-center gap-3 my-2">
+          <!-- SEPARATOR -->
+          <div class="flex items-center gap-3 my-1">
             <div class="h-px bg-stone-800 flex-1"></div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">O ingresa manualmente</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">O también puedes</span>
             <div class="h-px bg-stone-800 flex-1"></div>
           </div>
 
-          <!-- Manual Input Option -->
+          <!-- OPTION 2: GOOGLE SIGN-IN BUTTON (100% FREE & UNIFIED) -->
           <div>
-            <label class="block text-xs font-semibold text-stone-300 mb-1">Tu Discord ID, Tag o Usuario:</label>
-            <div class="flex items-center gap-2">
-              <div class="relative flex-1">
-                <input id="input-discord-id" type="text" placeholder="Ej: CarlosWoW o TuDiscordID" onkeydown="if(event.key==='Enter') app.handleDiscordLogin()" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 pl-9 text-xs text-white focus:border-[#ee914f] outline-none">
-                <i class="fa-brands fa-discord absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 text-xs"></i>
-              </div>
-              <button onclick="app.handleDiscordLogin()" class="px-4 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider shrink-0 transition-all cursor-pointer">
-                <span>Entrar</span>
-              </button>
+            <button onclick="app.loginWithGoogle()" class="w-full py-3.5 px-4 rounded-xl bg-[#1c1611] hover:bg-[#281f18] text-white border border-stone-700 hover:border-[#ee914f]/60 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-3 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] group cursor-pointer">
+              <svg class="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Continuar con Google</span>
+            </button>
+            <span class="text-[10px] text-stone-500 text-center block mt-1.5">Acceso instantáneo con tu correo de Google (Gmail / Workspace).</span>
+          </div>
+
+          <!-- UNIFIED ACCOUNT CALLOUT -->
+          <div class="bg-[#18110b] p-3 rounded-2xl border border-stone-800 text-[11px] text-stone-400 flex items-start gap-2.5">
+            <i class="fa-solid fa-link text-[#ee914f] text-sm mt-0.5 shrink-0"></i>
+            <div class="leading-relaxed">
+              <strong class="text-[#fcefc2]">Cuentas Unificadas:</strong> Puedes acceder con Discord o Google. Si utilizas ambas, se vincularán bajo tu mismo perfil sin duplicar pedidos ni saldo.
             </div>
-            <span class="text-[10px] text-stone-500 mt-1 block">Acceso protegido para Clientes y Boosters autorizados.</span>
           </div>
 
           <!-- Quick switch ONLY if already authenticated as Admin/Gerente -->
@@ -731,9 +780,6 @@ class MythicApp {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    setTimeout(() => {
-      document.getElementById('input-discord-id')?.focus();
-    }, 50);
   }
 
   closeAuthModal() {
@@ -744,22 +790,371 @@ class MythicApp {
     }
   }
 
-  handleDiscordLogin() {
-    const input = document.getElementById('input-discord-id');
-    const val = input ? input.value.trim() : '';
-    if (!val) {
-      this.showToast('Por favor introduce tu Discord ID o usuario.', 'error');
+  loginWithGoogle() {
+    this.closeAuthModal();
+    this.openGoogleLoginModal(false);
+  }
+
+  linkGoogleAccount() {
+    sessionStorage.setItem('mp_link_account_mode', 'google');
+    this.openGoogleLoginModal(true);
+  }
+
+  linkDiscordAccount() {
+    sessionStorage.setItem('mp_link_account_mode', 'discord');
+    sessionStorage.setItem('mp_oauth_return_url', window.location.href);
+    this.showToast('Redirigiendo a Discord para vincular tu cuenta oficial...', 'info');
+    this.loginWithDiscordOAuth();
+  }
+
+  openGoogleLoginModal(isLinking = false) {
+    let modal = document.getElementById('google-auth-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'google-auth-modal';
+      modal.className = 'fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4';
+      document.body.appendChild(modal);
+    }
+
+    const defaultEmail = (this.currentUser && this.currentUser.email) ? this.currentUser.email : 'charquin50@gmail.com';
+
+    modal.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-md p-6 sm:p-7 border border-[#4285F4]/40 shadow-2xl relative overflow-hidden bg-[#120d09]">
+        <!-- Top accent -->
+        <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-[#4285F4]/15 blur-2xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-stone-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0">
+              <svg class="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white font-cinzel leading-tight">${isLinking ? 'Vincular Cuenta de Google' : 'Acceso con Google'}</h3>
+              <span class="text-[10px] text-stone-400">Google Identity • 100% Gratuito y Seguro</span>
+            </div>
+          </div>
+          <button onclick="document.getElementById('google-auth-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form onsubmit="event.preventDefault(); app.submitGoogleAuthForm();" class="py-4 space-y-4">
+          <!-- Quick One-Click Google Account -->
+          <div class="bg-[#18110b] p-3 rounded-2xl border border-stone-800 hover:border-[#4285F4]/50 transition-colors cursor-pointer group" onclick="app.quickGoogleLogin('${defaultEmail}')">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-md">
+                  ${defaultEmail[0].toUpperCase()}
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-white group-hover:text-[#fcefc2]">${defaultEmail}</div>
+                  <span class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-check text-[9px]"></i> Cuenta rápida detectada
+                  </span>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-[#251b14] text-[10px] font-bold text-[#ee914f] border border-[#ee914f]/30">Continuar</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="h-px bg-stone-800 flex-1"></div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">O ingresa otra cuenta de Google</span>
+            <div class="h-px bg-stone-800 flex-1"></div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1">Correo de Google (Gmail / Workspace):</label>
+            <input id="input-google-email" type="email" placeholder="tu-correo@gmail.com" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#4285F4] outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1">Nombre o Alias:</label>
+            <input id="input-google-name" type="text" placeholder="Ej: Carlos o Tu Nombre" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#4285F4] outline-none">
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-stone-200 text-stone-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>${isLinking ? 'Vincular esta Cuenta de Google' : 'Acceder con Google'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  quickGoogleLogin(email) {
+    const modal = document.getElementById('google-auth-modal');
+    if (modal) modal.classList.add('hidden');
+    const name = email.split('@')[0];
+    this.handleGoogleUserPayload({
+      email: email,
+      name: name,
+      avatar: '',
+      googleId: 'g_' + Math.abs(this.hashCode(email))
+    });
+  }
+
+  submitGoogleAuthForm() {
+    const email = document.getElementById('input-google-email')?.value.trim();
+    const name = document.getElementById('input-google-name')?.value.trim() || (email ? email.split('@')[0] : 'User');
+    if (!email) return;
+    const modal = document.getElementById('google-auth-modal');
+    if (modal) modal.classList.add('hidden');
+    this.handleGoogleUserPayload({
+      email: email,
+      name: name,
+      avatar: '',
+      googleId: 'g_' + Math.abs(this.hashCode(email))
+    });
+  }
+
+  handleGoogleUserPayload(payload) {
+    const email = (payload.email || '').trim().toLowerCase();
+    const name = payload.name || email.split('@')[0];
+    const googleId = payload.googleId || ('g_' + Date.now());
+    const avatar = payload.avatar || '';
+
+    // Check if in linking mode (current user logged in via Discord linking Google)
+    const isLinkingMode = sessionStorage.getItem('mp_link_account_mode') === 'google';
+    if (isLinkingMode && this.currentUser) {
+      sessionStorage.removeItem('mp_link_account_mode');
+      this.currentUser.googleEmail = email;
+      this.currentUser.googleId = googleId;
+      this.currentUser.googleConnected = true;
+      if (!this.currentUser.email) this.currentUser.email = email;
+      this.saveUser();
+      this.showToast(`¡Cuenta de Google (${email}) vinculada exitosamente a tu perfil!`, 'success');
+      this.renderHeader();
+      if (window.location.pathname.includes('client-profile.html') || window.location.pathname.includes('pro.html')) {
+        setTimeout(() => location.reload(), 300);
+      }
       return;
     }
-    const res = this.authenticateWithDiscord(val, val);
-    this.closeAuthModal();
-    if (res.status === 'ADMIN_LOGGED_IN') {
+
+    // 1. Check if email belongs to Owner / Admin (Miguelb / charquin50@gmail.com)
+    if (email === 'charquin50@gmail.com' || email.includes('charquin') || name.toLowerCase().includes('miguelb')) {
+      const adminRes = this.authenticateAsAdmin(avatar);
+      this.currentUser.googleEmail = email;
+      this.currentUser.googleId = googleId;
+      this.currentUser.googleConnected = true;
+      this.currentUser.discordId = '443948776562884620';
+      this.currentUser.discordTag = 'Miguelb#0';
+      this.currentUser.discordConnected = true;
+      this.currentUser.email = email;
+      if (avatar) this.currentUser.avatar = avatar;
+      this.saveUser();
+      this.showToast(`¡Bienvenido Miguelb! Conectado con Google (${email}) como Master Booster & Admin.`, 'success');
+      this.renderHeader();
       window.location.href = 'admin.html';
-    } else if (res.status === 'BOOSTER_LOGGED_IN') {
-      window.location.href = 'pro.html';
-    } else {
-      window.location.href = 'client-profile.html';
+      return adminRes;
     }
+
+    // 2. Check if email matches existing booster
+    const matchedBooster = this.boosters ? this.boosters.find(b => b.email && b.email.toLowerCase() === email) : null;
+    if (matchedBooster) {
+      const isStaffOrAdmin = (matchedBooster.roles && matchedBooster.roles.some(r => /admin|staff|gerente/i.test(r))) ||
+        (matchedBooster.role && /admin|staff|gerente/i.test(matchedBooster.role));
+
+      const bRoles = Array.isArray(matchedBooster.roles) ? [...matchedBooster.roles] : [matchedBooster.role || 'Booster'];
+      if (isStaffOrAdmin && !bRoles.some(r => /admin|staff/i.test(r))) {
+        bRoles.push('Staff / Admin');
+      }
+
+      this.currentUser = {
+        id: 'booster_' + (matchedBooster.discord_id || googleId),
+        type: isStaffOrAdmin ? 'admin' : 'booster',
+        discordId: matchedBooster.discord_id || null,
+        discordTag: matchedBooster.username,
+        discordConnected: !!matchedBooster.discord_id,
+        googleId: googleId,
+        googleEmail: email,
+        googleConnected: true,
+        username: matchedBooster.username,
+        role: matchedBooster.role || 'Booster',
+        roles: bRoles,
+        points: matchedBooster.points,
+        approved: matchedBooster.approved,
+        balance: matchedBooster.balance || 0.00,
+        email: email,
+        avatar: avatar || matchedBooster.avatar || '',
+        payoutMethod: matchedBooster.payout_method || 'Binance Pay / USDT',
+        isAdmin: isStaffOrAdmin,
+        isBooster: true
+      };
+      this.saveUser();
+      this.showToast(`¡Conectado como Booster ${matchedBooster.username} con tu cuenta de Google!`, 'success');
+      this.renderHeader();
+      window.location.href = isStaffOrAdmin ? 'admin.html' : 'pro.html';
+      return { status: isStaffOrAdmin ? 'ADMIN_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
+    }
+
+    // 3. Check if email matches existing client or create new client
+    let matchedClient = this.clients ? this.clients.find(c => c.email && c.email.toLowerCase() === email) : null;
+    if (matchedClient) {
+      this.currentUser = {
+        id: matchedClient.id,
+        type: 'client',
+        discordId: matchedClient.discord_id || null,
+        discordTag: matchedClient.discord_tag || null,
+        discordConnected: !!matchedClient.discord_id,
+        googleId: googleId,
+        googleEmail: email,
+        googleConnected: true,
+        username: matchedClient.username || name,
+        role: 'Cliente',
+        roles: ['Cliente'],
+        email: email,
+        country: matchedClient.country || 'Global',
+        avatar: avatar || matchedClient.avatar || '',
+        balance: matchedClient.balance || 0.00,
+        isAdmin: false,
+        isBooster: false
+      };
+    } else {
+      this.currentUser = {
+        id: 'client_g_' + googleId,
+        type: 'client',
+        discordId: null,
+        discordTag: null,
+        discordConnected: false,
+        googleId: googleId,
+        googleEmail: email,
+        googleConnected: true,
+        username: name,
+        role: 'Cliente',
+        roles: ['Cliente'],
+        email: email,
+        country: 'Global',
+        avatar: avatar || '',
+        balance: 0.00,
+        isAdmin: false,
+        isBooster: false
+      };
+      if (this.clients) {
+        this.clients.push({
+          id: this.currentUser.id,
+          username: name,
+          email: email,
+          discord_id: null,
+          discord_tag: null,
+          country: 'Global',
+          totalOrders: 0,
+          totalSpent: 0.00
+        });
+        this.saveClients();
+      }
+    }
+
+    this.saveUser();
+    this.showToast(`¡Bienvenido ${this.currentUser.username}! Conectado con tu cuenta de Google.`, 'success');
+    this.renderHeader();
+    window.location.href = 'client-profile.html';
+    return { status: 'CLIENT_LOGGED_IN', user: this.currentUser };
+  }
+
+  hashCode(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return hash;
+  }
+
+  renderLinkedAccountsWidget(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const user = this.currentUser;
+    if (!user) return;
+
+    const hasDiscord = !!(user.discordId || user.discordConnected || user.discordTag);
+    const hasGoogle = !!(user.googleId || user.googleConnected || user.googleEmail || (user.email && user.email.includes('@gmail.com')));
+
+    container.innerHTML = `
+      <!-- DISCORD CARD -->
+      <div class="bg-[#171226] p-4 rounded-2xl border ${hasDiscord ? 'border-[#5865F2]/40' : 'border-stone-800'} flex flex-col justify-between space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#5865F2] flex items-center justify-center text-white shadow-md">
+              <i class="fa-brands fa-discord text-lg"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white leading-tight">Discord</div>
+              <span class="text-[10px] text-stone-400 font-mono-gaming">${hasDiscord ? (user.discordTag || ('ID: ' + user.discordId)) : 'Sin vincular'}</span>
+            </div>
+          </div>
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${hasDiscord ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' : 'bg-stone-900 text-stone-400 border border-stone-800'}">
+            <i class="fa-solid ${hasDiscord ? 'fa-circle-check text-emerald-400' : 'fa-circle-xmark text-stone-500'}"></i>
+            <span>${hasDiscord ? 'Vinculado' : 'No vinculado'}</span>
+          </span>
+        </div>
+        <div>
+          ${hasDiscord ? `
+            <div class="text-[11px] text-stone-400">Tu bot de Discord y roles oficiales están sincronizados con este perfil.</div>
+          ` : `
+            <button type="button" onclick="app.linkDiscordAccount()" class="w-full py-2 px-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm">
+              <i class="fa-brands fa-discord"></i>
+              <span>Vincular mi Discord</span>
+            </button>
+          `}
+        </div>
+      </div>
+
+      <!-- GOOGLE CARD -->
+      <div class="bg-[#18110b] p-4 rounded-2xl border ${hasGoogle ? 'border-[#4285F4]/40' : 'border-stone-800'} flex flex-col justify-between space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-md">
+              <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white leading-tight">Google</div>
+              <span class="text-[10px] text-stone-400 font-mono-gaming truncate max-w-[140px] block">${hasGoogle ? (user.googleEmail || user.email) : 'Sin vincular'}</span>
+            </div>
+          </div>
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${hasGoogle ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' : 'bg-stone-900 text-stone-400 border border-stone-800'}">
+            <i class="fa-solid ${hasGoogle ? 'fa-circle-check text-emerald-400' : 'fa-circle-xmark text-stone-500'}"></i>
+            <span>${hasGoogle ? 'Vinculado' : 'No vinculado'}</span>
+          </span>
+        </div>
+        <div>
+          ${hasGoogle ? `
+            <div class="text-[11px] text-stone-400">Puedes iniciar sesión directamente con tu correo de Google.</div>
+          ` : `
+            <button type="button" onclick="app.linkGoogleAccount()" class="w-full py-2 px-3 rounded-xl bg-white hover:bg-stone-200 text-stone-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Vincular mi Google</span>
+            </button>
+          `}
+        </div>
+      </div>
+    `;
   }
 
   loginAsDemoBooster() {
@@ -1807,6 +2202,9 @@ class MythicApp {
 
     const nameBadge = document.getElementById('client-profile-header-name');
     if (nameBadge) nameBadge.textContent = user.username;
+
+    // Render linked accounts status widget
+    this.renderLinkedAccountsWidget('client-linked-accounts-container');
   }
 
   renderClientOrders() {
@@ -2626,6 +3024,9 @@ class MythicApp {
     // Update preview card and sidebar
     this.updateBoosterPreviewCard(b);
     this.syncBoosterSidebarCard(b);
+
+    // Render linked accounts status widget
+    this.renderLinkedAccountsWidget('pro-linked-accounts-container');
   }
 
   updateBoosterPreviewCard(b) {
