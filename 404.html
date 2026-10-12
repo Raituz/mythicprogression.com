@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página no encontrada - Mythic Progression</title>
+  <script>
+    // GitHub Pages Smart Redirect: Strip .html and normalize routes
+    (function() {
+      try {
+        var path = window.location.pathname;
+        var search = window.location.search || '';
+        var hash = window.location.hash || '';
+
+        // If path has .html, remove it
+        if (path.endsWith('.html')) {
+          var clean = path.replace(/\.html$/i, '') + search + hash;
+          window.location.replace(clean);
+          return;
+        }
+
+        // If path matches a known slug without trailing slash
+        var known = ['mplus', 'raids', 'leveling', 'gearing', 'product', 'pro', 'admin', 'client-profile'];
+        for (var i = 0; i < known.length; i++) {
+          if (path === '/' + known[i] || path === '/' + known[i] + '/') {
+            window.location.replace('/' + known[i] + search + hash);
+            return;
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.2">
+  <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
+</head>
+<body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex flex-col items-center justify-center p-4 text-center selection:bg-[#ee914f] selection:text-[#140f0c]">
+  <div class="glass-panel p-8 sm:p-12 rounded-3xl border border-stone-800 max-w-md w-full shadow-2xl space-y-5">
+    <img src="assets/img/logo_circular.png" alt="Logo" class="w-16 h-16 mx-auto object-contain drop-shadow-[0_0_15px_rgba(238,145,79,0.5)]">
+    
+    <div>
+      <span class="text-4xl font-black font-cinzel copper-gradient-text block">404</span>
+      <h1 class="text-lg font-bold text-white mt-1">Página No Encontrada</h1>
+      <p class="text-xs text-stone-400 mt-2">La ruta que buscas no existe o ha sido movida a una dirección más limpia.</p>
+    </div>
+
+    <div class="pt-2">
+      <a href="/" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl copper-gradient-bg text-stone-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition-all">
+        <i class="fa-solid fa-house"></i>
+        <span>Volver al Inicio</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

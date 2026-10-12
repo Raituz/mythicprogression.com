@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Servicio - Mythic Progression</title>
@@ -240,8 +241,8 @@
           </div>
 
           <!-- Character & Realm Selection with Quick Filter -->
-          <div class="pt-4 border-t border-stone-800 space-y-3.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="pt-4 border-t border-stone-800 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
               <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider flex items-center gap-1.5">
                 <i class="fa-solid fa-gamepad text-[#ee914f]"></i>
                 <span>Datos de tu Personaje (WoW):</span>
@@ -256,32 +257,46 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
-              <!-- Region (3 cols) -->
-              <div class="md:col-span-3">
-                <span class="text-[10px] text-stone-500 block mb-1 font-semibold uppercase tracking-wider">Región:</span>
-                <select id="sp-region" onchange="app.onRegionChange()" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
-                  <option value="US">América (US)</option>
-                  <option value="EU">Europa (EU)</option>
-                </select>
+            <!-- Inputs Grid: Row 1 (Region & Character Name) + Row 2 (Realm Search Full Width) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <!-- Region (50% on sm+) -->
+              <div>
+                <label for="sp-region" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                  <i class="fa-solid fa-earth-americas text-[#ee914f] text-[10px]"></i>
+                  <span>Región:</span>
+                </label>
+                <div class="relative">
+                  <select id="sp-region" onchange="app.onRegionChange()" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
+                    <option value="US">América (US)</option>
+                    <option value="EU">Europa (EU)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+                </div>
               </div>
 
-              <!-- Character Name (4 cols) -->
-              <div class="md:col-span-4">
-                <span class="text-[10px] text-stone-500 block mb-1 font-semibold uppercase tracking-wider">Nombre del Personaje:</span>
-                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+              <!-- Character Name (50% on sm+) -->
+              <div>
+                <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                  <i class="fa-solid fa-user-shield text-[#ee914f] text-[10px]"></i>
+                  <span>Nombre del Personaje:</span>
+                </label>
+                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
               </div>
 
-              <!-- Realm Searchable Dropdown (5 cols) -->
-              <div class="md:col-span-5 relative" id="sp-realm-dropdown-container">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-[10px] text-stone-500 font-semibold uppercase tracking-wider">Reino / Servidor:</span>
-                  <span id="sp-selected-realm-tag" class="text-[9px] px-1.5 py-0.5 rounded bg-[#2a1d13] text-[#ee914f] border border-[#ee914f]/30 font-bold hidden"></span>
+              <!-- Realm Searchable Dropdown (Full Width) -->
+              <div class="sm:col-span-2 relative" id="sp-realm-dropdown-container">
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="sp-realm-search" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-server text-[#ee914f] text-[10px]"></i>
+                    <span>Reino / Servidor:</span>
+                  </label>
+                  <span id="sp-selected-realm-tag" class="text-[9px] px-2 py-0.5 rounded-full bg-[#2a1d13] text-[#ee914f] border border-[#ee914f]/30 font-bold hidden"></span>
                 </div>
 
                 <div class="relative">
-                  <input id="sp-realm-search" type="text" autocomplete="off" placeholder="🔍 Buscar reino (ej: Ragnaros)..." onfocus="app.openRealmDropdown()" oninput="app.filterRealmDropdown(this.value)" class="w-full bg-[#18110b] border border-stone-700 rounded-xl pl-3 pr-8 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
-                  <button type="button" onclick="app.toggleRealmDropdown()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-xs pointer-events-none"></i>
+                  <input id="sp-realm-search" type="text" autocomplete="off" placeholder="Buscar reino (ej: Ragnaros, Quel'Thalas, Whitemane, Forever...)" onfocus="app.openRealmDropdown()" oninput="app.filterRealmDropdown(this.value)" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-9 pr-9 py-2.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+                  <button type="button" onclick="app.toggleRealmDropdown()" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs">
                     <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" id="sp-realm-chevron"></i>
                   </button>
                 </div>

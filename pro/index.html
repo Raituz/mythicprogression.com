@@ -1,0 +1,654 @@
+﻿<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mythic Progression Pro - Tablón de Boosters</title>
+  <!-- STRICT INSTANT ROUTE GUARD: Boosters & Staff Only -->
+  <script>
+    (function() {
+      try {
+        var raw = localStorage.getItem('mp_current_user');
+        if (!raw) {
+          document.documentElement.style.display = 'none';
+          window.location.replace('/');
+          return;
+        }
+        var user = JSON.parse(raw);
+        var isAllowed = user && (
+          user.isBooster === true ||
+          user.isAdmin === true ||
+          user.type === 'booster' ||
+          user.type === 'admin' ||
+          user.type === 'staff' ||
+          user.discordId === '443948776562884620' ||
+          (Array.isArray(user.roles) && user.roles.some(function(r) { return /booster|admin|staff|gerente|raider|supplier|master/i.test(r); })) ||
+          (typeof user.role === 'string' && /booster|admin|staff|gerente|raider|supplier|master/i.test(user.role)) ||
+          (typeof user.username === 'string' && (user.username.toLowerCase() === 'miguelb' || /admin|gerente/i.test(user.username)))
+        );
+        if (!isAllowed) {
+          document.documentElement.style.display = 'none';
+          window.location.replace('/');
+        }
+      } catch (e) {
+        document.documentElement.style.display = 'none';
+        window.location.replace('/');
+      }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.2">
+  <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
+</head>
+<body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex selection:bg-[#ee914f] selection:text-[#140f0c]">
+
+  <!-- LEFT SIDEBAR: GUILD WAR ROOM THEME -->
+  <aside class="w-16 md:w-64 glass-panel border-r border-stone-800 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-30">
+    <div>
+      <!-- Brand Logo -->
+      <div class="p-4 flex items-center gap-3 border-b border-stone-800">
+        <img src="assets/img/logo_circular.png" alt="Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(238,145,79,0.4)]">
+        <div class="hidden md:block">
+          <span class="font-cinzel font-bold text-sm copper-gradient-text tracking-wider block leading-tight">MYTHIC PRO</span>
+          <span class="text-[9px] text-[#eedaa2] font-semibold uppercase tracking-wider">Tablón de Contratos</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="p-2 space-y-1.5">
+        <button onclick="switchProTab('find')" id="tab-btn-find" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40">
+          <i class="fa-solid fa-scroll text-[#ee914f] text-sm"></i>
+          <span class="hidden md:inline">Bolsa de Pedidos</span>
+          <span id="badge-avail-sidebar" class="hidden md:inline ml-auto text-[10px] bg-[#1a130e] text-[#ee914f] px-2 py-0.5 rounded-full border border-stone-800">11</span>
+        </button>
+
+        <button onclick="switchProTab('myorders')" id="tab-btn-myorders" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
+          <i class="fa-solid fa-shield-halved text-sm"></i>
+          <span class="hidden md:inline">Mis Contratos</span>
+          <span id="badge-my-count" class="hidden md:inline ml-auto text-[10px] bg-stone-900 px-2 py-0.5 rounded-full">1</span>
+        </button>
+
+        <button onclick="switchProTab('chat')" id="tab-btn-chat" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
+          <i class="fa-solid fa-comments text-sm"></i>
+          <span class="hidden md:inline">Multi Chat</span>
+        </button>
+
+        <button onclick="switchProTab('upsell')" id="tab-btn-upsell" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
+          <i class="fa-solid fa-gem text-sm text-[#ee914f]"></i>
+          <span class="hidden md:inline">Venta Extra (50%)</span>
+          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950 text-[#fcefc2] px-1.5 py-0.5 rounded border border-amber-800 font-bold">50%</span>
+        </button>
+
+        <button onclick="switchProTab('wallet')" id="tab-btn-wallet" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
+          <i class="fa-solid fa-wallet text-sm"></i>
+          <span class="hidden md:inline">Billetera / Pagos</span>
+        </button>
+
+        <button onclick="switchProTab('profile')" id="tab-btn-profile" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
+          <i class="fa-solid fa-id-card text-sm text-[#eedaa2]"></i>
+          <span class="hidden md:inline">Mi Perfil Pro</span>
+          <span class="hidden md:inline ml-auto text-[9px] bg-[#241910] text-[#ee914f] px-1.5 py-0.5 rounded border border-[#ee914f]/30 font-semibold">Editar</span>
+        </button>
+
+        <a href="/" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-500 hover:text-[#ee914f]">
+          <i class="fa-solid fa-store text-sm"></i>
+          <span class="hidden md:inline">Ver Tienda con Pro</span>
+        </a>
+
+        <!-- ONLY VISIBLE TO ADMINS & GERENTES -->
+        <a href="admin" id="pro-sidebar-admin-link" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#2a170d] text-[#fcefc2] border border-[#ee914f]/50 hover:bg-[#382012] shadow-sm hidden">
+          <i class="fa-solid fa-shield-halved text-[#ee914f] text-sm"></i>
+          <span class="hidden md:inline">Panel Admin</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Booster Mini Profile Card -->
+    <div class="p-3 border-t border-stone-800 cursor-pointer group" id="sidebar-booster-card" onclick="switchProTab('profile')" title="Haz clic para editar tu perfil pro y datos de cobro">
+      <div class="flex items-center gap-2.5 bg-[#17110d] group-hover:bg-[#221811] p-2 rounded-xl border border-stone-800 group-hover:border-[#ee914f]/40 transition-all">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#b85d1d] to-[#ee914f] flex items-center justify-center font-bold text-stone-950 text-xs overflow-hidden shrink-0 border border-[#ee914f]/40 shadow-md">
+          <img id="booster-sidebar-avatar-img" src="" alt="Avatar" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); document.getElementById('booster-avatar-initial').classList.remove('hidden');">
+          <span id="booster-avatar-initial">M</span>
+        </div>
+        <div class="hidden md:block overflow-hidden flex-1">
+          <div class="flex items-center justify-between">
+            <div id="booster-sidebar-name" class="text-xs font-bold text-white truncate group-hover:text-[#fcefc2]">Miguelb</div>
+            <i class="fa-solid fa-pen-to-square text-[10px] text-stone-500 group-hover:text-[#ee914f] ml-1"></i>
+          </div>
+          <div id="booster-sidebar-role" class="text-[10px] text-[#eedaa2] truncate">Master Booster</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT -->
+  <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+
+    <!-- TOP HEADER -->
+    <header class="glass-nav border-b border-stone-800 px-6 py-3.5 flex items-center justify-between sticky top-0 z-20">
+  <base href="/">
+      <div>
+        <h1 id="pro-page-title" class="text-lg font-black text-white flex items-center gap-2 font-cinzel">
+          <span>Bolsa de Pedidos (Find Orders)</span>
+          <span id="available-orders-count" class="text-xs font-normal text-[#fcefc2] bg-[#271d15] px-2.5 py-0.5 rounded-full border border-[#ee914f]/30">cargando...</span>
+        </h1>
+        <p class="text-[11px] text-stone-400 hidden sm:block">Toma órdenes al 30% base o puja en subasta hasta el límite del 50%.</p>
+      </div>
+
+      <!-- Top Right Status & Balance -->
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 bg-[#17120e] px-3.5 py-1.5 rounded-xl border border-stone-800">
+          <span class="text-xs text-stone-400">Saldo:</span>
+          <span id="booster-balance" class="text-base font-bold font-mono-gaming text-[#fcefc2]">$145.00</span>
+        </div>
+        <div id="user-session-badge"></div>
+      </div>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+
+      <!-- TAB 1: FIND ORDERS (BOLSA DE PEDIDOS) -->
+      <section id="tab-find" class="space-y-4">
+        <div class="glass-panel p-3.5 rounded-2xl border border-stone-800 flex flex-wrap items-center gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-stone-400">Juego:</span>
+            <span class="bg-[#241a13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-lg font-semibold">World of Warcraft</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-stone-400">Región:</span>
+            <select class="bg-[#17120e] border border-stone-700 text-stone-300 rounded-lg px-2 py-1 outline-none">
+              <option>Todas las regiones</option>
+              <option>América (US)</option>
+              <option>Europa (EU)</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-stone-400">Modalidad:</span>
+            <select class="bg-[#17120e] border border-stone-700 text-stone-300 rounded-lg px-2 py-1 outline-none">
+              <option>Cualquiera</option>
+              <option>Piloted</option>
+              <option>Self-Play</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="pro-orders-feed"></div>
+      </section>
+
+      <!-- TAB 2: MY ORDERS (MIS PEDIDOS ASIGNADOS) -->
+      <section id="tab-myorders" class="hidden space-y-4">
+        <div class="glass-panel p-4 rounded-2xl border border-stone-800 mb-4">
+          <h2 class="text-base font-bold text-[#fcefc2] mb-1 font-cinzel">Tus Contratos en Curso</h2>
+          <p class="text-xs text-stone-400">Activa el interruptor <strong class="text-[#ee914f]">"Estoy en la cuenta"</strong> para alertar al cliente.</p>
+        </div>
+        <div id="pro-my-orders"></div>
+      </section>
+
+      <!-- TAB 3: MULTI CHAT (STRICT PRIVACY: ONLY MY ORDERS) -->
+      <section id="tab-chat" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="glass-panel rounded-2xl border border-stone-800 p-3 h-[580px] flex flex-col">
+            <h3 class="text-xs font-bold text-[#fcefc2] uppercase tracking-wider p-2 border-b border-stone-800 font-cinzel">Mis Chats Activos</h3>
+            <div id="chat-conversations-list" class="flex-1 overflow-y-auto space-y-1 py-2"></div>
+          </div>
+
+          <div class="md:col-span-3 glass-panel rounded-2xl border border-stone-800 p-4" id="chat-active-window">
+            <div class="h-[550px] flex flex-col items-center justify-center text-center p-8">
+              <i class="fa-solid fa-comments text-4xl text-[#ee914f]/30 mb-3"></i>
+              <h4 class="text-sm font-bold text-stone-300 font-cinzel">Selecciona una orden para abrir la sala de chat</h4>
+              <p class="text-xs text-stone-500 max-w-sm mt-1">Solo tú y el cliente que pagó la orden pueden ver esta conversación.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: UPSELL / VENTAS EXTRA AL CLIENTE (REQ 6: 50% GANANCIA) -->
+      <section id="tab-upsell" class="hidden space-y-4">
+        <div id="booster-upsell-container">
+          <!-- Injected dynamically by app.js -->
+        </div>
+      </section>
+
+      <!-- TAB 5: WALLET & PAYOUTS -->
+      <section id="tab-wallet" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="glass-panel p-6 rounded-2xl border border-[#ee914f]/40">
+            <span class="text-xs text-stone-400 block mb-1">Saldo Disponible para Retiro</span>
+            <div class="text-3xl font-bold font-mono-gaming text-[#fcefc2]" id="wallet-avail-balance">$145.00</div>
+            <span class="text-[10px] text-[#ee914f] mt-2 block"><i class="fa-solid fa-circle-check mr-1"></i>Aprobado para pago</span>
+          </div>
+
+          <div class="glass-panel p-6 rounded-2xl border border-stone-800">
+            <span class="text-xs text-stone-400 block mb-1">Comisiones</span>
+            <div class="text-base font-bold font-mono-gaming text-stone-200">30% base | 50% venta adicional</div>
+            <span class="text-[10px] text-stone-500 mt-2 block">70% empresa / 50% empresa en upsell</span>
+          </div>
+
+          <div class="glass-panel p-6 rounded-2xl border border-stone-800">
+            <span class="text-xs text-stone-400 block mb-1">Rango y Reputación</span>
+            <div class="text-2xl font-bold font-mono-gaming text-[#ee914f]" id="wallet-points-display">546 Puntos</div>
+            <span class="text-[10px] text-[#eedaa2] mt-2 block">Master Booster (Acceso prioritario)</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-6 rounded-2xl border border-stone-800">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Solicitud de Cobro de Ganancias</h3>
+            <span class="text-xs text-stone-400">Datos vinculados a tu <button type="button" onclick="switchProTab('profile')" class="text-[#ee914f] hover:underline font-semibold">Perfil Pro</button></span>
+          </div>
+          <form onsubmit="event.preventDefault(); app.showToast('Solicitud enviada a gerencia. Tus fondos serán transferidos a tu cuenta configurada.', 'success');" class="max-w-lg space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-300 mb-1">Monto a retirar ($ USD):</label>
+              <input id="wallet-withdraw-amount" type="number" min="10" max="145" value="145" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-300 mb-1">Método de Pago:</label>
+              <select id="wallet-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200">
+                <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada (0 fee)</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Zelle">Zelle</option>
+                <option value="USDT TRC20 / ERC20">USDT TRC20 / BSC</option>
+                <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-300 mb-1">ID de Billetera o Cuenta de Destino:</label>
+              <input id="wallet-withdraw-address" type="text" placeholder="Ej: Binance Pay ID / USDT TRC20" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono-gaming" required>
+              <span class="text-[10px] text-stone-500 mt-1 block">Puedes cambiar tu cuenta por defecto en cualquier momento desde <a href="javascript:void(0)" onclick="switchProTab('profile')" class="text-[#ee914f] hover:underline">Mi Perfil Pro</a>.</span>
+            </div>
+            <button type="submit" class="px-6 py-3 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider shadow-md">
+              Solicitar Retiro
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 6: BOOSTER PRO PROFILE & PAYOUT SETTINGS -->
+      <section id="tab-profile" class="hidden space-y-6">
+        <div class="glass-panel p-6 rounded-2xl border border-stone-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-[#fcefc2] font-cinzel flex items-center gap-2">
+              <i class="fa-solid fa-id-card text-[#ee914f]"></i>
+              <span>Perfil Pro & Configuración de Cobros</span>
+            </h2>
+            <p class="text-xs text-stone-400 mt-1">Configura tu nombre de juego, foto de perfil, datos de cobro de ganancias y contacto con el staff.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 text-xs font-bold">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Booster Activo & Verificado</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- LEFT COLUMN: LIVE PRO IDENTITY CARD PREVIEW -->
+          <div class="space-y-4">
+            <div class="glass-panel rounded-2xl border border-[#ee914f]/40 p-6 text-center relative overflow-hidden shadow-xl">
+              <!-- Background Glow Accent -->
+              <div class="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-[#ee914f]/10 blur-2xl pointer-events-none"></div>
+
+              <!-- Live Avatar Preview with ring -->
+              <div class="relative mx-auto w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-[#8a4212] via-[#ee914f] to-[#fcefc2] shadow-lg mb-4">
+                <div class="w-full h-full rounded-full bg-[#18110b] flex items-center justify-center overflow-hidden border border-stone-900">
+                  <img id="pro-preview-avatar-img" src="" alt="Avatar" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); document.getElementById('pro-preview-avatar-initial').classList.remove('hidden');">
+                  <span id="pro-preview-avatar-initial" class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">M</span>
+                </div>
+                <div class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#120d09] flex items-center justify-center text-[10px] text-stone-950 font-bold" title="Online y Listo para Trabajos">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+              </div>
+
+              <h3 id="pro-preview-name" class="text-lg font-black text-white font-cinzel leading-tight">Miguelb</h3>
+              <div id="pro-preview-role" class="text-xs font-bold text-[#ee914f] mt-0.5">Master Booster</div>
+              <p id="pro-preview-bio" class="text-[11px] text-stone-400 mt-2 italic px-2">"Mythic Booster listo para M+ Push, Raids y Powerleveling express."</p>
+
+              <!-- Rep & Earnings Quick Summary -->
+              <div class="grid grid-cols-2 gap-2 mt-5 pt-4 border-t border-stone-800/80 text-left">
+                <div class="bg-[#140e0a] p-2.5 rounded-xl border border-stone-800">
+                  <span class="text-[10px] text-stone-500 block uppercase font-semibold">Reputación</span>
+                  <span id="pro-preview-points" class="text-sm font-bold font-mono-gaming text-[#fcefc2]">546 Pts</span>
+                </div>
+                <div class="bg-[#140e0a] p-2.5 rounded-xl border border-stone-800">
+                  <span class="text-[10px] text-stone-500 block uppercase font-semibold">Saldo Retirable</span>
+                  <span id="pro-preview-balance" class="text-sm font-bold font-mono-gaming text-emerald-400">$145.00</span>
+                </div>
+              </div>
+
+              <!-- Quick Info Badges -->
+              <div class="mt-4 pt-3 border-t border-stone-800/60 space-y-2 text-xs text-left">
+                <div class="flex items-center justify-between text-stone-400">
+                  <span class="text-[11px] flex items-center gap-1.5"><i class="fa-solid fa-wallet text-[#ee914f] text-[10px]"></i> Pago preferido:</span>
+                  <span id="pro-preview-payout-method" class="text-[11px] font-semibold text-stone-200">Binance Pay</span>
+                </div>
+                <div class="flex items-center justify-between text-stone-400">
+                  <span class="text-[11px] flex items-center gap-1.5"><i class="fa-brands fa-discord text-indigo-400 text-[10px]"></i> Discord:</span>
+                  <span id="pro-preview-discord" class="text-[11px] font-mono-gaming text-stone-200">@miguelb</span>
+                </div>
+                <div class="flex items-center justify-between text-stone-400">
+                  <span class="text-[11px] flex items-center gap-1.5"><i class="fa-solid fa-globe text-cyan-400 text-[10px]"></i> Región:</span>
+                  <span id="pro-preview-region" class="text-[11px] font-semibold text-stone-200">US & EU</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notice Box -->
+            <div class="glass-panel p-4 rounded-2xl border border-stone-800 text-xs text-stone-400 space-y-2">
+              <div class="flex items-center gap-2 text-[#eedaa2] font-bold">
+                <i class="fa-solid fa-shield-halved text-[#ee914f]"></i>
+                <span>Garantía de Pagos Mythic</span>
+              </div>
+              <p class="text-[11px] leading-relaxed">
+                Tus datos de cobro se utilizan automáticamente cada vez que solicitas un retiro de ganancias desde la pestaña <strong class="text-white">Billetera / Pagos</strong>. Asegúrate de verificar tu cuenta destino.
+              </p>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: PROFILE EDIT FORM -->
+          <div class="lg:col-span-2 space-y-6">
+            <form id="pro-profile-form" onsubmit="event.preventDefault(); app.saveBoosterProfile();" class="space-y-6">
+
+              <!-- SECCIÓN 1: IDENTIDAD Y FOTO DE PERFIL -->
+              <div class="glass-panel p-6 rounded-2xl border border-stone-800 space-y-4">
+                <h3 class="text-sm font-bold text-[#fcefc2] font-cinzel flex items-center gap-2 border-b border-stone-800 pb-3">
+                  <i class="fa-solid fa-user-astronaut text-[#ee914f]"></i>
+                  <span>1. Identidad de Booster & Foto de Perfil</span>
+                </h3>
+
+                <!-- Cuentas Vinculadas (Google & Discord) -->
+                <div class="bg-[#140e0a] p-4 rounded-xl border border-stone-800/80 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-[#fcefc2] flex items-center gap-2">
+                      <i class="fa-solid fa-link text-[#ee914f]"></i> Cuentas Vinculadas (Acceso Unificado)
+                    </span>
+                    <span class="text-[10px] text-stone-500">Mismo Perfil y Cobros</span>
+                  </div>
+                  <p class="text-[11px] text-stone-400">Vincula tu cuenta de Discord y Google para iniciar sesión indistintamente con cualquiera de las dos a tu mismo rango, historial y cobros.</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1" id="pro-linked-accounts-container">
+                    <!-- Dynamically populated by app.renderLinkedAccountsWidget() -->
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Nombre o Apodo de Booster:</label>
+                    <input id="pro-prof-name" type="text" placeholder="Ej: Miguelb" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none" required>
+                    <span class="text-[10px] text-stone-500 mt-0.5 block">Nombre visible para clientes en el chat y asignaciones.</span>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Rango / Título:</label>
+                    <input id="pro-prof-role" type="text" value="Master Booster" readonly class="w-full bg-[#130d09] border border-stone-800 text-stone-400 rounded-xl px-4 py-2.5 text-xs outline-none cursor-not-allowed">
+                    <span class="text-[10px] text-stone-500 mt-0.5 block">Asignado por el staff según tus puntos y antigüedad.</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-stone-300 mb-1">URL de Imagen de Perfil (Avatar):</label>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <input id="pro-prof-avatar" type="url" oninput="app.previewBoosterAvatar(this.value)" placeholder="https://i.imgur.com/tu-avatar.png o enlace CDN de Discord" class="flex-1 min-w-[200px] bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+                    <button type="button" onclick="app.syncDiscordAvatar()" class="px-3.5 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-[#5865F2]/25 shrink-0" title="Obtener foto directamente desde tu cuenta de Discord">
+                      <i class="fa-brands fa-discord text-sm"></i>
+                      <span>Traer de Discord</span>
+                    </button>
+                    <button type="button" onclick="document.getElementById('pro-prof-avatar').value=''; app.previewBoosterAvatar('');" class="px-3 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs font-semibold shrink-0" title="Borrar y usar iniciales">
+                      Reset
+                    </button>
+                  </div>
+                  <span class="text-[10px] text-stone-500 mt-1 block">Pega el link de cualquier foto tuya o pulsa "Traer de Discord" para vincular tu avatar oficial.</span>
+                </div>
+
+                <!-- Presets de Avatares Rápidos de WoW -->
+                <div>
+                  <span class="text-[11px] font-semibold text-stone-400 block mb-2">O elige un avatar épico rápido:</span>
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <button type="button" onclick="app.setBoosterPresetAvatar('assets/img/logo_circular.png')" class="w-10 h-10 rounded-xl border border-stone-800 hover:border-[#ee914f] overflow-hidden p-0.5 bg-[#17110d] hover:scale-105 transition-all" title="Dragón Cobre Mythic">
+                      <img src="assets/img/logo_circular.png" alt="Logo" class="w-full h-full object-contain">
+                    </button>
+                    <button type="button" onclick="app.setBoosterPresetAvatar('https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80')" class="w-10 h-10 rounded-xl border border-stone-800 hover:border-[#ee914f] overflow-hidden bg-[#17110d] hover:scale-105 transition-all" title="Guerrero">
+                      <img src="https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80" alt="Guerrero" class="w-full h-full object-cover">
+                    </button>
+                    <button type="button" onclick="app.setBoosterPresetAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80')" class="w-10 h-10 rounded-xl border border-stone-800 hover:border-[#ee914f] overflow-hidden bg-[#17110d] hover:scale-105 transition-all" title="Maga Elfa">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Maga" class="w-full h-full object-cover">
+                    </button>
+                    <button type="button" onclick="app.setBoosterPresetAvatar('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80')" class="w-10 h-10 rounded-xl border border-stone-800 hover:border-[#ee914f] overflow-hidden bg-[#17110d] hover:scale-105 transition-all" title="Pícaro">
+                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" alt="Pícaro" class="w-full h-full object-cover">
+                    </button>
+                    <button type="button" onclick="app.setBoosterPresetAvatar('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80')" class="w-10 h-10 rounded-xl border border-stone-800 hover:border-[#ee914f] overflow-hidden bg-[#17110d] hover:scale-105 transition-all" title="Paladín">
+                      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" alt="Paladín" class="w-full h-full object-cover">
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-stone-300 mb-1">Biografía / Presentación Pro:</label>
+                  <textarea id="pro-prof-bio" rows="2" placeholder="Experiencia en WoW, rating M+, especialidad de clases o disponibilidad horaria..." class="w-full bg-[#16110c] border border-stone-700 rounded-xl p-3 text-xs text-white focus:border-[#ee914f] outline-none"></textarea>
+                </div>
+              </div>
+
+              <!-- SECCIÓN 2: DATOS DE PAGO Y LIQUIDACIÓN DE GANANCIAS -->
+              <div class="glass-panel p-6 rounded-2xl border border-amber-900/40 space-y-4">
+                <div class="flex items-center justify-between border-b border-stone-800 pb-3">
+                  <h3 class="text-sm font-bold text-[#fcefc2] font-cinzel flex items-center gap-2">
+                    <i class="fa-solid fa-money-bill-transfer text-emerald-400"></i>
+                    <span>2. Datos de Pago & Liquidación de Retiros (70/30 & 50%)</span>
+                  </h3>
+                  <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800 font-semibold font-mono-gaming">Pagos Express</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Correo de Pago / Cobro:</label>
+                    <input id="pro-prof-payout-email" type="email" placeholder="cobros@tuemail.com" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none" required>
+                    <span class="text-[10px] text-stone-500 mt-0.5 block">Email para recibir comprobantes y pagos vía PayPal o Binance.</span>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Método de Pago Preferido:</label>
+                    <select id="pro-prof-payout-method" onchange="app.onBoosterPayoutMethodChange(this.value)" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-stone-200 focus:border-[#ee914f] outline-none">
+                      <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada (0 fee)</option>
+                      <option value="PayPal">PayPal (USD / EUR)</option>
+                      <option value="Zelle">Zelle (USD)</option>
+                      <option value="USDT TRC20 / ERC20">USDT (Billetera TRC20 / BSC)</option>
+                      <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div class="sm:col-span-2">
+                    <label id="pro-prof-payout-address-label" class="block text-xs font-semibold text-stone-300 mb-1">ID de Billetera o Cuenta de Destino:</label>
+                    <input id="pro-prof-payout-address" type="text" placeholder="Ej: Binance Pay ID (8 dígitos) o Wallet USDT" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none font-mono-gaming" required>
+                    <span class="text-[10px] text-stone-500 mt-0.5 block">Cuenta donde el staff enviará tus fondos al solicitar retiro.</span>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Moneda Preferida:</label>
+                    <select id="pro-prof-payout-currency" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-stone-200 focus:border-[#ee914f] outline-none">
+                      <option value="USD">USD ($ Dólares)</option>
+                      <option value="USDT">USDT (Crypto Dollar)</option>
+                      <option value="EUR">EUR (€ Euros)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECCIÓN 3: DATOS DE JUEGO & CONTACTO DE COORDINACIÓN -->
+              <div class="glass-panel p-6 rounded-2xl border border-stone-800 space-y-4">
+                <h3 class="text-sm font-bold text-[#fcefc2] font-cinzel flex items-center gap-2 border-b border-stone-800 pb-3">
+                  <i class="fa-solid fa-gamepad text-[#ee914f]"></i>
+                  <span>3. Datos de Juego WoW & Contacto Directo</span>
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Usuario de Discord (Tag):</label>
+                    <input id="pro-prof-discord" type="text" placeholder="Ej: Miguelb#1234 o @miguelb" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">BattleTag:</label>
+                    <input id="pro-prof-battletag" type="text" placeholder="Ej: Miguel#12345" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Región Principal:</label>
+                    <select id="pro-prof-region" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-stone-200 focus:border-[#ee914f] outline-none">
+                      <option value="América (US) & Europa (EU)">América (US) & Europa (EU)</option>
+                      <option value="América (US)">Solo América (US)</option>
+                      <option value="Europa (EU)">Solo Europa (EU)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Reino / Servidor Principal:</label>
+                    <input id="pro-prof-realm" list="pro-realms-datalist" type="text" placeholder="Ej: Ragnaros / Illidan" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+                    <datalist id="pro-realms-datalist"></datalist>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Facción:</label>
+                    <select id="pro-prof-faction" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-stone-200 focus:border-[#ee914f] outline-none">
+                      <option value="Ambas (Cross-Faction)">Ambas (Cross-Faction)</option>
+                      <option value="Horda">Horda</option>
+                      <option value="Alianza">Alianza</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Roles / Especialidades:</label>
+                    <input id="pro-prof-roles" type="text" placeholder="Ej: Tanque, DPS Melee, M+ Pusher" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Correo de Contacto Alternativo:</label>
+                    <input id="pro-prof-email" type="email" placeholder="contacto@gmail.com" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
+                  </div>
+                </div>
+              </div>
+
+              <!-- BARRA DE ACCIONES / GUARDAR -->
+              <div class="flex items-center justify-between pt-2">
+                <button type="button" onclick="app.initBoosterProfileForm()" class="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white text-xs font-bold transition-all">
+                  Descartar Cambios
+                </button>
+                <button type="submit" class="px-7 py-3 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/25 hover:brightness-110 transition-all">
+                  <i class="fa-solid fa-floppy-disk text-sm"></i>
+                  <span>Guardar Perfil Pro</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- BID MODAL -->
+  <div id="bid-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div id="bid-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
+  </div>
+
+  <script src="assets/js/app.js?v=2.3.2"></script>
+  <script>
+    function switchProTab(tabId) {
+      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));
+      const activeTab = document.getElementById('tab-' + tabId);
+      if (activeTab) activeTab.classList.remove('hidden');
+
+      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        if (btn) {
+          if (t === tabId) {
+            btn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40";
+          } else {
+            btn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]";
+          }
+        }
+      });
+
+      const titles = {
+        find: 'Bolsa de Pedidos (Find Orders)',
+        myorders: 'Mis Contratos (My Orders)',
+        chat: 'Centro de Mensajería (Multi Chat)',
+        upsell: 'Venta de Servicios Adicionales (50% Ganancia)',
+        wallet: 'Billetera y Cobros',
+        profile: 'Mi Perfil Pro (Configuración & Datos de Pago)'
+      };
+      const titleEl = document.getElementById('pro-page-title');
+      if (titleEl) titleEl.innerHTML = `<span>${titles[tabId] || 'Portal Pro Booster'}</span>`;
+
+      if (tabId === 'profile' && window.app && typeof app.initBoosterProfileForm === 'function') {
+        app.initBoosterProfileForm();
+      }
+    }
+
+    // Auto-listen to URL hash change
+    window.addEventListener('hashchange', () => {
+      const h = (window.location.hash || '').replace('#', '');
+      const valid = ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'];
+      if (valid.includes(h)) {
+        switchProTab(h);
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Preserve admin/gerente session if logged in; otherwise default to demo booster Miguelb
+      if (!app.currentUser) {
+        app.authenticateWithDiscord('443948776562884620', 'Miguelb');
+      }
+
+      const b = (app.currentUser && (app.currentUser.type === 'booster' || app.isBooster() || app.currentUser.discordId === '443948776562884620'))
+        ? app.currentUser
+        : (app.boosters && app.boosters.find(x => x.username.toLowerCase() === 'miguelb')) || { username: 'Miguelb', role: 'Master Booster', points: 546 };
+
+      if (!b.avatar) {
+        const backup = localStorage.getItem('mp_discord_avatar_backup');
+        if (backup) b.avatar = backup;
+      }
+
+      if (b) {
+        const nameEl = document.getElementById('booster-sidebar-name');
+        if (nameEl) nameEl.textContent = b.username;
+        const roleEl = document.getElementById('booster-sidebar-role');
+        if (roleEl) roleEl.textContent = `${b.role || 'Booster'} (${b.points || 0} pts)`;
+        const avEl = document.getElementById('booster-avatar-initial');
+        if (avEl) avEl.textContent = (b.username || 'M')[0].toUpperCase();
+        const ptsEl = document.getElementById('wallet-points-display');
+        if (ptsEl) ptsEl.textContent = `${b.points || 0} Puntos`;
+
+        if (b.avatar) {
+          const sImg = document.getElementById('booster-sidebar-avatar-img');
+          if (sImg) {
+            sImg.src = b.avatar;
+            sImg.classList.remove('hidden');
+            if (avEl) avEl.classList.add('hidden');
+          }
+        }
+      }
+
+      // Show Admin link in sidebar ONLY if user is admin or gerente
+      const adminLink = document.getElementById('pro-sidebar-admin-link');
+      if (adminLink) {
+        if (app.isAdminOrGerente()) {
+          adminLink.classList.remove('hidden');
+        } else {
+          adminLink.classList.add('hidden');
+        }
+      }
+
+      // Check initial URL hash
+      const initialTab = (window.location.hash || '').replace('#', '');
+      if (['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].includes(initialTab)) {
+        switchProTab(initialTab);
+      }
+    });
+  </script>
+</body>
+</html>

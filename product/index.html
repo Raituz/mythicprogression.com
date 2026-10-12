@@ -1,0 +1,513 @@
+﻿<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Servicio - Mythic Progression</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.3">
+  <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
+</head>
+<body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex flex-col selection:bg-[#ee914f] selection:text-[#140f0c]">
+
+  <!-- TOP HEADER WITH LIVE SEARCH BAR (REQ 1) -->
+  <nav class="sticky top-0 z-40 glass-nav px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center gap-3.5 shrink-0">
+        <img src="assets/img/logo_circular.png" alt="Logo" class="w-11 h-11 object-contain drop-shadow-[0_0_10px_rgba(238,145,79,0.4)]">
+        <div class="hidden sm:block">
+          <span class="font-cinzel font-bold text-base tracking-wider copper-gradient-text block leading-none">MYTHIC PROGRESSION</span>
+          <span class="text-[9px] text-[#eedaa2] font-semibold tracking-widest uppercase">WoW Carry & Services</span>
+        </div>
+      </a>
+
+      <!-- SEARCH BAR -->
+      <div class="flex-1 max-w-xl relative">
+        <div class="relative">
+          <input id="header-search-input" type="text" placeholder="Buscar mazmorras, piedras M+, bandas, equipo..." class="w-full bg-[#16110c] border border-stone-800 focus:border-[#ee914f] rounded-full py-2 pl-10 pr-4 text-xs text-white placeholder-stone-500 outline-none transition-all shadow-inner">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-xs"></i>
+        </div>
+        <div id="header-search-results" class="absolute left-0 right-0 top-full mt-2 bg-[#16110c] border border-stone-800 rounded-2xl shadow-2xl overflow-hidden z-50 hidden max-h-72 overflow-y-auto"></div>
+      </div>
+
+      <!-- User & Cart -->
+      <div class="flex items-center gap-3 shrink-0">
+        <button onclick="app.openCartModal()" class="relative p-2.5 rounded-xl bg-[#17110d] border border-stone-800 text-stone-300 hover:text-[#ee914f] transition-colors">
+          <i class="fa-solid fa-cart-shopping text-sm"></i>
+          <span class="cart-counter-badge absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full copper-gradient-bg text-stone-950 text-[10px] font-black flex items-center justify-center hidden">0</span>
+        </button>
+        <div id="user-session-badge"></div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- BREADCRUMBS & TOP BAR (MATCHING IMAGE 4) -->
+  <div class="border-b border-stone-900 bg-[#120d0a]/70 py-4 px-4 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-xs font-semibold text-stone-400 flex-wrap">
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-[#1a130e] border border-stone-800 hover:border-[#ee914f]/50 text-stone-300 hover:text-white flex items-center gap-1.5 transition-colors">
+          <i class="fa-solid fa-chevron-left text-[10px]"></i>
+          <span id="sp-breadcrumb-back">Mazmorras</span>
+        </a>
+        <span class="text-stone-600">/</span>
+        <span class="text-stone-400">Mythic Progression</span>
+        <span class="text-stone-600">/</span>
+        <span class="text-stone-400">World of Warcraft</span>
+        <span class="text-stone-600">/</span>
+        <span id="sp-breadcrumb-cat" class="text-stone-300">Mazmorras</span>
+        <span class="text-stone-600">/</span>
+        <span id="sp-breadcrumb-name" class="text-[#fcefc2] font-bold truncate max-w-xs">Mythic +2 a +20 Dungeons Boost</span>
+      </div>
+
+      <button onclick="app.showToast('¡Añadido a tus favoritos!', 'success')" class="px-3.5 py-1.5 rounded-xl bg-[#1a130e] border border-stone-800 hover:border-[#ee914f]/40 text-stone-300 hover:text-white text-xs font-semibold flex items-center gap-2 transition-all">
+        <span>Añadir a Favoritos</span>
+        <i class="fa-regular fa-heart text-stone-400 hover:text-red-400"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN VIEWPORT (MATCHING EXACT 3 COLUMNS OF IMAGE 4) -->
+  <main class="max-w-7xl w-full mx-auto p-4 lg:p-8 flex-1">
+    
+    <!-- Product Main Heading -->
+    <h1 id="sp-title" class="font-cinzel text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-8 tracking-tight">
+      Mythic +2-20 Dungeons Boost
+    </h1>
+
+    <!-- 3-COLUMN MASTER GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- ======================================================== -->
+      <!-- COLUMN 1 (LEFT): VISUALS, TRUST & DETAILED DESCRIPTION -->
+      <!-- ======================================================== -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Artwork Hero Card with Top Badges & Overlaid Review (Exact Image 4) -->
+        <div class="glass-panel rounded-3xl border border-stone-800 p-5 relative overflow-hidden bg-gradient-to-b from-[#1b130e] to-[#120d09]">
+          
+          <!-- Top Left Badges (Purple & Indigo) -->
+          <div id="sp-badges-container" class="flex flex-col gap-1.5 absolute top-4 left-4 z-10">
+            <span class="px-3 py-1 rounded-md bg-purple-950/80 text-purple-200 border border-purple-600/50 text-[11px] font-bold shadow-md">
+              311 ilvl Gear
+            </span>
+            <span class="px-3 py-1 rounded-md bg-purple-950/80 text-purple-200 border border-purple-600/50 text-[11px] font-bold shadow-md">
+              318 Weekly Vault
+            </span>
+            <span class="px-3 py-1 rounded-md bg-indigo-950/80 text-indigo-200 border border-indigo-600/50 text-[11px] font-bold shadow-md">
+              FREE Timer & Traders
+            </span>
+          </div>
+
+          <!-- Hero Graphic Visual -->
+          <div class="w-full h-56 rounded-2xl flex items-center justify-center relative overflow-hidden my-2">
+            <div class="absolute inset-0 bg-radial from-[#ee914f]/15 via-transparent to-transparent"></div>
+            <img src="assets/img/logo_circular.png" alt="Mythic Vault Art" class="w-36 h-36 object-contain drop-shadow-[0_0_25px_rgba(238,145,79,0.45)] relative z-0">
+          </div>
+
+          <!-- Overlaid Customer Review Widget (Exact Image 4) -->
+          <div class="bg-[#18110b]/90 border border-stone-800 rounded-2xl p-3.5 backdrop-blur-md space-y-1.5 shadow-xl">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1 text-emerald-400 text-xs">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+              </div>
+              <span id="sp-review-author" class="text-[10px] text-stone-500">Marsh123, hace 1 día</span>
+            </div>
+            <p id="sp-review-text" class="text-xs text-stone-200 italic leading-snug">
+              "Needed a few 13 keys for KSL before reset and these guys handled it insanely fast"
+            </p>
+            <div class="flex items-center justify-between pt-1 border-t border-stone-800/80 text-[10px]">
+              <span id="sp-review-rating" class="text-stone-400 font-bold"><strong class="text-white">5.0</strong> Basado en 38,720 opiniones</span>
+              <a href="#reviews" class="text-[#ee914f] hover:underline font-semibold">Más opiniones ▾</a>
+            </div>
+          </div>
+
+          <!-- Time Estimates (Exact Image 4) -->
+          <div class="grid grid-cols-2 gap-3 pt-3">
+            <div class="bg-[#150f0b] p-3 rounded-xl border border-stone-800/80 text-center">
+              <div id="sp-est-start" class="text-sm font-bold font-mono-gaming text-white">10-15 min</div>
+              <span class="text-[10px] text-stone-400 uppercase tracking-wider block mt-0.5">Inicio Estimado</span>
+            </div>
+            <div class="bg-[#150f0b] p-3 rounded-xl border border-stone-800/80 text-center">
+              <div id="sp-est-execution" class="text-sm font-bold font-mono-gaming text-white">15-30 min</div>
+              <span class="text-[10px] text-stone-400 uppercase tracking-wider block mt-0.5">Tiempo de Ejecución</span>
+            </div>
+          </div>
+
+          <!-- Trust Badges Strip (Exact Image 4) -->
+          <div class="grid grid-cols-3 gap-2 pt-3 text-[10px] text-stone-400 font-medium">
+            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+              <i class="fa-solid fa-lock text-emerald-400"></i>
+              <span>SSL Seguro</span>
+            </div>
+            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+              <i class="fa-solid fa-shield-halved text-[#ee914f]"></i>
+              <span>VPN, Safe Boost</span>
+            </div>
+            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+              <i class="fa-solid fa-check-double text-blue-400"></i>
+              <span>Servicio Seguro</span>
+            </div>
+            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+              <i class="fa-solid fa-headset text-[#eedaa2]"></i>
+              <span>24/7 Soporte</span>
+            </div>
+            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+              <i class="fa-solid fa-coins text-amber-400"></i>
+              <span>Reembolsos</span>
+            </div>
+            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+              <i class="fa-solid fa-gem text-purple-400"></i>
+              <span>Cashback 5%</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Description Block & Numbered Checklist (Exact Image 4) -->
+        <div class="glass-panel rounded-3xl border border-stone-800 p-6 space-y-4">
+          <h2 class="text-lg font-bold text-white font-cinzel">Descripción</h2>
+          
+          <p id="sp-description" class="text-xs text-stone-300 leading-relaxed">
+            Compra boost de mazmorras Míticas+ de WoW The War Within y completa piedras angulares de alto nivel con un equipo profesional sin lidiar con grupos aleatorios o piedras fallidas. Aumenta tu puntuación M+, equipa a tu personaje y asegura recompensas semanales valiosas en la Gran Cámara.
+          </p>
+
+          <h3 id="sp-checklist-title" class="text-xs font-bold text-[#eedaa2] uppercase tracking-wider pt-2">
+            ¿Qué obtienes con nuestro servicio de Míticas+?:
+          </h3>
+
+          <div id="sp-checklist-container" class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                1
+              </div>
+              <p class="text-xs text-stone-300 leading-snug">
+                Runs de mazmorras Míticas+ de la temporada oficial The War Within con los mejores equipos de boosters de élite (Master Boosters).
+              </p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                2
+              </div>
+              <p class="text-xs text-stone-300 leading-snug">
+                Equipo garantizado de hasta 318 ilvl en la Gran Cámara semanal para acelerar tu progresión.
+              </p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                3
+              </div>
+              <p class="text-xs text-stone-300 leading-snug">
+                Probabilidad de obtener botín de 311 ilvl en el cofre al finalizar la mazmorra con tus traders de armadura.
+              </p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                4
+              </div>
+              <p class="text-xs text-stone-300 leading-snug">
+                Temporizador garantizado GRATIS (In-Time) para piedras angulares de hasta nivel +13.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- COLUMN 2 (CENTER): DYNAMIC CUSTOMIZATION OPTIONS -->
+      <!-- ======================================================== -->
+      <div class="lg:col-span-4 space-y-6">
+        <div class="glass-panel rounded-3xl border border-stone-800 p-6 space-y-6 bg-[#130d09]">
+          
+          <h2 class="text-sm font-bold text-[#fcefc2] uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-stone-800">
+            <i class="fa-solid fa-sliders text-[#ee914f]"></i>
+            <span>Personalización del Pedido</span>
+          </h2>
+
+          <div id="sp-options-form">
+            <!-- Dynamic Form injected by app.js depending on service -->
+          </div>
+
+          <!-- Character & Realm Selection with Quick Filter -->
+          <div class="pt-4 border-t border-stone-800 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+              <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-gamepad text-[#ee914f]"></i>
+                <span>Datos de tu Personaje (WoW):</span>
+              </label>
+
+              <!-- Version filter pill buttons -->
+              <div id="sp-realm-version-pills" class="flex items-center gap-1 bg-[#120c08] p-1 rounded-xl border border-stone-800 text-[10px]">
+                <button type="button" onclick="app.setRealmVersionFilter('ALL')" class="realm-pill-btn active px-2.5 py-1 rounded-lg font-bold bg-[#ee914f]/25 text-[#fcefc2] border border-[#ee914f]/50 transition-all">Todos</button>
+                <button type="button" onclick="app.setRealmVersionFilter('Retail')" class="realm-pill-btn px-2.5 py-1 rounded-lg text-stone-400 hover:text-white transition-all font-semibold">Retail</button>
+                <button type="button" onclick="app.setRealmVersionFilter('Classic')" class="realm-pill-btn px-2.5 py-1 rounded-lg text-stone-400 hover:text-white transition-all font-semibold">Classic</button>
+                <button type="button" onclick="app.setRealmVersionFilter('Forever')" class="realm-pill-btn px-2.5 py-1 rounded-lg text-stone-400 hover:text-white transition-all font-semibold">Forever</button>
+              </div>
+            </div>
+
+            <!-- Inputs Grid: Row 1 (Region & Character Name) + Row 2 (Realm Search Full Width) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <!-- Region (50% on sm+) -->
+              <div>
+                <label for="sp-region" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                  <i class="fa-solid fa-earth-americas text-[#ee914f] text-[10px]"></i>
+                  <span>Región:</span>
+                </label>
+                <div class="relative">
+                  <select id="sp-region" onchange="app.onRegionChange()" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
+                    <option value="US">América (US)</option>
+                    <option value="EU">Europa (EU)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Character Name (50% on sm+) -->
+              <div>
+                <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                  <i class="fa-solid fa-user-shield text-[#ee914f] text-[10px]"></i>
+                  <span>Nombre del Personaje:</span>
+                </label>
+                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+              </div>
+
+              <!-- Realm Searchable Dropdown (Full Width) -->
+              <div class="sm:col-span-2 relative" id="sp-realm-dropdown-container">
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="sp-realm-search" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-server text-[#ee914f] text-[10px]"></i>
+                    <span>Reino / Servidor:</span>
+                  </label>
+                  <span id="sp-selected-realm-tag" class="text-[9px] px-2 py-0.5 rounded-full bg-[#2a1d13] text-[#ee914f] border border-[#ee914f]/30 font-bold hidden"></span>
+                </div>
+
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-xs pointer-events-none"></i>
+                  <input id="sp-realm-search" type="text" autocomplete="off" placeholder="Buscar reino (ej: Ragnaros, Quel'Thalas, Whitemane, Forever...)" onfocus="app.openRealmDropdown()" oninput="app.filterRealmDropdown(this.value)" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-9 pr-9 py-2.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+                  <button type="button" onclick="app.toggleRealmDropdown()" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs">
+                    <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" id="sp-realm-chevron"></i>
+                  </button>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div id="sp-realm-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/80 rounded-2xl shadow-2xl z-50 max-h-72 flex flex-col overflow-hidden">
+                  <!-- Header with count & popular chips -->
+                  <div class="p-2.5 border-b border-stone-800 bg-[#180e08]/90 text-[10px] space-y-2">
+                    <div class="flex items-center justify-between text-stone-400">
+                      <span id="sp-realm-count" class="font-semibold text-[#fcefc2]">450 reinos encontrados</span>
+                      <span class="text-stone-500 text-[9px]">Selecciona uno</span>
+                    </div>
+                    <!-- Quick Popular Chips -->
+                    <div class="flex flex-wrap gap-1" id="sp-realm-quick-chips">
+                      <span onclick="app.selectQuickRealm('Ragnaros', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-[#ee914f] hover:bg-[#382315] cursor-pointer font-bold border border-[#ee914f]/40 transition-colors">🔥 Ragnaros</span>
+                      <span onclick="app.selectQuickRealm('Quel\'Thalas', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Quel'Thalas</span>
+                      <span onclick="app.selectQuickRealm('Area 52', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Area 52</span>
+                      <span onclick="app.selectQuickRealm('Illidan', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Illidan</span>
+                      <span onclick="app.selectQuickRealm('Silvermoon', 'EU', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Silvermoon</span>
+                      <span onclick="app.selectQuickRealm('Dun Modr', 'EU', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Dun Modr</span>
+                      <span onclick="app.selectQuickRealm('Whitemane', 'US', 'Classic')" class="px-2 py-0.5 rounded-md bg-[#251810] text-amber-300 hover:bg-[#382315] cursor-pointer font-bold border border-amber-600/40 transition-colors">⚔️ Whitemane</span>
+                      <span onclick="app.selectQuickRealm('Forever Americas - Normal (PvE)', 'US', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-purple-300 hover:bg-[#382315] cursor-pointer font-bold border border-purple-600/40 transition-colors">⏳ Forever Americas</span>
+                    </div>
+                  </div>
+
+                  <!-- Scrollable Realm List -->
+                  <div id="sp-realm-list-items" class="overflow-y-auto flex-1 divide-y divide-stone-800/40 p-1 text-xs">
+                    <!-- Injected by JavaScript -->
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Hidden input for backwards compatibility (always holds "Shadow-Ragnaros") -->
+            <input id="sp-character" type="hidden" value="Heroe-Ragnaros">
+
+            <!-- Summary preview card -->
+            <div id="sp-char-summary-badge" class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-400 bg-[#160f0a] px-3.5 py-2 rounded-xl border border-stone-800">
+              <div class="flex items-center gap-2">
+                <span class="text-stone-500 font-semibold">Personaje para la orden:</span>
+                <strong id="sp-char-summary-text" class="text-[#ee914f] font-mono-gaming text-xs">Heroe-Ragnaros</strong>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="sp-char-summary-extra" class="text-stone-400 text-[10px] bg-[#22160f] px-2 py-0.5 rounded-lg border border-stone-700">América (US) • Retail • América Latina</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- COLUMN 3 (RIGHT): STICKY PURCHASE CARD (EXACT IMAGE 4) -->
+      <!-- ======================================================== -->
+      <div class="lg:col-span-3 sticky top-20 space-y-4">
+        
+        <div class="glass-panel rounded-3xl border border-[#ee914f]/40 p-6 space-y-5 bg-[#17100b] shadow-2xl relative">
+          
+          <!-- Runs Stepper Section (Exact Image 4) -->
+          <div class="space-y-2">
+            <span id="sp-stepper-title" class="text-xs font-bold text-stone-300 uppercase tracking-wider block">Runs</span>
+            
+            <div class="flex items-center justify-between bg-[#1f1610] border border-stone-700 rounded-2xl p-1.5">
+              <button onclick="app.updateSpRunsQty(-1)" class="w-9 h-9 rounded-xl bg-stone-900 text-stone-300 hover:text-white flex items-center justify-center font-bold text-base transition-colors">-</button>
+              <span id="sp-runs-qty" class="font-mono-gaming text-base font-black text-white">1</span>
+              <button onclick="app.updateSpRunsQty(1)" class="w-9 h-9 rounded-xl bg-stone-900 text-stone-300 hover:text-white flex items-center justify-center font-bold text-base transition-colors">+</button>
+            </div>
+
+            <!-- Discount Prompt Banner under Stepper (Exact Image 4) -->
+            <div class="p-2.5 rounded-xl bg-[#2a1d13] border border-[#ee914f]/30 flex items-center gap-2 text-[11px] text-[#fcefc2]">
+              <i class="fa-solid fa-certificate text-[#ee914f]"></i>
+              <span id="sp-discount-hint">Añade 1 run más para 5% de descuento</span>
+            </div>
+          </div>
+
+          <!-- Promo Code Accordion (Exact Image 4) -->
+          <div class="pt-2 border-t border-stone-800">
+            <details class="group">
+              <summary class="flex items-center justify-between cursor-pointer text-xs font-semibold text-stone-400 hover:text-[#ee914f] list-none">
+                <span>Aplicar código de descuento</span>
+                <i class="fa-solid fa-chevron-down text-[10px] group-open:rotate-180 transition-transform"></i>
+              </summary>
+              <div class="pt-3 flex gap-2">
+                <input id="sp-promo-code-input" type="text" placeholder="Ej: MYTHIC5" class="w-full bg-[#140e09] border border-stone-700 rounded-xl px-3 py-1.5 text-xs text-white focus:border-[#ee914f] outline-none uppercase font-mono-gaming">
+                <button onclick="app.applyPromoCode()" class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-xs font-bold">Aplicar</button>
+              </div>
+            </details>
+          </div>
+
+          <!-- Total Price & Cashback (Exact Image 4) -->
+          <div class="pt-2 border-t border-stone-800">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs text-stone-400 font-bold uppercase tracking-wider">Total</span>
+              <div class="text-3xl font-black font-mono-gaming text-white" id="sp-sticky-total">$38.00</div>
+            </div>
+            
+            <div class="mt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-wallet text-[10px]"></i>
+              <span id="sp-cashback-text">+$1.90 de cashback tras la compra</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons (Add to Cart & Buy Now - Req 1) -->
+          <div class="space-y-2.5 pt-2">
+            
+            <!-- Primary: Add to Cart (Req 1) -->
+            <button onclick="app.addCurrentSingleProductToCart()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition-all transform active:scale-95">
+              <i class="fa-solid fa-cart-shopping text-sm"></i>
+              <span>Añadir al Carrito</span>
+            </button>
+
+            <!-- Secondary: Buy Now (Instant Checkout) -->
+            <button onclick="app.buyCurrentSingleProductNow()" class="w-full py-3 rounded-2xl copper-gradient-bg font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all">
+              <i class="fa-solid fa-bolt text-xs"></i>
+              <span>Comprar Ahora</span>
+            </button>
+          </div>
+
+          <!-- Payment Logos (Exact Image 4) -->
+          <div class="pt-4 border-t border-stone-800 space-y-2 text-center">
+            <div class="flex items-center justify-center gap-3 text-stone-400 text-sm flex-wrap">
+              <i class="fa-brands fa-paypal" title="PayPal"></i>
+              <i class="fa-brands fa-cc-visa" title="Visa"></i>
+              <i class="fa-brands fa-cc-mastercard" title="Mastercard"></i>
+              <i class="fa-brands fa-apple-pay text-base" title="Apple Pay"></i>
+              <i class="fa-brands fa-google-pay text-base" title="Google Pay"></i>
+              <i class="fa-brands fa-bitcoin" title="Bitcoin"></i>
+            </div>
+          </div>
+
+          <!-- Support & Price Match (Exact Image 4) -->
+          <div class="pt-3 border-t border-stone-800 text-center space-y-2">
+            <span class="text-[11px] text-stone-400 block">¿Tienes preguntas?</span>
+            <button onclick="app.showToast('Conectando con soporte en vivo...', 'info')" class="w-full py-2.5 rounded-xl bg-[#221811] hover:bg-[#2e2017] border border-stone-700 text-stone-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+              <i class="fa-regular fa-comment-dots text-[#ee914f]"></i>
+              <span>Chatear antes de ordenar</span>
+            </button>
+            <div class="text-[10px] text-stone-500 flex items-center justify-center gap-1">
+              <i class="fa-solid fa-tags text-[9px]"></i>
+              <span>¿Lo viste más barato? Igualamos el precio</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RELATED PRODUCTS (CROSS-SELLING) -->
+    <section class="mt-16 pt-10 border-t border-stone-900">
+      <h3 class="text-xl font-black text-[#fcefc2] font-cinzel mb-6">Otros Servicios Recomendados</h3>
+      <div id="sp-related-products" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </section>
+
+  </main>
+
+  <!-- CART DRAWER MODAL (REQ 1 & 2) -->
+  <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-end">
+    <div class="w-full max-w-md h-full bg-[#120d09] border-l border-stone-800 p-6 flex flex-col shadow-2xl overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-stone-800">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-[#251b14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f]">
+            <i class="fa-solid fa-cart-shopping text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-cinzel font-bold text-base text-[#fcefc2]">Tu Carrito de Compra</h3>
+            <span class="text-[10px] text-stone-400">Servicios seleccionados</span>
+          </div>
+        </div>
+        <button onclick="app.closeCartModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="cart-items-container" class="py-4 flex-1"></div>
+
+      <div class="pt-4 border-t border-stone-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-stone-400 font-bold uppercase tracking-wider">Total a Pagar:</span>
+          <span id="cart-total-price" class="font-mono-gaming text-2xl font-bold text-[#fcefc2]">$0.00</span>
+        </div>
+        <div class="text-[10px] text-stone-500 leading-tight">
+          Al completar el pedido serás redirigido a tu panel de cliente donde podrás coordinar el horario y detalles en el chat privado con tu booster.
+        </div>
+        <button id="btn-checkout-cart" onclick="app.processFullCartCheckout()" class="w-full py-3.5 rounded-xl copper-gradient-bg font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Completar Pedido (Simular Pago)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-stone-900 py-10 px-4 mt-auto glass-panel">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <img src="assets/img/logo_circular.png" alt="Logo" class="w-9 h-9 object-contain">
+        <span class="font-cinzel font-bold text-sm copper-gradient-text">MythicProgression.com</span>
+      </div>
+      <div class="text-xs text-stone-500 text-center">
+        World of Warcraft es una marca registrada de Blizzard Entertainment, Inc. Mythic Progression es una plataforma independiente de servicios.
+      </div>
+      <div class="flex items-center gap-4 text-stone-500 text-xs">
+        <a href="/" class="hover:text-[#ee914f]">Inicio</a>
+        <a href="client-profile" class="hover:text-[#ee914f]">Mi Cuenta</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js?v=2.3.3"></script>
+</body>
+</html>
