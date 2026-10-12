@@ -77,6 +77,7 @@ class MythicApp {
     this.renderHeader();
     this.setupLiveSearch();
     this.updateCartCounter();
+    this.initLiveChatWidget();
 
     const path = window.location.pathname.toLowerCase();
     const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
@@ -3876,12 +3877,25 @@ class MythicApp {
           o.assignedBooster && (o.assignedBooster.discordId === this.currentUser?.discordId || o.assignedBooster.id === this.currentUser?.id)
         );
 
+    const liveItem = isStaffOrAdmin ? `
+      <div onclick="app.openAdminLiveSupportChat()" class="p-3 rounded-xl cursor-pointer transition-all mb-2 ${this.activeChatOrderId === 'live_support' ? 'bg-[#271047] border border-[#a855f7]' : 'bg-[#180e29] hover:bg-[#200f38] border border-purple-900/40'}">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-xs font-bold text-[#f3e8ff]">Soporte en Vivo (Web)</span>
+          </div>
+          <span class="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-800/40 font-mono">24/7 Web</span>
+        </div>
+        <p class="text-[10px] text-stone-400 truncate">Consultas preventa de visitantes...</p>
+      </div>
+    ` : '';
+
     if (myChatOrders.length === 0) {
-      listContainer.innerHTML = `<div class="p-4 text-xs text-stone-500">No hay chats activos registrados</div>`;
+      listContainer.innerHTML = liveItem + `<div class="p-4 text-xs text-stone-500">No hay chats de órdenes registrados</div>`;
       return;
     }
 
-    listContainer.innerHTML = myChatOrders.map(o => `
+    listContainer.innerHTML = liveItem + myChatOrders.map(o => `
       <div onclick="app.openChat('${o.id}')" class="p-3.5 rounded-xl cursor-pointer transition-all ${this.activeChatOrderId === o.id ? 'bg-[#291e16] border border-[#ee914f]/50' : 'hover:bg-[#1a140f] border border-transparent'}">
         <div class="flex items-center justify-between mb-1">
           <span class="text-xs font-bold text-white">${o.clientName}</span>
@@ -4031,6 +4045,118 @@ class MythicApp {
     this.saveOrders();
     input.value = '';
     this.openChat(this.activeChatOrderId);
+  }
+
+  openAdminLiveSupportChat() {
+    this.activeChatOrderId = 'live_support';
+    this.renderChatList();
+    const chatContainer = document.getElementById('chat-active-window');
+    if (!chatContainer) return;
+
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem('mp_live_support_chat')) || [];
+    } catch (e) {
+      stored = [];
+    }
+
+    chatContainer.innerHTML = `
+      <div class="p-3.5 bg-gradient-to-r from-[#1f0d36] to-[#120726] border border-purple-900/50 rounded-xl mb-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-900/40 border border-purple-500/50 flex items-center justify-center text-purple-300">
+            <i class="fa-solid fa-headset text-lg"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Soporte Preventa en Vivo (Visitantes Web)</span>
+              <span class="text-[9px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800 font-semibold">24/7 En línea</span>
+            </h4>
+            <p class="text-[11px] text-stone-400">Mensajes enviados a través del widget flotante de la tienda y "Chatear antes de ordenar".</p>
+          </div>
+        </div>
+        <button onclick="app.clearLiveSupportChat()" class="text-[11px] text-stone-400 hover:text-red-400 px-2.5 py-1 rounded-lg border border-stone-800 hover:border-red-900/50 transition-colors cursor-pointer">
+          <i class="fa-solid fa-trash-can mr-1"></i>Limpiar historial
+        </button>
+      </div>
+
+      <div class="flex flex-col h-[460px] bg-[#11061f] rounded-xl border border-stone-800 p-4">
+        <div id="admin-live-messages-scroll" class="flex-1 overflow-y-auto space-y-3 py-2 pr-1">
+          ${stored.map(m => {
+            const isSupport = m.sender === 'support';
+            if (m.isContext) {
+              return `
+                <div class="p-2.5 rounded-xl bg-[#200c3b] border border-purple-700/50 text-[#f3e8ff] text-[11px] my-1">
+                  ${m.message}
+                </div>
+              `;
+            }
+            return `
+              <div class="flex flex-col ${isSupport ? 'items-end' : 'items-start'}">
+                <div class="flex items-center gap-1.5 mb-0.5 text-[10px] text-stone-500">
+                  <span class="font-bold ${isSupport ? 'text-purple-300' : 'text-emerald-400'}">${m.author || (isSupport ? 'Staff' : 'Visitante')}</span>
+                  <span>•</span>
+                  <span>${m.time || ''}</span>
+                </div>
+                <div class="max-w-[85%] px-3.5 py-2 rounded-2xl ${isSupport ? 'bg-[#3b1768] text-purple-100 border border-purple-600/40' : 'bg-[#1a1226] text-stone-200 border border-stone-800'} text-xs leading-relaxed break-words">
+                  ${m.message}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="pt-3 border-t border-stone-800 flex items-center gap-2">
+          <input id="admin-live-reply-input" type="text" placeholder="Escribe tu respuesta como Admin al visitante..." onkeydown="if(event.key==='Enter') app.sendAdminLiveReply()" class="flex-1 bg-[#180a2c] border border-stone-700/80 focus:border-[#a855f7] rounded-xl px-4 py-2.5 text-xs text-white placeholder-stone-500 outline-none">
+          <button onclick="app.sendAdminLiveReply()" class="px-4 py-2.5 rounded-xl bg-[#a855f7] hover:bg-[#9333ea] text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-purple-900/30">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Responder</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const scroll = document.getElementById('admin-live-messages-scroll');
+      if (scroll) scroll.scrollTop = scroll.scrollHeight;
+    }, 50);
+  }
+
+  sendAdminLiveReply() {
+    const input = document.getElementById('admin-live-reply-input');
+    if (!input || !input.value.trim()) return;
+
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem('mp_live_support_chat')) || [];
+    } catch (e) {
+      stored = [];
+    }
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const replyMsg = {
+      id: 'msg_' + Date.now(),
+      sender: 'support',
+      author: this.currentUser?.username ? `${this.currentUser.username} (Admin)` : 'Admin (Miguelb)',
+      message: input.value.trim(),
+      time: timeStr
+    };
+
+    stored.push(replyMsg);
+    localStorage.setItem('mp_live_support_chat', JSON.stringify(stored));
+    this.liveChatMessages = stored;
+    input.value = '';
+
+    this.openAdminLiveSupportChat();
+    this.renderLiveChatMessages();
+    this.showToast('Respuesta enviada al visitante en vivo', 'success');
+  }
+
+  clearLiveSupportChat() {
+    localStorage.removeItem('mp_live_support_chat');
+    this.liveChatMessages = [];
+    this.openAdminLiveSupportChat();
+    this.renderLiveChatMessages();
+    this.showToast('Historial de chat preventa limpiado', 'info');
   }
 
   // ==========================================
@@ -6265,6 +6391,365 @@ class MythicApp {
       {"name": "Forever Europe - Hardcore", "region": "EU", "version": "Forever", "category": "WoW Forever (Anniversary)", "type": "Hardcore"}
     ];
   }
+
+  // ==========================================
+  // LIVE CHAT WIDGET SUITE (SOPORTE EN VIVO 24/7)
+  // ==========================================
+  initLiveChatWidget() {
+    // 1. Check for 3rd-party provider overrides if configured
+    const crispId = localStorage.getItem('mp_live_chat_crisp_id');
+    const tawkId = localStorage.getItem('mp_live_chat_tawk_id');
+
+    if (crispId) {
+      window.$crisp = [];
+      window.CRISP_WEBSITE_ID = crispId;
+      const s = document.createElement('script');
+      s.src = 'https://client.crisp.chat/l.js';
+      s.async = true;
+      document.head.appendChild(s);
+      return;
+    }
+
+    if (tawkId) {
+      const s = document.createElement('script');
+      s.src = `https://embed.tawk.to/${tawkId}`;
+      s.async = true;
+      s.charset = 'UTF-8';
+      s.setAttribute('crossorigin', '*');
+      document.head.appendChild(s);
+      return;
+    }
+
+    // 2. Default: Native Obsidian & Copper Live Chat Widget
+    this.injectNativeLiveChat();
+  }
+
+  injectNativeLiveChat() {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('mp-live-chat-launcher')) return;
+
+    // Do not show launcher on admin/pro portal to avoid covering operational interfaces
+    const p = window.location.pathname.toLowerCase();
+    const isAdminOrPro = p.includes('admin') || p.includes('pro');
+
+    const defaultMessages = [
+      {
+        id: 'msg_welcome',
+        sender: 'support',
+        author: 'Soporte Mythic (Alex)',
+        avatar: 'assets/img/logo_circular.png',
+        message: '¡Hola! 👋 Bienvenido a Mythic Progression. Estamos disponibles 24/7 para responder tus preguntas sobre míticas+, raids, nivelación o disponibilidad de boosters antes de ordenar.',
+        time: 'En línea'
+      }
+    ];
+
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem('mp_live_support_chat')) || [];
+    } catch (e) {
+      stored = [];
+    }
+    if (!stored || stored.length === 0) {
+      stored = defaultMessages;
+      localStorage.setItem('mp_live_support_chat', JSON.stringify(stored));
+    }
+    this.liveChatMessages = stored;
+
+    // Create container
+    const container = document.createElement('div');
+    container.id = 'mp-live-chat-root';
+    container.innerHTML = `
+      <!-- FLOATING LAUNCHER -->
+      <div id="mp-live-chat-launcher" class="${isAdminOrPro ? 'hidden' : 'flex'} fixed bottom-6 right-6 z-[999] items-center gap-3">
+        <!-- Callout bubble tooltip (hidden on mobile) -->
+        <div id="mp-chat-bubble-hint" onclick="app.toggleLiveChat()" class="hidden md:flex items-center gap-2 bg-[#18110b]/95 border border-[#ee914f]/60 text-[#fcefc2] px-3.5 py-2 rounded-2xl shadow-2xl text-xs font-semibold cursor-pointer hover:border-[#ee914f] transition-all">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>¿Dudas antes de comprar? Chatea en vivo</span>
+        </div>
+        <!-- Launcher button -->
+        <button type="button" onclick="app.toggleLiveChat()" aria-label="Abrir chat en vivo" class="relative w-14 h-14 rounded-full copper-gradient-bg text-white flex items-center justify-center shadow-[0_10px_35px_rgba(238,145,79,0.45)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#fcefc2]/30">
+          <i id="mp-chat-launcher-icon" class="fa-solid fa-comments text-xl"></i>
+          <span id="mp-chat-unread-dot" class="hidden absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#120b07]"></span>
+        </button>
+      </div>
+
+      <!-- LIVE CHAT WINDOW -->
+      <div id="mp-live-chat-window" class="hidden fixed bottom-24 right-4 sm:right-6 z-[1000] w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-7.5rem)] bg-[#120a06]/98 backdrop-blur-2xl border border-stone-700/90 rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden transition-all duration-300">
+        <!-- Header -->
+        <div class="p-4 bg-gradient-to-r from-[#1c120c] via-[#24170f] to-[#1a100a] border-b border-stone-800 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <img src="assets/img/logo_circular.png" alt="Logo" class="w-10 h-10 rounded-full border border-[#ee914f]/50 object-contain bg-black/50">
+              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#120b07]"></span>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-xs font-bold text-[#fcefc2] uppercase tracking-wider font-cinzel">Soporte en Vivo</h3>
+                <span class="text-[9px] bg-[#ee914f]/20 text-[#fcefc2] px-1.5 py-0.5 rounded border border-[#ee914f]/40 font-mono">24/7</span>
+              </div>
+              <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Conectado • Respuesta inmediata</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 text-stone-400">
+            <button type="button" onclick="app.toggleLiveChat()" class="w-8 h-8 rounded-lg hover:bg-stone-800/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer" title="Cerrar chat">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Stream -->
+        <div id="mp-live-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs text-stone-200">
+          <!-- Rendered messages -->
+        </div>
+
+        <!-- Quick Prompts / FAQ Chips -->
+        <div id="mp-live-chat-quick-chips" class="px-3.5 py-2 border-t border-stone-800/70 bg-[#160e09]/80 overflow-x-auto flex items-center gap-1.5 shrink-0">
+          <button type="button" onclick="app.sendLiveChatQuick('¿Tienen cupos disponibles hoy?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⚡ ¿Hay cupos hoy?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('¿Es seguro con VPN de mi país?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">🛡️ ¿Es seguro?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('¿Cuánto tardan en comenzar?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⏳ ¿Cuánto tardan?</button>
+        </div>
+
+        <!-- Input Box -->
+        <div class="p-3 bg-[#150d08] border-t border-stone-800 flex items-center gap-2 shrink-0">
+          <input id="mp-live-chat-input" type="text" placeholder="Escribe tu consulta aquí..." onkeydown="if(event.key==='Enter') app.sendLiveChatMessage()" class="flex-1 bg-[#1c120b] border border-stone-700/80 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 outline-none transition-colors">
+          <button type="button" onclick="app.sendLiveChatMessage()" aria-label="Enviar mensaje" class="w-10 h-10 rounded-xl copper-gradient-bg text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md shrink-0 cursor-pointer">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(container);
+    this.renderLiveChatMessages();
+  }
+
+  renderLiveChatMessages() {
+    const list = document.getElementById('mp-live-chat-messages');
+    if (!list) return;
+
+    list.innerHTML = (this.liveChatMessages || []).map(m => {
+      const isSupport = m.sender === 'support';
+      if (m.isContext) {
+        return `
+          <div class="p-2.5 rounded-xl bg-[#22160f] border border-[#ee914f]/40 text-[#fcefc2] text-[11px] space-y-1 my-1">
+            <div class="font-bold flex items-center gap-1.5 text-[#ee914f]">
+              <i class="fa-solid fa-cart-shopping text-[10px]"></i>
+              <span>Consulta de Producto</span>
+            </div>
+            <div class="text-stone-300 leading-snug">${m.message}</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="flex flex-col ${isSupport ? 'items-start' : 'items-end'}">
+          <div class="flex items-center gap-1.5 mb-0.5 text-[10px] text-stone-500">
+            ${isSupport ? `<span class="text-[#ee914f] font-semibold">${m.author || 'Soporte'}</span>` : '<span class="text-stone-400 font-semibold">Tú</span>'}
+            <span>•</span>
+            <span>${m.time || ''}</span>
+          </div>
+          <div class="max-w-[85%] px-3.5 py-2 rounded-2xl ${isSupport ? 'bg-[#1e140d] border border-stone-800 text-stone-200' : 'bg-gradient-to-r from-[#ee914f] to-[#b85d1d] text-white font-medium shadow-md shadow-[#ee914f]/15'} text-xs leading-relaxed break-words">
+            ${m.message}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    list.scrollTop = list.scrollHeight;
+  }
+
+  toggleLiveChat() {
+    const win = document.getElementById('mp-live-chat-window');
+    const icon = document.getElementById('mp-chat-launcher-icon');
+    const dot = document.getElementById('mp-chat-unread-dot');
+    const hint = document.getElementById('mp-chat-bubble-hint');
+    if (!win) {
+      this.injectNativeLiveChat();
+      return this.toggleLiveChat();
+    }
+
+    const isHidden = win.classList.contains('hidden');
+    if (isHidden) {
+      win.classList.remove('hidden');
+      if (icon) {
+        icon.classList.remove('fa-comments');
+        icon.classList.add('fa-xmark');
+      }
+      if (dot) dot.classList.add('hidden');
+      if (hint) hint.classList.add('hidden');
+      this.renderLiveChatMessages();
+      setTimeout(() => {
+        const inp = document.getElementById('mp-live-chat-input');
+        if (inp) inp.focus();
+      }, 100);
+    } else {
+      win.classList.add('hidden');
+      if (icon) {
+        icon.classList.remove('fa-xmark');
+        icon.classList.add('fa-comments');
+      }
+    }
+  }
+
+  openLiveChat(options = {}) {
+    // Crisp delegation
+    if (window.$crisp) {
+      window.$crisp.push(['do', 'chat:open']);
+      return;
+    }
+    // Tawk.to delegation
+    if (window.Tawk_API && typeof window.Tawk_API.maximize === 'function') {
+      window.Tawk_API.maximize();
+      return;
+    }
+
+    // Native Live Chat
+    const win = document.getElementById('mp-live-chat-window');
+    if (!win) this.injectNativeLiveChat();
+
+    const winEl = document.getElementById('mp-live-chat-window');
+    if (winEl && winEl.classList.contains('hidden')) {
+      this.toggleLiveChat();
+    }
+
+    // If triggered from "Chatear antes de ordenar"
+    if (options && options.fromProductButton) {
+      const prodTitle = document.getElementById('sp-product-title')?.textContent?.trim() || 'Servicio WoW';
+      const prodPrice = document.getElementById('sp-final-price')?.textContent?.trim() || '';
+      const charName = document.getElementById('sp-char-summary-text')?.textContent?.trim() || '';
+      const charMeta = document.getElementById('sp-char-summary-extra')?.textContent?.trim() || '';
+
+      // Check if this context message was already added recently
+      const alreadyHasContext = (this.liveChatMessages || []).some(m => m.isContext && m.message.includes(prodTitle));
+      if (!alreadyHasContext) {
+        this.liveChatMessages.push({
+          id: 'ctx_' + Date.now(),
+          sender: 'system',
+          isContext: true,
+          message: `Consultando sobre <strong>${prodTitle}</strong> ${prodPrice ? '• <span class="text-[#ee914f]">' + prodPrice + '</span>' : ''} ${charName ? '<br><span class="text-stone-400 text-[10px]">Personaje: ' + charName + ' (' + charMeta + ')</span>' : ''}`,
+          time: 'Ahora'
+        });
+        localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+        this.renderLiveChatMessages();
+      }
+
+      // Pre-fill input with ready question so user can just click send or customize
+      const inp = document.getElementById('mp-live-chat-input');
+      if (inp) {
+        inp.value = `Hola, ¿tienen disponibilidad ahora para ${prodTitle}?`;
+        inp.focus();
+        inp.select();
+      }
+    }
+  }
+
+  sendLiveChatQuick(text) {
+    const inp = document.getElementById('mp-live-chat-input');
+    if (inp) inp.value = text;
+    this.sendLiveChatMessage();
+  }
+
+  sendLiveChatMessage() {
+    const inp = document.getElementById('mp-live-chat-input');
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg = {
+      id: 'msg_' + Date.now(),
+      sender: 'client',
+      author: this.currentUser ? this.currentUser.username : 'Tú',
+      message: text,
+      time: timeStr
+    };
+
+    this.liveChatMessages = this.liveChatMessages || [];
+    this.liveChatMessages.push(userMsg);
+    localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+    inp.value = '';
+
+    this.renderLiveChatMessages();
+    this.playChatChime();
+
+    // Auto-responder simulation with realistic typing delay
+    this.showLiveChatTyping(true);
+
+    setTimeout(() => {
+      this.showLiveChatTyping(false);
+      let replyText = '¡Mensaje recibido! Nuestro Staff y Master Booster están en línea. Si tienes cualquier requerimiento especial (horario específico, no tocar oro, streaming en Discord), puedes indicárnoslo aquí.';
+      const lower = text.toLowerCase();
+
+      if (lower.includes('cupo') || lower.includes('disponible') || lower.includes('iniciar') || lower.includes('hoy') || lower.includes('ahora')) {
+        replyText = '¡Sí! Tenemos boosters verificados disponibles en este momento. Al confirmar tu pedido, tu booster se asigna en 10-15 minutos y se abre tu chat privado de coordinación.';
+      } else if (lower.includes('seguro') || lower.includes('ban') || lower.includes('vpn') || lower.includes('riesgo')) {
+        replyText = '100% seguro. Todos nuestros boosters juegan con VPN dedicada configurada en tu misma región y ciudad para máxima discreción y seguridad total de tu cuenta Blizzard.';
+      } else if (lower.includes('tarda') || lower.includes('tiempo') || lower.includes('demora') || lower.includes('duracion')) {
+        replyText = 'Las míticas+ y raids inician habitualmente entre 15 y 30 minutos tras el pago. Si eliges Powerleveling, podemos adaptarnos al horario en que tú no uses la cuenta.';
+      } else if (lower.includes('precio') || lower.includes('barato') || lower.includes('descuento') || lower.includes('igualar')) {
+        replyText = '¡Tenemos garantía de mejor precio! Si viste la misma oferta más barata en otra plataforma formal, te igualamos el precio y además acumulas 5% de cashback en tu saldo.';
+      } else if (lower.includes('hola') || lower.includes('buenas') || lower.includes('hey')) {
+        replyText = '¡Hola! ¿Cómo estás? Dime con qué servicio o mazmorra necesitas ayuda y con gusto te doy detalles y disponibilidad inmediata.';
+      }
+
+      const supportMsg = {
+        id: 'msg_' + Date.now(),
+        sender: 'support',
+        author: 'Soporte Mythic (Alex)',
+        message: replyText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      this.liveChatMessages.push(supportMsg);
+      localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+      this.renderLiveChatMessages();
+      this.playChatChime();
+    }, 1200);
+  }
+
+  showLiveChatTyping(show) {
+    const list = document.getElementById('mp-live-chat-messages');
+    if (!list) return;
+    const existing = document.getElementById('mp-live-chat-typing');
+    if (existing) existing.remove();
+
+    if (show) {
+      const typingEl = document.createElement('div');
+      typingEl.id = 'mp-live-chat-typing';
+      typingEl.className = 'flex items-center gap-1.5 text-[11px] text-[#ee914f] bg-[#1e140d] border border-stone-800 rounded-xl px-3 py-1.5 w-fit';
+      typingEl.innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] animate-bounce"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] animate-bounce [animation-delay:0.2s]"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] animate-bounce [animation-delay:0.4s]"></span>
+        <span class="text-stone-400 text-[10px] ml-1">Soporte está respondiendo...</span>
+      `;
+      list.appendChild(typingEl);
+      list.scrollTop = list.scrollHeight;
+    }
+  }
+
+  playChatChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1174, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {
+      // Audio policy ignored safely
+    }
+  }
 }
 
 const app = new MythicApp();
@@ -6273,5 +6758,7 @@ window.openAuthModal = () => app.openAuthModal();
 window.closeAuthModal = () => app.closeAuthModal();
 window.handleDiscordLogin = () => app.handleDiscordLogin();
 window.logout = () => app.logout();
+window.openLiveChat = (opts) => app.openLiveChat(opts);
+window.toggleLiveChat = () => app.toggleLiveChat();
 
 

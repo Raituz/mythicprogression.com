@@ -156,7 +156,7 @@
               <i class="fa-solid fa-check-double text-blue-400"></i>
               <span>Servicio Seguro</span>
             </div>
-            <div class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 flex items-center justify-center gap-1.5 text-center">
+            <div onclick="app.openLiveChat()" class="bg-[#150f0b] p-2 rounded-lg border border-stone-800/80 hover:border-[#ee914f]/50 flex items-center justify-center gap-1.5 text-center cursor-pointer transition-colors" title="Chatear con soporte">
               <i class="fa-solid fa-headset text-[#eedaa2]"></i>
               <span>24/7 Soporte</span>
             </div>
@@ -431,7 +431,7 @@
           <!-- Support & Price Match (Exact Image 4) -->
           <div class="pt-3 border-t border-stone-800 text-center space-y-2">
             <span class="text-[11px] text-stone-400 block">¿Tienes preguntas?</span>
-            <button onclick="app.showToast('Conectando con soporte en vivo...', 'info')" class="w-full py-2.5 rounded-xl bg-[#221811] hover:bg-[#2e2017] border border-stone-700 text-stone-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+            <button type="button" onclick="app.openLiveChat({ fromProductButton: true })" class="w-full py-2.5 rounded-xl bg-[#221811] hover:bg-[#2e2017] border border-stone-700 text-stone-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
               <i class="fa-regular fa-comment-dots text-[#ee914f]"></i>
               <span>Chatear antes de ordenar</span>
             </button>
