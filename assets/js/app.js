@@ -71,14 +71,15 @@ class MythicApp {
 
   async init() {
     this.cleanUrlBar();
+    this.initLanguage();
+    this.initLiveChatWidget();
     await this.loadInitialData();
     await this.checkDiscordOAuthCallback();
     this.initSession();
     this.renderHeader();
     this.setupLiveSearch();
     this.updateCartCounter();
-    this.initLiveChatWidget();
-    this.initLanguage();
+    this.renderLanguageSelector();
 
     const path = window.location.pathname.toLowerCase();
     const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
@@ -3867,23 +3868,30 @@ class MythicApp {
     if (!listContainer) return;
 
     // Strict Privacy (Req 4): Staff/Admin sees all orders; Booster ONLY sees orders assigned to THEM
-    const isStaffOrAdmin = this.currentUser?.type === 'admin' || this.currentUser?.type === 'staff' || this.isAdminOrGerente();
+    const isAdminUrl = (typeof window !== 'undefined' && window.location.pathname.toLowerCase().includes('admin'));
+    const isStaffOrAdmin = isAdminUrl || this.currentUser?.type === 'admin' || this.currentUser?.type === 'staff' || this.isAdminOrGerente();
     const myChatOrders = isStaffOrAdmin 
       ? this.orders 
       : this.orders.filter(o => 
           o.assignedBooster && (o.assignedBooster.discordId === this.currentUser?.discordId || o.assignedBooster.id === this.currentUser?.id)
         );
 
+    let visitorChatCount = 0;
+    try {
+      const storedLive = JSON.parse(localStorage.getItem('mp_live_support_chat')) || [];
+      visitorChatCount = storedLive.filter(m => m.sender !== 'support' && !m.isContext).length;
+    } catch (e) {}
+
     const liveItem = isStaffOrAdmin ? `
-      <div onclick="app.openAdminLiveSupportChat()" class="p-3 rounded-xl cursor-pointer transition-all mb-2 ${this.activeChatOrderId === 'live_support' ? 'bg-[#271047] border border-[#a855f7]' : 'bg-[#180e29] hover:bg-[#200f38] border border-purple-900/40'}">
+      <div onclick="app.openAdminLiveSupportChat()" class="p-3 rounded-xl cursor-pointer transition-all mb-2 ${this.activeChatOrderId === 'live_support' ? 'bg-[#271047] border border-[#a855f7] shadow-[0_0_15px_rgba(168,85,247,0.25)]' : 'bg-[#180e29] hover:bg-[#200f38] border border-purple-900/40'}">
         <div class="flex items-center justify-between mb-1">
           <div class="flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span class="text-xs font-bold text-[#f3e8ff]">Soporte en Vivo (Web)</span>
           </div>
-          <span class="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-800/40 font-mono">24/7 Web</span>
+          <span class="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-800/40 font-mono font-bold">${visitorChatCount > 0 ? visitorChatCount + ' msgs' : '24/7 Web'}</span>
         </div>
-        <p class="text-[10px] text-stone-400 truncate">Consultas preventa de visitantes...</p>
+        <p class="text-[10px] text-stone-400 truncate">Consultas preventa de visitantes y clientes...</p>
       </div>
     ` : '';
 
@@ -4186,6 +4194,7 @@ class MythicApp {
       }
     }
 
+    this.renderLanguageSelector();
     this.setupAdminSearchAndFilters();
     this.renderAdminOverview();
     this.renderAdminProductsManager();
@@ -4201,6 +4210,9 @@ class MythicApp {
       const validTabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat'];
       if (validTabs.includes(initialTab)) {
         window.switchAdminTab(initialTab);
+        if (initialTab === 'chat') {
+          this.openAdminLiveSupportChat();
+        }
       } else {
         window.switchAdminTab('dashboard');
       }

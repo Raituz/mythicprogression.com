@@ -7,8 +7,17 @@
   <title>Servicio - Mythic Progression</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.3">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.0">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
+  <script>
+    window.openLiveChat = window.openLiveChat || function(opts) {
+      if (window.app && typeof window.app.openLiveChat === 'function') {
+        window.app.openLiveChat(opts);
+      } else {
+        window._pendingChatOpts = opts;
+      }
+    };
+  </script>
 </head>
 <body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex flex-col selection:bg-[#ee914f] selection:text-[#140f0c]">
 
@@ -432,7 +441,7 @@
           <!-- Support & Price Match (Exact Image 4) -->
           <div class="pt-3 border-t border-stone-800 text-center space-y-2">
             <span class="text-[11px] text-stone-400 block">¿Tienes preguntas?</span>
-            <button type="button" onclick="app.openLiveChat({ fromProductButton: true })" class="w-full py-2.5 rounded-xl bg-[#221811] hover:bg-[#2e2017] border border-stone-700 text-stone-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
+            <button type="button" onclick="window.openLiveChat ? window.openLiveChat({ fromProductButton: true }) : (window.app && app.openLiveChat({ fromProductButton: true }))" class="w-full py-2.5 rounded-xl bg-[#221811] hover:bg-[#2e2017] border border-stone-700 text-stone-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
               <i class="fa-regular fa-comment-dots text-[#ee914f]"></i>
               <span>Chatear antes de ordenar</span>
             </button>
@@ -509,6 +518,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=2.3.3"></script>
+  <script src="assets/js/app.js?v=2.4.0"></script>
 </body>
 </html>

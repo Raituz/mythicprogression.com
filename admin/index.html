@@ -37,7 +37,7 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.3.2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.0">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
 </head>
 <body class="bg-[#080411] text-[#f1edfa] min-h-screen flex selection:bg-[#a855f7] selection:text-white admin-theme">
@@ -728,10 +728,17 @@
               </h2>
               <p class="text-xs text-stone-400">Canal exclusivo de mediación y soporte entre clientes y boosters en servicio.</p>
             </div>
-            <span class="px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 text-xs font-semibold flex items-center gap-1.5">
+            <div class="flex items-center gap-2.5">
+              <button onclick="app.openAdminLiveSupportChat()" class="px-3 py-1.5 rounded-xl bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/50 text-[#f3e8ff] text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <i class="fa-solid fa-headset text-purple-300"></i>
+                <span>Ver Soporte en Vivo (Web)</span>
+              </button>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 text-xs font-semibold flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Canal Auditado</span>
-            </span>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -1066,7 +1073,7 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=2.3.2"></script>
+  <script src="assets/js/app.js?v=2.4.0"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
@@ -1121,8 +1128,17 @@
       if (tabId === 'history' && window.app && typeof app.renderHistoryOrdersTable === 'function') {
         app.renderHistoryOrdersTable();
         app.renderHistoryPagination();
-      } else if (tabId === 'chat' && window.app && typeof app.renderChatList === 'function') {
-        app.renderChatList();
+      } else if (tabId === 'chat') {
+        const triggerChat = () => {
+          if (window.app && typeof app.renderChatList === 'function') {
+            app.renderChatList();
+            if (!app.activeChatOrderId || app.activeChatOrderId === 'live_support') {
+              app.openAdminLiveSupportChat();
+            }
+          }
+        };
+        triggerChat();
+        setTimeout(triggerChat, 120);
       } else if (tabId === 'orders' && window.app && typeof app.renderAdminOrders === 'function') {
         app.renderAdminOrders();
       } else if (tabId === 'catalog' && window.app && typeof app.renderAdminProductsManager === 'function') {
