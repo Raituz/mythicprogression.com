@@ -443,6 +443,18 @@ class MythicApp {
     return true;
   }
 
+  checkAdminPermission() {
+    if (!this.currentUser) {
+      this.showToast('Debes iniciar sesión con una cuenta de Administrador.', 'error');
+      return false;
+    }
+    if (!this.isAdminOrGerente() && !this.isAdmin()) {
+      this.showToast('Acceso exclusivo para Administradores y Gerencia.', 'error');
+      return false;
+    }
+    return true;
+  }
+
   addServiceQuickToCart(serviceId) {
     const svc = this.services.find(s => s.id === serviceId) || this.services[0];
     if (!svc) return;
@@ -3058,9 +3070,11 @@ class MythicApp {
           <div id="client-full-chat-stream" class="flex-1 overflow-y-auto py-4 space-y-3">
             ${(order.chat || []).map(msg => {
               if (msg.sender === 'system') {
+                const isWarning = msg.message.includes('Aviso del Sistema') || msg.message.includes('desasignado') || msg.message.includes('ha ingresado');
+                const isSuccess = msg.message.includes('ha salido') || msg.message.includes('tomado tu orden');
                 return `
                   <div class="flex flex-col items-center">
-                    <div class="max-w-md p-2 rounded-xl text-center text-[10px] ${msg.message.includes('ha ingresado') ? 'bg-amber-950/60 border border-amber-800 text-amber-200' : (msg.message.includes('ha salido') ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-200' : 'bg-[#1b140f] border border-stone-800 text-stone-300')}">
+                    <div class="max-w-md p-2.5 rounded-xl text-center text-[10px] ${isWarning ? 'bg-amber-950/70 border border-amber-800 text-amber-200 shadow-sm' : (isSuccess ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-200' : 'bg-[#1b140f] border border-stone-800 text-stone-300')}">
                       ${msg.message}
                     </div>
                   </div>
@@ -3233,7 +3247,7 @@ class MythicApp {
             <span class="text-[11px] px-2 py-0.5 rounded ${order.completionMethod === 'Piloted' ? 'bg-[#301c10] text-[#fccc8f] border border-[#b85d1d]/40' : 'bg-[#18231a] text-emerald-400 border border-emerald-900/40'}">
               ${order.completionMethod}
             </span>
-            ${order.bids.length > 0 ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#2c1d14] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-gavel mr-1"></i>${order.bids.length} Oferta(s)</span>` : ''}
+            ${(order.bids && order.bids.length > 0) ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#2c1d14] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-gavel mr-1"></i>${order.bids.length} Oferta(s)</span>` : ''}
           </div>
 
           <h3 class="text-base font-bold text-white group-hover:text-[#fcefc2] transition-colors">
@@ -3258,7 +3272,7 @@ class MythicApp {
           </div>
 
           <div class="flex flex-col gap-2 min-w-[135px]">
-            <button onclick="app.takeOrder('${order.id}')" class="px-3.5 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
+            <button onclick="app.promptTakeOrder('${order.id}')" class="px-3.5 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110 active:scale-[0.98]">
               <i class="fa-solid fa-bolt"></i>
               <span>Tomar Orden</span>
             </button>
@@ -3272,8 +3286,121 @@ class MythicApp {
     `).join('');
   }
 
+  promptTakeOrder(orderId) {
+    if (!this.checkBoosterPermission()) return;
+
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    let modal = document.getElementById('take-order-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'take-order-modal';
+      modal.className = 'fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4';
+      modal.innerHTML = '<div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>';
+      document.body.appendChild(modal);
+    }
+
+    const content = document.getElementById('take-order-modal-content');
+    if (!content) return;
+
+    const payout = Number(order.boosterPayout || 0);
+
+    content.innerHTML = `
+      <div class="p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-stone-800 mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#ee914f]/15 border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f]">
+              <i class="fa-solid fa-handshake text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Confirmar Pedido</h3>
+              <p class="text-[11px] text-stone-400">Verifica los detalles antes de aceptar para evitar penalizaciones</p>
+            </div>
+          </div>
+          <button onclick="app.closeTakeOrderModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="bg-[#140e0b] p-4 rounded-xl border border-stone-800 space-y-3 mb-4 text-xs">
+          <div>
+            <span class="text-stone-400 text-[10px] uppercase font-bold tracking-wider block">Orden a Tomar:</span>
+            <div class="font-bold text-white text-sm mt-0.5 flex items-center gap-2">
+              <span class="text-[#ee914f] font-mono-gaming font-bold">#${order.id}</span>
+              <span>-</span>
+              <span class="text-stone-200">${order.serviceName}</span>
+            </div>
+          </div>
+
+          ${order.details ? `
+            <div class="bg-[#1b120c] p-2.5 rounded-lg border border-stone-800/80 text-stone-300 text-[11px] leading-relaxed">
+              <i class="fa-solid fa-circle-info text-[#ee914f] mr-1.5"></i>${order.details}
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-2 gap-2 text-[11px] text-stone-300 pt-1 border-t border-stone-800/60">
+            <div><span class="text-stone-500">Región/Modalidad:</span> <strong class="text-white">${order.region || 'US'} | ${order.completionMethod || 'Piloted'}</strong></div>
+            <div><span class="text-stone-500">VPN Requerida:</span> <strong class="text-stone-200">${order.vpnLocation || 'No requerida'}</strong></div>
+          </div>
+        </div>
+
+        <!-- REWARD / PAYOUT BOX -->
+        <div class="bg-gradient-to-r from-[#24150d] to-[#170e08] p-4 rounded-xl border border-[#ee914f]/50 mb-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-stone-400 block uppercase tracking-wider font-semibold">Cantidad que recibirás por completar la orden:</span>
+            <span class="text-[11px] text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
+              <i class="fa-solid fa-wallet text-[10px]"></i> Pago garantizado al Pro
+            </span>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-black font-mono-gaming text-[#fcefc2]">
+              $${payout.toFixed(2)} <span class="text-xs text-[#ee914f]">USD</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-amber-200/90 bg-amber-950/30 border border-amber-800/40 p-3 rounded-xl mb-5 flex items-start gap-2.5 leading-relaxed">
+          <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm mt-0.5 shrink-0"></i>
+          <div>
+            <strong class="text-amber-300 block mb-0.5">¿Aceptas tomar y comprometerte con este pedido?</strong>
+            <span>Al aceptar, la orden se asignará a tu perfil Pro y se habilitará el chat directo con el cliente.</span>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+          <button onclick="app.closeTakeOrderModal()" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-bold transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button onclick="app.confirmTakeOrder('${order.id}')" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+            <i class="fa-solid fa-check"></i>
+            <span>Sí, Aceptar y Tomar Pedido</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  confirmTakeOrder(orderId) {
+    this.closeTakeOrderModal();
+    this.takeOrder(orderId);
+  }
+
+  closeTakeOrderModal() {
+    const modal = document.getElementById('take-order-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
   takeOrder(orderId) {
     if (!this.checkBoosterPermission()) return;
+
+    this.closeTakeOrderModal();
 
     const order = this.orders.find(o => o.id === orderId);
     if (!order) return;
@@ -3297,6 +3424,14 @@ class MythicApp {
     this.saveOrders();
     this.renderProOrderFeed();
     this.renderProMyOrders();
+    this.renderChatList();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_CLAIMED', orderId: order.id, booster: this.currentUser.username });
+      } catch (e) {}
+    }
+
     this.showToast(`¡Orden #${order.id} tomada con éxito!`, 'success');
   }
 
@@ -3957,9 +4092,13 @@ class MythicApp {
           <div id="chat-messages-scroll" class="flex-1 overflow-y-auto py-4 space-y-3">
             ${(order.chat || []).map(msg => {
               if (msg.sender === 'system') {
+                const isWarning = msg.message.includes('Aviso del Sistema') || msg.message.includes('desasignado') || msg.message.includes('ha ingresado');
+                const isSuccess = msg.message.includes('ha salido') || msg.message.includes('tomado tu orden');
                 return `
                   <div class="flex flex-col items-center">
-                    <span class="text-[10px] bg-[#1a140f] border border-stone-800 text-stone-400 px-3 py-1 rounded-full text-center">${msg.message}</span>
+                    <span class="text-[10px] ${isWarning ? 'bg-amber-950/70 border border-amber-800 text-amber-200 shadow-sm' : (isSuccess ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-200' : 'bg-[#1a140f] border border-stone-800 text-stone-300')} px-3 py-1 rounded-full text-center">
+                      ${msg.message}
+                    </span>
                   </div>
                 `;
               }
@@ -4860,12 +4999,18 @@ class MythicApp {
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
           <div class="flex items-center justify-end gap-2">
-            <button onclick="app.openAdminOrderModal('${o.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all" title="Ver Detalles y Chat">
+            <button onclick="app.openAdminOrderModal('${o.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer" title="Ver Detalles y Chat">
               <i class="fa-solid fa-eye text-[#a855f7] text-xs"></i>
               <span>Auditar</span>
             </button>
+            ${o.assignedBooster && o.status !== 'COMPLETED' ? `
+              <button onclick="app.adminUnassignBoosterOrder('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 text-rose-300 border border-rose-700/60 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer" title="Quitar orden al booster y devolverla a la Bolsa de Pedidos">
+                <i class="fa-solid fa-user-xmark text-rose-400"></i>
+                <span class="hidden xl:inline">Quitar Booster</span>
+              </button>
+            ` : ''}
             ${o.status !== 'COMPLETED' ? `
-              <button onclick="app.adminCompleteOrder('${o.id}')" class="w-8 h-8 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 flex items-center justify-center font-bold text-xs shadow-sm transition-all" title="Completar Orden">
+              <button onclick="app.adminCompleteOrder('${o.id}')" class="w-8 h-8 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer" title="Completar Orden">
                 <i class="fa-solid fa-check"></i>
               </button>
             ` : ''}
@@ -4908,6 +5053,61 @@ class MythicApp {
     }
   }
 
+  adminUnassignBoosterOrder(orderId) {
+    if (!this.checkAdminPermission()) return;
+
+    const o = this.orders.find(x => x.id === orderId);
+    if (!o) return;
+
+    if (!o.assignedBooster) {
+      this.showToast('Esta orden no tiene un booster asignado.', 'info');
+      return;
+    }
+
+    const boosterName = o.assignedBooster.username || 'Booster';
+
+    const confirmed = confirm(
+      `¿Deseas quitar la orden #${o.id} al booster "${boosterName}" y devolverla a la Bolsa de Pedidos?\n\n` +
+      `• La orden volverá a estar disponible inmediatamente en la Bolsa de Pedidos para que cualquier otro booster la tome.\n` +
+      `• Se enviará un aviso automático en el chat compartido del pedido notificando que se retiró al booster y se espera un nuevo asignado.`
+    );
+
+    if (!confirmed) return;
+
+    // Reset order assignment and status to available pool
+    o.status = 'AVAILABLE';
+    o.assignedBooster = null;
+    o.isOnAccount = false;
+
+    // Send automatic notification in shared chat between booster and client
+    o.chat = o.chat || [];
+    o.chat.push({
+      sender: 'system',
+      author: 'Sistema Mythic Progression',
+      message: `⚠️ Aviso del Sistema: Se ha desasignado al booster actual (${boosterName}) de este pedido. La orden ha vuelto a la Bolsa de Pedidos y está a la espera de que otro booster tome la orden.`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.saveOrders();
+    this.renderAdminOverview();
+    this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    this.renderProOrderFeed();
+    this.renderProMyOrders();
+    this.renderChatList();
+    if (this.activeClientChatOrderId === o.id) {
+      this.renderClientChatsList();
+    }
+
+    // Broadcast sync to other open tabs
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_UNASSIGNED', orderId: o.id, boosterName });
+      } catch (e) {}
+    }
+
+    this.showToast(`Orden #${o.id} retirada de ${boosterName} y devuelta a la Bolsa de Pedidos.`, 'success');
+  }
+
   openAdminOrderModal(orderId) {
     const o = this.orders.find(x => x.id === orderId);
     if (!o) return;
@@ -4922,7 +5122,7 @@ class MythicApp {
           <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Auditoría de Orden #${o.id}</h3>
           <span class="text-xs text-[#a855f7]">${o.serviceName}</span>
         </div>
-        <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
+        <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -4944,6 +5144,17 @@ class MythicApp {
           </h4>
           <div class="bg-[#100521] border border-stone-800 rounded-xl p-3 max-h-56 overflow-y-auto space-y-2">
             ${o.chat && o.chat.length ? o.chat.map(m => {
+              if (m.sender === 'system') {
+                return `
+                  <div class="p-2.5 rounded-lg bg-[#1a1208] text-amber-200 border border-amber-700/50 text-center text-xs">
+                    <span class="inline-flex items-center gap-1 font-bold text-amber-400 text-[10px] mb-1">
+                      <i class="fa-solid fa-triangle-exclamation"></i> AVISO DEL SISTEMA
+                    </span>
+                    <div class="leading-relaxed">${m.message}</div>
+                    <span class="text-[9px] text-stone-400 mt-1 block">${new Date(m.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                `;
+              }
               const info = this.formatChatAuthorDisplay(m);
               return `
               <div class="p-2.5 rounded-lg ${info.bubbleClass} border border-stone-800/80">
@@ -4960,8 +5171,14 @@ class MythicApp {
           </div>
         </div>
 
-        <div class="pt-4 border-t border-stone-800 flex justify-end gap-2">
-          <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-stone-900 text-stone-300 font-bold text-xs">Cerrar</button>
+        <div class="pt-4 border-t border-stone-800 flex items-center justify-between gap-2">
+          ${o.assignedBooster && o.status !== 'COMPLETED' ? `
+            <button onclick="app.adminUnassignBoosterOrder('${o.id}'); document.getElementById('admin-order-modal').classList.add('hidden');" class="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/70 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-rose-950/40">
+              <i class="fa-solid fa-user-xmark text-rose-400"></i>
+              <span>Quitar Orden al Booster y Devolver a Bolsa</span>
+            </button>
+          ` : '<div></div>'}
+          <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs cursor-pointer transition-colors">Cerrar</button>
         </div>
       </div>
     `;
@@ -5933,7 +6150,9 @@ class MythicApp {
 
     // Determine role label
     let roleLabel = 'Cliente';
-    if (sender === 'admin' || /\(admin\)/i.test(author) || /miguelb/i.test(author)) {
+    if (sender === 'system' || /sistema/i.test(author) || /notificaci[oó]n/i.test(author)) {
+      roleLabel = 'Sistema';
+    } else if (sender === 'admin' || /\(admin\)/i.test(author) || /miguelb/i.test(author)) {
       roleLabel = 'Admin';
     } else if (sender === 'staff' || /\(staff\)/i.test(author)) {
       roleLabel = 'Staff';
@@ -5958,7 +6177,11 @@ class MythicApp {
     let authorColor = '#ee914f';
     let bubbleClass = 'bg-[#18120d] text-stone-200 border border-stone-800';
 
-    if (roleLabel === 'Admin') {
+    if (roleLabel === 'Sistema') {
+      authorColor = '#fbbf24';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-950/70 text-amber-300 border border-amber-600/50 shadow-sm"><i class="fa-solid fa-triangle-exclamation text-[8px] text-amber-400"></i> Sistema</span>`;
+      bubbleClass = 'bg-[#1a1208] text-amber-100 border border-amber-700/50 shadow-sm';
+    } else if (roleLabel === 'Admin') {
       authorColor = '#c084fc';
       badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#2d124d] text-purple-200 border border-purple-500/50 shadow-sm"><i class="fa-solid fa-crown text-[8px] text-amber-300"></i> Admin</span>`;
       bubbleClass = 'bg-[#1b0b2e] text-purple-100 border border-purple-600/40 shadow-sm shadow-purple-950/30';
