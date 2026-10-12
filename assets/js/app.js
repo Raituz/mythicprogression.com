@@ -70,38 +70,43 @@ class MythicApp {
   }
 
   async init() {
-    this.cleanUrlBar();
-    this.initLanguage();
-    this.initLiveChatWidget();
-    await this.loadInitialData();
-    await this.checkDiscordOAuthCallback();
-    this.initSession();
-    this.renderHeader();
-    this.setupLiveSearch();
-    this.updateCartCounter();
-    this.renderLanguageSelector();
+    try { this.cleanUrlBar(); } catch (e) { console.warn('cleanUrlBar:', e); }
+    try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
+    try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
+    try { await this.loadInitialData(); } catch (e) { console.warn('loadInitialData:', e); }
+    try { await this.checkDiscordOAuthCallback(); } catch (e) { console.warn('checkDiscordOAuthCallback:', e); }
+    try { this.initSession(); } catch (e) { console.warn('initSession:', e); }
+    try { this.renderHeader(); } catch (e) { console.warn('renderHeader:', e); }
+    try { this.setupLiveSearch(); } catch (e) { console.warn('setupLiveSearch:', e); }
+    try { this.updateCartCounter(); } catch (e) { console.warn('updateCartCounter:', e); }
+    try { this.renderLanguageSelector(); } catch (e) { console.warn('renderLanguageSelector:', e); }
 
-    const path = window.location.pathname.toLowerCase();
-    const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
+    try {
+      const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+      const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
 
-    if (cleanPath.endsWith('/product') || cleanPath === 'product') {
-      this.initSingleProductPage();
-    } else if (cleanPath.endsWith('/client-profile') || cleanPath === 'client-profile') {
-      this.initClientProfile();
-    } else if (cleanPath.endsWith('/pro') || cleanPath === 'pro') {
-      this.initProPortal();
-    } else if (cleanPath.endsWith('/admin') || cleanPath === 'admin') {
-      this.initAdminPortal();
-    } else if (cleanPath.endsWith('/mplus') || cleanPath === 'mplus') {
-      this.initCategoryPage('Míticas Plus');
-    } else if (cleanPath.endsWith('/raids') || cleanPath === 'raids') {
-      this.initCategoryPage('Bandas / Raids');
-    } else if (cleanPath.endsWith('/leveling') || cleanPath === 'leveling') {
-      this.initCategoryPage('Powerleveling');
-    } else if (cleanPath.endsWith('/gearing') || cleanPath === 'gearing') {
-      this.initCategoryPage('Equipo / ilvl');
-    } else {
-      this.initStoreFront();
+      if (cleanPath.endsWith('/product') || cleanPath === 'product') {
+        this.initSingleProductPage();
+      } else if (cleanPath.endsWith('/client-profile') || cleanPath === 'client-profile') {
+        this.initClientProfile();
+      } else if (cleanPath.endsWith('/pro') || cleanPath === 'pro') {
+        this.initProPortal();
+      } else if (cleanPath.endsWith('/admin') || cleanPath === 'admin') {
+        this.initAdminPortal();
+      } else if (cleanPath.endsWith('/mplus') || cleanPath === 'mplus') {
+        this.initCategoryPage('Míticas Plus');
+      } else if (cleanPath.endsWith('/raids') || cleanPath === 'raids') {
+        this.initCategoryPage('Bandas / Raids');
+      } else if (cleanPath.endsWith('/leveling') || cleanPath === 'leveling') {
+        this.initCategoryPage('Powerleveling');
+      } else if (cleanPath.endsWith('/gearing') || cleanPath === 'gearing') {
+        this.initCategoryPage('Equipo / ilvl');
+      } else {
+        this.initStoreFront();
+      }
+    } catch (e) {
+      console.warn('Path router error, falling back to initStoreFront:', e);
+      try { this.initStoreFront(); } catch (err) { console.error('initStoreFront fallback error:', err); }
     }
   }
 
@@ -6656,6 +6661,66 @@ class MythicApp {
     // 2. Default: Native Obsidian & Copper Live Chat Widget
     this.injectNativeLiveChat();
     this.initLiveChatSync();
+  }
+
+  initLiveChatSync() {
+    try {
+      if (typeof window === 'undefined') return;
+
+      // 1. BroadcastChannel for 0ms cross-tab synchronization
+      if (window.BroadcastChannel) {
+        try {
+          this.liveChatChannel = new BroadcastChannel('mp_live_support_channel');
+          this.liveChatChannel.onmessage = (evt) => {
+            if (!evt || !evt.data) return;
+            if (evt.data.type === 'NEW_LIVE_CHAT_MSG') {
+              try {
+                const stored = localStorage.getItem('mp_live_support_chat');
+                if (stored) this.liveChatMessages = JSON.parse(stored);
+              } catch (e) {}
+              const list = document.getElementById('mp-live-chat-messages');
+              if (list) this.renderLiveChatMessages();
+              const adminList = document.getElementById('chat-conversations-list');
+              if (adminList) this.renderChatList();
+            } else if (evt.data.type === 'ORDER_CLAIMED' || evt.data.type === 'ORDER_UNASSIGNED' || evt.data.type === 'ORDER_UPDATED') {
+              try {
+                const stored = localStorage.getItem('mp_orders');
+                if (stored) this.orders = JSON.parse(stored);
+              } catch (e) {}
+              this.renderProOrderFeed();
+              this.renderProMyOrders();
+              this.renderAdminOverview();
+              this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+              this.renderChatList();
+            }
+          };
+        } catch (e) {
+          console.warn('BroadcastChannel init error:', e);
+        }
+      }
+
+      // 2. Storage event listener for multi-window sync fallback
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'mp_live_support_chat') {
+          try {
+            this.liveChatMessages = JSON.parse(e.newValue || '[]');
+          } catch (err) {}
+          this.renderLiveChatMessages();
+          if (typeof this.renderChatList === 'function') this.renderChatList();
+        } else if (e.key === 'mp_orders') {
+          try {
+            this.orders = JSON.parse(e.newValue || '[]');
+          } catch (err) {}
+          this.renderProOrderFeed();
+          this.renderProMyOrders();
+          this.renderAdminOverview();
+          this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+          this.renderChatList();
+        }
+      });
+    } catch (e) {
+      console.warn('initLiveChatSync notice:', e);
+    }
   }
 
   injectNativeLiveChat() {
