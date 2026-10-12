@@ -466,11 +466,26 @@ class MythicApp {
   // ==========================================
   // DISCORD OAUTH2 & BOT AUTHENTICATION
   // ==========================================
+  getOAuthRedirectUri() {
+    if (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') {
+      return 'http://localhost:8080/index.html';
+    }
+    const host = window.location.hostname.toLowerCase();
+    if (host.includes('mythicprogression.com')) {
+      const proto = window.location.protocol === 'http:' ? 'http:' : 'https:';
+      return `${proto}//www.mythicprogression.com/index.html`;
+    }
+    if (host.includes('github.io')) {
+      const pathname = window.location.pathname;
+      const repo = pathname.split('/')[1] || '';
+      return repo ? `${window.location.origin}/${repo}/index.html` : `${window.location.origin}/index.html`;
+    }
+    return `${window.location.origin}/index.html`;
+  }
+
   loginWithDiscordOAuth() {
     const clientId = '861673053363896320'; // Mythic Progression Official Client ID
-    // Canonical redirect URI: Always route to /index.html so only one redirect URI is needed in Discord Developer Portal
-    const origin = window.location.origin;
-    const redirectUri = `${origin}/index.html`;
+    const redirectUri = this.getOAuthRedirectUri();
 
     sessionStorage.setItem('mp_oauth_return_url', window.location.href);
     sessionStorage.setItem('mp_discord_oauth_active', '1');
