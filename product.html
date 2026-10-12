@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <base href="/">
@@ -80,7 +80,7 @@
     </h1>
 
     <!-- 3-COLUMN MASTER GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative z-30">
 
       <!-- ======================================================== -->
       <!-- COLUMN 1 (LEFT): VISUALS, TRUST & DETAILED DESCRIPTION -->
@@ -228,8 +228,8 @@
       <!-- ======================================================== -->
       <!-- COLUMN 2 (CENTER): DYNAMIC CUSTOMIZATION OPTIONS -->
       <!-- ======================================================== -->
-      <div class="lg:col-span-4 space-y-6">
-        <div class="glass-panel rounded-3xl border border-stone-800 p-6 space-y-6 bg-[#130d09]">
+      <div class="lg:col-span-4 space-y-6 relative z-30">
+        <div class="glass-panel rounded-3xl border border-stone-800 p-6 space-y-6 bg-[#130d09] relative z-30">
           
           <h2 class="text-sm font-bold text-[#fcefc2] uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-stone-800">
             <i class="fa-solid fa-sliders text-[#ee914f]"></i>
@@ -257,16 +257,16 @@
               </div>
             </div>
 
-            <!-- Inputs Grid: Row 1 (Region & Character Name) + Row 2 (Realm Search Full Width) -->
+            <!-- Inputs Grid: Symmetrical Row 1 (Region & Character) + Row 2 (Realm Search Full Width) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <!-- Region (50% on sm+) -->
               <div>
-                <label for="sp-region" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <div class="h-6 flex items-center gap-1.5 mb-1.5">
                   <i class="fa-solid fa-earth-americas text-[#ee914f] text-[10px]"></i>
-                  <span>Región:</span>
-                </label>
+                  <label for="sp-region" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Región:</label>
+                </div>
                 <div class="relative">
-                  <select id="sp-region" onchange="app.onRegionChange()" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
+                  <select id="sp-region" onchange="app.onRegionChange()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
                     <option value="US">América (US)</option>
                     <option value="EU">Europa (EU)</option>
                   </select>
@@ -276,17 +276,17 @@
 
               <!-- Character Name (50% on sm+) -->
               <div>
-                <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <div class="h-6 flex items-center gap-1.5 mb-1.5">
                   <i class="fa-solid fa-user-shield text-[#ee914f] text-[10px]"></i>
-                  <span>Nombre del Personaje:</span>
-                </label>
-                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+                  <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Personaje:</label>
+                </div>
+                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
               </div>
 
-              <!-- Realm Searchable Dropdown (Full Width) -->
-              <div class="sm:col-span-2 relative" id="sp-realm-dropdown-container">
-                <div class="flex items-center justify-between mb-1.5">
-                  <label for="sp-realm-search" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+              <!-- Realm Searchable Dropdown (Full Width - Stacking Context z-50) -->
+              <div class="sm:col-span-2 relative z-50" id="sp-realm-dropdown-container">
+                <div class="h-6 flex items-center justify-between mb-1.5">
+                  <label for="sp-realm-search" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-server text-[#ee914f] text-[10px]"></i>
                     <span>Reino / Servidor:</span>
                   </label>
@@ -295,14 +295,14 @@
 
                 <div class="relative">
                   <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-xs pointer-events-none"></i>
-                  <input id="sp-realm-search" type="text" autocomplete="off" placeholder="Buscar reino (ej: Ragnaros, Quel'Thalas, Whitemane, Forever...)" onfocus="app.openRealmDropdown()" oninput="app.filterRealmDropdown(this.value)" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-9 pr-9 py-2.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
-                  <button type="button" onclick="app.toggleRealmDropdown()" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs">
+                  <input id="sp-realm-search" type="text" autocomplete="off" placeholder="Buscar reino (ej: Ragnaros, Quel'Thalas, Whitemane, Forever...)" onfocus="app.openRealmDropdown()" oninput="app.filterRealmDropdown(this.value)" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-9 pr-9 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+                  <button type="button" onclick="app.toggleRealmDropdown()" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs p-1">
                     <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" id="sp-realm-chevron"></i>
                   </button>
                 </div>
 
-                <!-- Dropdown Menu -->
-                <div id="sp-realm-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/80 rounded-2xl shadow-2xl z-50 max-h-72 flex flex-col overflow-hidden">
+                <!-- Dropdown Menu (High z-index z-[100] so it always floats OVER everything below) -->
+                <div id="sp-realm-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/90 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] z-[100] max-h-64 flex flex-col overflow-hidden">
                   <!-- Header with count & popular chips -->
                   <div class="p-2.5 border-b border-stone-800 bg-[#180e08]/90 text-[10px] space-y-2">
                     <div class="flex items-center justify-between text-stone-400">
@@ -448,7 +448,7 @@
     </div>
 
     <!-- RELATED PRODUCTS (CROSS-SELLING) -->
-    <section class="mt-16 pt-10 border-t border-stone-900">
+    <section class="mt-16 pt-10 border-t border-stone-900 relative z-10">
       <h3 class="text-xl font-black text-[#fcefc2] font-cinzel mb-6">Otros Servicios Recomendados</h3>
       <div id="sp-related-products" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
     </section>
