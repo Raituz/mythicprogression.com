@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Marcellus&family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap');
+
+:root {
+  /* Palette exact to Mythic Progression Logo */
+  --bg-obsidian: #0c0907;
+  --bg-stone-dark: #140f0c;
+  --bg-card: #191410;
+  --bg-card-hover: #221c17;
+  --bg-input: #1f1914;
+  
+  /* Metallic Bronze & Copper dragon tones from logo */
+  --copper-primary: #ee914f;
+  --copper-light: #fccc8f;
+  --copper-dark: #b85d1d;
+  --copper-shadow: #873e0e;
+
+  /* Antique Parchment from logo center */
+  --parchment-light: #fcefc2;
+  --parchment-base: #eedaa2;
+  --parchment-muted: #c2b389;
+
+  /* Borders & Highlights */
+  --border-copper: rgba(238, 145, 79, 0.28);
+  --border-subtle: rgba(252, 239, 194, 0.09);
+  --copper-glow: rgba(238, 145, 79, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-obsidian);
+  color: #e5dfd5;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .font-cinzel {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+}
+
+.font-marcellus {
+  font-family: 'Marcellus', serif;
+}
+
+.font-mono-gaming {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Glassmorphism & Obsidian Panels */
+.glass-panel {
+  background: rgba(22, 17, 13, 0.90);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-copper);
+}
+
+.glass-nav {
+  background: rgba(12, 9, 7, 0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-copper);
+}
+
+/* Gradients derived from logo */
+.copper-gradient-text {
+  background: linear-gradient(135deg, #fcefc2 0%, #ee914f 50%, #b85d1d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.copper-gradient-bg {
+  background: linear-gradient(135deg, #fccc8f 0%, #ee914f 45%, #b85d1d 100%);
+  color: #140f0c;
+  box-shadow: 0 4px 20px rgba(238, 145, 79, 0.25);
+}
+.copper-gradient-bg:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 6px 25px rgba(238, 145, 79, 0.38);
+}
+
+.copper-border-glow {
+  box-shadow: 0 0 25px var(--copper-glow);
+}
+
+/* Custom Scrollbar in Dark Bronze */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f0b08;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2018;
+  border-radius: 4px;
+  border: 1px solid rgba(238, 145, 79, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--copper-primary);
+}
+
+/* Custom Toggle Switch for 'Estoy en la cuenta' */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #261e17;
+  transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 34px;
+  border: 1px solid var(--border-copper);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #fcefc2;
+  transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #ee914f;
+  box-shadow: 0 0 14px rgba(238, 145, 79, 0.5);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+  background-color: #140f0c;
+}
+
+/* Mythic Guild Strict Warning Banner */
+.mythic-guild-banner {
+  background: linear-gradient(90deg, rgba(38, 25, 17, 0.95) 0%, rgba(56, 36, 23, 0.95) 100%);
+  border: 1px solid rgba(238, 145, 79, 0.45);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Ember Glow Effect */
+.ember-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(238, 145, 79, 0.15) 0%, transparent 70%);
+}
+
+/* Keyframe Animations */
+@keyframes flame-pulse {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.015); }
+}
+
+.animate-flame {
+  animation: flame-pulse 3s infinite ease-in-out;
+}

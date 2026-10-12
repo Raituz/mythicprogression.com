@@ -1,0 +1,98 @@
+[
+  {
+    "id": "client_carlos",
+    "username": "Carlos M.",
+    "email": "carlos.wow@gmail.com",
+    "discordId": "CarlosWoW#4819",
+    "battletag": "Shadow#1294",
+    "country": "México",
+    "totalOrders": 2,
+    "totalSpent": 98.00,
+    "status": "Activo / Verificado",
+    "joinedAt": "2026-08-15"
+  },
+  {
+    "id": "client_alex",
+    "username": "Alex Rider",
+    "email": "alex.rider@gmail.com",
+    "discordId": "AlexRider#1290",
+    "battletag": "Holyheal#2184",
+    "country": "España",
+    "totalOrders": 1,
+    "totalSpent": 45.00,
+    "status": "Activo / Verificado",
+    "joinedAt": "2026-09-01"
+  },
+  {
+    "id": "client_valeria",
+    "username": "Valeria S.",
+    "email": "valeria.soto@outlook.com",
+    "discordId": "Valeria_Valk#3310",
+    "battletag": "Valkyrie#1902",
+    "country": "Colombia",
+    "totalOrders": 3,
+    "totalSpent": 155.00,
+    "status": "Activo / VIP",
+    "joinedAt": "2026-07-12"
+  },
+  {
+    "id": "client_marcos",
+    "username": "Marcos D.",
+    "email": "marcos.duran@gmail.com",
+    "discordId": "MarcosPvE#9021",
+    "battletag": "Titan#3391",
+    "country": "Argentina",
+    "totalOrders": 4,
+    "totalSpent": 230.00,
+    "status": "Activo / VIP",
+    "joinedAt": "2026-06-20"
+  },
+  {
+    "id": "client_david",
+    "username": "David K.",
+    "email": "david.krauss@yahoo.com",
+    "discordId": "David_WoW#5541",
+    "battletag": "Frostfire#4412",
+    "country": "Chile",
+    "totalOrders": 1,
+    "totalSpent": 38.00,
+    "status": "Activo / Verificado",
+    "joinedAt": "2026-09-05"
+  },
+  {
+    "id": "client_lucas",
+    "username": "Lucas B.",
+    "email": "lucas.benitez@gmail.com",
+    "discordId": "LucasB#7718",
+    "battletag": "Bloodlust#5519",
+    "country": "Perú",
+    "totalOrders": 2,
+    "totalSpent": 72.00,
+    "status": "Activo / Verificado",
+    "joinedAt": "2026-08-28"
+  },
+  {
+    "id": "client_javier",
+    "username": "Javier R.",
+    "email": "javier.rojas@gmail.com",
+    "discordId": "Javi_Mythic#1109",
+    "battletag": "Arcane#1104",
+    "country": "Uruguay",
+    "totalOrders": 1,
+    "totalSpent": 65.00,
+    "status": "Activo / Verificado",
+    "joinedAt": "2026-10-02"
+  },
+  {
+    "id": "client_elena",
+    "username": "Elena Gómez",
+    "email": "elena.gomez@gmail.com",
+    "discordId": "Elena_Druid#4499",
+    "battletag": "Moonkin#7721",
+    "country": "España",
+    "totalOrders": 5,
+    "totalSpent": 310.00,
+    "status": "Activo / VIP",
+    "joinedAt": "2026-05-10"
+  }
+]

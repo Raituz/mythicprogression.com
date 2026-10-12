@@ -1,0 +1,112 @@
+[
+  {
+    "id": "MP-91024",
+    "serviceName": "Mythic+ Keystone Run (+10 The Stonevault)",
+    "category": "Míticas Plus",
+    "region": "US",
+    "faction": "Horda",
+    "realm": "Area 52",
+    "characterName": "Shadowstrike-Area52",
+    "completionMethod": "Piloted",
+    "vpnLocation": "Chicago, USA",
+    "details": "The Stonevault (+10). Sin muertes, en tiempo. Trader de armadura de malla.",
+    "clientId": "client_carlos",
+    "clientEmail": "carlos.wow@gmail.com",
+    "clientDiscord": "CarlosWoW#4819",
+    "clientName": "Carlos M.",
+    "totalPrice": 48.00,
+    "companyShare": 33.60,
+    "boosterPayout": 14.40,
+    "boosterPayoutRate": 30,
+    "maxBidAllowed": 24.00,
+    "status": "AVAILABLE",
+    "bids": [],
+    "assignedBooster": null,
+    "isOnAccount": false,
+    "createdAt": "2026-10-12T02:15:00Z",
+    "chat": []
+  },
+  {
+    "id": "MP-76512",
+    "serviceName": "Powerleveling 70-80 Super Express",
+    "category": "Powerleveling",
+    "region": "US",
+    "faction": "Horda",
+    "realm": "Ragnaros",
+    "characterName": "Bloodmage-Ragnaros",
+    "completionMethod": "Piloted",
+    "vpnLocation": "Miami, USA",
+    "details": "Guerrero 70 a 80 en menos de 4 horas. Campaña principal incluida.",
+    "clientId": "client_carlos",
+    "clientEmail": "carlos.wow@gmail.com",
+    "clientDiscord": "CarlosWoW#4819",
+    "clientName": "Carlos M.",
+    "totalPrice": 50.00,
+    "companyShare": 35.00,
+    "boosterPayout": 15.00,
+    "boosterPayoutRate": 30,
+    "maxBidAllowed": 25.00,
+    "status": "IN_PROGRESS",
+    "bids": [],
+    "assignedBooster": {
+      "discordId": "443948776562884620",
+      "username": "Miguelb",
+      "payout": 15.00
+    },
+    "isOnAccount": true,
+    "createdAt": "2026-10-11T23:10:00Z",
+    "chat": [
+      {
+        "sender": "system",
+        "author": "Sistema Mythic Progression",
+        "message": "El booster Miguelb ha tomado tu orden.",
+        "timestamp": "2026-10-11T23:12:00Z"
+      },
+      {
+        "sender": "booster",
+        "author": "Miguelb (Pro)",
+        "message": "¡Hola Carlos! Ya tengo tu orden asignada. Me conectaré con VPN en Miami para que tu cuenta esté 100% protegida.",
+        "timestamp": "2026-10-11T23:15:00Z"
+      },
+      {
+        "sender": "client",
+        "author": "Carlos M. (Cliente)",
+        "message": "¡Excelente! Código Blizzard enviado. Por favor avísame cuando estés dentro.",
+        "timestamp": "2026-10-11T23:16:30Z"
+      },
+      {
+        "sender": "system",
+        "author": "Notificación de Cuenta",
+        "message": "⚠️ El booster Miguelb ha ingresado a la cuenta de juego. Por favor NO inicies sesión para evitar desconexiones.",
+        "timestamp": "2026-10-11T23:18:00Z"
+      }
+    ]
+  },
+  {
+    "id": "MP-88931",
+    "serviceName": "Palacio Nerub-ar Heroico (Full 8/8 AOTC)",
+    "category": "Bandas / Raids",
+    "region": "US",
+    "faction": "Alianza",
+    "realm": "Stormrage",
+    "characterName": "Holyheal-Stormrage",
+    "completionMethod": "Self-Play",
+    "vpnLocation": "N/A (Self-play)",
+    "details": "Limpieza completa 8/8 con logro de Reina Ansurek AOTC. Self-play.",
+    "clientId": "client_alex",
+    "clientEmail": "alex.rider@gmail.com",
+    "clientDiscord": "AlexRider#1290",
+    "clientName": "Alex Rider",
+    "totalPrice": 45.00,
+    "companyShare": 31.50,
+    "boosterPayout": 13.50,
+    "boosterPayoutRate": 30,
+    "maxBidAllowed": 22.50,
+    "status": "AVAILABLE",
+    "bids": [],
+    "assignedBooster": null,
+    "isOnAccount": false,
+    "createdAt": "2026-10-12T02:00:00Z",
+    "chat": []
+  }
+]
