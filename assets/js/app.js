@@ -1580,7 +1580,7 @@ class MythicApp {
 
     // Breadcrumbs & Title
     const titleEl = document.getElementById('sp-title');
-    if (titleEl) titleEl.textContent = svc.name;
+    if (titleEl) { titleEl.textContent = svc.name; titleEl.classList.add('notranslate'); titleEl.setAttribute('translate', 'no'); }
     const catEl = document.getElementById('sp-breadcrumb-cat');
     if (catEl) catEl.textContent = svc.category;
     const backEl = document.getElementById('sp-breadcrumb-back');
@@ -2394,7 +2394,7 @@ class MythicApp {
               <i class="fa-solid ${svc.icon}"></i>
             </div>
             <div>
-              <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors">${svc.name}</h3>
+              <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors notranslate product-card-title" translate="no">${svc.name}</h3>
               <p class="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">${svc.description}</p>
             </div>
           </div>
@@ -5775,27 +5775,27 @@ class MythicApp {
       const rLower = r.toLowerCase();
 
       if (rLower.includes('master')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#3a1d0d] text-[#ee914f] border border-[#ee914f]/50 shadow-[0_0_8px_rgba(238,145,79,0.3)]"><i class="fa-solid fa-crown text-[9px] text-[#ee914f]"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#3a1d0d] text-[#ee914f] border border-[#ee914f]/50 shadow-[0_0_8px_rgba(238,145,79,0.3)]" translate="no"><i class="fa-solid fa-crown text-[9px] text-[#ee914f]"></i> ${r}</span>`;
       }
       if (rLower.includes('admin') || rLower.includes('staff') || rLower.includes('gerente')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/70 text-rose-300 border border-rose-700/50 shadow-[0_0_8px_rgba(244,63,94,0.2)]"><i class="fa-solid fa-shield-halved text-[9px] text-rose-400"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/70 text-rose-300 border border-rose-700/50 shadow-[0_0_8px_rgba(244,63,94,0.2)]" translate="no"><i class="fa-solid fa-shield-halved text-[9px] text-rose-400"></i> ${r}</span>`;
       }
       if (rLower.includes('elite')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-950/60 text-purple-300 border border-purple-700/50"><i class="fa-solid fa-star text-[9px] text-purple-400"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-950/60 text-purple-300 border border-purple-700/50" translate="no"><i class="fa-solid fa-star text-[9px] text-purple-400"></i> ${r}</span>`;
       }
       if (rLower.includes('veteran')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-950/60 text-cyan-300 border border-cyan-700/50"><i class="fa-solid fa-medal text-[9px] text-cyan-400"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-950/60 text-cyan-300 border border-cyan-700/50" translate="no"><i class="fa-solid fa-medal text-[9px] text-cyan-400"></i> ${r}</span>`;
       }
       if (rLower.includes('gold')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/60 text-[#fcefc2] border border-amber-600/50"><i class="fa-solid fa-coins text-[9px] text-amber-400"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/60 text-[#fcefc2] border border-amber-600/50" translate="no"><i class="fa-solid fa-coins text-[9px] text-amber-400"></i> ${r}</span>`;
       }
       if (rLower.includes('raider')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-950/60 text-blue-300 border border-blue-700/50"><i class="fa-solid fa-shield text-[9px] text-blue-400"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-950/60 text-blue-300 border border-blue-700/50" translate="no"><i class="fa-solid fa-shield text-[9px] text-blue-400"></i> ${r}</span>`;
       }
       if (rLower.includes('supplier')) {
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-700/50"><i class="fa-solid fa-box text-[9px] text-emerald-400"></i> ${r}</span>`;
+        return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-700/50" translate="no"><i class="fa-solid fa-box text-[9px] text-emerald-400"></i> ${r}</span>`;
       }
-      return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[#1e1711] text-stone-300 border border-stone-700/50"><i class="fa-solid fa-bolt text-[9px] text-[#ee914f]"></i> ${r}</span>`;
+      return `<span class="notranslate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[#1e1711] text-stone-300 border border-stone-700/50" translate="no"><i class="fa-solid fa-bolt text-[9px] text-[#ee914f]"></i> ${r}</span>`;
     }).join('');
   }
 
@@ -6432,15 +6432,14 @@ class MythicApp {
 
     // 2. Default: Native Obsidian & Copper Live Chat Widget
     this.injectNativeLiveChat();
+    this.initLiveChatSync();
   }
 
   injectNativeLiveChat() {
     if (typeof document === 'undefined') return;
     if (document.getElementById('mp-live-chat-launcher')) return;
 
-    // Do not show launcher on admin/pro portal to avoid covering operational interfaces
-    const p = window.location.pathname.toLowerCase();
-    const isAdminOrPro = p.includes('admin') || p.includes('pro');
+    // Launcher visible across all portals for seamless live support communication
 
     const defaultMessages = [
       {
@@ -6470,7 +6469,7 @@ class MythicApp {
     container.id = 'mp-live-chat-root';
     container.innerHTML = `
       <!-- FLOATING LAUNCHER -->
-      <div id="mp-live-chat-launcher" class="${isAdminOrPro ? 'hidden' : 'flex'} fixed bottom-6 right-6 z-[999] items-center gap-3">
+      <div id="mp-live-chat-launcher" class="flex fixed bottom-6 right-6 z-[999] items-center gap-3">
         <!-- Callout bubble tooltip (hidden on mobile) -->
         <div id="mp-chat-bubble-hint" onclick="app.toggleLiveChat()" class="hidden md:flex items-center gap-2 bg-[#18110b]/95 border border-[#ee914f]/60 text-[#fcefc2] px-3.5 py-2 rounded-2xl shadow-2xl text-xs font-semibold cursor-pointer hover:border-[#ee914f] transition-all">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -6626,7 +6625,7 @@ class MythicApp {
 
     // If triggered from "Chatear antes de ordenar"
     if (options && options.fromProductButton) {
-      const prodTitle = document.getElementById('sp-product-title')?.textContent?.trim() || 'Servicio WoW';
+      const prodTitle = document.getElementById('sp-title')?.textContent?.trim() || document.getElementById('sp-product-title')?.textContent?.trim() || 'Servicio WoW';
       const prodPrice = document.getElementById('sp-final-price')?.textContent?.trim() || '';
       const charName = document.getElementById('sp-char-summary-text')?.textContent?.trim() || '';
       const charMeta = document.getElementById('sp-char-summary-extra')?.textContent?.trim() || '';

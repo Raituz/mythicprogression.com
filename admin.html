@@ -37,7 +37,7 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.0">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.1">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
 </head>
 <body class="bg-[#080411] text-[#f1edfa] min-h-screen flex selection:bg-[#a855f7] selection:text-white admin-theme">
@@ -169,7 +169,6 @@
           <i class="fa-solid fa-bolt text-xs text-[#a855f7]"></i>
           <span>Portal Pro</span>
         </a>
-        <div id="header-lang-selector" class="relative"></div>
         <div class="hidden sm:flex items-center gap-2 bg-[#150a2e] px-3.5 py-1.5 rounded-xl border border-stone-800">
           <span class="text-xs text-stone-400">Empresa (70%):</span>
           <span id="top-company-rev" class="text-xs font-bold font-mono-gaming text-[#f3e8ff]">$0.00</span>
@@ -182,6 +181,7 @@
           <i class="fa-solid fa-crown text-[#c084fc] text-xs"></i>
           <span>Master Admin</span>
         </div>
+        <div id="header-lang-selector" class="relative shrink-0 notranslate" translate="no"></div>
       </div>
     </header>
 
@@ -1073,7 +1073,7 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=2.4.0"></script>
+  <script src="assets/js/app.js?v=2.4.1"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {

@@ -7,7 +7,7 @@
   <title>Mi Cuenta - Mythic Progression</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.0">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.1">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
 </head>
 <body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex flex-col selection:bg-[#ee914f] selection:text-[#140f0c]">
@@ -36,7 +36,6 @@
 
       <!-- User & Store Actions -->
       <div class="flex items-center gap-2.5 shrink-0">
-        <div id="header-lang-selector" class="relative"></div>
         <a href="/" class="px-3.5 py-2 rounded-xl bg-[#17120e] hover:bg-[#251b14] border border-stone-800 text-stone-300 hover:text-[#ee914f] text-xs font-semibold flex items-center gap-1.5 transition-colors">
           <i class="fa-solid fa-store text-xs text-[#ee914f]"></i>
           <span class="hidden sm:inline">Tienda</span>
@@ -46,6 +45,7 @@
           <span class="cart-counter-badge absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full copper-gradient-bg text-stone-950 text-[10px] font-black flex items-center justify-center hidden">0</span>
         </button>
         <div id="user-session-badge"></div>
+        <div id="header-lang-selector" class="relative shrink-0 notranslate" translate="no"></div>
       </div>
 
     </div>
@@ -257,7 +257,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=2.4.0"></script>
+  <script src="assets/js/app.js?v=2.4.1"></script>
   <script>
     function switchClientTab(tab) {
       const tabs = ['orders', 'chat', 'settings'];

@@ -39,7 +39,7 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.0">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.1">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
 </head>
 <body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex selection:bg-[#ee914f] selection:text-[#140f0c]">
@@ -139,12 +139,12 @@
 
       <!-- Top Right Status & Balance -->
       <div class="flex items-center gap-3">
-        <div id="header-lang-selector" class="relative"></div>
         <div class="flex items-center gap-2 bg-[#17120e] px-3.5 py-1.5 rounded-xl border border-stone-800">
           <span class="text-xs text-stone-400">Saldo:</span>
           <span id="booster-balance" class="text-base font-bold font-mono-gaming text-[#fcefc2]">$145.00</span>
         </div>
         <div id="user-session-badge"></div>
+        <div id="header-lang-selector" class="relative shrink-0 notranslate" translate="no"></div>
       </div>
     </header>
 
@@ -556,7 +556,7 @@
     <div id="bid-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=2.4.0"></script>
+  <script src="assets/js/app.js?v=2.4.1"></script>
   <script>
     function switchProTab(tabId) {
       document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));

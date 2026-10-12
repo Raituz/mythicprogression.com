@@ -7,7 +7,7 @@
   <title>Mythic Progression - World of Warcraft Boosting & Services</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.0">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.4.1">
   <link rel="icon" type="image/png" href="assets/img/logo_circular.png">
 </head>
 <body class="bg-[#0c0907] text-[#e5dfd5] min-h-screen flex flex-col selection:bg-[#ee914f] selection:text-[#140f0c]">
@@ -36,12 +36,12 @@
 
       <!-- User & Cart (Req 2) -->
       <div class="flex items-center gap-2.5 shrink-0">
-        <div id="header-lang-selector" class="relative"></div>
         <button onclick="app.openCartModal()" class="relative p-2.5 rounded-xl bg-[#17110d] border border-stone-800 text-stone-300 hover:text-[#ee914f] transition-colors">
           <i class="fa-solid fa-cart-shopping text-sm"></i>
           <span class="cart-counter-badge absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full copper-gradient-bg text-stone-950 text-[10px] font-black flex items-center justify-center hidden">0</span>
         </button>
         <div id="user-session-badge"></div>
+        <div id="header-lang-selector" class="relative shrink-0 notranslate" translate="no"></div>
       </div>
 
     </div>
@@ -265,7 +265,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=2.4.0"></script>
+  <script src="assets/js/app.js?v=2.4.1"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {
