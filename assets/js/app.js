@@ -181,6 +181,28 @@ class MythicApp {
         this.orders = await res.json();
         this.saveOrders();
       }
+
+      // Sanitize legacy "Soporte / Gerencia" labels in stored chats
+      if (Array.isArray(this.orders)) {
+        let orderChatsUpdated = false;
+        this.orders.forEach(o => {
+          if (Array.isArray(o.chat)) {
+            o.chat.forEach(msg => {
+              if (msg && msg.author && /soporte\s*\/\s*gerencia/i.test(msg.author)) {
+                if (/miguelb/i.test(msg.author) || msg.sender === 'admin') {
+                  msg.author = msg.author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Admin)');
+                  msg.sender = 'admin';
+                } else {
+                  msg.author = msg.author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Staff)');
+                  msg.sender = 'staff';
+                }
+                orderChatsUpdated = true;
+              }
+            });
+          }
+        });
+        if (orderChatsUpdated) this.saveOrders();
+      }
     } catch (e) {
       console.warn('Fallback loading orders:', e);
       if (!this.orders || this.orders.length === 0) this.orders = [];
@@ -2320,7 +2342,7 @@ class MythicApp {
   canAccessOrderChat(order) {
     if (!this.currentUser) return false;
     // Staff & Admin always have access
-    if (this.currentUser.type === 'staff' || this.currentUser.type === 'admin') return true;
+    if (this.currentUser.type === 'staff' || this.currentUser.type === 'admin' || this.isAdminOrGerente()) return true;
     // Order's client has access
     if (order.clientId === this.currentUser.id || order.clientEmail === this.currentUser.email || order.clientName === this.currentUser.username) return true;
     // Order's assigned booster has access
@@ -2340,21 +2362,31 @@ class MythicApp {
     const stream = document.getElementById('client-chat-stream');
     if (!stream) return;
 
-    stream.innerHTML = (order.chat || []).map(msg => `
-      <div class="flex flex-col ${msg.sender === 'client' ? 'items-end' : (msg.sender === 'system' ? 'items-center' : 'items-start')} mb-3">
-        ${msg.sender === 'system' ? `
-          <span class="text-[11px] bg-[#1a140f] border border-[#ee914f]/30 text-[#fcefc2] px-3.5 py-1 rounded-full text-center">
-            ${msg.message}
-          </span>
-        ` : `
-          <div class="max-w-[80%] p-3.5 rounded-2xl text-xs ${msg.sender === 'client' ? 'bg-[#291e16] text-[#fcefc2] border border-[#ee914f]/35 rounded-br-none' : 'bg-[#18130f] text-stone-200 border border-stone-800 rounded-bl-none'}">
-            <div class="text-[10px] text-[#ee914f] mb-1 font-semibold">${msg.author}</div>
-            <div class="leading-relaxed">${msg.message}</div>
+    stream.innerHTML = (order.chat || []).map(msg => {
+      if (msg.sender === 'system') {
+        return `
+          <div class="flex flex-col items-center mb-3">
+            <span class="text-[11px] bg-[#1a140f] border border-[#ee914f]/30 text-[#fcefc2] px-3.5 py-1 rounded-full text-center">
+              ${msg.message}
+            </span>
+          </div>
+        `;
+      }
+      const info = this.formatChatAuthorDisplay(msg);
+      const isClientMsg = info.roleLabel === 'Cliente' || msg.sender === 'client';
+      return `
+        <div class="flex flex-col ${isClientMsg ? 'items-end' : 'items-start'} mb-3">
+          <div class="max-w-[80%] p-3.5 rounded-2xl text-xs ${info.bubbleClass} ${isClientMsg ? 'rounded-br-none' : 'rounded-bl-none'}">
+            <div class="text-[10px] mb-1 font-semibold flex items-center gap-1.5" style="color: ${info.authorColor}">
+              <span>${info.cleanName}</span>
+              ${info.badgeHtml}
+            </div>
+            <div class="leading-relaxed break-words">${msg.message}</div>
           </div>
           <span class="text-[9px] text-stone-500 mt-1">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-        `}
-      </div>
-    `).join('');
+        </div>
+      `;
+    }).join('');
 
     setTimeout(() => {
       stream.scrollTop = stream.scrollHeight;
@@ -2480,23 +2512,33 @@ class MythicApp {
 
           <!-- Messages Stream -->
           <div id="client-full-chat-stream" class="flex-1 overflow-y-auto py-4 space-y-3">
-            ${(order.chat || []).map(msg => `
-              <div class="flex flex-col ${msg.sender === 'client' ? 'items-end' : (msg.sender === 'system' ? 'items-center' : 'items-start')}">
-                ${msg.sender === 'system' ? `
-                  <div class="max-w-md p-2 rounded-xl text-center text-[10px] ${msg.message.includes('ha ingresado') ? 'bg-amber-950/60 border border-amber-800 text-amber-200' : (msg.message.includes('ha salido') ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-200' : 'bg-[#1b140f] border border-stone-800 text-stone-300')}">
-                    ${msg.message}
+            ${(order.chat || []).map(msg => {
+              if (msg.sender === 'system') {
+                return `
+                  <div class="flex flex-col items-center">
+                    <div class="max-w-md p-2 rounded-xl text-center text-[10px] ${msg.message.includes('ha ingresado') ? 'bg-amber-950/60 border border-amber-800 text-amber-200' : (msg.message.includes('ha salido') ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-200' : 'bg-[#1b140f] border border-stone-800 text-stone-300')}">
+                      ${msg.message}
+                    </div>
                   </div>
-                ` : `
-                  <div class="max-w-[80%] p-3 rounded-2xl text-xs ${msg.sender === 'client' ? 'bg-[#2e2116] text-[#fcefc2] border border-[#ee914f]/35 rounded-br-none' : 'bg-[#18120d] text-stone-200 border border-stone-800 rounded-bl-none'}">
-                    <div class="text-[10px] text-[#ee914f] mb-1 font-semibold flex items-center justify-between gap-4">
-                      <span>${msg.author}</span>
+                `;
+              }
+              const info = this.formatChatAuthorDisplay(msg);
+              const isClientMsg = info.roleLabel === 'Cliente' || msg.sender === 'client';
+              return `
+                <div class="flex flex-col ${isClientMsg ? 'items-end' : 'items-start'}">
+                  <div class="max-w-[80%] p-3 rounded-2xl text-xs ${info.bubbleClass} ${isClientMsg ? 'rounded-br-none' : 'rounded-bl-none'}">
+                    <div class="text-[10px] mb-1 font-semibold flex items-center justify-between gap-4" style="color: ${info.authorColor}">
+                      <span class="flex items-center gap-1.5">
+                        <span>${info.cleanName}</span>
+                        ${info.badgeHtml}
+                      </span>
                       <span class="text-[9px] text-stone-500 font-normal">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div class="leading-relaxed">${msg.message}</div>
+                    <div class="leading-relaxed break-words">${msg.message}</div>
                   </div>
-                `}
-              </div>
-            `).join('')}
+                </div>
+              `;
+            }).join('')}
           </div>
 
           <!-- Input Box -->
@@ -2575,7 +2617,7 @@ class MythicApp {
     order.chat = order.chat || [];
     order.chat.push({
       sender: 'client',
-      author: this.currentUser?.username || 'Cliente',
+      author: `${this.currentUser?.username || 'Cliente'} (Cliente)`,
       message: msg,
       timestamp: new Date().toISOString()
     });
@@ -3281,8 +3323,8 @@ class MythicApp {
     if (!listContainer) return;
 
     // Strict Privacy (Req 4): Staff/Admin sees all orders; Booster ONLY sees orders assigned to THEM
-    const isAdmin = this.currentUser?.type === 'admin' || this.currentUser?.type === 'staff';
-    const myChatOrders = isAdmin 
+    const isStaffOrAdmin = this.currentUser?.type === 'admin' || this.currentUser?.type === 'staff' || this.isAdminOrGerente();
+    const myChatOrders = isStaffOrAdmin 
       ? this.orders 
       : this.orders.filter(o => 
           o.assignedBooster && (o.assignedBooster.discordId === this.currentUser?.discordId || o.assignedBooster.id === this.currentUser?.id)
@@ -3323,6 +3365,10 @@ class MythicApp {
     const chatContainer = document.getElementById('chat-active-window');
     if (!chatContainer) return;
 
+    const myRole = this.getUserChatRole();
+    const isAdminUser = myRole === 'Admin';
+    const isStaffUser = myRole === 'Staff';
+
     chatContainer.innerHTML = `
       <div class="mythic-guild-banner p-3.5 text-xs text-[#fcefc2] flex items-start gap-2.5 rounded-xl mb-4">
         <i class="fa-solid fa-dragon text-[#ee914f] text-sm mt-0.5"></i>
@@ -3344,24 +3390,34 @@ class MythicApp {
           </div>
 
           <div id="chat-messages-scroll" class="flex-1 overflow-y-auto py-4 space-y-3">
-            ${(order.chat || []).map(msg => `
-              <div class="flex flex-col ${msg.sender === 'booster' ? 'items-end' : (msg.sender === 'system' ? 'items-center' : 'items-start')}">
-                ${msg.sender === 'system' ? `
-                  <span class="text-[10px] bg-[#1a140f] border border-stone-800 text-stone-400 px-3 py-1 rounded-full text-center">${msg.message}</span>
-                ` : `
-                  <div class="max-w-[75%] p-3 rounded-2xl text-xs ${msg.sender === 'booster' ? 'bg-[#2f2217] text-[#fcefc2] border border-[#ee914f]/30 rounded-br-none' : 'bg-[#1a1511] text-stone-200 border border-stone-800 rounded-bl-none'}">
-                    <div class="text-[10px] text-[#ee914f] mb-1 font-semibold">${msg.author}</div>
-                    <div>${msg.message}</div>
+            ${(order.chat || []).map(msg => {
+              if (msg.sender === 'system') {
+                return `
+                  <div class="flex flex-col items-center">
+                    <span class="text-[10px] bg-[#1a140f] border border-stone-800 text-stone-400 px-3 py-1 rounded-full text-center">${msg.message}</span>
+                  </div>
+                `;
+              }
+              const info = this.formatChatAuthorDisplay(msg);
+              const isRightSide = info.isSelf || (myRole === 'Booster' && info.roleLabel === 'Booster');
+              return `
+                <div class="flex flex-col ${isRightSide ? 'items-end' : 'items-start'}">
+                  <div class="max-w-[75%] p-3 rounded-2xl text-xs ${info.bubbleClass} ${isRightSide ? 'rounded-br-none' : 'rounded-bl-none'}">
+                    <div class="text-[10px] mb-1 font-semibold flex items-center gap-1.5" style="color: ${info.authorColor}">
+                      <span>${info.cleanName}</span>
+                      ${info.badgeHtml}
+                    </div>
+                    <div class="leading-relaxed break-words">${msg.message}</div>
                   </div>
                   <span class="text-[9px] text-stone-500 mt-1">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                `}
-              </div>
-            `).join('')}
+                </div>
+              `;
+            }).join('')}
           </div>
 
           <form onsubmit="event.preventDefault(); app.sendChatMessage();" class="flex gap-2 pt-3 border-t border-stone-800">
-            <input id="chat-input-text" type="text" placeholder="Escribe un mensaje al cliente sobre la orden..." class="flex-1 bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2 text-xs text-white focus:border-[#ee914f] outline-none">
-            <button type="submit" class="px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs">
+            <input id="chat-input-text" type="text" placeholder="${isAdminUser ? 'Escribe como Admin en el chat de la orden...' : (isStaffUser ? 'Escribe como Staff en el chat de la orden...' : 'Escribe un mensaje al cliente sobre la orden...')}" class="flex-1 bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2 text-xs text-white focus:border-[#ee914f] outline-none">
+            <button type="submit" class="px-4 py-2 rounded-xl ${isAdminUser ? 'purple-gradient-bg text-white' : 'copper-gradient-bg text-stone-950'} font-bold text-xs">
               <i class="fa-solid fa-paper-plane"></i>
             </button>
           </form>
@@ -3410,12 +3466,18 @@ class MythicApp {
     const order = this.orders.find(o => o.id === this.activeChatOrderId);
     if (!order) return;
 
-    const isStaff = this.currentUser?.type === 'admin' || this.currentUser?.type === 'staff';
+    const roleLabel = this.getUserChatRole();
+    const authorName = this.currentUser?.username || (roleLabel === 'Admin' ? 'Admin' : (roleLabel === 'Staff' ? 'Staff' : 'Pro'));
+
+    let senderKey = 'booster';
+    if (roleLabel === 'Admin') senderKey = 'admin';
+    else if (roleLabel === 'Staff') senderKey = 'staff';
+    else if (roleLabel === 'Cliente') senderKey = 'client';
 
     order.chat = order.chat || [];
     order.chat.push({
-      sender: isStaff ? 'admin' : 'booster',
-      author: isStaff ? `${this.currentUser?.username || 'Staff'} (Soporte / Gerencia)` : `${this.currentUser?.username || 'Pro'} (Booster)`,
+      sender: senderKey,
+      author: `${authorName} (${roleLabel})`,
       message: input.value.trim(),
       timestamp: new Date().toISOString()
     });
@@ -4200,15 +4262,20 @@ class MythicApp {
             <span>Historial del Chat Entre Cliente y Booster:</span>
           </h4>
           <div class="bg-[#100521] border border-stone-800 rounded-xl p-3 max-h-56 overflow-y-auto space-y-2">
-            ${o.chat && o.chat.length ? o.chat.map(m => `
-              <div class="p-2 rounded-lg bg-[#1a130e] border border-stone-800/80">
-                <div class="flex items-center justify-between text-[10px] text-stone-400 mb-0.5">
-                  <span class="font-bold ${m.sender === 'booster' ? 'text-[#a855f7]' : m.sender === 'client' ? 'text-[#f3e8ff]' : 'text-emerald-400'}">${m.author}</span>
-                  <span>${new Date(m.timestamp).toLocaleTimeString()}</span>
+            ${o.chat && o.chat.length ? o.chat.map(m => {
+              const info = this.formatChatAuthorDisplay(m);
+              return `
+              <div class="p-2.5 rounded-lg ${info.bubbleClass} border border-stone-800/80">
+                <div class="flex items-center justify-between text-[10px] mb-1" style="color: ${info.authorColor}">
+                  <span class="font-bold flex items-center gap-1.5">
+                    <span>${info.cleanName}</span>
+                    ${info.badgeHtml}
+                  </span>
+                  <span class="text-stone-400">${new Date(m.timestamp).toLocaleTimeString()}</span>
                 </div>
-                <div class="text-stone-200 text-xs">${m.message}</div>
+                <div class="text-stone-200 text-xs break-words">${m.message}</div>
               </div>
-            `).join('') : '<div class="text-stone-500 text-center py-4">No hay mensajes en este chat aún.</div>'}
+            `;}).join('') : '<div class="text-stone-500 text-center py-4">No hay mensajes en este chat aún.</div>'}
           </div>
         </div>
 
@@ -5084,6 +5151,159 @@ class MythicApp {
     }
     const role = (this.currentUser.role || '').toLowerCase();
     return role.includes(target);
+  }
+
+  isAdmin() {
+    if (!this.currentUser) return false;
+    const discordId = String(this.currentUser.discordId || this.currentUser.discord_id || '').trim();
+    const username = (this.currentUser.username || '').trim().toLowerCase();
+    const email = (this.currentUser.email || '').trim().toLowerCase();
+    const role = (this.currentUser.role || '').trim().toLowerCase();
+    const roles = Array.isArray(this.currentUser.roles) ? this.currentUser.roles.map(r => String(r).toLowerCase()) : [];
+
+    return (
+      discordId === '443948776562884620' ||
+      username === 'miguelb' ||
+      email === 'charquin50@gmail.com' ||
+      role.includes('admin') ||
+      role.includes('gerente') ||
+      role.includes('owner') ||
+      role.includes('director') ||
+      role.includes('ceo') ||
+      roles.some(r => /admin|gerente|owner|director|ceo/i.test(r)) ||
+      (this.currentUser.type === 'admin' && !roles.some(r => /staff|soporte/i.test(r)) && !role.includes('staff'))
+    );
+  }
+
+  isStaffOnly() {
+    if (!this.currentUser) return false;
+    if (this.isAdmin()) return false;
+    const role = (this.currentUser.role || '').trim().toLowerCase();
+    const roles = Array.isArray(this.currentUser.roles) ? this.currentUser.roles.map(r => String(r).toLowerCase()) : [];
+    return (
+      this.currentUser.type === 'staff' ||
+      role.includes('staff') ||
+      role.includes('soporte') ||
+      role.includes('moderador') ||
+      roles.some(r => /staff|soporte|mod/i.test(r)) ||
+      (this.currentUser.isAdmin === true && !this.isAdmin())
+    );
+  }
+
+  getUserChatRole(user = this.currentUser) {
+    if (!user) return 'Cliente';
+    const discordId = String(user.discordId || user.discord_id || '').trim();
+    const username = (user.username || '').trim().toLowerCase();
+    const email = (user.email || '').trim().toLowerCase();
+    const role = (user.role || '').trim().toLowerCase();
+    const roles = Array.isArray(user.roles) ? user.roles.map(r => String(r).toLowerCase()) : [];
+
+    // Admin detection (Priority #1): Miguelb, Owner, Gerente, Admin
+    const isAdmin =
+      discordId === '443948776562884620' ||
+      username === 'miguelb' ||
+      email === 'charquin50@gmail.com' ||
+      role.includes('admin') ||
+      role.includes('gerente') ||
+      role.includes('owner') ||
+      role.includes('director') ||
+      role.includes('ceo') ||
+      roles.some(r => /admin|gerente|owner|director|ceo/i.test(r)) ||
+      (user.type === 'admin' && !roles.some(r => /staff|soporte/i.test(r)) && !role.includes('staff'));
+
+    if (isAdmin) return 'Admin';
+
+    // Staff detection (Priority #2): Staff roles, Soporte, Moderador
+    const isStaff =
+      user.type === 'staff' ||
+      role.includes('staff') ||
+      role.includes('soporte') ||
+      role.includes('moderador') ||
+      roles.some(r => /staff|soporte|mod/i.test(r)) ||
+      (user.isAdmin === true && !isAdmin);
+
+    if (isStaff) return 'Staff';
+
+    // Booster detection (Priority #3)
+    if (user.type === 'booster' || user.isBooster === true || roles.some(r => /booster|raider/i.test(r))) {
+      return 'Booster';
+    }
+
+    // Default: Cliente
+    return 'Cliente';
+  }
+
+  formatChatAuthorDisplay(msg) {
+    if (!msg) return { author: '', cleanName: '', roleLabel: '', badgeHtml: '', bubbleClass: '', isSelf: false, authorColor: '#ee914f' };
+
+    let author = String(msg.author || '').trim();
+    let sender = String(msg.sender || '').toLowerCase().trim();
+
+    // Retroactive conversion of legacy "Soporte / Gerencia"
+    if (/soporte\s*\/\s*gerencia/i.test(author)) {
+      if (/miguelb/i.test(author) || sender === 'admin') {
+        author = author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Admin)');
+        sender = 'admin';
+      } else {
+        author = author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Staff)');
+        sender = 'staff';
+      }
+    }
+
+    // Determine role label
+    let roleLabel = 'Cliente';
+    if (sender === 'admin' || /\(admin\)/i.test(author) || /miguelb/i.test(author)) {
+      roleLabel = 'Admin';
+    } else if (sender === 'staff' || /\(staff\)/i.test(author)) {
+      roleLabel = 'Staff';
+    } else if (sender === 'booster' || /\(booster\)|\(pro\)/i.test(author)) {
+      roleLabel = 'Booster';
+    } else if (sender === 'client' || /\(cliente\)/i.test(author)) {
+      roleLabel = 'Cliente';
+    }
+
+    // Clean name without parenthesized role
+    const cleanName = author.replace(/\s*\([^)]*\)\s*$/, '').trim() || author;
+
+    // Check if sent by current viewer
+    const myName = (this.currentUser?.username || '').toLowerCase().trim();
+    const myRole = this.getUserChatRole();
+    const isSelf = (myName && cleanName.toLowerCase() === myName) ||
+                   (roleLabel === 'Admin' && myRole === 'Admin') ||
+                   (roleLabel === 'Staff' && myRole === 'Staff' && myName && cleanName.toLowerCase() === myName);
+
+    // Badges & styling
+    let badgeHtml = '';
+    let authorColor = '#ee914f';
+    let bubbleClass = 'bg-[#18120d] text-stone-200 border border-stone-800';
+
+    if (roleLabel === 'Admin') {
+      authorColor = '#c084fc';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#2d124d] text-purple-200 border border-purple-500/50 shadow-sm"><i class="fa-solid fa-crown text-[8px] text-amber-300"></i> Admin</span>`;
+      bubbleClass = 'bg-[#1b0b2e] text-purple-100 border border-purple-600/40 shadow-sm shadow-purple-950/30';
+    } else if (roleLabel === 'Staff') {
+      authorColor = '#38bdf8';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0c2338] text-sky-200 border border-sky-500/40 shadow-sm"><i class="fa-solid fa-shield-halved text-[8px] text-sky-400"></i> Staff</span>`;
+      bubbleClass = 'bg-[#0b1926] text-sky-100 border border-sky-600/35 shadow-sm shadow-sky-950/30';
+    } else if (roleLabel === 'Booster') {
+      authorColor = '#ee914f';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#291e16] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-bolt text-[8px] text-[#ee914f]"></i> Booster</span>`;
+      bubbleClass = 'bg-[#261a12] text-[#fcefc2] border border-[#ee914f]/35';
+    } else {
+      authorColor = '#34d399';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-500/30"><i class="fa-solid fa-user text-[8px]"></i> Cliente</span>`;
+      bubbleClass = 'bg-[#141210] text-stone-200 border border-stone-800';
+    }
+
+    return {
+      author: `${cleanName} (${roleLabel})`,
+      cleanName,
+      roleLabel,
+      badgeHtml,
+      authorColor,
+      bubbleClass,
+      isSelf
+    };
   }
 
   // ==========================================
