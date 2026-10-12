@@ -167,3 +167,48 @@ input:checked + .slider:before {
 .animate-flame {
   animation: flame-pulse 3s infinite ease-in-out;
 }
+
+/* ======================================================== */
+/* ADMIN WAR ROOM: ROYAL AMETHYST & CYBER VIOLET THEME      */
+/* ======================================================== */
+:root {
+  --admin-purple-primary: #a855f7;
+  --admin-purple-light: #c084fc;
+  --admin-purple-dark: #7e22ce;
+  --admin-purple-glow: rgba(168, 85, 247, 0.35);
+  --admin-border-purple: rgba(168, 85, 247, 0.28);
+}
+
+.purple-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 20%, #c084fc 60%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.purple-gradient-bg {
+  background: linear-gradient(135deg, #c084fc 0%, #9333ea 50%, #6b21a8 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.35);
+}
+.purple-gradient-bg:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 6px 28px rgba(168, 85, 247, 0.55);
+}
+
+.admin-glass-panel {
+  background: rgba(18, 10, 32, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.admin-glass-nav {
+  background: rgba(13, 7, 26, 0.95);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.admin-purple-glow {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
+}
+

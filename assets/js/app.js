@@ -3544,10 +3544,10 @@ class MythicApp {
     }
 
     container.innerHTML = list.map(svc => `
-      <tr class="hover:bg-[#1a140f] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
-        <td class="py-4 px-5 font-mono-gaming text-[#ee914f] font-bold whitespace-nowrap">${svc.id}</td>
+      <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
+        <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap">${svc.id}</td>
         <td class="py-4 px-5 font-bold text-white flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-[#221a14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] shrink-0">
+          <div class="w-8 h-8 rounded-xl bg-[#230f3f] border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7] shrink-0">
             <i class="fa-solid ${svc.icon || 'fa-dungeon'} text-xs"></i>
           </div>
           <div>
@@ -3556,11 +3556,11 @@ class MythicApp {
           </div>
         </td>
         <td class="py-4 px-5 whitespace-nowrap">
-          <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#251b14] text-[#fcefc2] border border-[#ee914f]/30 text-[11px] font-semibold">
+          <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#241042] text-[#f3e8ff] border border-[#a855f7]/30 text-[11px] font-semibold">
             ${svc.category}
           </span>
         </td>
-        <td class="py-4 px-5 font-mono-gaming font-bold text-[#fcefc2] text-sm whitespace-nowrap">
+        <td class="py-4 px-5 font-mono-gaming font-bold text-[#f3e8ff] text-sm whitespace-nowrap">
           $${Number(svc.basePrice).toFixed(2)}
         </td>
         <td class="py-4 px-5 whitespace-nowrap">
@@ -3570,8 +3570,8 @@ class MythicApp {
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
           <div class="flex items-center justify-end gap-2">
-            <button onclick="app.editProductModal('${svc.id}')" class="px-3 py-1.5 rounded-xl bg-[#241a13] hover:bg-[#342419] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
-              <i class="fa-solid fa-pen-to-square text-[#ee914f]"></i>
+            <button onclick="app.editProductModal('${svc.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
+              <i class="fa-solid fa-pen-to-square text-[#a855f7]"></i>
               <span>Editar</span>
             </button>
             <button onclick="app.deleteProduct('${svc.id}')" class="px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
@@ -3596,12 +3596,12 @@ class MythicApp {
       if (t === tabId) {
         if (content) content.classList.remove('hidden');
         if (btn) {
-          btn.className = 'px-3.5 py-1.5 rounded-xl bg-[#2a170d] text-[#ee914f] border border-[#ee914f]/50 flex items-center gap-2 transition-all cursor-pointer font-semibold shadow-sm';
+          btn.className = 'px-3.5 py-1.5 rounded-xl bg-[#29104a] text-[#a855f7] border border-[#a855f7]/50 flex items-center gap-2 transition-all cursor-pointer font-semibold shadow-sm';
         }
       } else {
         if (content) content.classList.add('hidden');
         if (btn) {
-          btn.className = 'px-3.5 py-1.5 rounded-xl bg-[#17110d] hover:bg-[#201610] text-stone-400 hover:text-white border border-stone-800 flex items-center gap-2 transition-all cursor-pointer font-semibold';
+          btn.className = 'px-3.5 py-1.5 rounded-xl bg-[#150a2e] hover:bg-[#201610] text-stone-400 hover:text-white border border-stone-800 flex items-center gap-2 transition-all cursor-pointer font-semibold';
         }
       }
     });
@@ -3611,16 +3611,16 @@ class MythicApp {
     const container = document.getElementById('adm-key-levels-list');
     if (!container) return;
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#140e0a] p-2 rounded-xl border border-stone-800/80 adm-key-row';
+    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#120726] p-2 rounded-xl border border-stone-800/80 adm-key-row';
     row.innerHTML = `
       <div class="col-span-3">
-        <input type="text" value="${level}" placeholder="+10" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white text-center font-mono-gaming font-bold outline-none focus:border-[#ee914f] adm-key-lvl">
+        <input type="text" value="${level}" placeholder="+10" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white text-center font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-key-lvl">
       </div>
       <div class="col-span-4">
-        <input type="number" step="0.5" value="${price}" placeholder="38.00" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#fcefc2] font-mono-gaming font-bold outline-none focus:border-[#ee914f] adm-key-prc">
+        <input type="number" step="0.5" value="${price}" placeholder="38.00" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-key-prc">
       </div>
       <div class="col-span-3 flex justify-center">
-        <input type="radio" name="adm_key_recommended" ${recommended ? 'checked' : ''} class="w-4 h-4 accent-[#ee914f] cursor-pointer adm-key-rec" title="Marcar como recomendado">
+        <input type="radio" name="adm_key_recommended" ${recommended ? 'checked' : ''} class="w-4 h-4 accent-[#a855f7] cursor-pointer adm-key-rec" title="Marcar como recomendado">
       </div>
       <div class="col-span-2 flex justify-end">
         <button type="button" onclick="this.closest('.adm-key-row').remove()" class="w-7 h-7 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Eliminar fila">
@@ -3666,13 +3666,13 @@ class MythicApp {
     const container = document.getElementById('adm-traders-list');
     if (!container) return;
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#140e0a] p-2 rounded-xl border border-stone-800 adm-trader-row';
+    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#120726] p-2 rounded-xl border border-stone-800 adm-trader-row';
     row.innerHTML = `
       <div class="col-span-7">
-        <input type="text" value="${label}" placeholder="VIP Group (+3 traders)" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#ee914f] adm-trader-lbl">
+        <input type="text" value="${label}" placeholder="VIP Group (+3 traders)" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#a855f7] adm-trader-lbl">
       </div>
       <div class="col-span-3">
-        <input type="number" step="0.01" value="${price}" placeholder="2.50" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#fcefc2] font-mono-gaming font-bold outline-none focus:border-[#ee914f] adm-trader-prc">
+        <input type="number" step="0.01" value="${price}" placeholder="2.50" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-trader-prc">
       </div>
       <div class="col-span-2 flex justify-end">
         <button type="button" onclick="this.closest('.adm-trader-row').remove()" class="w-7 h-7 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Eliminar trader">
@@ -3699,16 +3699,16 @@ class MythicApp {
     const container = document.getElementById('adm-modes-list');
     if (!container) return;
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#140e0a] p-2 rounded-xl border border-stone-800 adm-mode-row';
+    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#120726] p-2 rounded-xl border border-stone-800 adm-mode-row';
     row.innerHTML = `
       <div class="col-span-5">
-        <input type="text" value="${label}" placeholder="Self-play" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#ee914f] adm-mode-lbl">
+        <input type="text" value="${label}" placeholder="Self-play" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#a855f7] adm-mode-lbl">
       </div>
       <div class="col-span-3">
-        <input type="number" step="0.01" value="${price}" placeholder="0.00" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#fcefc2] font-mono-gaming font-bold outline-none focus:border-[#ee914f] adm-mode-prc">
+        <input type="number" step="0.01" value="${price}" placeholder="0.00" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-mode-prc">
       </div>
       <div class="col-span-2">
-        <input type="text" value="${tag}" placeholder="Gratis" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2 py-1.5 text-xs text-stone-300 outline-none focus:border-[#ee914f] adm-mode-tag">
+        <input type="text" value="${tag}" placeholder="Gratis" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2 py-1.5 text-xs text-stone-300 outline-none focus:border-[#a855f7] adm-mode-tag">
       </div>
       <div class="col-span-2 flex justify-end">
         <button type="button" onclick="this.closest('.adm-mode-row').remove()" class="w-7 h-7 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Eliminar método">
@@ -3735,13 +3735,13 @@ class MythicApp {
     const container = document.getElementById('adm-extras-list');
     if (!container) return;
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#140e0a] p-2 rounded-xl border border-stone-800 adm-extra-row';
+    row.className = 'grid grid-cols-12 gap-2 items-center bg-[#120726] p-2 rounded-xl border border-stone-800 adm-extra-row';
     row.innerHTML = `
       <div class="col-span-7">
-        <input type="text" value="${label}" placeholder="Rank One Team" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#ee914f] adm-extra-lbl">
+        <input type="text" value="${label}" placeholder="Rank One Team" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#a855f7] adm-extra-lbl">
       </div>
       <div class="col-span-3">
-        <input type="number" step="0.01" value="${price}" placeholder="1.95" class="w-full bg-[#1c140e] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#fcefc2] font-mono-gaming font-bold outline-none focus:border-[#ee914f] adm-extra-prc">
+        <input type="number" step="0.01" value="${price}" placeholder="1.95" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-extra-prc">
       </div>
       <div class="col-span-2 flex justify-end">
         <button type="button" onclick="this.closest('.adm-extra-row').remove()" class="w-7 h-7 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Eliminar extra">
@@ -4079,29 +4079,29 @@ class MythicApp {
     }
 
     container.innerHTML = list.map(o => `
-      <tr class="hover:bg-[#1a140f] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
-        <td class="py-4 px-5 font-mono-gaming text-[#ee914f] font-bold whitespace-nowrap text-xs">#${o.id}</td>
+      <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
+        <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap text-xs">#${o.id}</td>
         <td class="py-4 px-5">
           <div class="font-bold text-white text-sm leading-snug">${o.serviceName}</div>
           <div class="text-[11px] text-stone-400 mt-1">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
         </td>
         <td class="py-4 px-5">
-          <div class="font-semibold text-[#fcefc2] text-xs">${o.clientName || 'Cliente'}</div>
+          <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
           <div class="text-[11px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
         </td>
         <td class="py-4 px-5 font-mono-gaming font-bold text-white text-sm whitespace-nowrap">
           $${Number(o.totalPrice).toFixed(2)}
         </td>
-        <td class="py-4 px-5 font-mono-gaming text-[#fcefc2] font-bold text-sm whitespace-nowrap">
+        <td class="py-4 px-5 font-mono-gaming text-[#f3e8ff] font-bold text-sm whitespace-nowrap">
           $${(Number(o.companyShare) || (Number(o.totalPrice) * 0.70)).toFixed(2)}
         </td>
         <td class="py-4 px-5">
           ${o.assignedBooster ? `
             <div class="font-semibold text-emerald-300 flex items-center gap-1.5 text-xs">
-              <i class="fa-solid fa-bolt text-[11px] text-[#ee914f]"></i>
+              <i class="fa-solid fa-bolt text-[11px] text-[#a855f7]"></i>
               <span>${o.assignedBooster.username || 'Booster'}</span>
             </div>
-            <div class="text-[10px] font-mono-gaming text-[#ee914f] mt-0.5">Pago: $${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>
+            <div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>
           ` : `
             <span class="text-stone-500 italic text-[11px]">Sin asignar</span>
           `}
@@ -4110,15 +4110,15 @@ class MythicApp {
           <span class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider ${
             o.status === 'COMPLETED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-sm' :
             o.status === 'IN_PROGRESS' ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60 shadow-sm' :
-            'bg-[#281b13] text-[#ee914f] border border-[#ee914f]/40 shadow-sm'
+            'bg-[#281b13] text-[#a855f7] border border-[#a855f7]/40 shadow-sm'
           }">
             ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : 'DISPONIBLE'}
           </span>
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
           <div class="flex items-center justify-end gap-2">
-            <button onclick="app.openAdminOrderModal('${o.id}')" class="px-3 py-1.5 rounded-xl bg-[#241a13] hover:bg-[#342419] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all" title="Ver Detalles y Chat">
-              <i class="fa-solid fa-eye text-[#ee914f] text-xs"></i>
+            <button onclick="app.openAdminOrderModal('${o.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all" title="Ver Detalles y Chat">
+              <i class="fa-solid fa-eye text-[#a855f7] text-xs"></i>
               <span>Auditar</span>
             </button>
             ${o.status !== 'COMPLETED' ? `
@@ -4176,8 +4176,8 @@ class MythicApp {
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div>
-          <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Auditoría de Orden #${o.id}</h3>
-          <span class="text-xs text-[#ee914f]">${o.serviceName}</span>
+          <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Auditoría de Orden #${o.id}</h3>
+          <span class="text-xs text-[#a855f7]">${o.serviceName}</span>
         </div>
         <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
@@ -4187,23 +4187,23 @@ class MythicApp {
       <div class="space-y-4 text-xs">
         <div class="grid grid-cols-2 gap-3 bg-[#150f0c] p-4 rounded-xl border border-stone-800">
           <div><span class="text-stone-500">Cliente:</span> <strong class="text-white">${o.clientName}</strong> (${o.clientDiscord})</div>
-          <div><span class="text-stone-500">Booster:</span> <strong class="text-[#ee914f]">${o.assignedBooster ? o.assignedBooster.username : 'Sin Asignar'}</strong></div>
+          <div><span class="text-stone-500">Booster:</span> <strong class="text-[#a855f7]">${o.assignedBooster ? o.assignedBooster.username : 'Sin Asignar'}</strong></div>
           <div><span class="text-stone-500">Personaje:</span> <strong class="text-stone-200">${o.characterName || 'N/A'} (${o.realm || 'US'})</strong></div>
           <div><span class="text-stone-500">Modalidad:</span> <strong class="text-stone-200">${o.completionMethod || 'Self-play'}</strong></div>
           <div><span class="text-stone-500">Total Pagado:</span> <strong class="text-white font-mono-gaming text-sm">$${o.totalPrice.toFixed(2)}</strong></div>
-          <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#fcefc2] font-mono-gaming">$${(o.companyShare || o.totalPrice * 0.7).toFixed(2)} / $${(o.boosterPayout || o.totalPrice * 0.3).toFixed(2)}</strong></div>
+          <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#f3e8ff] font-mono-gaming">$${(o.companyShare || o.totalPrice * 0.7).toFixed(2)} / $${(o.boosterPayout || o.totalPrice * 0.3).toFixed(2)}</strong></div>
         </div>
 
         <div>
           <h4 class="font-bold text-stone-300 mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-comments text-[#ee914f]"></i>
+            <i class="fa-solid fa-comments text-[#a855f7]"></i>
             <span>Historial del Chat Entre Cliente y Booster:</span>
           </h4>
-          <div class="bg-[#120d09] border border-stone-800 rounded-xl p-3 max-h-56 overflow-y-auto space-y-2">
+          <div class="bg-[#100521] border border-stone-800 rounded-xl p-3 max-h-56 overflow-y-auto space-y-2">
             ${o.chat && o.chat.length ? o.chat.map(m => `
               <div class="p-2 rounded-lg bg-[#1a130e] border border-stone-800/80">
                 <div class="flex items-center justify-between text-[10px] text-stone-400 mb-0.5">
-                  <span class="font-bold ${m.sender === 'booster' ? 'text-[#ee914f]' : m.sender === 'client' ? 'text-[#fcefc2]' : 'text-emerald-400'}">${m.author}</span>
+                  <span class="font-bold ${m.sender === 'booster' ? 'text-[#a855f7]' : m.sender === 'client' ? 'text-[#f3e8ff]' : 'text-emerald-400'}">${m.author}</span>
                   <span>${new Date(m.timestamp).toLocaleTimeString()}</span>
                 </div>
                 <div class="text-stone-200 text-xs">${m.message}</div>
@@ -4381,7 +4381,7 @@ class MythicApp {
       'Over': 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40',
       'Conquest': 'bg-red-950/60 text-red-300 border-red-800/40',
       'Barreiro': 'bg-stone-900 text-stone-300 border-stone-800',
-      'Miguel': 'bg-[#291e16] text-[#ee914f] border-[#ee914f]/30'
+      'Miguel': 'bg-[#291e16] text-[#a855f7] border-[#a855f7]/30'
     };
 
     tbody.innerHTML = pageItems.map(o => {
@@ -4400,7 +4400,7 @@ class MythicApp {
           <td class="py-3 px-4">
             <div class="font-mono-gaming font-bold text-white text-[11px]">${o.id}</div>
             <div class="text-[10px] text-stone-500 flex items-center gap-1 mt-0.5">
-              <i class="fa-solid fa-calendar-day text-[9px] text-[#ee914f]"></i>
+              <i class="fa-solid fa-calendar-day text-[9px] text-[#a855f7]"></i>
               <span>${o.fecha || 'N/A'}</span>
             </div>
           </td>
@@ -4410,8 +4410,8 @@ class MythicApp {
             </span>
           </td>
           <td class="py-3 px-4 max-w-xs">
-            <div class="font-bold text-[#fcefc2] truncate flex items-center gap-1.5">
-              <i class="fa-solid fa-dungeon text-[#ee914f] text-[10px]"></i>
+            <div class="font-bold text-[#f3e8ff] truncate flex items-center gap-1.5">
+              <i class="fa-solid fa-dungeon text-[#a855f7] text-[10px]"></i>
               <span title="${o.trabajo}">${o.trabajo}</span>
             </div>
             ${o.supplier ? `<span class="text-[10px] text-stone-500 block">Supplier: ${o.supplier}</span>` : ''}
@@ -4425,8 +4425,8 @@ class MythicApp {
             </span>
           </td>
           <td class="py-3 px-4 font-mono-gaming text-[11px]">
-            ${o.cu > 0 ? `<div class="text-[#fcefc2] font-semibold">C/U: ${isGold ? o.cu.toLocaleString() : '$' + o.cu.toFixed(2)}</div>` : ''}
-            ${o.total_pagar > 0 ? `<div class="text-[#ee914f] text-[10px]">Total: ${isGold ? o.total_pagar.toLocaleString() : '$' + o.total_pagar.toFixed(2)}</div>` : '<span class="text-stone-600">-</span>'}
+            ${o.cu > 0 ? `<div class="text-[#f3e8ff] font-semibold">C/U: ${isGold ? o.cu.toLocaleString() : '$' + o.cu.toFixed(2)}</div>` : ''}
+            ${o.total_pagar > 0 ? `<div class="text-[#a855f7] text-[10px]">Total: ${isGold ? o.total_pagar.toLocaleString() : '$' + o.total_pagar.toFixed(2)}</div>` : '<span class="text-stone-600">-</span>'}
           </td>
           <td class="py-3 px-4">
             <div class="flex flex-wrap gap-1 max-w-[200px]">
@@ -4444,8 +4444,8 @@ class MythicApp {
             </div>
           </td>
           <td class="py-3 px-4 text-right">
-            <button onclick="app.viewHistoryOrderModal('${encodeURIComponent(o.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#241a13] hover:bg-[#342419] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-[11px] flex items-center gap-1.5 ml-auto shadow-sm" title="Ver todos los detalles">
-              <i class="fa-solid fa-file-invoice text-[#ee914f]"></i>
+            <button onclick="app.viewHistoryOrderModal('${encodeURIComponent(o.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-[11px] flex items-center gap-1.5 ml-auto shadow-sm" title="Ver todos los detalles">
+              <i class="fa-solid fa-file-invoice text-[#a855f7]"></i>
               <span>Ficha</span>
             </button>
           </td>
@@ -4499,12 +4499,12 @@ class MythicApp {
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-[#241a13] border border-[#ee914f]/50 flex items-center justify-center text-[#ee914f] text-lg">
+          <div class="w-10 h-10 rounded-xl bg-[#241042] border border-[#a855f7]/50 flex items-center justify-center text-[#a855f7] text-lg">
             <i class="fa-solid fa-file-invoice"></i>
           </div>
           <div>
-            <h3 class="text-base font-bold text-[#fcefc2] font-cinzel leading-tight">Ficha de Orden: ${o.id}</h3>
-            <span class="text-xs text-[#ee914f] font-semibold">${o.cartera} | Fecha: ${o.fecha || 'N/A'}</span>
+            <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel leading-tight">Ficha de Orden: ${o.id}</h3>
+            <span class="text-xs text-[#a855f7] font-semibold">${o.cartera} | Fecha: ${o.fecha || 'N/A'}</span>
           </div>
         </div>
         <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
@@ -4525,38 +4525,38 @@ class MythicApp {
         <div class="bg-[#150f0c] p-4 rounded-xl border border-stone-800">
           <span class="text-[10px] text-stone-500 uppercase font-bold tracking-wider block mb-3">Auditoría Financiera:</span>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div class="p-2.5 rounded-lg bg-[#1c140e] border border-stone-800/80">
+            <div class="p-2.5 rounded-lg bg-[#1b0c36] border border-stone-800/80">
               <span class="text-[10px] text-stone-500 block">Monto Real Total:</span>
               <strong class="text-sm font-mono-gaming ${isGold ? 'text-amber-400' : 'text-white'}">
                 ${isGold ? o.monto_real.toLocaleString() + ' Gold' : '$' + o.monto_real.toFixed(2)}
               </strong>
             </div>
-            <div class="p-2.5 rounded-lg bg-[#1c140e] border border-stone-800/80">
+            <div class="p-2.5 rounded-lg bg-[#1b0c36] border border-stone-800/80">
               <span class="text-[10px] text-stone-500 block">Pago C/U por Booster:</span>
-              <strong class="text-sm font-mono-gaming text-[#fcefc2]">
+              <strong class="text-sm font-mono-gaming text-[#f3e8ff]">
                 ${isGold ? o.cu.toLocaleString() + ' Gold' : '$' + o.cu.toFixed(2)}
               </strong>
             </div>
-            <div class="p-2.5 rounded-lg bg-[#1c140e] border border-stone-800/80">
+            <div class="p-2.5 rounded-lg bg-[#1b0c36] border border-stone-800/80">
               <span class="text-[10px] text-stone-500 block">Total a Pagar:</span>
-              <strong class="text-sm font-mono-gaming text-[#ee914f]">
+              <strong class="text-sm font-mono-gaming text-[#a855f7]">
                 ${isGold ? o.total_pagar.toLocaleString() + ' Gold' : '$' + o.total_pagar.toFixed(2)}
               </strong>
             </div>
             ${o.mp_margin > 0 ? `
-              <div class="p-2.5 rounded-lg bg-[#1c140e] border border-stone-800/80">
+              <div class="p-2.5 rounded-lg bg-[#1b0c36] border border-stone-800/80">
                 <span class="text-[10px] text-stone-500 block">Margen Mythic (MP):</span>
                 <strong class="text-xs font-mono-gaming text-emerald-400">$${o.mp_margin.toFixed(2)}</strong>
               </div>
             ` : ''}
             ${o.monto_booster_40 > 0 ? `
-              <div class="p-2.5 rounded-lg bg-[#1c140e] border border-stone-800/80">
+              <div class="p-2.5 rounded-lg bg-[#1b0c36] border border-stone-800/80">
                 <span class="text-[10px] text-stone-500 block">Monto Booster (40%):</span>
                 <strong class="text-xs font-mono-gaming text-stone-300">$${o.monto_booster_40.toFixed(2)}</strong>
               </div>
             ` : ''}
             ${o.monto_booster_20 > 0 ? `
-              <div class="p-2.5 rounded-lg bg-[#1c140e] border border-stone-800/80">
+              <div class="p-2.5 rounded-lg bg-[#1b0c36] border border-stone-800/80">
                 <span class="text-[10px] text-stone-500 block">Monto Booster (20%):</span>
                 <strong class="text-xs font-mono-gaming text-stone-300">$${o.monto_booster_20.toFixed(2)}</strong>
               </div>
@@ -4568,19 +4568,19 @@ class MythicApp {
         <div class="bg-[#150f0c] p-4 rounded-xl border border-stone-800">
           <span class="text-[10px] text-stone-500 uppercase font-bold tracking-wider block mb-2">Equipo de Boosters (Party):</span>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div class="p-2 rounded-lg bg-[#18110b] border border-stone-800 text-center">
+            <div class="p-2 rounded-lg bg-[#160a30] border border-stone-800 text-center">
               <span class="text-[10px] text-blue-400 font-bold block"><i class="fa-solid fa-shield mr-1"></i>Tank</span>
               <strong class="text-white text-xs">${o.tank || 'Sin asignar'}</strong>
             </div>
-            <div class="p-2 rounded-lg bg-[#18110b] border border-stone-800 text-center">
+            <div class="p-2 rounded-lg bg-[#160a30] border border-stone-800 text-center">
               <span class="text-[10px] text-emerald-400 font-bold block"><i class="fa-solid fa-heart mr-1"></i>Healer</span>
               <strong class="text-white text-xs">${o.heal || 'Sin asignar'}</strong>
             </div>
-            <div class="p-2 rounded-lg bg-[#18110b] border border-stone-800 text-center">
+            <div class="p-2 rounded-lg bg-[#160a30] border border-stone-800 text-center">
               <span class="text-[10px] text-amber-400 font-bold block"><i class="fa-solid fa-crosshairs mr-1"></i>DPS 1</span>
               <strong class="text-white text-xs">${o.dps1 || 'Sin asignar'}</strong>
             </div>
-            <div class="p-2 rounded-lg bg-[#18110b] border border-stone-800 text-center">
+            <div class="p-2 rounded-lg bg-[#160a30] border border-stone-800 text-center">
               <span class="text-[10px] text-amber-400 font-bold block"><i class="fa-solid fa-crosshairs mr-1"></i>DPS 2</span>
               <strong class="text-white text-xs">${o.dps2 || 'Sin asignar'}</strong>
             </div>
@@ -4676,9 +4676,9 @@ class MythicApp {
     }
 
     container.innerHTML = list.map(c => `
-      <tr class="hover:bg-[#1a140f] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
+      <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
         <td class="py-4 px-5 font-bold text-white flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-[#241a13] border border-[#ee914f]/40 flex items-center justify-center text-[#fcefc2] font-bold text-xs shrink-0">
+          <div class="w-8 h-8 rounded-full bg-[#241042] border border-[#a855f7]/40 flex items-center justify-center text-[#f3e8ff] font-bold text-xs shrink-0">
             ${c.username ? c.username[0].toUpperCase() : 'C'}
           </div>
           <div>
@@ -4686,7 +4686,7 @@ class MythicApp {
             <div class="text-[11px] text-stone-500 font-mono-gaming">${c.id}</div>
           </div>
         </td>
-        <td class="py-4 px-5 font-mono-gaming text-[#ee914f] font-semibold whitespace-nowrap">${c.discordId}</td>
+        <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-semibold whitespace-nowrap">${c.discordId}</td>
         <td class="py-4 px-5">
           <div class="text-stone-300 text-xs">${c.email}</div>
           <div class="text-[11px] text-stone-500 font-mono-gaming mt-0.5">${c.battletag || 'N/A'}</div>
@@ -4700,8 +4700,8 @@ class MythicApp {
           </span>
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
-          <button onclick="app.viewClientDetailsModal('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#241a13] hover:bg-[#342419] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs flex items-center gap-1.5 ml-auto shadow-sm transition-all">
-            <i class="fa-solid fa-receipt text-[#ee914f]"></i>
+          <button onclick="app.viewClientDetailsModal('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 ml-auto shadow-sm transition-all">
+            <i class="fa-solid fa-receipt text-[#a855f7]"></i>
             <span>Historial</span>
           </button>
         </td>
@@ -4726,8 +4726,8 @@ class MythicApp {
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div>
-          <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Perfil del Cliente: ${c.username}</h3>
-          <span class="text-xs text-[#ee914f]">${c.discordId} | ${c.country}</span>
+          <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Perfil del Cliente: ${c.username}</h3>
+          <span class="text-xs text-[#a855f7]">${c.discordId} | ${c.country}</span>
         </div>
         <button onclick="document.getElementById('admin-client-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
@@ -4751,7 +4751,7 @@ class MythicApp {
                   <div class="font-bold text-white">#${o.id} - ${o.serviceName}</div>
                   <div class="text-[10px] text-stone-500">${new Date(o.createdAt).toLocaleDateString()} | ${o.status}</div>
                 </div>
-                <div class="text-right font-mono-gaming font-bold text-[#fcefc2]">
+                <div class="text-right font-mono-gaming font-bold text-[#f3e8ff]">
                   $${o.totalPrice.toFixed(2)}
                 </div>
               </div>
@@ -4829,7 +4829,7 @@ class MythicApp {
       const bRoles = Array.isArray(b.roles) && b.roles.length > 0 ? b.roles : [b.role || 'Booster'];
       const isOwner = b.discord_id === '443948776562884620' || (b.username && b.username.toLowerCase() === 'miguelb');
       return `
-        <tr class="hover:bg-[#1f1712] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
+        <tr class="hover:bg-[#1e0d3d] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
           <td class="py-4 px-5 font-mono-gaming text-stone-400 whitespace-nowrap">
             <span class="flex items-center gap-1.5">
               <i class="fa-brands fa-discord text-[#5865F2] text-xs"></i>
@@ -4837,7 +4837,7 @@ class MythicApp {
             </span>
           </td>
           <td class="py-4 px-5 font-bold text-white flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-[#2a1e16] border border-[#ee914f]/30 flex items-center justify-center text-xs text-[#fcefc2] shrink-0 font-bold overflow-hidden shadow-inner">
+            <div class="w-8 h-8 rounded-full bg-[#28114d] border border-[#a855f7]/30 flex items-center justify-center text-xs text-[#f3e8ff] shrink-0 font-bold overflow-hidden shadow-inner">
               ${b.avatar ? `<img src="${b.avatar}" class="w-full h-full object-cover">` : (b.username ? b.username[0].toUpperCase() : 'B')}
             </div>
             <div>
@@ -4853,9 +4853,9 @@ class MythicApp {
               ${this.renderBoosterRoleBadges(bRoles)}
             </div>
           </td>
-          <td class="py-4 px-5 font-mono-gaming text-[#fcefc2] font-bold whitespace-nowrap">${b.points || 0} pts</td>
+          <td class="py-4 px-5 font-mono-gaming text-[#f3e8ff] font-bold whitespace-nowrap">${b.points || 0} pts</td>
           <td class="py-4 px-5 text-stone-400 text-xs whitespace-nowrap">
-            <span class="px-2 py-1 rounded bg-[#16100b] border border-stone-800 text-[11px] text-stone-300">
+            <span class="px-2 py-1 rounded bg-[#15092a] border border-stone-800 text-[11px] text-stone-300">
               ${b.payout_method || 'Binance Pay / USDT'}
             </span>
           </td>
@@ -4875,12 +4875,12 @@ class MythicApp {
           <td class="py-4 px-5 text-right whitespace-nowrap">
             <div class="flex items-center justify-end gap-1.5">
               ${!b.approved ? `
-                <button onclick="app.approveBooster('${b.discord_id}')" class="px-3 py-1.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase shadow-sm">
+                <button onclick="app.approveBooster('${b.discord_id}')" class="px-3 py-1.5 rounded-xl purple-gradient-bg font-bold text-xs uppercase shadow-sm">
                   Aprobar
                 </button>
               ` : ''}
-              <button onclick="app.openEditBoosterRolesModal('${b.discord_id}')" class="px-3 py-1.5 rounded-xl bg-[#241a12] hover:bg-[#342418] border border-[#ee914f]/30 hover:border-[#ee914f] text-[#fcefc2] font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm" title="Editar Multi-Roles">
-                <i class="fa-solid fa-tags text-[11px] text-[#ee914f]"></i>
+              <button onclick="app.openEditBoosterRolesModal('${b.discord_id}')" class="px-3 py-1.5 rounded-xl bg-[#241a12] hover:bg-[#342418] border border-[#a855f7]/30 hover:border-[#a855f7] text-[#f3e8ff] font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm" title="Editar Multi-Roles">
+                <i class="fa-solid fa-tags text-[11px] text-[#a855f7]"></i>
                 <span>Roles</span>
               </button>
             </div>
@@ -4959,8 +4959,8 @@ class MythicApp {
       container.innerHTML = availableRoles.map(roleObj => {
         const checked = currentRoles.some(r => r.toLowerCase().includes(roleObj.id.toLowerCase()) || roleObj.id.toLowerCase().includes(r.toLowerCase()));
         return `
-          <label class="flex items-start gap-3 p-2.5 rounded-xl bg-[#19120c] hover:bg-[#251a11] border border-stone-800 transition-colors cursor-pointer select-none">
-            <input type="checkbox" name="booster_roles" value="${roleObj.id}" ${checked ? 'checked' : ''} class="mt-1 accent-[#ee914f] w-4 h-4 rounded">
+          <label class="flex items-start gap-3 p-2.5 rounded-xl bg-[#19120c] hover:bg-[#240f40] border border-stone-800 transition-colors cursor-pointer select-none">
+            <input type="checkbox" name="booster_roles" value="${roleObj.id}" ${checked ? 'checked' : ''} class="mt-1 accent-[#a855f7] w-4 h-4 rounded">
             <div class="flex-1">
               <div class="text-xs font-bold text-white">${roleObj.label}</div>
               <div class="text-[10px] text-stone-400">${roleObj.desc}</div>
