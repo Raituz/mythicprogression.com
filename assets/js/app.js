@@ -34,6 +34,9 @@ class MythicApp {
     this.currentProduct = null;
     this.currentRunsQuantity = 1;
     this.currentUnitCalcPrice = 0;
+    this.realms = [];
+    this.currentRealmVersionFilter = 'ALL';
+    this.selectedRealm = null;
     this.init();
   }
 
@@ -230,6 +233,19 @@ class MythicApp {
     } catch (e) {
       console.warn('Fallback loading history orders:', e);
       this.historyOrders = [];
+    }
+
+    // 6. WoW Realms (Retail, Classic & Forever)
+    try {
+      const res = await fetch('data/realms.json');
+      if (res.ok) {
+        this.realms = await res.json();
+      }
+    } catch (e) {
+      console.warn('Fallback loading realms:', e);
+    }
+    if (!this.realms || this.realms.length === 0) {
+      this.realms = this.getFallbackRealmsList();
     }
   }
 
@@ -1499,6 +1515,7 @@ class MythicApp {
     this.renderSingleProductOptions(svc);
     this.recalculateSingleProductTotal();
     this.renderRelatedProducts(svc);
+    this.initRealmSelector();
   }
 
   renderSingleProductOptions(svc) {
@@ -1792,8 +1809,9 @@ class MythicApp {
 
   addCurrentSingleProductToCart() {
     const svc = this.currentProduct || this.services[0];
-    const char = document.getElementById('sp-character')?.value.trim() || this.currentUser?.battletag || 'Heroe-Ragnaros';
-    const region = document.getElementById('sp-region')?.value || 'US';
+    const char = document.getElementById('sp-character')?.value.trim() 
+              || `${document.getElementById('sp-char-name')?.value.trim() || 'Heroe'}-${document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros'}`;
+    const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
     const dungeon = document.getElementById('sp-dungeon-select')?.value || 'Random Dungeon';
     const selectedMode = document.querySelector('input[name="sp_mode"]:checked')?.value || 'Self-play';
 
@@ -2646,6 +2664,11 @@ class MythicApp {
     this.renderChatList();
     this.renderBoosterUpsellCatalog();
     this.initBoosterProfileForm();
+
+    const datalist = document.getElementById('pro-realms-datalist');
+    if (datalist && Array.isArray(this.realms) && this.realms.length > 0) {
+      datalist.innerHTML = this.realms.map(r => `<option value="${r.name} (${r.region})">`).join('');
+    }
   }
 
   renderProOrderFeed() {
@@ -5447,6 +5470,277 @@ class MythicApp {
     const booster = Number((totalPrice * (boosterRate / 100)).toFixed(2));
     const maxBid = Number((totalPrice * (BOOSTER_MAX_BID_PERCENT / 100)).toFixed(2));
     return { company, booster, maxBid, boosterRate };
+  }
+
+  // ==========================================
+  // WOW REALMS SELECTOR & FAST FILTER SUITE
+  // ==========================================
+  initRealmSelector() {
+    const realmSearchInput = document.getElementById('sp-realm-search');
+    const charNameInput = document.getElementById('sp-char-name');
+    const regionSelect = document.getElementById('sp-region');
+    if (!realmSearchInput || !charNameInput) return;
+
+    // Default realm is Ragnaros (US - Retail)
+    if (!this.selectedRealm) {
+      this.selectedRealm = (this.realms && this.realms.length > 0)
+        ? (this.realms.find(r => r.name === 'Ragnaros' && r.region === 'US') || this.realms[0])
+        : { name: 'Ragnaros', region: 'US', version: 'Retail', category: 'América Latina', type: 'Normal' };
+    }
+
+    // Default character name from current session or fallback
+    if (!charNameInput.value) {
+      const defaultName = (this.currentUser?.username && this.currentUser.username !== 'Aventurero')
+        ? this.currentUser.username
+        : 'Heroe';
+      charNameInput.value = defaultName;
+    }
+
+    realmSearchInput.value = this.selectedRealm.name;
+    if (regionSelect) regionSelect.value = this.selectedRealm.region;
+
+    this.updateCombinedCharacter();
+    this.renderRealmDropdownItems('');
+
+    // Click outside listener to close realm dropdown
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('sp-realm-dropdown-container');
+      if (container && !container.contains(e.target)) {
+        this.closeRealmDropdown();
+      }
+    });
+  }
+
+  setRealmVersionFilter(version) {
+    this.currentRealmVersionFilter = version;
+    
+    // Update pills styling
+    const pills = document.querySelectorAll('#sp-realm-version-pills .realm-pill-btn');
+    pills.forEach(btn => {
+      if ((version === 'ALL' && btn.textContent.trim() === 'Todos') || btn.textContent.trim() === version) {
+        btn.classList.add('active', 'bg-[#ee914f]/25', 'text-[#fcefc2]', 'border-[#ee914f]/50', 'font-bold');
+        btn.classList.remove('text-stone-400');
+      } else {
+        btn.classList.remove('active', 'bg-[#ee914f]/25', 'text-[#fcefc2]', 'border-[#ee914f]/50', 'font-bold');
+        btn.classList.add('text-stone-400');
+      }
+    });
+
+    const searchVal = document.getElementById('sp-realm-search')?.value.trim() || '';
+    this.renderRealmDropdownItems(searchVal);
+    this.openRealmDropdown();
+  }
+
+  onRegionChange() {
+    const region = document.getElementById('sp-region')?.value || 'US';
+    // If current selected realm does not match the new region, select the primary realm of that region
+    if (this.selectedRealm && this.selectedRealm.region !== region) {
+      const newDefault = (this.realms || []).find(r => r.region === region && (r.name === 'Silvermoon' || r.name === 'Ragnaros')) 
+                      || (this.realms || []).find(r => r.region === region);
+      if (newDefault) {
+        this.selectedRealm = newDefault;
+        const searchInput = document.getElementById('sp-realm-search');
+        if (searchInput) searchInput.value = newDefault.name;
+        this.updateCombinedCharacter();
+      }
+    }
+    const searchVal = document.getElementById('sp-realm-search')?.value.trim() || '';
+    this.renderRealmDropdownItems(searchVal);
+  }
+
+  openRealmDropdown() {
+    const menu = document.getElementById('sp-realm-dropdown-menu');
+    const chevron = document.getElementById('sp-realm-chevron');
+    if (!menu) return;
+    menu.classList.remove('hidden');
+    if (chevron) chevron.classList.add('rotate-180');
+    const searchVal = document.getElementById('sp-realm-search')?.value.trim() || '';
+    this.renderRealmDropdownItems(searchVal);
+  }
+
+  closeRealmDropdown() {
+    const menu = document.getElementById('sp-realm-dropdown-menu');
+    const chevron = document.getElementById('sp-realm-chevron');
+    if (!menu) return;
+    menu.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+
+  toggleRealmDropdown() {
+    const menu = document.getElementById('sp-realm-dropdown-menu');
+    if (menu && menu.classList.contains('hidden')) {
+      this.openRealmDropdown();
+    } else {
+      this.closeRealmDropdown();
+    }
+  }
+
+  filterRealmDropdown(query) {
+    this.openRealmDropdown();
+    this.renderRealmDropdownItems(query);
+  }
+
+  renderRealmDropdownItems(query = '') {
+    const listContainer = document.getElementById('sp-realm-list-items');
+    const countEl = document.getElementById('sp-realm-count');
+    if (!listContainer) return;
+
+    const q = query.trim().toLowerCase();
+    const currentRegion = document.getElementById('sp-region')?.value || 'US';
+    const versionFilter = this.currentRealmVersionFilter || 'ALL';
+
+    let filtered = (this.realms || []).filter(r => {
+      // Version filter
+      if (versionFilter !== 'ALL' && r.version !== versionFilter) return false;
+      // Region match - if query is empty, prioritize current region, but allow searching across regions if query has text
+      if (!q && r.region !== currentRegion) return false;
+      // Search text filter
+      if (q) {
+        const matchName = r.name.toLowerCase().includes(q);
+        const matchCat = (r.category || '').toLowerCase().includes(q);
+        const matchType = (r.type || '').toLowerCase().includes(q);
+        const matchVer = (r.version || '').toLowerCase().includes(q);
+        const matchRegion = r.region.toLowerCase() === q;
+        if (!matchName && !matchCat && !matchType && !matchVer && !matchRegion) return false;
+      }
+      return true;
+    });
+
+    if (countEl) {
+      countEl.textContent = `${filtered.length} reinos encontrados`;
+    }
+
+    if (filtered.length === 0) {
+      listContainer.innerHTML = `
+        <div class="p-4 text-center text-stone-500">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500/60 text-lg mb-1 block"></i>
+          <span>No se encontraron reinos con "${query}".</span>
+          <p class="text-[10px] text-stone-600 mt-0.5">Puedes escribir el nombre directamente si es un reino especial.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = filtered.map(r => {
+      const isSelected = this.selectedRealm && this.selectedRealm.name === r.name && this.selectedRealm.region === r.region;
+      let badgeVerColor = 'bg-blue-950/80 text-blue-300 border-blue-600/40';
+      if (r.version === 'Classic') badgeVerColor = 'bg-amber-950/80 text-amber-300 border-amber-600/40';
+      if (r.version === 'Forever') badgeVerColor = 'bg-purple-950/80 text-purple-300 border-purple-600/40';
+
+      const safeName = r.name.replace(/'/g, "\\'");
+      const safeCat = (r.category || '').replace(/'/g, "\\'");
+
+      return `
+        <div onclick="app.selectRealm('${safeName}', '${r.region}', '${r.version}', '${safeCat}')" 
+             class="p-2.5 flex items-center justify-between hover:bg-[#20140c] cursor-pointer transition-colors ${isSelected ? 'bg-[#291a10] border-l-2 border-[#ee914f]' : ''}">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-server text-[10px] ${r.version === 'Forever' ? 'text-purple-400' : (r.version === 'Classic' ? 'text-amber-400' : 'text-[#ee914f]')}"></i>
+            <div>
+              <span class="font-bold text-stone-200 block leading-tight text-xs">${r.name}</span>
+              <span class="text-[9px] text-stone-500">${r.category || 'Reino'} • ${r.type || 'Normal'}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono-gaming font-bold bg-stone-900 text-stone-300 border border-stone-800">${r.region}</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold border ${badgeVerColor}">${r.version}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  selectRealm(name, region, version, category) {
+    this.selectedRealm = { name, region, version, category };
+    const searchInput = document.getElementById('sp-realm-search');
+    const regionSelect = document.getElementById('sp-region');
+    const tag = document.getElementById('sp-selected-realm-tag');
+
+    if (searchInput) searchInput.value = name;
+    if (regionSelect && region) regionSelect.value = region;
+    if (tag) {
+      tag.textContent = `${version} • ${region}`;
+      tag.classList.remove('hidden');
+    }
+
+    this.closeRealmDropdown();
+    this.updateCombinedCharacter();
+  }
+
+  selectQuickRealm(name, region, version) {
+    const realm = (this.realms || []).find(r => r.name === name && r.region === region) || {
+      name, region, version, category: ''
+    };
+    this.selectRealm(realm.name, realm.region, realm.version, realm.category);
+  }
+
+  updateCombinedCharacter() {
+    const charName = document.getElementById('sp-char-name')?.value.trim() || 'Heroe';
+    const realmName = this.selectedRealm?.name || document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros';
+    const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
+    const hiddenCharInput = document.getElementById('sp-character');
+    const summaryText = document.getElementById('sp-char-summary-text');
+    const summaryExtra = document.getElementById('sp-char-summary-extra');
+
+    const combined = `${charName}-${realmName}`;
+    if (hiddenCharInput) hiddenCharInput.value = combined;
+    if (summaryText) summaryText.textContent = combined;
+    if (summaryExtra) {
+      const ver = this.selectedRealm?.version || 'Retail';
+      const cat = this.selectedRealm?.category || '';
+      summaryExtra.textContent = `${region === 'US' ? 'América (US)' : 'Europa (EU)'} • ${ver}${cat ? ' • ' + cat : ''}`;
+    }
+  }
+
+  getFallbackRealmsList() {
+    return [
+      {"name": "Ragnaros", "region": "US", "version": "Retail", "category": "América Latina", "type": "Normal"},
+      {"name": "Quel'Thalas", "region": "US", "version": "Retail", "category": "América Latina", "type": "Normal"},
+      {"name": "Drakkari", "region": "US", "version": "Retail", "category": "América Latina", "type": "Normal"},
+      {"name": "Azralon", "region": "US", "version": "Retail", "category": "Brasil", "type": "Normal"},
+      {"name": "Area 52", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Illidan", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Stormrage", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Sargeras", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Tichondrius", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Proudmoore", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Zul'jin", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Bleeding Hollow", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Mal'Ganis", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Thrall", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Dalaran", "region": "US", "version": "Retail", "category": "Estados Unidos", "type": "Normal"},
+      {"name": "Frostmourne", "region": "US", "version": "Retail", "category": "Oceanía", "type": "Normal"},
+      {"name": "Dun Modr", "region": "EU", "version": "Retail", "category": "España", "type": "Normal"},
+      {"name": "Sanguino", "region": "EU", "version": "Retail", "category": "España", "type": "Normal"},
+      {"name": "Zul'jin (EU)", "region": "EU", "version": "Retail", "category": "España", "type": "Normal"},
+      {"name": "Silvermoon", "region": "EU", "version": "Retail", "category": "Inglés (EU)", "type": "Normal"},
+      {"name": "Draenor", "region": "EU", "version": "Retail", "category": "Inglés (EU)", "type": "Normal"},
+      {"name": "Tarren Mill", "region": "EU", "version": "Retail", "category": "Inglés (EU)", "type": "Normal"},
+      {"name": "Kazzak", "region": "EU", "version": "Retail", "category": "Inglés (EU)", "type": "Normal"},
+      {"name": "Twisting Nether", "region": "EU", "version": "Retail", "category": "Inglés (EU)", "type": "Normal"},
+      {"name": "Ravencrest", "region": "EU", "version": "Retail", "category": "Inglés (EU)", "type": "Normal"},
+      {"name": "Antonidas", "region": "EU", "version": "Retail", "category": "Alemán", "type": "Normal"},
+      {"name": "Hyjal (EU)", "region": "EU", "version": "Retail", "category": "Francés", "type": "Normal"},
+      {"name": "Whitemane", "region": "US", "version": "Classic", "category": "Classic Era (US)", "type": "PvP"},
+      {"name": "Mankrik", "region": "US", "version": "Classic", "category": "Classic Era (US)", "type": "PvE"},
+      {"name": "Grobbulus", "region": "US", "version": "Classic", "category": "Classic Era (US)", "type": "RP-PvP"},
+      {"name": "Faerlina", "region": "US", "version": "Classic", "category": "Classic Era (US)", "type": "PvP"},
+      {"name": "Firemaw", "region": "EU", "version": "Classic", "category": "Classic Era (EU)", "type": "PvP"},
+      {"name": "Pyrewood Village", "region": "EU", "version": "Classic", "category": "Classic Era (EU)", "type": "PvE"},
+      {"name": "Gehennas", "region": "EU", "version": "Classic", "category": "Classic Era (EU)", "type": "PvP"},
+      {"name": "Mandokir", "region": "EU", "version": "Classic", "category": "Classic Era (España)", "type": "PvP"},
+      {"name": "Crusader Strike (US)", "region": "US", "version": "Classic", "category": "Season of Discovery", "type": "RP-PvP"},
+      {"name": "Wild Growth (US)", "region": "US", "version": "Classic", "category": "Season of Discovery", "type": "PvE"},
+      {"name": "Defias Pillager", "region": "US", "version": "Classic", "category": "Hardcore Classic", "type": "Hardcore"},
+      {"name": "Skull Rock", "region": "US", "version": "Classic", "category": "Hardcore Classic", "type": "Hardcore"},
+      {"name": "Stitches", "region": "EU", "version": "Classic", "category": "Hardcore Classic", "type": "Hardcore"},
+      {"name": "Forever Americas - Normal (PvE)", "region": "US", "version": "Forever", "category": "WoW Forever (Megaservidores)", "type": "PvE"},
+      {"name": "Forever Americas - JcJ (PvP)", "region": "US", "version": "Forever", "category": "WoW Forever (Megaservidores)", "type": "PvP"},
+      {"name": "Forever Americas - Hardcore", "region": "US", "version": "Forever", "category": "WoW Forever (Megaservidores)", "type": "Hardcore"},
+      {"name": "Forever Americas - Fresh Anniversary (PvE)", "region": "US", "version": "Forever", "category": "WoW Forever (Anniversary)", "type": "PvE"},
+      {"name": "Forever Europe - Normal (PvE)", "region": "EU", "version": "Forever", "category": "WoW Forever (Megaservidores)", "type": "PvE"},
+      {"name": "Forever Europe - JcJ (PvP)", "region": "EU", "version": "Forever", "category": "WoW Forever (Megaservidores)", "type": "PvP"},
+      {"name": "Forever Europe - Hardcore", "region": "EU", "version": "Forever", "category": "WoW Forever (Anniversary)", "type": "Hardcore"}
+    ];
   }
 }
 
