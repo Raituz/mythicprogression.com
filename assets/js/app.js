@@ -78,6 +78,7 @@ class MythicApp {
     this.setupLiveSearch();
     this.updateCartCounter();
     this.initLiveChatWidget();
+    this.initLanguage();
 
     const path = window.location.pathname.toLowerCase();
     const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
@@ -3248,11 +3249,11 @@ class MythicApp {
 
         <div class="flex items-center gap-4 border-t md:border-t-0 md:border-l border-stone-800 pt-3 md:pt-0 md:pl-6 justify-between md:justify-end">
           <div class="text-right">
-            <span class="text-[10px] text-stone-400 block uppercase tracking-wider">Pago al Pro (${order.boosterPayoutRate || 30}%)</span>
+            <span class="text-[10px] text-stone-400 block uppercase tracking-wider">Pago al Pro</span>
             <div class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">
               $${order.boosterPayout.toFixed(2)}
             </div>
-            <span class="text-[10px] text-stone-500">Total cliente: $${order.totalPrice.toFixed(2)}</span>
+            <span class="text-[10px] text-emerald-400/90 font-medium"><i class="fa-solid fa-circle-check text-[8px] mr-1"></i>Oferta disponible</span>
           </div>
 
           <div class="flex flex-col gap-2 min-w-[135px]">
@@ -3315,15 +3316,11 @@ class MythicApp {
 
         <div class="bg-[#140e0b] p-4 rounded-xl border border-stone-800 space-y-2 mb-4 text-xs">
           <div class="flex justify-between">
-            <span class="text-stone-400">Total pagado por cliente:</span>
-            <span class="font-bold text-white">$${order.totalPrice.toFixed(2)}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-stone-400">Pago actual del Booster (30% base):</span>
+            <span class="text-stone-400">Pago actual del Booster:</span>
             <span class="font-bold text-[#ee914f]">$${order.boosterPayout.toFixed(2)}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-stone-400">Oferta máxima permitida (50% límite):</span>
+            <span class="text-stone-400">Oferta máxima permitida:</span>
             <span class="font-bold text-[#fcefc2]">$${order.maxBidAllowed.toFixed(2)}</span>
           </div>
         </div>
@@ -5982,6 +5979,7 @@ class MythicApp {
   // HEADER & ROLES (STRICT ACCESS CONTROL)
   // ==========================================
   renderHeader() {
+    this.renderLanguageSelector();
     const userBadge = document.getElementById('user-session-badge');
     if (!userBadge) return;
 
@@ -6750,6 +6748,338 @@ class MythicApp {
       // Audio policy ignored safely
     }
   }
+
+  // ==========================================
+  // MULTI-LANGUAGE SYSTEM (ES, EN, PT-BR)
+  // ==========================================
+  initLanguage() {
+    this.currentLang = localStorage.getItem('mp_lang') || 'es';
+    this.renderLanguageSelector();
+
+    if (!this._langListenerAttached && typeof document !== 'undefined') {
+      document.addEventListener('click', (e) => {
+        const container = document.getElementById('header-lang-selector');
+        const dropdown = document.getElementById('header-lang-dropdown');
+        if (dropdown && !dropdown.classList.contains('hidden')) {
+          if (container && !container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            const chev = document.getElementById('header-lang-chevron');
+            if (chev) chev.classList.remove('rotate-180');
+          }
+        }
+      });
+      this._langListenerAttached = true;
+    }
+
+    if (this.currentLang !== 'es') {
+      setTimeout(() => this.applyTranslations(), 150);
+    }
+  }
+
+  renderLanguageSelector() {
+    if (typeof document === 'undefined') return;
+    let langContainer = document.getElementById('header-lang-selector');
+    const userBadge = document.getElementById('user-session-badge');
+
+    // Auto-inject container in header if not directly in HTML
+    if (!langContainer && userBadge && userBadge.parentElement) {
+      langContainer = document.createElement('div');
+      langContainer.id = 'header-lang-selector';
+      langContainer.className = 'relative';
+      userBadge.parentElement.insertBefore(langContainer, userBadge.parentElement.firstChild);
+    }
+
+    if (!langContainer) return;
+
+    const current = this.currentLang || 'es';
+    const langMeta = {
+      es: { code: 'ES', flag: '🇪🇸', label: 'Español' },
+      en: { code: 'EN', flag: '🇺🇸', label: 'English' },
+      pt: { code: 'PT', flag: '🇧🇷', label: 'Português (BR)' }
+    };
+    const active = langMeta[current] || langMeta.es;
+
+    langContainer.innerHTML = `
+      <div class="relative" id="mp-lang-dropdown-wrapper">
+        <button type="button" onclick="app.toggleLangDropdown(event)" id="header-lang-btn" class="h-9 px-2.5 sm:px-3 rounded-xl bg-[#17110d] hover:bg-[#231812] border border-stone-800 hover:border-[#ee914f]/50 text-xs font-bold text-[#fcefc2] flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Cambiar idioma / Change language">
+          <span class="text-sm">${active.flag}</span>
+          <span class="text-[11px] font-mono-gaming font-bold text-white uppercase">${active.code}</span>
+          <i class="fa-solid fa-chevron-down text-[8px] text-stone-400 transition-transform duration-200" id="header-lang-chevron"></i>
+        </button>
+
+        <div id="header-lang-dropdown" class="hidden absolute right-0 top-full mt-1.5 bg-[#140c08]/98 backdrop-blur-xl border border-stone-700/80 rounded-2xl shadow-2xl p-1.5 z-[100] min-w-[160px] space-y-1">
+          <button type="button" onclick="app.setLanguage('es')" class="w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition-colors ${current === 'es' ? 'bg-[#29180e] text-[#fcefc2] border border-[#ee914f]/40 font-bold' : 'text-stone-300 hover:bg-[#20130b] hover:text-white'} cursor-pointer">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🇪🇸</span>
+              <span>Español</span>
+            </div>
+            ${current === 'es' ? '<i class="fa-solid fa-check text-[#ee914f] text-[10px]"></i>' : ''}
+          </button>
+
+          <button type="button" onclick="app.setLanguage('en')" class="w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition-colors ${current === 'en' ? 'bg-[#29180e] text-[#fcefc2] border border-[#ee914f]/40 font-bold' : 'text-stone-300 hover:bg-[#20130b] hover:text-white'} cursor-pointer">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🇺🇸</span>
+              <span>English</span>
+            </div>
+            ${current === 'en' ? '<i class="fa-solid fa-check text-[#ee914f] text-[10px]"></i>' : ''}
+          </button>
+
+          <button type="button" onclick="app.setLanguage('pt')" class="w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition-colors ${current === 'pt' ? 'bg-[#29180e] text-[#fcefc2] border border-[#ee914f]/40 font-bold' : 'text-stone-300 hover:bg-[#20130b] hover:text-white'} cursor-pointer">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🇧🇷</span>
+              <span>Português (BR)</span>
+            </div>
+            ${current === 'pt' ? '<i class="fa-solid fa-check text-[#ee914f] text-[10px]"></i>' : ''}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  toggleLangDropdown(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const dropdown = document.getElementById('header-lang-dropdown');
+    const chev = document.getElementById('header-lang-chevron');
+    if (!dropdown) return;
+
+    const isHidden = dropdown.classList.contains('hidden');
+    if (isHidden) {
+      dropdown.classList.remove('hidden');
+      if (chev) chev.classList.add('rotate-180');
+    } else {
+      dropdown.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+    }
+  }
+
+  setLanguage(lang) {
+    this.currentLang = lang;
+    localStorage.setItem('mp_lang', lang);
+
+    const dropdown = document.getElementById('header-lang-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+    const chev = document.getElementById('header-lang-chevron');
+    if (chev) chev.classList.remove('rotate-180');
+
+    this.renderLanguageSelector();
+    this.applyTranslations();
+
+    const msgs = {
+      es: 'Idioma cambiado a Español',
+      en: 'Language switched to English',
+      pt: 'Idioma alterado para Português (Brasil)'
+    };
+    this.showToast(msgs[lang] || msgs.es, 'success');
+  }
+
+  applyTranslations() {
+    const lang = this.currentLang || 'es';
+    if (typeof document === 'undefined') return;
+
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
+
+    const dict = {
+      'iniciar sesión': { en: 'Log In', pt: 'Entrar' },
+      'iniciar sesion': { en: 'Log In', pt: 'Entrar' },
+      'cerrar sesión': { en: 'Log Out', pt: 'Sair' },
+      'cerrar sesion': { en: 'Log Out', pt: 'Sair' },
+      'panel admin': { en: 'Admin Panel', pt: 'Painel Admin' },
+      'portal pro': { en: 'Pro Portal', pt: 'Portal Pro' },
+      'mi cuenta': { en: 'My Account', pt: 'Minha Conta' },
+      'mi perfil': { en: 'My Profile', pt: 'Meu Perfil' },
+      'mi perfil / pedidos': { en: 'My Profile / Orders', pt: 'Meu Perfil / Pedidos' },
+      'inicio': { en: 'Home', pt: 'Início' },
+      'míticas plus': { en: 'Mythic Plus', pt: 'Míticas Plus' },
+      'miticas plus': { en: 'Mythic Plus', pt: 'Míticas Plus' },
+      'bandas / raids': { en: 'Raids', pt: 'Raides' },
+      'raids': { en: 'Raids', pt: 'Raides' },
+      'bandas': { en: 'Raids', pt: 'Raides' },
+      'powerleveling': { en: 'Powerleveling', pt: 'Powerleveling' },
+      'equipo / ilvl': { en: 'Gearing / ilvl', pt: 'Equipamento / ilvl' },
+      'catálogo completo': { en: 'Full Catalog', pt: 'Catálogo Completo' },
+      'buscar servicios de wow (míticas+, bandas, leveling, equipo)...': { en: 'Search WoW services (Mythic+, Raids, Leveling, Gear)...', pt: 'Buscar serviços WoW (Míticas+, Raides, Leveling, Equipamento)...' },
+      'world of warcraft: the war within - temporada oficial': { en: 'World of Warcraft: The War Within - Official Season', pt: 'World of Warcraft: The War Within - Temporada Oficial' },
+      'domina el contenido mítico': { en: 'DOMINATE MYTHIC CONTENT', pt: 'DOMINE O CONTEÚDO MÍTICO' },
+      'con jugadores de élite': { en: 'WITH ELITE PLAYERS', pt: 'COM JOGADORES DE ELITE' },
+      'vpn, safe boost': { en: 'VPN, Safe Boost', pt: 'VPN, Safe Boost' },
+      'servicio seguro': { en: 'Secure Service', pt: 'Serviço Seguro' },
+      '24/7 soporte': { en: '24/7 Support', pt: 'Suporte 24/7' },
+      'reembolsos': { en: 'Refunds', pt: 'Reembolsos' },
+      'cashback 5%': { en: '5% Cashback', pt: '5% Cashback' },
+      'personalización del pedido': { en: 'Order Customization', pt: 'Personalização do Pedido' },
+      'personalizacion del pedido': { en: 'Order Customization', pt: 'Personalização do Pedido' },
+      'datos de tu personaje (wow):': { en: 'Character Details (WoW):', pt: 'Dados do seu Personagem (WoW):' },
+      'región:': { en: 'Region:', pt: 'Região:' },
+      'region:': { en: 'Region:', pt: 'Região:' },
+      'américa (us)': { en: 'Americas (US)', pt: 'Américas (US)' },
+      'europa (eu)': { en: 'Europe (EU)', pt: 'Europa (EU)' },
+      'personaje:': { en: 'Character:', pt: 'Personagem:' },
+      'nombre del personaje:': { en: 'Character Name:', pt: 'Nome do Personagem:' },
+      'reino / servidor:': { en: 'Realm / Server:', pt: 'Reino / Servidor:' },
+      'todos': { en: 'All', pt: 'Todos' },
+      'populares:': { en: 'Popular:', pt: 'Populares:' },
+      'personaje para la orden:': { en: 'Character for order:', pt: 'Personagem para o pedido:' },
+      'total': { en: 'TOTAL', pt: 'TOTAL' },
+      'total:': { en: 'Total:', pt: 'Total:' },
+      'añadir al carrito': { en: 'ADD TO CART', pt: 'ADICIONAR AO CARRINHO' },
+      'anadir al carrito': { en: 'ADD TO CART', pt: 'ADICIONAR AO CARRINHO' },
+      'comprar ahora': { en: 'BUY NOW', pt: 'COMPRAR AGORA' },
+      '¿tienes preguntas?': { en: 'Have questions?', pt: 'Tem dúvidas?' },
+      'chatear antes de ordenar': { en: 'Chat before ordering', pt: 'Conversar antes de pedir' },
+      '¿lo viste más barato? igualamos el precio': { en: 'Found it cheaper? We price match', pt: 'Viu mais barato? Cobrimos o preço' },
+      'otros servicios recomendados': { en: 'Other Recommended Services', pt: 'Outros Serviços Recomendados' },
+      'de cashback tras la compra': { en: 'cashback after purchase', pt: 'de cashback após a compra' },
+      'modo de juego:': { en: 'Game Mode:', pt: 'Modo de Jogo:' },
+      'piloteado': { en: 'Piloted', pt: 'Pilotado' },
+      'selfplay': { en: 'Selfplay', pt: 'Selfplay' },
+      'selfplay (juegas tú)': { en: 'Selfplay (you play)', pt: 'Selfplay (você joga)' },
+      'piloteado (juega el booster)': { en: 'Piloted (booster plays)', pt: 'Pilotado (o booster joga)' },
+      'nivel deseado': { en: 'Desired Level', pt: 'Nível Desejado' },
+      'nivel actual': { en: 'Current Level', pt: 'Nível Atual' },
+      'selecciona mazmorra:': { en: 'Select Dungeon:', pt: 'Selecionar Masmorra:' },
+      'nivel de piedra:': { en: 'Keystone Level:', pt: 'Nível da Pedra:' },
+      'en tiempo garantizado (in-time)': { en: 'Beat the Timer (In-time)', pt: 'No tempo garantido (In-time)' },
+      'loot trader específico': { en: 'Specific Loot Trader', pt: 'Loot Trader específico' },
+      'velocidad express (+20%)': { en: 'Express Speed (+20%)', pt: 'Velocidade Express (+20%)' },
+      'transmisión en vivo (discord)': { en: 'Live Stream (Discord)', pt: 'Transmissão ao vivo (Discord)' },
+      'opciones adicionales': { en: 'Additional Options', pt: 'Opções Adicionais' },
+      'runs': { en: 'Runs', pt: 'Runs' },
+      'tu carrito': { en: 'Your Cart', pt: 'Seu Carrinho' },
+      'tu carrito de compras': { en: 'Your Shopping Cart', pt: 'Seu Carrinho de Compras' },
+      'vaciar carrito': { en: 'Clear Cart', pt: 'Esvaziar Carrinho' },
+      'resumen del pedido': { en: 'Order Summary', pt: 'Resumo do Pedido' },
+      'subtotal:': { en: 'Subtotal:', pt: 'Subtotal:' },
+      'total a pagar': { en: 'Total to Pay', pt: 'Total a Pagar' },
+      'proceder al pago': { en: 'Proceed to Checkout', pt: 'Finalizar Compra' },
+      'seguir comprando': { en: 'Continue Shopping', pt: 'Continuar Comprando' },
+      'tu carrito está vacío': { en: 'Your cart is empty', pt: 'Seu carrinho está vazio' },
+      'soporte en vivo': { en: 'Live Support', pt: 'Suporte ao Vivo' },
+      'conectado • respuesta inmediata': { en: 'Connected • Instant reply', pt: 'Conectado • Resposta imediata' },
+      '¿dudas antes de comprar? chatea en vivo': { en: 'Questions before buying? Chat live', pt: 'Dúvidas antes de comprar? Converse ao vivo' },
+      'escribe tu consulta aquí...': { en: 'Type your message here...', pt: 'Digite sua mensagem aqui...' },
+      'mis pedidos': { en: 'My Orders', pt: 'Meus Pedidos' },
+      'centro de mensajería (chat)': { en: 'Message Center (Chat)', pt: 'Central de Mensagens (Chat)' },
+      'configuración': { en: 'Settings', pt: 'Configurações' },
+      'chat con el booster': { en: 'Chat with Booster', pt: 'Chat com o Booster' },
+      'hacer oferta (subasta)': { en: 'Place Bid (Auction)', pt: 'Fazer Oferta (Leilão)' },
+      'pago actual del booster:': { en: 'Current Booster Payout:', pt: 'Pagamento Atual do Booster:' },
+      'oferta máxima permitida:': { en: 'Maximum Allowed Bid:', pt: 'Oferta Máxima Permitida:' },
+      'cancelar': { en: 'Cancel', pt: 'Cancelar' },
+      'enviar oferta': { en: 'Submit Bid', pt: 'Enviar Oferta' },
+      'tomar orden': { en: 'Claim Order', pt: 'Pegar Pedido' }
+    };
+
+    if (lang === 'es') {
+      // Restore Spanish
+      document.querySelectorAll('[data-i18n-orig]').forEach(el => {
+        const orig = el.getAttribute('data-i18n-orig');
+        const icon = el.querySelector('i');
+        if (icon) {
+          el.innerHTML = '';
+          el.appendChild(icon);
+          el.appendChild(document.createTextNode(' ' + orig));
+        } else {
+          el.textContent = orig;
+        }
+      });
+      document.querySelectorAll('[data-i18n-orig-ph]').forEach(el => {
+        el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
+      });
+
+      this.triggerGoogleTranslate('es');
+      return;
+    }
+
+    // Translate Inputs & Placeholders
+    document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+      const orig = el.getAttribute('data-i18n-orig-ph') || el.getAttribute('placeholder');
+      if (!el.hasAttribute('data-i18n-orig-ph')) el.setAttribute('data-i18n-orig-ph', orig);
+      const key = orig.trim().toLowerCase();
+      if (dict[key] && dict[key][lang]) {
+        el.setAttribute('placeholder', dict[key][lang]);
+      }
+    });
+
+    // Translate DOM Elements
+    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong, div');
+    elements.forEach(el => {
+      // Don't modify complex containers
+      if (el.children.length > 2) return;
+      if (el.closest('#mp-lang-dropdown-wrapper')) return;
+
+      const fullText = el.textContent.trim();
+      if (!fullText) return;
+
+      const orig = el.getAttribute('data-i18n-orig') || fullText;
+      const key = orig.trim().toLowerCase();
+
+      if (dict[key] && dict[key][lang]) {
+        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', orig);
+        const icon = el.querySelector('i');
+        if (icon) {
+          el.innerHTML = '';
+          el.appendChild(icon);
+          el.appendChild(document.createTextNode(' ' + dict[key][lang]));
+        } else {
+          el.textContent = dict[key][lang];
+        }
+      }
+    });
+
+    // Trigger full deep translation via Google Translate Element bridge
+    this.triggerGoogleTranslate(lang);
+  }
+
+  triggerGoogleTranslate(lang) {
+    if (typeof window === 'undefined') return;
+
+    if (!window.googleTranslateElementInit) {
+      window.googleTranslateElementInit = function() {
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'es',
+          includedLanguages: 'en,es,pt',
+          autoDisplay: false
+        }, 'google_translate_element');
+      };
+
+      if (!document.getElementById('google_translate_element')) {
+        const div = document.createElement('div');
+        div.id = 'google_translate_element';
+        div.style.display = 'none';
+        document.body.appendChild(div);
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+          .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame { display: none !important; }
+          body { top: 0px !important; }
+          .goog-tooltip, .goog-tooltip:hover { display: none !important; }
+          .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+          #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+          .skiptranslate:not(#google_translate_element) { display: none !important; }
+        `;
+        document.head.appendChild(style);
+
+        const s = document.createElement('script');
+        s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        s.async = true;
+        document.head.appendChild(s);
+      }
+    }
+
+    const fireChange = () => {
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        if (combo.value !== lang) {
+          combo.value = lang;
+          combo.dispatchEvent(new Event('change'));
+        }
+      }
+    };
+
+    fireChange();
+    setTimeout(fireChange, 500);
+    setTimeout(fireChange, 1200);
+  }
 }
 
 const app = new MythicApp();
@@ -6760,5 +7090,7 @@ window.handleDiscordLogin = () => app.handleDiscordLogin();
 window.logout = () => app.logout();
 window.openLiveChat = (opts) => app.openLiveChat(opts);
 window.toggleLiveChat = () => app.toggleLiveChat();
+window.setLanguage = (lang) => app.setLanguage(lang);
+window.toggleLangDropdown = (e) => app.toggleLangDropdown(e);
 
 
