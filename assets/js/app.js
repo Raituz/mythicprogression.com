@@ -5095,9 +5095,9 @@ class MythicApp {
 
     if (!this.currentUser) {
       userBadge.innerHTML = `
-        <button onclick="app.openAuthModal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-[#5865F2]/25 hover:shadow-[#5865F2]/45 border border-[#5865F2]/40 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer group">
-          <i class="fa-brands fa-discord text-base group-hover:scale-110 transition-transform"></i>
-          <span class="tracking-wide font-sans">Iniciar con Discord</span>
+        <button onclick="app.openAuthModal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+          <i class="fa-solid fa-user text-xs"></i>
+          <span>Iniciar Sesión</span>
         </button>
       `;
       return;
