@@ -2,7 +2,7 @@
   {
     "id": "mplus-keystone",
     "category": "Míticas Plus",
-    "page": "mplus.html",
+    "page": "mplus",
     "name": "Mythic+ Keystone Run (+2 a +15)",
     "description": "Completa mazmorras míticas plus a tiempo con nuestro equipo profesional. Obtén el mejor botín de temporada y progresión en tu Gran Cámara.",
     "basePrice": 12.00,
@@ -67,7 +67,7 @@
   {
     "id": "nerubar-palace",
     "category": "Bandas / Raids",
-    "page": "raids.html",
+    "page": "raids",
     "name": "Palacio Nerub-ar (Heroico / Mítico)",
     "description": "Derrota a la Reina Ansurek y a los jefes de banda. Botín garantizado de alto nivel de objeto y logros Ahead of the Curve (AOTC).",
     "basePrice": 45.00,
@@ -86,7 +86,7 @@
   {
     "id": "powerleveling-80",
     "category": "Powerleveling",
-    "page": "leveling.html",
+    "page": "leveling",
     "name": "WoW Powerleveling Personalizado (1 - 80 / 90)",
     "description": "Sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. Elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.",
     "basePrice": 25.00,
@@ -142,7 +142,7 @@
   {
     "id": "ilvl-gearing",
     "category": "Equipo / ilvl",
-    "page": "gearing.html",
+    "page": "gearing",
     "name": "Full Equipamiento ilvl 606 - 639",
     "description": "Farm completo de equipo para tu personaje mediante M+, Delves Rango 8 y Bandas. Tu personaje listo para contenido competitivo.",
     "basePrice": 65.00,

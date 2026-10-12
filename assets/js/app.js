@@ -40,7 +40,37 @@ class MythicApp {
     this.init();
   }
 
+  cleanUrlBar() {
+    try {
+      if (typeof window === 'undefined' || !window.location) return;
+      const loc = window.location;
+      if (loc.protocol === 'file:') return;
+
+      let pathname = loc.pathname;
+      let needsClean = false;
+
+      if (pathname.endsWith('/index.html')) {
+        pathname = pathname.substring(0, pathname.length - 10) || '/';
+        needsClean = true;
+      } else if (pathname === '/index.html' || pathname === 'index.html') {
+        pathname = '/';
+        needsClean = true;
+      } else if (pathname.endsWith('.html')) {
+        pathname = pathname.substring(0, pathname.length - 5);
+        needsClean = true;
+      }
+
+      if (needsClean) {
+        const cleanUrl = (pathname || '/') + loc.search + loc.hash;
+        window.history.replaceState(null, '', cleanUrl);
+      }
+    } catch (e) {
+      console.debug('cleanUrlBar:', e);
+    }
+  }
+
   async init() {
+    this.cleanUrlBar();
     await this.loadInitialData();
     await this.checkDiscordOAuthCallback();
     this.initSession();
@@ -49,21 +79,23 @@ class MythicApp {
     this.updateCartCounter();
 
     const path = window.location.pathname.toLowerCase();
-    if (path.includes('product.html')) {
+    const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
+
+    if (cleanPath.endsWith('/product') || cleanPath === 'product') {
       this.initSingleProductPage();
-    } else if (path.includes('client-profile.html')) {
+    } else if (cleanPath.endsWith('/client-profile') || cleanPath === 'client-profile') {
       this.initClientProfile();
-    } else if (path.includes('pro.html')) {
+    } else if (cleanPath.endsWith('/pro') || cleanPath === 'pro') {
       this.initProPortal();
-    } else if (path.includes('admin.html')) {
+    } else if (cleanPath.endsWith('/admin') || cleanPath === 'admin') {
       this.initAdminPortal();
-    } else if (path.includes('mplus.html')) {
+    } else if (cleanPath.endsWith('/mplus') || cleanPath === 'mplus') {
       this.initCategoryPage('Míticas Plus');
-    } else if (path.includes('raids.html')) {
+    } else if (cleanPath.endsWith('/raids') || cleanPath === 'raids') {
       this.initCategoryPage('Bandas / Raids');
-    } else if (path.includes('leveling.html')) {
+    } else if (cleanPath.endsWith('/leveling') || cleanPath === 'leveling') {
       this.initCategoryPage('Powerleveling');
-    } else if (path.includes('gearing.html')) {
+    } else if (cleanPath.endsWith('/gearing') || cleanPath === 'gearing') {
       this.initCategoryPage('Equipo / ilvl');
     } else {
       this.initStoreFront();
@@ -551,7 +583,7 @@ class MythicApp {
     this.authenticateAsAdmin();
     const modal = document.getElementById('auth-modal');
     if (modal) modal.classList.add('hidden');
-    window.location.href = 'admin.html';
+    window.location.href = 'admin';
   }
 
   // ==========================================
@@ -628,6 +660,7 @@ class MythicApp {
 
       try {
         history.replaceState(null, null, window.location.pathname);
+        this.cleanUrlBar();
       } catch (e) {}
     } catch (err) {
       console.error('Discord OAuth error:', err);
@@ -682,7 +715,7 @@ class MythicApp {
       this.renderHeader();
       const returnUrl = sessionStorage.getItem('mp_oauth_return_url');
       sessionStorage.removeItem('mp_oauth_return_url');
-      window.location.href = returnUrl || (this.currentUser.isAdmin ? 'admin.html' : (this.currentUser.isBooster ? 'pro.html' : 'client-profile.html'));
+      window.location.href = returnUrl || (this.currentUser.isAdmin ? 'admin' : (this.currentUser.isBooster ? 'pro' : 'client-profile'));
       return;
     }
 
@@ -706,10 +739,10 @@ class MythicApp {
 
       const returnUrl = sessionStorage.getItem('mp_oauth_return_url');
       sessionStorage.removeItem('mp_oauth_return_url');
-      if (returnUrl && (returnUrl.includes('pro.html') || returnUrl.includes('client-profile.html'))) {
+      if (returnUrl && (returnUrl.includes('pro') || returnUrl.includes('client-profile'))) {
         window.location.href = returnUrl;
       } else {
-        window.location.href = 'admin.html';
+        window.location.href = 'admin';
       }
       return adminRes;
     }
@@ -750,7 +783,7 @@ class MythicApp {
       this.saveUser();
       this.showToast(`¡Conectado como Booster ${existingBooster.username}!`, 'success');
       this.renderHeader();
-      window.location.href = isStaffOrAdmin ? 'admin.html' : 'pro.html';
+      window.location.href = isStaffOrAdmin ? 'admin' : 'pro';
       return { status: isStaffOrAdmin ? 'ADMIN_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
     }
 
@@ -774,7 +807,7 @@ class MythicApp {
     this.saveUser();
     this.showToast(`¡Bienvenido ${username}! Conectado con Discord.`, 'success');
     this.renderHeader();
-    window.location.href = 'client-profile.html';
+    window.location.href = 'client-profile';
     return { status: 'CLIENT_LOGGED_IN', user: this.currentUser };
   }
 
@@ -1047,7 +1080,7 @@ class MythicApp {
       this.saveUser();
       this.showToast(`¡Cuenta de Google (${email}) vinculada exitosamente a tu perfil!`, 'success');
       this.renderHeader();
-      if (window.location.pathname.includes('client-profile.html') || window.location.pathname.includes('pro.html')) {
+      if (window.location.pathname.includes('client-profile') || window.location.pathname.includes('pro')) {
         setTimeout(() => location.reload(), 300);
       }
       return;
@@ -1067,7 +1100,7 @@ class MythicApp {
       this.saveUser();
       this.showToast(`¡Bienvenido Miguelb! Conectado con Google (${email}) como Master Booster & Admin.`, 'success');
       this.renderHeader();
-      window.location.href = 'admin.html';
+      window.location.href = 'admin';
       return adminRes;
     }
 
@@ -1106,7 +1139,7 @@ class MythicApp {
       this.saveUser();
       this.showToast(`¡Conectado como Booster ${matchedBooster.username} con tu cuenta de Google!`, 'success');
       this.renderHeader();
-      window.location.href = isStaffOrAdmin ? 'admin.html' : 'pro.html';
+      window.location.href = isStaffOrAdmin ? 'admin' : 'pro';
       return { status: isStaffOrAdmin ? 'ADMIN_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
     }
 
@@ -1170,7 +1203,7 @@ class MythicApp {
     this.saveUser();
     this.showToast(`¡Bienvenido ${this.currentUser.username}! Conectado con tu cuenta de Google.`, 'success');
     this.renderHeader();
-    window.location.href = 'client-profile.html';
+    window.location.href = 'client-profile';
     return { status: 'CLIENT_LOGGED_IN', user: this.currentUser };
   }
 
@@ -1266,13 +1299,13 @@ class MythicApp {
   loginAsDemoBooster() {
     this.authenticateWithDiscord('443948776562884620', 'Miguelb');
     this.closeAuthModal();
-    window.location.href = 'pro.html';
+    window.location.href = 'pro';
   }
 
   loginAsDemoClient() {
     this.authenticateWithDiscord('987654321012345678', 'Carlos M.');
     this.closeAuthModal();
-    window.location.href = 'client-profile.html';
+    window.location.href = 'client-profile';
   }
 
   updateClientProfile(data) {
@@ -1465,7 +1498,7 @@ class MythicApp {
 
     this.showToast(`¡Pago completado! Se crearon ${createdOrderIds.length} orden(es). Redirigiendo a tu perfil...`, 'success');
     setTimeout(() => {
-      window.location.href = 'client-profile.html';
+      window.location.href = 'client-profile';
     }, 1200);
   }
 
@@ -1495,7 +1528,7 @@ class MythicApp {
         dropdown.innerHTML = `<div class="p-3 text-xs text-stone-500 text-center">No se encontraron servicios para "${query}"</div>`;
       } else {
         dropdown.innerHTML = results.map(s => `
-          <a href="product.html?id=${s.id}" class="p-3 hover:bg-[#201812] flex items-center justify-between border-b border-stone-800 last:border-0 transition-colors">
+          <a href="product?id=${s.id}" class="p-3 hover:bg-[#201812] flex items-center justify-between border-b border-stone-800 last:border-0 transition-colors">
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-lg bg-[#251b14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] text-sm">
                 <i class="fa-solid ${s.icon}"></i>
@@ -2378,7 +2411,7 @@ class MythicApp {
             <span class="text-[10px] text-stone-400 uppercase font-bold tracking-wider block">Desde</span>
             <div class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">$${svc.basePrice.toFixed(2)}</div>
           </div>
-          <a href="product.html?id=${svc.id}" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-all shadow-md">
+          <a href="product?id=${svc.id}" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-all shadow-md">
             <span>Configurar</span>
             <i class="fa-solid fa-arrow-right text-[10px]"></i>
           </a>
@@ -2391,6 +2424,30 @@ class MythicApp {
     const container = document.getElementById('services-grid');
     if (!container) return;
     container.innerHTML = this.services.map(svc => this.buildServiceCardHtml(svc)).join('');
+  }
+
+  renderRelatedProducts(currentSvc) {
+    const container = document.getElementById('sp-related-products');
+    if (!container) return;
+    const others = (this.services || []).filter(s => s.id !== currentSvc?.id).slice(0, 3);
+    container.innerHTML = others.map(s => `
+      <div class="glass-panel p-5 rounded-2xl border border-stone-800 hover:border-[#ee914f]/50 transition-all flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold text-[#ee914f] bg-[#22160f] px-2 py-0.5 rounded-md border border-[#ee914f]/20">${s.category}</span>
+            <span class="text-xs font-mono-gaming font-bold text-[#fcefc2]">$${s.basePrice.toFixed(2)}</span>
+          </div>
+          <h4 class="font-bold text-white text-sm mb-1">${s.name}</h4>
+          <p class="text-[11px] text-stone-400 line-clamp-2 leading-relaxed">${s.description}</p>
+        </div>
+        <div class="pt-3 mt-3 border-t border-stone-800/60 flex justify-end">
+          <a href="product?id=${s.id}" class="text-xs font-bold text-[#ee914f] hover:underline flex items-center gap-1">
+            <span>Ver servicio</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+      </div>
+    `).join('');
   }
 
   openServiceModal(serviceId) {
@@ -2693,7 +2750,7 @@ class MythicApp {
 
     // Auto-redirect to client profile after 1 second
     setTimeout(() => {
-      window.location.href = 'client-profile.html';
+      window.location.href = 'client-profile';
     }, 1200);
   }
 
@@ -2744,7 +2801,7 @@ class MythicApp {
           <i class="fa-solid fa-receipt text-3xl text-stone-600 mb-2"></i>
           <h4 class="text-sm font-bold text-stone-300">Aún no tienes pedidos activos</h4>
           <p class="text-xs text-stone-500 mt-1">Explora nuestra tienda para adquirir tu primera piedra mítica o raid.</p>
-          <a href="index.html" class="inline-block mt-4 px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider">Ver Servicios</a>
+          <a href="/" class="inline-block mt-4 px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider">Ver Servicios</a>
         </div>
       `;
       return;
@@ -3119,7 +3176,7 @@ class MythicApp {
       document.body.style.display = 'none';
       this.showToast('Acceso Denegado: Portal exclusivo para Boosters verificados.', 'error');
       setTimeout(() => {
-        window.location.replace('index.html');
+        window.location.replace('/');
       }, 350);
       return;
     }
@@ -3470,7 +3527,7 @@ class MythicApp {
 
   copyBoosterUpsellLink(serviceId) {
     const boosterName = this.currentUser?.username || 'Pro';
-    const link = `${window.location.origin}/index.html?service=${serviceId}&ref_booster=${encodeURIComponent(boosterName)}`;
+    const link = `${window.location.origin}/product?id=${serviceId}&ref_booster=${encodeURIComponent(boosterName)}`;
     
     // Copy to clipboard
     navigator.clipboard.writeText(link).then(() => {
@@ -3988,7 +4045,7 @@ class MythicApp {
       document.body.style.display = 'none';
       this.showToast('Acceso Denegado: Se requieren permisos de Administrador o Staff.', 'error');
       setTimeout(() => {
-        window.location.replace('index.html');
+        window.location.replace('/');
       }, 350);
       return;
     }
@@ -4577,7 +4634,7 @@ class MythicApp {
         icon: icon,
         badge: badge,
         description: desc,
-        page: 'product.html?id=' + cleanSlug,
+        page: 'product?id=' + cleanSlug,
         options: compiledOptions
       };
       this.services.unshift(newService);
@@ -5821,11 +5878,11 @@ class MythicApp {
 
       userBadge.innerHTML = `
         <div class="flex items-center gap-2.5">
-          <a href="admin.html" id="header-admin-btn" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2a170d] hover:bg-[#3d1f11] text-[#fcefc2] hover:text-white border border-[#ee914f] text-xs font-bold shadow-[0_0_15px_rgba(238,145,79,0.35)] transition-all">
+          <a href="admin" id="header-admin-btn" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2a170d] hover:bg-[#3d1f11] text-[#fcefc2] hover:text-white border border-[#ee914f] text-xs font-bold shadow-[0_0_15px_rgba(238,145,79,0.35)] transition-all">
             <i class="fa-solid fa-shield-halved text-[#ee914f]"></i>
             <span>Panel Admin</span>
           </a>
-          <a href="pro.html" title="Ir al Tablón de Boosters" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#18110b] hover:bg-[#251a11] text-stone-300 hover:text-white border border-stone-800 text-xs font-semibold transition-all">
+          <a href="pro" title="Ir al Tablón de Boosters" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#18110b] hover:bg-[#251a11] text-stone-300 hover:text-white border border-stone-800 text-xs font-semibold transition-all">
             <i class="fa-solid fa-bolt text-[#ee914f] text-[11px]"></i>
             <span>Portal Pro</span>
           </a>
@@ -5851,7 +5908,7 @@ class MythicApp {
         : (this.currentUser.username ? this.currentUser.username[0].toUpperCase() : 'B');
       userBadge.innerHTML = `
         <div class="flex items-center gap-2 bg-[#17120e] px-3 py-1.5 rounded-full border border-stone-800">
-          <a href="pro.html" class="flex items-center gap-2 text-left hover:opacity-90 transition-opacity">
+          <a href="pro" class="flex items-center gap-2 text-left hover:opacity-90 transition-opacity">
             <div class="w-6 h-6 rounded-full bg-[#2a1e16] border border-[#ee914f]/40 flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0">
               ${avatarHtml}
             </div>
@@ -5872,7 +5929,7 @@ class MythicApp {
         : (this.currentUser.username ? this.currentUser.username[0].toUpperCase() : 'C');
       userBadge.innerHTML = `
         <div class="flex items-center gap-2 bg-[#17120e] px-3 py-1.5 rounded-full border border-stone-800">
-          <a href="client-profile.html" class="flex items-center gap-2 text-left hover:opacity-80 transition-opacity">
+          <a href="client-profile" class="flex items-center gap-2 text-left hover:opacity-80 transition-opacity">
             <div class="w-6 h-6 rounded-full bg-[#241a13] border border-[#ee914f]/30 flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0">
               ${avatarHtml}
             </div>
@@ -5898,9 +5955,9 @@ class MythicApp {
     this.showToast('Sesión cerrada correctamente.', 'info');
 
     const path = window.location.pathname.toLowerCase();
-    if (path.includes('client-profile.html') || path.includes('pro.html') || path.includes('admin.html')) {
+    if (path.includes('client-profile') || path.includes('pro') || path.includes('admin')) {
       setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.href = '/';
       }, 400);
     }
   }

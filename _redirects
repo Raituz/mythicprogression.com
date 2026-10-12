@@ -1,0 +1,11 @@
+# Cloudflare Pages Clean URLs / Pretty URLs Redirections
+/index.html / 301
+/index / 301
+/mplus.html /mplus 301
+/raids.html /raids 301
+/leveling.html /leveling 301
+/gearing.html /gearing 301
+/product.html /product 301
+/pro.html /pro 301
+/admin.html /admin 301
+/client-profile.html /client-profile 301

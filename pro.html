@@ -11,7 +11,7 @@
         var raw = localStorage.getItem('mp_current_user');
         if (!raw) {
           document.documentElement.style.display = 'none';
-          window.location.replace('index.html');
+          window.location.replace('/');
           return;
         }
         var user = JSON.parse(raw);
@@ -28,11 +28,11 @@
         );
         if (!isAllowed) {
           document.documentElement.style.display = 'none';
-          window.location.replace('index.html');
+          window.location.replace('/');
         }
       } catch (e) {
         document.documentElement.style.display = 'none';
-        window.location.replace('index.html');
+        window.location.replace('/');
       }
     })();
   </script>
@@ -91,13 +91,13 @@
           <span class="hidden md:inline ml-auto text-[9px] bg-[#241910] text-[#ee914f] px-1.5 py-0.5 rounded border border-[#ee914f]/30 font-semibold">Editar</span>
         </button>
 
-        <a href="index.html" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-500 hover:text-[#ee914f]">
+        <a href="/" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-500 hover:text-[#ee914f]">
           <i class="fa-solid fa-store text-sm"></i>
           <span class="hidden md:inline">Ver Tienda con Pro</span>
         </a>
 
         <!-- ONLY VISIBLE TO ADMINS & GERENTES -->
-        <a href="admin.html" id="pro-sidebar-admin-link" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#2a170d] text-[#fcefc2] border border-[#ee914f]/50 hover:bg-[#382012] shadow-sm hidden">
+        <a href="admin" id="pro-sidebar-admin-link" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#2a170d] text-[#fcefc2] border border-[#ee914f]/50 hover:bg-[#382012] shadow-sm hidden">
           <i class="fa-solid fa-shield-halved text-[#ee914f] text-sm"></i>
           <span class="hidden md:inline">Panel Admin</span>
         </a>
