@@ -7084,8 +7084,9 @@ class MythicApp {
     if (!langContainer && userBadge && userBadge.parentElement) {
       langContainer = document.createElement('div');
       langContainer.id = 'header-lang-selector';
-      langContainer.className = 'relative';
-      userBadge.parentElement.insertBefore(langContainer, userBadge.parentElement.firstChild);
+      langContainer.className = 'relative shrink-0 notranslate';
+      langContainer.setAttribute('translate', 'no');
+      userBadge.parentElement.insertBefore(langContainer, userBadge);
     }
 
     if (!langContainer) return;
@@ -7106,7 +7107,7 @@ class MythicApp {
           <i class="fa-solid fa-chevron-down text-[8px] text-stone-400 transition-transform duration-200" id="header-lang-chevron"></i>
         </button>
 
-        <div id="header-lang-dropdown" class="hidden absolute right-0 top-full mt-1.5 bg-[#140c08]/98 backdrop-blur-xl border border-stone-700/80 rounded-2xl shadow-2xl p-1.5 z-[100] min-w-[160px] space-y-1">
+        <div id="header-lang-dropdown" class="hidden absolute right-0 top-full mt-1.5 bg-[#140c08] border border-stone-700/80 rounded-2xl shadow-2xl p-1.5 z-[100] min-w-[160px] space-y-1">
           <button type="button" onclick="app.setLanguage('es')" class="w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition-colors ${current === 'es' ? 'bg-[#29180e] text-[#fcefc2] border border-[#ee914f]/40 font-bold' : 'text-stone-300 hover:bg-[#20130b] hover:text-white'} cursor-pointer">
             <div class="flex items-center gap-2">
               <span class="text-sm">🇪🇸</span>
