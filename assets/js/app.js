@@ -6191,12 +6191,18 @@ class MythicApp {
     this.renderLanguageSelector();
     const userBadge = document.getElementById('user-session-badge');
     if (!userBadge) return;
+    userBadge.classList.add('notranslate');
+    userBadge.setAttribute('translate', 'no');
+
+    const isEn = this.currentLang === 'en';
+    const isPt = this.currentLang === 'pt';
+    const loginText = isEn ? 'Log In' : (isPt ? 'Entrar' : 'Iniciar Sesión');
 
     if (!this.currentUser) {
       userBadge.innerHTML = `
-        <button onclick="app.openAuthModal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+        <button type="button" onclick="app.openAuthModal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
           <i class="fa-solid fa-user text-xs"></i>
-          <span>Iniciar Sesión</span>
+          <span>${loginText}</span>
         </button>
       `;
       return;
@@ -7130,7 +7136,7 @@ class MythicApp {
     const chev = document.getElementById('header-lang-chevron');
     if (chev) chev.classList.remove('rotate-180');
 
-    this.renderLanguageSelector();
+    this.renderHeader();
     this.applyTranslations();
 
     const msgs = {
@@ -7245,6 +7251,10 @@ class MythicApp {
     if (lang === 'es') {
       // Restore Spanish
       document.querySelectorAll('[data-i18n-orig]').forEach(el => {
+        if (el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+        const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
+        if (nonIconChildren.length > 0) return;
+
         const orig = el.getAttribute('data-i18n-orig');
         const icon = el.querySelector('i');
         if (icon) {
@@ -7273,12 +7283,15 @@ class MythicApp {
       }
     });
 
-    // Translate DOM Elements
-    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong, div');
+    // Translate DOM Elements (strictly leaf elements, never containers or divs)
+    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong');
     elements.forEach(el => {
-      // Don't modify complex containers
-      if (el.children.length > 2) return;
-      if (el.closest('#mp-lang-dropdown-wrapper')) return;
+      // Protect interactive and already localized header containers
+      if (el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+
+      // Only process leaf elements or elements containing only an <i> icon
+      const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
+      if (nonIconChildren.length > 0) return;
 
       const fullText = el.textContent.trim();
       if (!fullText) return;
