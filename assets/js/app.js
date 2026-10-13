@@ -70,6 +70,7 @@ class MythicApp {
   }
 
   async init() {
+    try { this.cleanupGoogleTranslate(); } catch (e) {}
     try { this.cleanUrlBar(); } catch (e) { console.warn('cleanUrlBar:', e); }
     try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
     try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
@@ -7373,7 +7374,30 @@ class MythicApp {
       'oferta máxima permitida:': { en: 'Maximum Allowed Bid:', pt: 'Oferta Máxima Permitida:' },
       'cancelar': { en: 'Cancel', pt: 'Cancelar' },
       'enviar oferta': { en: 'Submit Bid', pt: 'Enviar Oferta' },
-      'tomar orden': { en: 'Claim Order', pt: 'Pegar Pedido' }
+      'tomar orden': { en: 'Claim Order', pt: 'Pegar Pedido' },
+      'vpn de tu ciudad': { en: "Your City's VPN", pt: 'VPN da sua cidade' },
+      'inicio en 15 minutos': { en: 'Start in 15 minutes', pt: 'Início em 15 minutos' },
+      'chat privado con tu booster': { en: 'Private Chat with your Booster', pt: 'Chat privado com seu booster' },
+      'servicios destacados': { en: 'FEATURED SERVICES', pt: 'SERVIÇOS EM DESTAQUE' },
+      'oficial world of warcraft': { en: 'World of Warcraft Official', pt: 'World of Warcraft Oficial' },
+      'selecciona cualquier servicio para ver su página individual y configurar tus opciones.': { en: 'Select any service to view its individual page and configure your options.', pt: 'Selecione qualquer serviço para ver sua página individual e configurar suas opções.' },
+      'piedras angulares míticas+, bandas heroicas y míticas, equipamiento bis y powerleveling. protección garantizada con vpn local, seguimiento en vivo de tu orden y chat directo con tu pro.': { en: 'Mythic Keystones+, Heroic and Mythic Raids, BiS Gear, and Powerleveling. Guaranteed protection with local VPN, live order tracking, and direct chat with your pro.', pt: 'Pedras-chave Míticas+, Raides Heróicas e Míticas, Equipamento BiS e Powerleveling. Proteção garantida com VPN local, rastreamento ao vivo do seu pedido e chat direto com seu pro.' },
+      'desde': { en: 'FROM', pt: 'A PARTIR DE' },
+      'configurar': { en: 'SET UP', pt: 'CONFIGURAR' },
+      'temporada 2 activa': { en: 'Season 2 Active', pt: 'Temporada 2 Ativa' },
+      'nueva raid temporada 2': { en: 'New Raid Season 2', pt: 'Novo Raide Temporada 2' },
+      'sweet spot tier 8': { en: 'Sweet Spot Tier 8', pt: 'Ponto Ideal Tier 8' },
+      'paquete completo': { en: 'Complete Package', pt: 'Pacote Completo' },
+      'gana un 50% extra:': { en: 'Earn an extra 50%:', pt: 'Ganhe 50% extra:' },
+      'gana 50% extra:': { en: 'Earn an extra 50%:', pt: 'Ganhe 50% extra:' },
+      'copiar enlace pro (50%)': { en: 'Copy Link Pro (50%)', pt: 'Copiar Link Pro (50%)' },
+      'el abismo venenoso (the venomous abyss)': { en: 'The Venomous Abyss', pt: 'The Venomous Abyss' },
+      'mítica+ keystone run (+2 a +15)': { en: 'Mythic+ Keystone Run (+2 to +15)', pt: 'Mítica+ Keystone Run (+2 a +15)' },
+      'mítica+ keystone run (+2 a +20)': { en: 'Mythic+ Keystone Run (+2 to +20)', pt: 'Mítica+ Keystone Run (+2 a +20)' },
+      'delves tier 8-11 & némesis de temporada': { en: 'Delves Tier 8-11 & Season Nemesis', pt: 'Delves Tier 8-11 & Nêmesis de Temporada' },
+      'full equipamiento de temporada (ilvl 292 - 344)': { en: 'Full Season Gear (ilvl 292 - 344)', pt: 'Equipamento Completo de Temporada (ilvl 292 - 344)' },
+      'world of warcraft es una marca registrada de blizzard entertainment, inc. mythic progression es una plataforma independiente de servicios.': { en: 'World of Warcraft is a registered trademark of Blizzard Entertainment, Inc. Mythic Progression is an independent service platform.', pt: 'World of Warcraft é uma marca registrada da Blizzard Entertainment, Inc. Mythic Progression é uma plataforma de serviços independente.' },
+      'wow carry & mythic services': { en: 'WoW Carry & Mythic Services', pt: 'WoW Carry & Mythic Services' }
     };
 
     if (lang === 'es') {
@@ -7397,8 +7421,7 @@ class MythicApp {
         if (el.closest('#mp-live-chat-root') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
         el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
       });
-
-      this.triggerGoogleTranslate('es');
+      this.cleanupGoogleTranslate();
       return;
     }
 
@@ -7442,59 +7465,27 @@ class MythicApp {
       }
     });
 
-    // Trigger full deep translation via Google Translate Element bridge
-    this.triggerGoogleTranslate(lang);
+    this.cleanupGoogleTranslate();
   }
 
-  triggerGoogleTranslate(lang) {
-    if (typeof window === 'undefined') return;
-
-    if (!window.googleTranslateElementInit) {
-      window.googleTranslateElementInit = function() {
-        new window.google.translate.TranslateElement({
-          pageLanguage: 'es',
-          includedLanguages: 'en,es,pt',
-          autoDisplay: false
-        }, 'google_translate_element');
-      };
-
-      if (!document.getElementById('google_translate_element')) {
-        const div = document.createElement('div');
-        div.id = 'google_translate_element';
-        div.style.display = 'none';
-        document.body.appendChild(div);
-
-        const style = document.createElement('style');
-        style.innerHTML = `
-          .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame { display: none !important; }
-          body { top: 0px !important; }
-          .goog-tooltip, .goog-tooltip:hover { display: none !important; }
-          .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
-          #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
-          .skiptranslate:not(#google_translate_element) { display: none !important; }
-        `;
-        document.head.appendChild(style);
-
-        const s = document.createElement('script');
-        s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-        s.async = true;
-        document.head.appendChild(s);
+  cleanupGoogleTranslate() {
+    try {
+      if (typeof document === 'undefined') return;
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      if (typeof window !== 'undefined' && window.location) {
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + window.location.hostname + '; path=/;';
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + window.location.hostname + '; path=/;';
       }
-    }
-
-    const fireChange = () => {
-      const combo = document.querySelector('.goog-te-combo');
-      if (combo) {
-        if (combo.value !== lang) {
-          combo.value = lang;
-          combo.dispatchEvent(new Event('change'));
-        }
+      const el = document.getElementById('google_translate_element');
+      if (el) el.remove();
+      const frames = document.querySelectorAll('.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame');
+      frames.forEach(f => f.remove());
+      const body = document.body;
+      if (body) {
+        body.classList.remove('translated-ltr', 'translated-rtl');
+        body.style.top = '0px';
       }
-    };
-
-    fireChange();
-    setTimeout(fireChange, 500);
-    setTimeout(fireChange, 1200);
+    } catch (e) {}
   }
 }
 
