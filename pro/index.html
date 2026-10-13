@@ -19,13 +19,13 @@
         var isAllowed = user && (
           user.isBooster === true ||
           user.isAdmin === true ||
+          user.isStaff === true ||
           user.type === 'booster' ||
           user.type === 'admin' ||
           user.type === 'staff' ||
           user.discordId === '443948776562884620' ||
           (Array.isArray(user.roles) && user.roles.some(function(r) { return /booster|admin|staff|gerente|raider|supplier|master/i.test(r); })) ||
-          (typeof user.role === 'string' && /booster|admin|staff|gerente|raider|supplier|master/i.test(user.role)) ||
-          (typeof user.username === 'string' && (user.username.toLowerCase() === 'miguelb' || /admin|gerente/i.test(user.username)))
+          (typeof user.role === 'string' && /booster|admin|staff|gerente|raider|supplier|master/i.test(user.role))
         );
         if (!isAllowed) {
           document.documentElement.style.display = 'none';
@@ -605,14 +605,14 @@
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Preserve admin/gerente session if logged in; otherwise default to demo booster Miguelb
-      if (!app.currentUser) {
-        app.authenticateWithDiscord('443948776562884620', 'Miguelb');
-      }
-
-      const b = (app.currentUser && (app.currentUser.type === 'booster' || app.isBooster() || app.currentUser.discordId === '443948776562884620'))
+      const b = (app.currentUser && (app.currentUser.type === 'booster' || app.currentUser.type === 'staff' || app.currentUser.type === 'admin' || app.isBooster() || app.isAdminOrGerente()))
         ? app.currentUser
-        : (app.boosters && app.boosters.find(x => x.username.toLowerCase() === 'miguelb')) || { username: 'Miguelb', role: 'Master Booster', points: 546 };
+        : null;
+
+      if (!b) {
+        window.location.replace('/');
+        return;
+      }
 
       if (!b.avatar) {
         const backup = localStorage.getItem('mp_discord_avatar_backup');

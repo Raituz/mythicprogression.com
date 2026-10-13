@@ -4,26 +4,26 @@
     "category": "Míticas Plus",
     "page": "mplus",
     "name": "Mythic+ Keystone Run (+2 a +15)",
-    "description": "Completa mazmorras míticas plus a tiempo con nuestro equipo profesional. Obtén el mejor botín de temporada y progresión en tu Gran Cámara.",
+    "description": "Completa mazmorras míticas plus de Midnight a tiempo con nuestro equipo profesional. Obtén botín hasta 311 ilvl en cofre final y 318 ilvl (Mítico) en tu Gran Cámara semanal.",
     "basePrice": 12.00,
     "icon": "fa-dungeon",
-    "badge": "Más Popular",
+    "badge": "Temporada 2 Activa",
     "options": {
       "keyLevels": [
-        {"level": 2, "price": 12.00, "recommended": false},
-        {"level": 4, "price": 16.00, "recommended": false},
-        {"level": 6, "price": 22.00, "recommended": false},
-        {"level": 8, "price": 28.00, "recommended": false},
-        {"level": 10, "price": 38.00, "recommended": true},
-        {"level": 12, "price": 52.00, "recommended": false},
-        {"level": 14, "price": 70.00, "recommended": false},
-        {"level": 15, "price": 85.00, "recommended": false},
-        {"level": 18, "price": 115.00, "recommended": false},
-        {"level": 20, "price": 145.00, "recommended": false}
+        {"level": 2, "price": 12.00, "endIlvl": 295, "vaultIlvl": 305, "track": "Campeón 2/6 → Héroe 1/6", "crests": "Campeón (Champion)", "recommended": false},
+        {"level": 4, "price": 16.00, "endIlvl": 298, "vaultIlvl": 308, "track": "Campeón 3/6 → Héroe 2/6", "crests": "Héroe (Hero)", "recommended": false},
+        {"level": 6, "price": 22.00, "endIlvl": 305, "vaultIlvl": 311, "track": "Héroe 1/6 → Héroe 3/6", "crests": "Héroe (Hero)", "recommended": false},
+        {"level": 8, "price": 28.00, "endIlvl": 308, "vaultIlvl": 315, "track": "Héroe 2/6 → Héroe 4/6", "crests": "Héroe (Hero)", "recommended": false},
+        {"level": 10, "price": 38.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 → Mito 1/6 (BiS)", "crests": "Mítico (Myth)", "recommended": true},
+        {"level": 12, "price": 52.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 → Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
+        {"level": 14, "price": 70.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 → Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
+        {"level": 15, "price": 85.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 → Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
+        {"level": 18, "price": 115.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 → Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
+        {"level": 20, "price": 145.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 → Mito 1/6", "crests": "Mítico (Myth)", "recommended": false}
       ],
       "timer": {
         "enabled": true,
-        "label": "Timer guaranteed",
+        "label": "Timer garantizado (In-time)",
         "price": 0.00
       },
       "lootTraders": [
@@ -33,14 +33,20 @@
       ],
       "dungeons": [
         "Random Dungeon (Más Rápido)",
-        "The Stonevault",
-        "City of Threads",
-        "The Dawnbreaker",
-        "Ara-Kara, City of Echoes",
-        "Grim Batol",
-        "The Necrotic Wake",
-        "Mists of Tirna Scithe",
-        "Siege of Boralus"
+        "Vaults of Atal'Utek (Cámaras de Atal'Utek)",
+        "Coiled Spire (Aguja Enroscada)",
+        "Underground Sanctum (Sagrario Subterráneo)",
+        "Operation: Floodgate (Operación: Compuerta)",
+        "Cinderbrew Meadery (Hidromelería de Ceniza)",
+        "Darkflame Cleft (Fisura de Flama Oscura)",
+        "Priory of the Sacred Flame (Priorato de la Llama Sagrada)"
+      ],
+      "legacyDungeons": [
+        "The Stonevault (El Sagrario de Piedra)",
+        "City of Threads (Ciudad de los Hilos)",
+        "The Dawnbreaker (El Rompealbas)",
+        "Ara-Kara, City of Echoes (Ara-Kara)",
+        "The MOTHERLODE!! (¡VETA MADRE!)"
       ],
       "completionMethods": [
         {"label": "Self-play", "price": 0.00, "tag": "Gratis"},
@@ -48,7 +54,7 @@
         {"label": "Self-play Remote", "price": 1.95, "tag": "+$1.95"}
       ],
       "extras": [
-        {"label": "Rank One Team", "price": 1.95},
+        {"label": "Rank One Team (Top 0.1% M+)", "price": 1.95},
         {"label": "Stream Privado en Discord", "price": 2.50}
       ],
       "estimates": {
@@ -56,31 +62,155 @@
         "execution": "15-30 min"
       },
       "heroBadges": [
-        "311 ilvl Gear",
-        "318 Weekly Vault",
-        "FREE Timer & Traders"
+        "Hasta 311 ilvl Botín",
+        "318 ilvl Gran Cámara (Mítico)",
+        "Blasones Míticos & Portales"
       ],
       "volumeDiscount": 5,
       "cashbackPercent": 5
     }
   },
   {
-    "id": "nerubar-palace",
+    "id": "the-venomous-abyss",
     "category": "Bandas / Raids",
     "page": "raids",
-    "name": "Palacio Nerub-ar (Heroico / Mítico)",
-    "description": "Derrota a la Reina Ansurek y a los jefes de banda. Botín garantizado de alto nivel de objeto y logros Ahead of the Curve (AOTC).",
-    "basePrice": 45.00,
-    "icon": "fa-dragon",
-    "badge": "Season Raid",
+    "name": "El Abismo Venenoso (The Venomous Abyss)",
+    "description": "Derrota a los 8 jefes del Abismo Venenoso en las Cámaras de Atal'Utek incluyendo a Ula'tek. Botín garantizado de 292 a 344 ilvl, logro Ahead of the Curve (AOTC) / Cutting Edge y recompensas BiS de temporada.",
+    "basePrice": 28.00,
+    "icon": "fa-crown",
+    "badge": "Nueva Raid Temporada 2",
     "options": {
       "difficulties": [
-        {"name": "Normal (8/8)", "price": 25.00},
-        {"name": "Heroico (8/8 - AOTC)", "price": 45.00},
-        {"name": "Solo Reina Ansurek Heroico", "price": 18.00},
-        {"name": "Mítico (Primeros 4 jefes)", "price": 120.00},
-        {"name": "Mítico Full Clear (Cutting Edge)", "price": 350.00}
-      ]
+        {"name": "Normal (8/8) - ilvl 292-302", "price": 28.00, "ilvl": "292 - 302", "track": "Campeón", "tag": "Full Clear"},
+        {"name": "Heroico (8/8 - AOTC Ula'tek) - ilvl 305-315", "price": 48.00, "ilvl": "305 - 315", "track": "Héroe", "recommended": true, "tag": "AOTC Garantizado"},
+        {"name": "Solo Ula'tek Heroico (AOTC)", "price": 19.00, "ilvl": "315", "track": "Héroe", "tag": "Jefe Final"},
+        {"name": "Mítico (Primeros 4 jefes) - ilvl 318-324", "price": 135.00, "ilvl": "318 - 324", "track": "Mito", "tag": "Mítico Progresión"},
+        {"name": "Mítico Full Clear (Cutting Edge Ula'tek) - ilvl 318-344", "price": 390.00, "ilvl": "318 - 344", "track": "Mito BiS", "tag": "Cutting Edge"}
+      ],
+      "bosses": [
+        "1. Nek'zali the Soulcoiler",
+        "2. Entombed Sentinels",
+        "3. The Lost Explorers",
+        "4. Vashnik",
+        "5. Sszorak",
+        "6. The Twin Fangs",
+        "7. The Coiled Altar",
+        "8. Ula'tek (Jefe Final)"
+      ],
+      "lootTypes": [
+        {"label": "Group Loot (Tirada estándar)", "price": 0.00},
+        {"label": "Armor Priority (Prioridad de armadura)", "price": 14.50},
+        {"label": "VIP Loot Traders (Comerciantes exclusivos)", "price": 28.00}
+      ],
+      "completionMethods": [
+        {"label": "Self-play (Juegas tú con la hermandad)", "price": 0.00, "tag": "Gratis"},
+        {"label": "Piloted (VPN de tu ciudad)", "price": 0.00, "tag": "Incluido"}
+      ],
+      "heroBadges": [
+        "292 - 344 ilvl Gear BiS",
+        "AOTC Ula'tek Garantizado",
+        "8/8 Jefes Derrotados"
+      ],
+      "estimates": {
+        "start": "15-30 min",
+        "execution": "1.5 - 2 horas"
+      },
+      "volumeDiscount": 5,
+      "cashbackPercent": 5
+    }
+  },
+  {
+    "id": "delves-midnight",
+    "category": "Profundidades / Delves",
+    "page": "gearing",
+    "name": "Delves Tier 8-11 & Némesis de Temporada",
+    "description": "Completa Profundidades Abundantes Tier 8 (Sweet Spot) para botín directo de 295-298 ilvl (Campeón) en Cofre Abundante con Llave y Gran Cámara semanal de 308-311 ilvl (Héroe). Desbloquea hasta 3 ranuras semanales.",
+    "basePrice": 14.00,
+    "icon": "fa-gem",
+    "badge": "Sweet Spot Tier 8",
+    "options": {
+      "bundles": [
+        {"label": "1x Delve Tier 8 Bountiful (1 opción en Gran Cámara)", "price": 14.00, "runs": 1, "vaultSlots": 1},
+        {"label": "2x Delves Tier 8 Bountiful", "price": 26.00, "runs": 2, "vaultSlots": 1},
+        {"label": "4x Delves Tier 8 Bountiful (2 opciones en Gran Cámara)", "price": 48.00, "runs": 4, "vaultSlots": 2},
+        {"label": "8x Delves Tier 8 Bountiful (Gran Cámara COMPLETA - 3 opciones ilvl 311 Héroe)", "price": 85.00, "runs": 8, "vaultSlots": 3, "recommended": true},
+        {"label": "Derrota de Némesis de Temporada (Montura y Título Exclusivo)", "price": 42.00, "runs": 1, "special": true}
+      ],
+      "tiers": [
+        {"tier": 4, "name": "Tier 4 (Starter - ilvl 280)", "price": 10.00},
+        {"tier": 7, "name": "Tier 7 (Avanzado - ilvl 292)", "price": 12.00},
+        {"tier": 8, "name": "Tier 8 (Sweet Spot - Máximo Botín Cofre 298 / Bóveda 311)", "price": 14.00, "recommended": true},
+        {"tier": 11, "name": "Tier 11 (Blasones Míticos & Título Maestro de Delves)", "price": 20.00}
+      ],
+      "delvesList": [
+        "Random Bountiful Delve (Recomendado)",
+        "Coiled Hollow",
+        "Sunken Catacombs",
+        "Kriegval's Rest",
+        "Fungal Folly",
+        "Earthcrawl Mines",
+        "The Waterworks",
+        "The Dread Pit",
+        "Nightfall Sanctum"
+      ],
+      "extras": [
+        {"label": "Granjero de Llaves: 100 Esquirlas de Llave Restaurada", "price": 8.00},
+        {"label": "Subir 10 niveles al Acompañante de Temporada", "price": 12.00},
+        {"label": "Stream Privado en Discord", "price": 2.50}
+      ],
+      "completionMethods": [
+        {"label": "Self-play (Juegas tú con nuestro pro)", "price": 0.00, "tag": "Gratis"},
+        {"label": "Piloted (VPN de tu país)", "price": 0.00, "tag": "Incluido"}
+      ],
+      "heroBadges": [
+        "298 ilvl Cofre Abundante",
+        "311 ilvl Gran Cámara (Héroe)",
+        "Montura & Título Némesis"
+      ],
+      "estimates": {
+        "start": "10-15 min",
+        "execution": "15-20 min por delve"
+      },
+      "volumeDiscount": 5,
+      "cashbackPercent": 5
+    }
+  },
+  {
+    "id": "ilvl-gearing",
+    "category": "Equipo / ilvl",
+    "page": "gearing",
+    "name": "Full Equipamiento de Temporada (ilvl 292 - 344)",
+    "description": "Equipa a tu personaje con los mejores objetos de la temporada actual mediante Míticas+, Delves Tier 8 y Raid El Abismo Venenoso. Tu personaje listo para míticas altas y PvP.",
+    "basePrice": 65.00,
+    "icon": "fa-shield-halved",
+    "badge": "Paquete Completo",
+    "options": {
+      "tiers": [
+        {"name": "Starter Gear 292+ (M0 & Delves T4-5)", "price": 65.00, "ilvl": 292, "desc": "Ideal para personajes recién subidos. Equipo completo de calidad Campeón starter."},
+        {"name": "Champion Raid Ready 298-302+ (Delves T8 & M+2 a +5)", "price": 125.00, "ilvl": 302, "desc": "Equipo completo Campeón. Listo para entrar directo a Raid Heroica."},
+        {"name": "Heroic Gear 305-315+ (M+6 a +8 & Abismo Venenoso Heroico AOTC)", "price": 245.00, "ilvl": 315, "desc": "Equipo completo de calidad Héroe. Ideal para empujar míticas +10."},
+        {"name": "BiS Mítico Competitivo 318-344+ (M+10 Weekly Vaults & Mítico)", "price": 440.00, "ilvl": 344, "desc": "El mejor equipo del juego. Ranuras de nivel Mito y Blasones Míticos."}
+      ],
+      "completionMethods": [
+        {"label": "Piloted (VPN)", "price": 0.00, "tag": "Incluido", "recommended": true},
+        {"label": "Self-play (Juegas en grupo con pros)", "price": 25.00, "tag": "+$25.00"}
+      ],
+      "extras": [
+        {"label": "Arma BiS específica con stats optimizadas", "price": 18.00},
+        {"label": "2 Abalorios (Trinkets) BiS de Temporada", "price": 24.00},
+        {"label": "Prioridad Express (Empieza en 15 min)", "price": 15.00}
+      ],
+      "heroBadges": [
+        "292 a 344 ilvl Garantizado",
+        "Delves T8 + M+ + Raid",
+        "BiS Gear Optimizado"
+      ],
+      "estimates": {
+        "start": "15-30 min",
+        "execution": "1-3 días (según tier)"
+      },
+      "volumeDiscount": 5,
+      "cashbackPercent": 5
     }
   },
   {
@@ -98,9 +228,9 @@
       "defaultCurrentLevel": 1,
       "defaultDesiredLevel": 80,
       "heroBadges": [
-        "Fast Leveling",
-        "Best Price",
-        "1-90 Fully AFK Option"
+        "1-80/90 en Horas",
+        "Piloted VPN o Self-Play",
+        "Gearing 292+ Opcional"
       ],
       "estimates": {
         "start": "10-15 min",
@@ -120,14 +250,14 @@
       ],
       "gearingOptions": [
         {"label": "Not Required", "price": 0},
-        {"label": "Starter Gear 554+ (+$12.00)", "price": 12.00},
+        {"label": "Starter Gear 292+ (+$12.00)", "price": 12.00},
         {"label": "Honor PvP Gear (+$19.00)", "price": 19.00},
-        {"label": "Full Dungeon Gear 580+ (+$29.00)", "price": 29.00},
-        {"label": "Champion Raid Ready 593+ (+$45.00)", "price": 45.00}
+        {"label": "Full Dungeon Gear 298+ (+$29.00)", "price": 29.00},
+        {"label": "Champion Raid Ready 302+ (+$45.00)", "price": 45.00}
       ],
       "additionalOptions": [
-        {"label": "The Venomous Abyss Heroic run", "price": 32.99},
-        {"label": "8/8 M+0 Dungeons", "price": 27.99},
+        {"label": "Vaults of Atal'Utek Heroic run", "price": 32.99},
+        {"label": "8/8 M+0 Dungeons (Semanal)", "price": 27.99},
         {"label": "Midnight Campaign", "price": 23.99},
         {"label": "The War of Light and Shadow Campaign", "price": 23.99},
         {"label": "The Curse of Ula'tek Campaign", "price": 16.99},
@@ -137,23 +267,6 @@
       ],
       "volumeDiscount": 5,
       "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "ilvl-gearing",
-    "category": "Equipo / ilvl",
-    "page": "gearing",
-    "name": "Full Equipamiento ilvl 606 - 639",
-    "description": "Farm completo de equipo para tu personaje mediante M+, Delves Rango 8 y Bandas. Tu personaje listo para contenido competitivo.",
-    "basePrice": 65.00,
-    "icon": "fa-shield-halved",
-    "badge": "Paquete Completo",
-    "options": {
-      "tiers": [
-        {"name": "ilvl 606+ (Paquete Starter)", "price": 65.00},
-        {"name": "ilvl 619+ (Heroico Completo)", "price": 130.00},
-        {"name": "ilvl 636+ (BiS Mítico)", "price": 290.00}
-      ]
     }
   }
 ]

@@ -18,12 +18,12 @@
         var user = JSON.parse(raw);
         var isStaff = user && (
           user.isAdmin === true ||
+          user.isStaff === true ||
           user.type === 'admin' ||
           user.type === 'staff' ||
           user.discordId === '443948776562884620' ||
           (Array.isArray(user.roles) && user.roles.some(function(r) { return /admin|staff|gerente/i.test(r); })) ||
-          (typeof user.role === 'string' && /admin|staff|gerente/i.test(user.role)) ||
-          (typeof user.username === 'string' && (user.username.toLowerCase() === 'miguelb' || /admin|gerente/i.test(user.username)))
+          (typeof user.role === 'string' && /admin|staff|gerente/i.test(user.role))
         );
         if (!isStaff) {
           document.documentElement.style.display = 'none';
@@ -1047,7 +1047,7 @@
             <button type="button" onclick="document.getElementById('admin-product-modal').classList.add('hidden')" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-bold transition-all cursor-pointer">
               Cancelar
             </button>
-            <button type="button" onclick="app.resetModalMplusDefaults()" class="px-3.5 py-2.5 rounded-xl bg-[#1a0b32] hover:bg-[#240f40] text-stone-400 hover:text-[#f3e8ff] border border-stone-800 text-xs font-semibold transition-all cursor-pointer" title="Rellenar todas las pestañas con valores óptimos de The War Within">
+            <button type="button" onclick="app.resetModalMplusDefaults()" class="px-3.5 py-2.5 rounded-xl bg-[#1a0b32] hover:bg-[#240f40] text-stone-400 hover:text-[#f3e8ff] border border-stone-800 text-xs font-semibold transition-all cursor-pointer" title="Rellenar todas las pestañas con valores óptimos de Midnight">
               <i class="fa-solid fa-rotate-left mr-1.5 text-[#a855f7]"></i>
               <span>Cargar Valores por Defecto</span>
             </button>

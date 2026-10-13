@@ -147,120 +147,26 @@ class MythicApp {
     // 2. Services
     try {
       const storedServices = localStorage.getItem('mp_services');
-      if (storedServices && JSON.parse(storedServices).length > 0) {
+      const catalogVersion = localStorage.getItem('mp_catalog_v');
+      let shouldReload = (catalogVersion !== '2.7.0' || !storedServices);
+      if (storedServices) {
+        try {
+          const parsed = JSON.parse(storedServices);
+          if (!parsed.find(s => s.id === 'the-venomous-abyss') || !parsed.find(s => s.id === 'delves-midnight')) {
+            shouldReload = true;
+          }
+        } catch (e) {
+          shouldReload = true;
+        }
+      }
+
+      if (!shouldReload && storedServices) {
         this.services = JSON.parse(storedServices);
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
+        localStorage.setItem('mp_catalog_v', '2.7.0');
         this.saveServices();
-      }
-
-      // Upgrade existing stored services with rich M+ options if not present
-      if (this.services && Array.isArray(this.services)) {
-        const mplus = this.services.find(s => s.id === 'mplus-keystone');
-        if (mplus) {
-          if (!mplus.options || !mplus.options.lootTraders || !mplus.options.completionMethods) {
-            mplus.options = {
-              keyLevels: [
-                { level: 2, price: 12.00, recommended: false },
-                { level: 4, price: 16.00, recommended: false },
-                { level: 6, price: 22.00, recommended: false },
-                { level: 8, price: 28.00, recommended: false },
-                { level: 10, price: 38.00, recommended: true },
-                { level: 12, price: 52.00, recommended: false },
-                { level: 14, price: 70.00, recommended: false },
-                { level: 15, price: 85.00, recommended: false },
-                { level: 18, price: 115.00, recommended: false },
-                { level: 20, price: 145.00, recommended: false }
-              ],
-              timer: { enabled: true, label: 'Timer guaranteed', price: 0 },
-              lootTraders: [
-                { label: 'Premium Group (x2 loot-traders)', price: 0 },
-                { label: 'VIP Group (+3 loot-traders)', price: 2.27 },
-                { label: 'Top Group (+4 loot-traders)', price: 2.92 }
-              ],
-              dungeons: [
-                'Random Dungeon (Más Rápido)',
-                'The Stonevault',
-                'City of Threads',
-                'The Dawnbreaker',
-                'Ara-Kara, City of Echoes',
-                'Grim Batol',
-                'The Necrotic Wake',
-                'Mists of Tirna Scithe',
-                'Siege of Boralus'
-              ],
-              completionMethods: [
-                { label: 'Self-play', price: 0, tag: 'Gratis' },
-                { label: 'Piloted (Juega un Pro con VPN)', price: 0, tag: 'Incluido' },
-                { label: 'Self-play Remote', price: 1.95, tag: '+$1.95' }
-              ],
-              extras: [
-                { label: 'Rank One Team', price: 1.95 },
-                { label: 'Stream Privado en Discord', price: 2.50 }
-              ],
-              estimates: { start: '10-15 min', execution: '15-30 min' },
-              heroBadges: ['311 ilvl Gear', '318 Weekly Vault', 'FREE Timer & Traders'],
-              volumeDiscount: 5,
-              cashbackPercent: 5,
-              ...(mplus.options || {})
-            };
-            this.saveServices();
-          }
-        }
-
-        const plevel = this.services.find(s => s.id === 'powerleveling-80');
-        if (plevel) {
-          if (!plevel.options || !plevel.options.gearingOptions || !plevel.options.additionalOptions) {
-            plevel.name = "WoW Powerleveling Personalizado (1 - 80 / 90)";
-            plevel.description = "Sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. Elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.";
-            plevel.badge = "Personalizable 1-90";
-            plevel.options = {
-              minLevel: 1,
-              maxLevel: 90,
-              defaultCurrentLevel: 1,
-              defaultDesiredLevel: 80,
-              heroBadges: [
-                "Fast Leveling",
-                "Best Price",
-                "1-90 Fully AFK Option"
-              ],
-              estimates: { start: "10-15 min", execution: "Flexible" },
-              review: {
-                stars: 5,
-                author: "Bestworld, hace 1 día",
-                quote: "\"I'm buying leveling here for the third expansion in a row. They level your character from lvl 1 to 80 insanely fast and completely safe.\"",
-                rating: "5.0",
-                count: "11,232"
-              },
-              completionMethods: [
-                { label: "Piloted (VPN)", price: 0, tag: "Incluido", recommended: true },
-                { label: "Self-play", price: 9.99, tag: "+$9.99" },
-                { label: "Self-play Remote", price: 14.99, tag: "+$14.99" }
-              ],
-              gearingOptions: [
-                { label: "Not Required", price: 0 },
-                { label: "Starter Gear 554+ (+$12.00)", price: 12.00 },
-                { label: "Honor PvP Gear (+$19.00)", price: 19.00 },
-                { label: "Full Dungeon Gear 580+ (+$29.00)", price: 29.00 },
-                { label: "Champion Raid Ready 593+ (+$45.00)", price: 45.00 }
-              ],
-              additionalOptions: [
-                { label: "The Venomous Abyss Heroic run", price: 32.99 },
-                { label: "8/8 M+0 Dungeons", price: 27.99 },
-                { label: "Midnight Campaign", price: 23.99 },
-                { label: "The War of Light and Shadow Campaign", price: 23.99 },
-                { label: "The Curse of Ula'tek Campaign", price: 16.99 },
-                { label: "The Promise of Tomorrow Campaign", price: 16.99 },
-                { label: "Haranir Allied Race Unlock", price: 14.99 },
-                { label: "All Skyriding Glyphs", price: 9.99 }
-              ],
-              volumeDiscount: 5,
-              cashbackPercent: 5
-            };
-            this.saveServices();
-          }
-        }
       }
     } catch (e) {
       console.warn('Fallback loading services:', e);
@@ -342,7 +248,26 @@ class MythicApp {
     }
   }
 
+  // Owner identity. Only granted when the Discord ID comes from a real OAuth handshake.
+  static get OWNER_DISCORD_ID() { return '443948776562884620'; }
+  static get SESSION_VERSION() { return '3'; }
+
+  isVerifiedOwner(user = this.currentUser) {
+    if (!user) return false;
+    const id = String(user.discordId || user.discord_id || '').trim();
+    return id === MythicApp.OWNER_DISCORD_ID && user.ownerVerified === true;
+  }
+
   initSession() {
+    // SECURITY: invalidate every session created before the identity fix.
+    // Older builds could impersonate the owner (demo buttons, /pro auto-login, name matching).
+    if (localStorage.getItem('mp_session_v') !== MythicApp.SESSION_VERSION) {
+      localStorage.removeItem('mp_current_user');
+      sessionStorage.removeItem('mp_current_user');
+      localStorage.removeItem('mp_discord_avatar_backup');
+      localStorage.setItem('mp_session_v', MythicApp.SESSION_VERSION);
+    }
+
     const stored = localStorage.getItem('mp_current_user');
     if (stored) {
       try {
@@ -352,26 +277,18 @@ class MythicApp {
           if (!this.currentUser.roles || !Array.isArray(this.currentUser.roles)) {
             this.currentUser.roles = [this.currentUser.role || (this.currentUser.type === 'admin' ? 'Staff / Admin' : 'Booster')];
           }
-          if (this.currentUser.discordId === '443948776562884620' || (this.currentUser.username && this.currentUser.username.toLowerCase() === 'miguelb')) {
-            this.currentUser.type = 'admin';
-            this.currentUser.isAdmin = true;
-            this.currentUser.isBooster = true;
-            if (!this.currentUser.roles.includes('Master Booster')) this.currentUser.roles.unshift('Master Booster');
-            if (!this.currentUser.roles.includes('Staff / Admin')) this.currentUser.roles.push('Staff / Admin');
-            this.currentUser.role = 'Master Booster & Admin';
+          // An owner-looking session that was not verified via OAuth is an impersonation: drop it.
+          const claimsOwner = String(this.currentUser.discordId || '') === MythicApp.OWNER_DISCORD_ID || this.currentUser.id === 'admin_miguelb';
+          if (claimsOwner && !this.isVerifiedOwner()) {
+            this.currentUser = null;
+            localStorage.removeItem('mp_current_user');
+            return;
           }
 
-          // Restore avatar if missing from persistent backup or booster database
-          if (!this.currentUser.avatar) {
-            const bMatch = this.boosters && this.boosters.find(b => (this.currentUser.discordId && b.discord_id === this.currentUser.discordId) || (this.currentUser.username && b.username.toLowerCase() === this.currentUser.username.toLowerCase()));
-            const backup = localStorage.getItem('mp_discord_avatar_backup');
-            if (bMatch && bMatch.avatar) {
-              this.currentUser.avatar = bMatch.avatar;
-            } else if (backup) {
-              this.currentUser.avatar = backup;
-            }
-          } else {
-            localStorage.setItem('mp_discord_avatar_backup', this.currentUser.avatar);
+          // Restore avatar only from the booster record with the SAME Discord ID
+          if (!this.currentUser.avatar && this.currentUser.discordId) {
+            const bMatch = this.boosters && this.boosters.find(b => b.discord_id === this.currentUser.discordId);
+            if (bMatch && bMatch.avatar) this.currentUser.avatar = bMatch.avatar;
           }
         }
       } catch (e) {
@@ -493,62 +410,20 @@ class MythicApp {
 
 // AUTH (CLIENT VS BOOSTER VS ADMIN)
   // ==========================================
+  // UNVERIFIED login (manual ID / demo). It can NEVER grant owner, admin, staff or booster
+  // privileges, because anyone can type someone else's Discord ID or name.
   authenticateWithDiscord(discordId, customName = null) {
-    const inputStr = String(discordId || customName || '').trim().toLowerCase();
-    
-    // Check if logging in as Admin/Gerente or Miguelb (Owner)
-    if (inputStr === 'admin' || inputStr === 'gerente' || inputStr === 'gerencia' || inputStr === 'staff' || inputStr.includes('mythicadmin') || inputStr === '443948776562884620' || inputStr === 'miguelb') {
-      return this.authenticateAsAdmin();
-    }
-
-    // Check if it's one of the pre-approved boosters
-    const existingBooster = this.boosters.find(b => 
-      b.discord_id === String(discordId).trim() || 
-      b.username.toLowerCase() === String(customName || discordId).trim().toLowerCase()
-    );
-
-    if (existingBooster) {
-      const isStaffOrAdmin = existingBooster.discord_id === '443948776562884620' ||
-        (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente/i.test(r))) ||
-        (existingBooster.role && /admin|staff|gerente/i.test(existingBooster.role));
-
-      const bRoles = Array.isArray(existingBooster.roles) ? [...existingBooster.roles] : [existingBooster.role || 'Booster'];
-      if (isStaffOrAdmin && !bRoles.some(r => /admin|staff/i.test(r))) {
-        bRoles.push('Staff / Admin');
-      }
-
-      this.currentUser = {
-        id: 'booster_' + existingBooster.discord_id,
-        type: isStaffOrAdmin ? 'admin' : 'booster',
-        discordId: existingBooster.discord_id,
-        username: existingBooster.username,
-        role: existingBooster.role || 'Booster',
-        roles: bRoles,
-        points: existingBooster.points || 0,
-        approved: existingBooster.approved,
-        balance: existingBooster.balance || 0.00,
-        email: existingBooster.email,
-        avatar: existingBooster.avatar || '',
-        payoutMethod: existingBooster.payout_method || 'Binance Pay / USDT',
-        isAdmin: isStaffOrAdmin,
-        isBooster: true
-      };
-      this.saveUser();
-      this.showToast(`¡Bienvenido Booster ${existingBooster.username}!`, 'success');
-      this.renderHeader();
-      return { status: isStaffOrAdmin ? 'ADMIN_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
-    }
-
-    // Otherwise client login
+    const id = String(discordId || '').trim();
+    const name = (customName || ('Cliente_' + id.slice(0, 4))).trim();
     this.currentUser = {
-      id: 'client_' + (discordId || 'user'),
+      id: 'client_' + (id || ('u' + Date.now())),
       type: 'client',
-      username: customName || 'Cliente_' + String(discordId).slice(0, 4),
+      username: name,
       role: 'Cliente',
       roles: ['Cliente'],
-      email: (customName || 'cliente') + '@discord.com',
+      email: '',
       country: 'Global',
-      discordId: String(discordId),
+      discordId: id,
       balance: 0.00,
       isAdmin: false,
       isBooster: false
@@ -559,51 +434,49 @@ class MythicApp {
     return { status: 'CLIENT_LOGGED_IN', user: this.currentUser };
   }
 
-  authenticateAsAdmin(avatar = null) {
-    const existingAvatar = avatar || 
-      this.currentUser?.avatar || 
-      (this.boosters && this.boosters.find(b => b.discord_id === '443948776562884620' || b.username.toLowerCase() === 'miguelb')?.avatar) || 
-      localStorage.getItem('mp_discord_avatar_backup') || 
-      '';
-
+  // Only called after a VERIFIED Discord OAuth handshake whose ID equals OWNER_DISCORD_ID.
+  authenticateAsAdmin(verifiedPayload) {
+    if (!verifiedPayload || String(verifiedPayload.id) !== MythicApp.OWNER_DISCORD_ID) {
+      console.warn('authenticateAsAdmin rejected: not a verified owner payload');
+      return { status: 'REJECTED' };
+    }
+    const ownerRecord = (this.boosters || []).find(b => b.discord_id === MythicApp.OWNER_DISCORD_ID) || {};
     this.currentUser = {
-      id: 'admin_miguelb',
+      id: 'booster_' + MythicApp.OWNER_DISCORD_ID,
       type: 'admin',
-      username: 'Miguelb',
+      username: verifiedPayload.username || ownerRecord.username || 'Owner',
       role: 'Master Booster & Admin',
       roles: ['Master Booster', 'Staff / Admin'],
-      email: 'charquin50@gmail.com',
+      email: verifiedPayload.email || ownerRecord.email || '',
       country: 'Global',
-      discordId: '443948776562884620',
-      avatar: existingAvatar,
-      points: 546,
+      discordId: MythicApp.OWNER_DISCORD_ID,
+      discordTag: verifiedPayload.discordTag || '',
+      discordConnected: true,
+      avatar: verifiedPayload.avatar || ownerRecord.avatar || '',
+      points: ownerRecord.points || 0,
       approved: true,
-      balance: 0.00,
-      payoutMethod: 'Binance Pay / USDT',
+      balance: ownerRecord.balance || 0.00,
+      payoutMethod: ownerRecord.payout_method || '',
       isAdmin: true,
-      isBooster: true
+      isBooster: true,
+      ownerVerified: true
     };
-    if (existingAvatar) {
-      localStorage.setItem('mp_discord_avatar_backup', existingAvatar);
-      if (this.boosters) {
-        const b = this.boosters.find(x => x.discord_id === '443948776562884620' || x.username.toLowerCase() === 'miguelb');
-        if (b) {
-          b.avatar = existingAvatar;
-          this.saveBoosters();
-        }
-      }
+    if (ownerRecord && verifiedPayload.avatar) {
+      ownerRecord.avatar = verifiedPayload.avatar;
+      this.saveBoosters();
     }
     this.saveUser();
     this.renderHeader();
-    this.showToast('¡Sesión iniciada como Administrador & Master Booster (Miguelb)!', 'success');
+    this.showToast(`¡Sesión iniciada como Administrador (${this.currentUser.username})!`, 'success');
     return { status: 'ADMIN_LOGGED_IN', user: this.currentUser };
   }
 
+  // "Ver como Staff" quick switch: only navigates, never changes identity.
   loginAsAdminQuick() {
-    this.authenticateAsAdmin();
     const modal = document.getElementById('auth-modal');
     if (modal) modal.classList.add('hidden');
-    window.location.href = 'admin';
+    if (this.isAdminOrGerente()) window.location.href = 'admin';
+    else this.showToast('Acceso exclusivo para Administradores.', 'error');
   }
 
   // ==========================================
@@ -713,21 +586,27 @@ class MythicApp {
       if (avatar && !this.currentUser.avatar) this.currentUser.avatar = avatar;
 
       const existingBooster = this.boosters ? this.boosters.find(b => 
-        b.discord_id === discordId || b.username.toLowerCase() === username.toLowerCase()
+        b.discord_id === discordId
       ) : null;
 
-      if (discordId === '443948776562884620' || username.toLowerCase() === 'miguelb' || username.toLowerCase().includes('admin')) {
+      if (discordId === MythicApp.OWNER_DISCORD_ID) {
         this.currentUser.isAdmin = true;
         this.currentUser.isBooster = true;
         this.currentUser.type = 'admin';
         this.currentUser.role = 'Master Booster & Admin';
         this.currentUser.roles = ['Master Booster', 'Staff / Admin'];
       } else if (existingBooster) {
+        const isStaffOrAdmin = (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente/i.test(r))) ||
+          (existingBooster.role && /admin|staff|gerente/i.test(existingBooster.role));
         this.currentUser.isBooster = true;
-        this.currentUser.role = existingBooster.role || 'Booster';
-        this.currentUser.roles = existingBooster.roles || [existingBooster.role || 'Booster'];
-        this.currentUser.points = existingBooster.points;
+        this.currentUser.isStaff = isStaffOrAdmin;
+        this.currentUser.role = existingBooster.role || (isStaffOrAdmin ? 'Staff / Admin' : 'Booster');
+        this.currentUser.roles = existingBooster.roles || [this.currentUser.role];
+        this.currentUser.points = existingBooster.points || 0;
         this.currentUser.balance = existingBooster.balance || 0.00;
+        if (isStaffOrAdmin) {
+          this.currentUser.type = 'staff';
+        }
       }
 
       this.saveUser();
@@ -739,24 +618,9 @@ class MythicApp {
       return;
     }
 
-    // 1. Check if Admin/Staff or Miguelb (Owner)
-    if (discordId === '443948776562884620' || username.toLowerCase() === 'miguelb' || username.toLowerCase().includes('admin') || username.toLowerCase().includes('gerente')) {
-      const adminRes = this.authenticateAsAdmin(avatar);
-      if (avatar) this.currentUser.avatar = avatar;
-      if (payload.email) this.currentUser.email = payload.email;
-      this.currentUser.discordConnected = true;
-      this.currentUser.discordTag = payload.discordTag || `${username}#0`;
-      this.saveUser();
-
-      // Sync into boosters list too
-      if (this.boosters) {
-        const bIdx = this.boosters.findIndex(b => b.discord_id === '443948776562884620' || b.username.toLowerCase() === 'miguelb');
-        if (bIdx !== -1) {
-          this.boosters[bIdx].avatar = avatar;
-          this.saveBoosters();
-        }
-      }
-
+    // 1. Check if verified Owner (Miguelb) by verified Discord ID ONLY
+    if (discordId === MythicApp.OWNER_DISCORD_ID) {
+      const adminRes = this.authenticateAsAdmin(payload);
       const returnUrl = sessionStorage.getItem('mp_oauth_return_url');
       sessionStorage.removeItem('mp_oauth_return_url');
       if (returnUrl && (returnUrl.includes('pro') || returnUrl.includes('client-profile'))) {
@@ -768,10 +632,10 @@ class MythicApp {
     }
 
     // 2. Check if Booster in database
-    const existingBooster = this.boosters.find(b => 
+    const existingBooster = this.boosters ? this.boosters.find(b => 
       b.discord_id === discordId || 
-      b.username.toLowerCase() === username.toLowerCase()
-    );
+      (b.email && payload.email && b.email.toLowerCase() === payload.email.toLowerCase())
+    ) : null;
 
     if (existingBooster) {
       const isStaffOrAdmin = (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente/i.test(r))) ||
@@ -783,28 +647,33 @@ class MythicApp {
       }
 
       this.currentUser = {
-        id: 'booster_' + existingBooster.discord_id,
-        type: isStaffOrAdmin ? 'admin' : 'booster',
-        discordId: existingBooster.discord_id,
+        id: 'booster_' + (existingBooster.discord_id || discordId),
+        type: isStaffOrAdmin ? 'staff' : 'booster',
+        discordId: existingBooster.discord_id || discordId,
         discordTag: payload.discordTag || `${username}#0`,
         discordConnected: true,
-        username: existingBooster.username,
-        role: existingBooster.role || 'Booster',
+        username: payload.username || existingBooster.username,
+        role: existingBooster.role || (isStaffOrAdmin ? 'Staff / Admin' : 'Booster'),
         roles: bRoles,
-        points: existingBooster.points,
-        approved: existingBooster.approved,
+        points: existingBooster.points || 0,
+        approved: existingBooster.approved !== false,
         balance: existingBooster.balance || 0.00,
-        email: payload.email || existingBooster.email,
+        email: payload.email || existingBooster.email || '',
         avatar: payload.avatar || existingBooster.avatar || '',
-        payoutMethod: existingBooster.payout_method || 'Binance Pay / USDT',
-        isAdmin: isStaffOrAdmin,
+        payoutMethod: existingBooster.payout_method || existingBooster.payoutMethod || 'Binance Pay / USDT',
+        payoutAddress: existingBooster.wallet_id || existingBooster.payout_address || '',
+        wallet_id: existingBooster.wallet_id || '',
+        isAdmin: false,
+        isStaff: isStaffOrAdmin,
         isBooster: true
       };
       this.saveUser();
-      this.showToast(`¡Conectado como Booster ${existingBooster.username}!`, 'success');
+      this.showToast(`¡Conectado como Booster ${this.currentUser.username}!`, 'success');
       this.renderHeader();
-      window.location.href = isStaffOrAdmin ? 'admin' : 'pro';
-      return { status: isStaffOrAdmin ? 'ADMIN_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
+      const returnUrl = sessionStorage.getItem('mp_oauth_return_url');
+      sessionStorage.removeItem('mp_oauth_return_url');
+      window.location.href = returnUrl || (isStaffOrAdmin ? 'admin' : 'pro');
+      return { status: isStaffOrAdmin ? 'STAFF_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
     }
 
     // 3. Otherwise Client
@@ -975,7 +844,7 @@ class MythicApp {
       document.body.appendChild(modal);
     }
 
-    const defaultEmail = (this.currentUser && this.currentUser.email) ? this.currentUser.email : 'charquin50@gmail.com';
+    const defaultEmail = (this.currentUser && this.currentUser.email) ? this.currentUser.email : '';
 
     modal.innerHTML = `
       <div class="glass-panel rounded-3xl w-full max-w-md p-6 sm:p-7 border border-[#4285F4]/40 shadow-2xl relative overflow-hidden bg-[#120d09]">
@@ -1106,13 +975,19 @@ class MythicApp {
       return;
     }
 
-    // 1. Check if email belongs to Owner / Admin (Miguelb / charquin50@gmail.com)
-    if (email === 'charquin50@gmail.com' || email.includes('charquin') || name.toLowerCase().includes('miguelb')) {
-      const adminRes = this.authenticateAsAdmin(avatar);
+    // 1. Check if email belongs to Owner (Miguelb / charquin50@gmail.com)
+    if (email === 'charquin50@gmail.com') {
+      const adminRes = this.authenticateAsAdmin({
+        id: MythicApp.OWNER_DISCORD_ID,
+        username: 'Miguelb',
+        email: email,
+        avatar: avatar,
+        discordTag: 'Miguelb#0'
+      });
       this.currentUser.googleEmail = email;
       this.currentUser.googleId = googleId;
       this.currentUser.googleConnected = true;
-      this.currentUser.discordId = '443948776562884620';
+      this.currentUser.discordId = MythicApp.OWNER_DISCORD_ID;
       this.currentUser.discordTag = 'Miguelb#0';
       this.currentUser.discordConnected = true;
       this.currentUser.email = email;
@@ -1317,7 +1192,6 @@ class MythicApp {
   }
 
   loginAsDemoBooster() {
-    this.authenticateWithDiscord('443948776562884620', 'Miguelb');
     this.closeAuthModal();
     window.location.href = 'pro';
   }
@@ -1658,7 +1532,107 @@ class MythicApp {
           <div class="mt-4 pt-3 border-t border-stone-800 text-[11px] text-stone-400 space-y-1.5">
             <strong class="text-[#eedaa2] block uppercase tracking-wider text-[10px]">Opciones de Equipamiento (Gearing):</strong>
             <div>• <strong class="text-stone-300">Honor PvP Gear:</strong> Conjunto completo JcJ con versatilidad para saltar directo a campos de batalla y arenas.</div>
-            <div>• <strong class="text-stone-300">Full Dungeon Gear 580+:</strong> Equipo de mazmorras de temporada preparado para Míticas+ y bandas.</div>
+            <div>• <strong class="text-stone-300">Full Dungeon Gear 642+:</strong> Equipo de mazmorras de temporada preparado para Míticas+ y bandas.</div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'mplus-keystone') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con nuestro servicio de Míticas+?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Runs de mazmorras Míticas+ (+2 a +15) con equipo profesional de élite en tiempo garantizado.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Botín directo de hasta <strong class="text-[#fcefc2]">311 ilvl (Track Héroe)</strong> en el cofre al finalizar la mazmorra con tus traders de armadura.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Recompensa semanal de hasta <strong class="text-[#5eead4]">318 ilvl (Track Mito BiS)</strong> en la Gran Cámara para tu personaje.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+              <p class="text-xs text-stone-300 leading-snug">Blasones de mejora: Campeón, Héroe y <strong class="text-amber-400">Míticos (Myth Crests)</strong> para subir tu equipo al máximo.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">5</div>
+              <p class="text-xs text-stone-300 leading-snug">Telepuertos a mazmorras (+10 en tiempo) y progreso hacia los títulos y monturas de Keystone Master / Keystone Hero.</p>
+            </div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'the-venomous-abyss' || svc.id === 'liberation-of-undermine') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes en la nueva banda El Abismo Venenoso?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Derrota garantizada de los 8 jefes del Abismo Venenoso incluyendo a <strong class="text-[#fcefc2]">Ula'tek (Jefe Final)</strong>.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Botín oficial de <strong class="text-[#eedaa2]">292 a 324+ ilvl</strong> (hasta 344 ilvl Very Rare en dificultad Mítica).</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Logro oficial de hermandad <strong class="text-amber-400">Ahead of the Curve (AOTC): Ula'tek</strong> en dificultad Heroica.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+              <p class="text-xs text-stone-300 leading-snug">Tokens de conjunto de clase (Tier Set), monturas y progreso en la ranura de banda de la Gran Cámara.</p>
+            </div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'delves-midnight' || svc.id === 'delves-tww') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes en las Profundidades (Delves)?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Runs rápidos en <strong class="text-[#fcefc2]">Tier 8 (Sweet Spot)</strong>: el nivel óptimo para equipar personajes en la temporada actual.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Botín directo de <strong class="text-[#eedaa2]">298 ilvl (Track Campeón)</strong> abriendo el cofre abundante con Llave Restaurada.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Desbloquea hasta 3 ranuras de la Gran Cámara (Mundo) de <strong class="text-[#5eead4]">311 ilvl (Track Héroe)</strong> con 8 runs.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+              <p class="text-xs text-stone-300 leading-snug">Opción de derrotar al <strong class="text-purple-400">Némesis de Temporada</strong> para conseguir la montura exclusiva y el título.</p>
+            </div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'ilvl-gearing') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué incluye tu Paquete de Equipamiento?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Conjunto de equipo completo para cada ranura de tu personaje optimizado según tu especialización (BiS).</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Combinación estratégica de Delves Tier 8, Míticas+ (+2 a +10) y Raid El Abismo Venenoso.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Rangos de equipamiento garantizados desde <strong class="text-stone-300">292 ilvl (Starter)</strong> hasta <strong class="text-[#5eead4]">344 ilvl (BiS Mítico)</strong>.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+              <p class="text-xs text-stone-300 leading-snug">Blasones y monedas de mejora suficientes para llevar tus piezas al nivel máximo de cada rango.</p>
+            </div>
           </div>
         `;
       }
@@ -3690,78 +3664,70 @@ class MythicApp {
   // ==========================================
   initBoosterProfileForm() {
     // Determine active booster data
-    let b = (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster() || this.currentUser.discordId === '443948776562884620' || (this.currentUser.username && this.currentUser.username.toLowerCase() === 'miguelb')))
-      ? this.currentUser
-      : (this.boosters && this.boosters.find(x => x.username.toLowerCase() === 'miguelb')) || { 
-          username: 'Miguelb', 
-          role: 'Master Booster', 
-          points: 546,
-          email: 'charquin50@gmail.com',
-          payout_method: 'Binance Pay / USDT',
-          wallet_id: '44394877',
-          discord_id: '443948776562884620'
-        };
-
-    // If avatar missing, recover from backup or booster list
-    if (!b.avatar) {
-      const backup = localStorage.getItem('mp_discord_avatar_backup');
-      const bMatch = this.boosters && this.boosters.find(x => x.discord_id === '443948776562884620' || (x.username && x.username.toLowerCase() === 'miguelb'));
-      b.avatar = (bMatch && bMatch.avatar) || backup || '';
-      if (b.avatar && this.currentUser) {
-        this.currentUser.avatar = b.avatar;
-        this.saveUser();
+    let b = null;
+    if (this.currentUser) {
+      if (this.currentUser.type === 'booster' || this.currentUser.type === 'staff' || this.currentUser.type === 'admin' || this.isBooster() || this.isAdminOrGerente()) {
+        b = this.currentUser;
       }
+    }
+    if (!b) return;
+
+    const dbRecord = (this.boosters && b.discordId) ? this.boosters.find(x => x.discord_id === b.discordId) : null;
+
+    // If avatar missing, recover from dbRecord
+    if (!b.avatar && dbRecord && dbRecord.avatar) {
+      b.avatar = dbRecord.avatar;
     }
 
     // Populate inputs if form exists in DOM
     const nameInput = document.getElementById('pro-prof-name');
-    if (nameInput) nameInput.value = b.username || 'Miguelb';
+    if (nameInput) nameInput.value = b.username || '';
 
     const roleInput = document.getElementById('pro-prof-role');
-    if (roleInput) roleInput.value = `${b.role || 'Booster'} (${b.points || 0} pts)`;
+    if (roleInput) roleInput.value = b.role ? `${b.role} (${b.points || 0} pts)` : `Booster (${b.points || 0} pts)`;
 
     const avatarInput = document.getElementById('pro-prof-avatar');
     if (avatarInput) avatarInput.value = b.avatar || '';
 
     const emailInput = document.getElementById('pro-prof-email');
-    if (emailInput) emailInput.value = b.email || '';
+    if (emailInput) emailInput.value = b.email || (dbRecord && dbRecord.email) || '';
 
     const payoutEmailInput = document.getElementById('pro-prof-payout-email');
-    if (payoutEmailInput) payoutEmailInput.value = b.payoutEmail || b.payout_email || b.email || '';
+    if (payoutEmailInput) payoutEmailInput.value = b.payoutEmail || b.payout_email || (dbRecord && (dbRecord.payout_email || dbRecord.email)) || '';
 
     const payoutMethodSelect = document.getElementById('pro-prof-payout-method');
     if (payoutMethodSelect) {
-      const pm = b.payoutMethod || b.payout_method || 'Binance Pay / USDT';
+      const pm = b.payoutMethod || b.payout_method || (dbRecord && dbRecord.payout_method) || 'Binance Pay / USDT';
       payoutMethodSelect.value = pm;
       this.onBoosterPayoutMethodChange(pm);
     }
 
     const payoutAddressInput = document.getElementById('pro-prof-payout-address');
-    if (payoutAddressInput) payoutAddressInput.value = b.payoutAddress || b.payout_address || b.wallet_id || '';
+    if (payoutAddressInput) payoutAddressInput.value = b.payoutAddress || b.payout_address || b.wallet_id || (dbRecord && (dbRecord.wallet_id || dbRecord.payout_address)) || '';
 
     const payoutCurrencySelect = document.getElementById('pro-prof-payout-currency');
     if (payoutCurrencySelect) payoutCurrencySelect.value = b.payoutCurrency || 'USD';
 
     const discordInput = document.getElementById('pro-prof-discord');
-    if (discordInput) discordInput.value = b.discordId || b.discord_id || '';
+    if (discordInput) discordInput.value = b.discordId || b.discord_id || (dbRecord && dbRecord.discord_id) || '';
 
     const battletagInput = document.getElementById('pro-prof-battletag');
-    if (battletagInput) battletagInput.value = b.battletag || '';
+    if (battletagInput) battletagInput.value = b.battletag || (dbRecord && dbRecord.battletag) || '';
 
     const regionSelect = document.getElementById('pro-prof-region');
-    if (regionSelect) regionSelect.value = b.region || 'América (US) & Europa (EU)';
+    if (regionSelect) regionSelect.value = b.region || (dbRecord && dbRecord.region) || 'América (US) & Europa (EU)';
 
     const realmInput = document.getElementById('pro-prof-realm');
-    if (realmInput) realmInput.value = b.realm || 'Ragnaros (US)';
+    if (realmInput) realmInput.value = b.realm || (dbRecord && dbRecord.realm) || '';
 
     const factionSelect = document.getElementById('pro-prof-faction');
-    if (factionSelect) factionSelect.value = b.faction || 'Ambas (Cross-Faction)';
+    if (factionSelect) factionSelect.value = b.faction || (dbRecord && dbRecord.faction) || 'Ambas (Cross-Faction)';
 
     const rolesInput = document.getElementById('pro-prof-roles');
-    if (rolesInput) rolesInput.value = b.mainRoles || 'Tanque / DPS Melee';
+    if (rolesInput) rolesInput.value = b.mainRoles || (dbRecord && dbRecord.mainRoles) || 'Tanque / DPS Melee';
 
     const bioInput = document.getElementById('pro-prof-bio');
-    if (bioInput) bioInput.value = b.bio || 'Booster profesional de WoW. M+ Pusher, Raid CE y soporte 24/7.';
+    if (bioInput) bioInput.value = b.bio || (dbRecord && dbRecord.bio) || '';
 
     // Update preview card and sidebar
     this.updateBoosterPreviewCard(b);
@@ -3905,11 +3871,13 @@ class MythicApp {
 
     // Initialize or update currentUser
     if (!this.currentUser) {
-      this.currentUser = { type: 'booster' };
+      this.showToast('Debes iniciar sesión para editar tu perfil.', 'error');
+      return;
     }
-    const oldUsername = this.currentUser.username || 'Miguelb';
-    const wasAdmin = this.currentUser.type === 'admin' || this.currentUser.type === 'staff' || this.currentUser.isAdmin || this.isAdminOrGerente();
-    this.currentUser.type = wasAdmin ? 'admin' : 'booster';
+    const oldUsername = this.currentUser.username || '';
+    const wasAdmin = this.currentUser.type === 'admin' || this.currentUser.isAdmin;
+    const wasStaff = this.currentUser.type === 'staff' || this.currentUser.isStaff;
+    this.currentUser.type = wasAdmin ? 'admin' : (wasStaff ? 'staff' : 'booster');
     this.currentUser.username = name;
     this.currentUser.avatar = avatar;
     this.currentUser.email = email;
@@ -3919,7 +3887,7 @@ class MythicApp {
     this.currentUser.payout_method = payoutMethod;
     this.currentUser.payoutAddress = payoutAddress;
     this.currentUser.payoutCurrency = payoutCurrency;
-    this.currentUser.discordId = discordId || this.currentUser.discordId;
+    this.currentUser.discordId = discordId || this.currentUser.discordId || '';
     this.currentUser.discord_id = this.currentUser.discordId;
     this.currentUser.battletag = battletag;
     this.currentUser.region = region;
@@ -3933,6 +3901,11 @@ class MythicApp {
       if (!this.currentUser.roles || !Array.isArray(this.currentUser.roles)) {
         this.currentUser.roles = ['Master Booster', 'Staff / Admin'];
       }
+    } else if (wasStaff) {
+      this.currentUser.isStaff = true;
+      if (!this.currentUser.roles || !Array.isArray(this.currentUser.roles)) {
+        this.currentUser.roles = ['Booster', 'Staff / Admin'];
+      }
     }
 
     if (avatar) {
@@ -3943,10 +3916,10 @@ class MythicApp {
 
     // Sync with this.boosters list in memory and localStorage
     if (this.boosters && this.boosters.length > 0) {
+      const activeDiscordId = this.currentUser.discordId;
       const idx = this.boosters.findIndex(b => 
-        (discordId && b.discord_id === discordId) || 
-        b.username.toLowerCase() === oldUsername.toLowerCase() ||
-        b.username.toLowerCase() === name.toLowerCase()
+        (activeDiscordId && b.discord_id === activeDiscordId) || 
+        (oldUsername && b.username.toLowerCase() === oldUsername.toLowerCase())
       );
       if (idx !== -1) {
         this.boosters[idx] = {
@@ -3969,9 +3942,9 @@ class MythicApp {
       } else {
         this.boosters.push({
           username: name,
-          role: wasAdmin ? 'Master Booster & Admin' : 'Booster',
-          roles: wasAdmin ? ['Master Booster', 'Staff / Admin'] : ['Booster'],
-          points: 546,
+          role: wasAdmin ? 'Master Booster & Admin' : (wasStaff ? 'Staff / Admin' : 'Booster'),
+          roles: wasAdmin ? ['Master Booster', 'Staff / Admin'] : (wasStaff ? ['Booster', 'Staff / Admin'] : ['Booster']),
+          points: this.currentUser.points || 0,
           approved: true,
           balance: 0.00,
           email: email,
@@ -3980,7 +3953,7 @@ class MythicApp {
           payout_method: payoutMethod,
           payout_address: payoutAddress,
           wallet_id: payoutAddress,
-          discord_id: discordId || '443948776562884620',
+          discord_id: activeDiscordId || ('booster_' + Date.now()),
           battletag: battletag,
           region: region,
           realm: realm,
@@ -6065,9 +6038,7 @@ class MythicApp {
     const roles = Array.isArray(this.currentUser.roles) ? this.currentUser.roles.map(r => String(r).toLowerCase()) : [];
 
     return (
-      discordId === '443948776562884620' ||
-      username === 'miguelb' ||
-      email === 'charquin50@gmail.com' ||
+      discordId === MythicApp.OWNER_DISCORD_ID ||
       role.includes('admin') ||
       role.includes('gerente') ||
       role.includes('owner') ||
@@ -6101,11 +6072,9 @@ class MythicApp {
     const role = (user.role || '').trim().toLowerCase();
     const roles = Array.isArray(user.roles) ? user.roles.map(r => String(r).toLowerCase()) : [];
 
-    // Admin detection (Priority #1): Miguelb, Owner, Gerente, Admin
+    // Admin detection (Priority #1): Owner, Gerente, Admin
     const isAdmin =
-      discordId === '443948776562884620' ||
-      username === 'miguelb' ||
-      email === 'charquin50@gmail.com' ||
+      discordId === MythicApp.OWNER_DISCORD_ID ||
       role.includes('admin') ||
       role.includes('gerente') ||
       role.includes('owner') ||
@@ -7199,6 +7168,10 @@ class MythicApp {
       'catálogo completo': { en: 'Full Catalog', pt: 'Catálogo Completo' },
       'buscar servicios de wow (míticas+, bandas, leveling, equipo)...': { en: 'Search WoW services (Mythic+, Raids, Leveling, Gear)...', pt: 'Buscar serviços WoW (Míticas+, Raides, Leveling, Equipamento)...' },
       'world of warcraft: the war within - temporada oficial': { en: 'World of Warcraft: The War Within - Official Season', pt: 'World of Warcraft: The War Within - Temporada Oficial' },
+      'world of warcraft: midnight - temporada oficial': { en: 'World of Warcraft: Midnight - Official Season', pt: 'World of Warcraft: Midnight - Temporada Oficial' },
+      'el abismo venenoso & temporada de bandas': { en: 'The Venomous Abyss & Raid Season', pt: 'The Venomous Abyss & Temporada de Raides' },
+      'temporada míticas+ midnight': { en: 'Mythic+ Season Midnight', pt: 'Temporada Míticas+ Midnight' },
+      'abismo venenoso aotc': { en: 'The Venomous Abyss AOTC', pt: 'The Venomous Abyss AOTC' },
       'domina el contenido mítico': { en: 'DOMINATE MYTHIC CONTENT', pt: 'DOMINE O CONTEÚDO MÍTICO' },
       'con jugadores de élite': { en: 'WITH ELITE PLAYERS', pt: 'COM JOGADORES DE ELITE' },
       'vpn, safe boost': { en: 'VPN, Safe Boost', pt: 'VPN, Safe Boost' },
