@@ -5,38 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mythic Progression Pro - Tablón de Boosters</title>
-  <!-- STRICT INSTANT ROUTE GUARD: Boosters & Staff Only -->
-  <script>
-    (function() {
-      try {
-        var raw = localStorage.getItem('mp_current_user');
-        if (!raw) {
-          document.documentElement.style.display = 'none';
-          window.location.replace('/');
-          return;
-        }
-        var user = JSON.parse(raw);
-        var isAllowed = user && (
-          user.isBooster === true ||
-          user.isAdmin === true ||
-          user.isStaff === true ||
-          user.type === 'booster' ||
-          user.type === 'admin' ||
-          user.type === 'staff' ||
-          user.discordId === '443948776562884620' ||
-          (Array.isArray(user.roles) && user.roles.some(function(r) { return /booster|admin|staff|gerente|raider|supplier|master/i.test(r); })) ||
-          (typeof user.role === 'string' && /booster|admin|staff|gerente|raider|supplier|master/i.test(user.role))
-        );
-        if (!isAllowed) {
-          document.documentElement.style.display = 'none';
-          window.location.replace('/');
-        }
-      } catch (e) {
-        document.documentElement.style.display = 'none';
-        window.location.replace('/');
-      }
-    })();
-  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="assets/css/styles.css?v=2.4.1">
@@ -610,7 +579,9 @@
         : null;
 
       if (!b) {
-        window.location.replace('/');
+        if (window.app && typeof window.app.showProAccessGate === 'function') {
+          window.app.showProAccessGate();
+        }
         return;
       }
 

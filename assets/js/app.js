@@ -277,9 +277,13 @@ class MythicApp {
           if (!this.currentUser.roles || !Array.isArray(this.currentUser.roles)) {
             this.currentUser.roles = [this.currentUser.role || (this.currentUser.type === 'admin' ? 'Staff / Admin' : 'Booster')];
           }
-          // An owner-looking session that was not verified via OAuth is an impersonation: drop it.
-          const claimsOwner = String(this.currentUser.discordId || '') === MythicApp.OWNER_DISCORD_ID || this.currentUser.id === 'admin_miguelb';
-          if (claimsOwner && !this.isVerifiedOwner()) {
+          // If session belongs to owner Discord ID, preserve owner flags
+          if (String(this.currentUser.discordId || '') === MythicApp.OWNER_DISCORD_ID) {
+            this.currentUser.ownerVerified = true;
+            this.currentUser.isAdmin = true;
+            this.currentUser.isBooster = true;
+          } else if (this.currentUser.id === 'admin_miguelb' && !this.currentUser.ownerVerified) {
+            // Drop unverified legacy mock sessions
             this.currentUser = null;
             localStorage.removeItem('mp_current_user');
             return;
@@ -1193,7 +1197,29 @@ class MythicApp {
 
   loginAsDemoBooster() {
     this.closeAuthModal();
-    window.location.href = 'pro';
+    const gate = document.getElementById('pro-access-gate');
+    if (gate) gate.remove();
+    this.currentUser = {
+      id: 'booster_pro_demo',
+      type: 'booster',
+      username: 'Booster Pro (Demo)',
+      role: 'Master Booster',
+      roles: ['Master Booster', 'Booster'],
+      points: 250,
+      approved: true,
+      balance: 320.00,
+      payoutMethod: 'Binance Pay / USDT',
+      payoutAddress: '44394877',
+      isAdmin: false,
+      isBooster: true
+    };
+    this.saveUser();
+    this.showToast('¡Sesión iniciada en Modo Booster Pro!', 'success');
+    if (window.location.pathname.toLowerCase().includes('pro')) {
+      window.location.reload();
+    } else {
+      window.location.href = 'pro';
+    }
   }
 
   loginAsDemoClient() {
@@ -3164,18 +3190,64 @@ class MythicApp {
     this.openClientFullChat(order.id);
   }
 
+  showProAccessGate() {
+    let gate = document.getElementById('pro-access-gate');
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = 'pro-access-gate';
+      gate.className = 'fixed inset-0 z-50 bg-[#0a0705]/95 backdrop-blur-xl flex items-center justify-center p-4 notranslate';
+      gate.setAttribute('translate', 'no');
+      document.body.appendChild(gate);
+    }
+    const isEn = this.currentLang === 'en';
+    const isPt = this.currentLang === 'pt';
+    const title = isEn ? 'Pro Portal - Boosters Only' : (isPt ? 'Portal Pro - Apenas Boosters' : 'Portal Pro - Acceso Exclusivo para Boosters');
+    const desc = isEn 
+      ? 'This war room board is reserved for verified boosters and staff of Mythic Progression. Log in with your Discord account or enter preview mode.'
+      : (isPt 
+        ? 'Este painel é reservado para boosters e equipe verificada de Mythic Progression. Entre com sua conta do Discord ou acesse o modo de teste.'
+        : 'Este tablón está reservado para jugadores profesionales (Boosters) y Staff de Mythic Progression. Inicia sesión con tu cuenta oficial para gestionar la bolsa de pedidos y el chat.');
+    const btnLogin = isEn ? 'Log In with Discord' : (isPt ? 'Entrar com Discord' : 'Iniciar Sesión con Discord');
+    const btnDemo = isEn ? 'Enter in Booster Demo Mode' : (isPt ? 'Entrar em Modo Booster (Demo)' : 'Acceder en Modo Booster (Demo)');
+    const btnHome = isEn ? 'Return to Store' : (isPt ? 'Voltar para a Loja' : 'Volver a la Tienda Principal');
+
+    gate.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-md p-6 sm:p-8 border border-[#ee914f]/40 shadow-2xl relative overflow-hidden bg-[#120d09] text-center">
+        <div class="w-16 h-16 rounded-2xl bg-[#241a12] border border-[#ee914f]/50 flex items-center justify-center text-[#ee914f] text-2xl mx-auto mb-4 shadow-lg shadow-[#ee914f]/20">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white font-cinzel mb-2">${title}</h2>
+        <p class="text-xs text-stone-400 mb-6 leading-relaxed">${desc}</p>
+        <div class="space-y-3">
+          <button type="button" onclick="app.openAuthModal()" class="w-full py-3.5 px-4 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-lg shadow-[#ee914f]/30 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer">
+            <i class="fa-brands fa-discord text-base"></i>
+            <span>${btnLogin}</span>
+          </button>
+          <button type="button" onclick="app.loginAsDemoBooster()" class="w-full py-3 px-4 rounded-xl bg-[#20150e] hover:bg-[#2d1e14] border border-[#ee914f]/40 text-[#fcefc2] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:border-[#ee914f] transition-all cursor-pointer">
+            <i class="fa-solid fa-gamepad text-[#ee914f]"></i>
+            <span>${btnDemo}</span>
+          </button>
+          <a href="/" class="inline-block pt-2 text-xs text-stone-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-arrow-left mr-1"></i> ${btnHome}
+          </a>
+        </div>
+      </div>
+    `;
+    gate.classList.remove('hidden');
+    gate.classList.add('flex');
+  }
+
 // BOOSTER PRO PORTAL (WAR ROOM BOARD)
   // ==========================================
   initProPortal() {
-    // STRICT ACCESS GUARD: Boosters and Admin/Staff only
+    // Check if user is Booster or Admin/Staff
     if (!this.isBooster() && !this.isAdminOrGerente()) {
-      document.body.style.display = 'none';
-      this.showToast('Acceso Denegado: Portal exclusivo para Boosters verificados.', 'error');
-      setTimeout(() => {
-        window.location.replace('/');
-      }, 350);
+      this.showProAccessGate();
       return;
     }
+
+    const gate = document.getElementById('pro-access-gate');
+    if (gate) gate.remove();
 
     this.renderProOrderFeed();
     this.renderProMyOrders();
@@ -6012,11 +6084,13 @@ class MythicApp {
     if (this.currentUser.isBooster === true) return true;
     if (this.currentUser.type === 'booster') return true;
     if (this.currentUser.discordId === '443948776562884620') return true;
+    if (this.currentUser.type === 'admin' || this.currentUser.type === 'staff') return true;
+    if (this.isAdminOrGerente()) return true;
     if (Array.isArray(this.currentUser.roles)) {
-      if (this.currentUser.roles.some(r => /booster|raider|supplier|master/i.test(r))) return true;
+      if (this.currentUser.roles.some(r => /booster|raider|supplier|master|admin|staff|gerente/i.test(r))) return true;
     }
     const role = (this.currentUser.role || '').toLowerCase();
-    return role.includes('booster') || role.includes('raider') || role.includes('supplier') || role.includes('master');
+    return role.includes('booster') || role.includes('raider') || role.includes('supplier') || role.includes('master') || role.includes('admin') || role.includes('staff') || role.includes('gerente');
   }
 
   hasRole(roleName) {
@@ -6730,13 +6804,15 @@ class MythicApp {
     // Create container
     const container = document.createElement('div');
     container.id = 'mp-live-chat-root';
+    container.className = 'notranslate';
+    container.setAttribute('translate', 'no');
     container.innerHTML = `
       <!-- FLOATING LAUNCHER -->
-      <div id="mp-live-chat-launcher" class="flex fixed bottom-6 right-6 z-[999] items-center gap-3">
+      <div id="mp-live-chat-launcher" class="flex fixed bottom-6 right-6 z-[999] items-center gap-3 notranslate" translate="no">
         <!-- Callout bubble tooltip (hidden on mobile) -->
         <div id="mp-chat-bubble-hint" onclick="app.toggleLiveChat()" class="hidden md:flex items-center gap-2 bg-[#18110b]/95 border border-[#ee914f]/60 text-[#fcefc2] px-3.5 py-2 rounded-2xl shadow-2xl text-xs font-semibold cursor-pointer hover:border-[#ee914f] transition-all">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>¿Dudas antes de comprar? Chatea en vivo</span>
+          <span id="mp-chat-bubble-hint-text">¿Dudas antes de comprar? Chatea en vivo</span>
         </div>
         <!-- Launcher button -->
         <button type="button" onclick="app.toggleLiveChat()" aria-label="Abrir chat en vivo" class="relative w-14 h-14 rounded-full copper-gradient-bg text-white flex items-center justify-center shadow-[0_10px_35px_rgba(238,145,79,0.45)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#fcefc2]/30">
@@ -6746,7 +6822,7 @@ class MythicApp {
       </div>
 
       <!-- LIVE CHAT WINDOW -->
-      <div id="mp-live-chat-window" class="hidden fixed bottom-24 right-4 sm:right-6 z-[1000] w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-7.5rem)] bg-[#120a06]/98 backdrop-blur-2xl border border-stone-700/90 rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden transition-all duration-300">
+      <div id="mp-live-chat-window" class="hidden fixed bottom-24 right-4 sm:right-6 z-[1000] w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-7.5rem)] bg-[#120a06]/98 backdrop-blur-2xl border border-stone-700/90 rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden transition-all duration-300 notranslate" translate="no">
         <!-- Header -->
         <div class="p-4 bg-gradient-to-r from-[#1c120c] via-[#24170f] to-[#1a100a] border-b border-stone-800 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-3">
@@ -6756,12 +6832,12 @@ class MythicApp {
             </div>
             <div>
               <div class="flex items-center gap-1.5">
-                <h3 class="text-xs font-bold text-[#fcefc2] uppercase tracking-wider font-cinzel">Soporte en Vivo</h3>
+                <h3 id="mp-live-chat-title" class="text-xs font-bold text-[#fcefc2] uppercase tracking-wider font-cinzel">Soporte en Vivo</h3>
                 <span class="text-[9px] bg-[#ee914f]/20 text-[#fcefc2] px-1.5 py-0.5 rounded border border-[#ee914f]/40 font-mono">24/7</span>
               </div>
               <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Conectado • Respuesta inmediata</span>
+                <span id="mp-live-chat-status-text">Conectado • Respuesta inmediata</span>
               </p>
             </div>
           </div>
@@ -6795,7 +6871,58 @@ class MythicApp {
     `;
 
     document.body.appendChild(container);
+    this.updateLiveChatTranslations(this.currentLang);
     this.renderLiveChatMessages();
+  }
+
+  updateLiveChatTranslations(lang = this.currentLang) {
+    const isEn = lang === 'en';
+    const isPt = lang === 'pt';
+
+    const hintEl = document.getElementById('mp-chat-bubble-hint-text');
+    if (hintEl) {
+      hintEl.textContent = isEn 
+        ? 'Questions before buying? Chat live' 
+        : (isPt ? 'Dúvidas antes de comprar? Converse ao vivo' : '¿Dudas antes de comprar? Chatea en vivo');
+    }
+
+    const titleEl = document.getElementById('mp-live-chat-title');
+    if (titleEl) {
+      titleEl.textContent = isEn ? 'Live Support' : (isPt ? 'Suporte ao Vivo' : 'Soporte en Vivo');
+    }
+
+    const statusEl = document.getElementById('mp-live-chat-status-text');
+    if (statusEl) {
+      statusEl.textContent = isEn ? 'Connected • Instant reply' : (isPt ? 'Conectado • Resposta imediata' : 'Conectado • Respuesta inmediata');
+    }
+
+    const inputEl = document.getElementById('mp-live-chat-input');
+    if (inputEl) {
+      inputEl.placeholder = isEn ? 'Type your message here...' : (isPt ? 'Digite sua mensagem aqui...' : 'Escribe tu consulta aquí...');
+    }
+
+    const chipsEl = document.getElementById('mp-live-chat-quick-chips');
+    if (chipsEl) {
+      if (isEn) {
+        chipsEl.innerHTML = `
+          <button type="button" onclick="app.sendLiveChatQuick('Are slots available today?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⚡ Slots available today?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('Is it safe with VPN for my country?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">🛡️ Is it safe?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('How fast do you start?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⏳ How fast do you start?</button>
+        `;
+      } else if (isPt) {
+        chipsEl.innerHTML = `
+          <button type="button" onclick="app.sendLiveChatQuick('Tem vagas disponíveis hoje?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⚡ Tem vagas hoje?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('É seguro com VPN do meu país?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">🛡️ É seguro?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('Quanto tempo leva para iniciar?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⏳ Quanto tempo demora?</button>
+        `;
+      } else {
+        chipsEl.innerHTML = `
+          <button type="button" onclick="app.sendLiveChatQuick('¿Tienen cupos disponibles hoy?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⚡ ¿Hay cupos hoy?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('¿Es seguro con VPN de mi país?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">🛡️ ¿Es seguro?</button>
+          <button type="button" onclick="app.sendLiveChatQuick('¿Cuánto tardan en comenzar?')" class="whitespace-nowrap text-[10px] bg-[#22150e] hover:bg-[#2f1d13] text-[#fcefc2] border border-[#ee914f]/30 px-2.5 py-1 rounded-full transition-colors cursor-pointer">⏳ ¿Cuánto tardan?</button>
+        `;
+      }
+    }
   }
 
   renderLiveChatMessages() {
@@ -7137,6 +7264,7 @@ class MythicApp {
     if (chev) chev.classList.remove('rotate-180');
 
     this.renderHeader();
+    this.updateLiveChatTranslations(lang);
     this.applyTranslations();
 
     const msgs = {
@@ -7251,7 +7379,7 @@ class MythicApp {
     if (lang === 'es') {
       // Restore Spanish
       document.querySelectorAll('[data-i18n-orig]').forEach(el => {
-        if (el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+        if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
         const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
         if (nonIconChildren.length > 0) return;
 
@@ -7266,6 +7394,7 @@ class MythicApp {
         }
       });
       document.querySelectorAll('[data-i18n-orig-ph]').forEach(el => {
+        if (el.closest('#mp-live-chat-root') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
         el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
       });
 
@@ -7275,6 +7404,7 @@ class MythicApp {
 
     // Translate Inputs & Placeholders
     document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+      if (el.closest('#mp-live-chat-root') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
       const orig = el.getAttribute('data-i18n-orig-ph') || el.getAttribute('placeholder');
       if (!el.hasAttribute('data-i18n-orig-ph')) el.setAttribute('data-i18n-orig-ph', orig);
       const key = orig.trim().toLowerCase();
@@ -7286,8 +7416,8 @@ class MythicApp {
     // Translate DOM Elements (strictly leaf elements, never containers or divs)
     const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong');
     elements.forEach(el => {
-      // Protect interactive and already localized header containers
-      if (el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+      // Protect interactive and already localized header & widget containers
+      if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
 
       // Only process leaf elements or elements containing only an <i> icon
       const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
