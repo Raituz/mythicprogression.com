@@ -6269,15 +6269,11 @@ class MythicApp {
     userBadge.classList.add('notranslate');
     userBadge.setAttribute('translate', 'no');
 
-    const isEn = this.currentLang === 'en';
-    const isPt = this.currentLang === 'pt';
-    const loginText = isEn ? 'Log In' : (isPt ? 'Entrar' : 'Iniciar Sesión');
-
     if (!this.currentUser) {
       userBadge.innerHTML = `
-        <button type="button" onclick="app.openAuthModal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+        <button type="button" onclick="app.openAuthModal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer notranslate" translate="no">
           <i class="fa-solid fa-user text-xs"></i>
-          <span>${loginText}</span>
+          <span class="notranslate" translate="no">Iniciar Sesión</span>
         </button>
       `;
       return;
@@ -6811,12 +6807,12 @@ class MythicApp {
       <!-- FLOATING LAUNCHER -->
       <div id="mp-live-chat-launcher" class="flex fixed bottom-6 right-6 z-[999] items-center gap-3 notranslate" translate="no">
         <!-- Callout bubble tooltip (hidden on mobile) -->
-        <div id="mp-chat-bubble-hint" onclick="app.toggleLiveChat()" class="hidden md:flex items-center gap-2 bg-[#18110b]/95 border border-[#ee914f]/60 text-[#fcefc2] px-3.5 py-2 rounded-2xl shadow-2xl text-xs font-semibold cursor-pointer hover:border-[#ee914f] transition-all">
+        <div id="mp-chat-bubble-hint" onclick="app.toggleLiveChat()" class="hidden md:flex items-center gap-2 bg-[#18110b]/95 border border-[#ee914f]/60 text-[#fcefc2] px-3.5 py-2 rounded-2xl shadow-2xl text-xs font-semibold cursor-pointer hover:border-[#ee914f] transition-all notranslate" translate="no">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="mp-chat-bubble-hint-text">¿Dudas antes de comprar? Chatea en vivo</span>
+          <span id="mp-chat-bubble-hint-text" class="notranslate" translate="no">¿Dudas antes de comprar? Chatea en vivo</span>
         </div>
         <!-- Launcher button -->
-        <button type="button" onclick="app.toggleLiveChat()" aria-label="Abrir chat en vivo" class="relative w-14 h-14 rounded-full copper-gradient-bg text-white flex items-center justify-center shadow-[0_10px_35px_rgba(238,145,79,0.45)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#fcefc2]/30">
+        <button type="button" onclick="app.toggleLiveChat()" aria-label="Abrir chat en vivo" class="relative w-14 h-14 rounded-full copper-gradient-bg text-white flex items-center justify-center shadow-[0_10px_35px_rgba(238,145,79,0.45)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#fcefc2]/30 notranslate" translate="no">
           <i id="mp-chat-launcher-icon" class="fa-solid fa-comments text-xl"></i>
           <span id="mp-chat-unread-dot" class="hidden absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#120b07]"></span>
         </button>
@@ -6882,9 +6878,7 @@ class MythicApp {
 
     const hintEl = document.getElementById('mp-chat-bubble-hint-text');
     if (hintEl) {
-      hintEl.textContent = isEn 
-        ? 'Questions before buying? Chat live' 
-        : (isPt ? 'Dúvidas antes de comprar? Converse ao vivo' : '¿Dudas antes de comprar? Chatea en vivo');
+      hintEl.textContent = '¿Dudas antes de comprar? Chatea en vivo';
     }
 
     const titleEl = document.getElementById('mp-live-chat-title');
@@ -7283,8 +7277,6 @@ class MythicApp {
     document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
 
     const dict = {
-      'iniciar sesión': { en: 'Log In', pt: 'Entrar' },
-      'iniciar sesion': { en: 'Log In', pt: 'Entrar' },
       'cerrar sesión': { en: 'Log Out', pt: 'Sair' },
       'cerrar sesion': { en: 'Log Out', pt: 'Sair' },
       'panel admin': { en: 'Admin Panel', pt: 'Painel Admin' },
@@ -7363,7 +7355,6 @@ class MythicApp {
       'tu carrito está vacío': { en: 'Your cart is empty', pt: 'Seu carrinho está vazio' },
       'soporte en vivo': { en: 'Live Support', pt: 'Suporte ao Vivo' },
       'conectado • respuesta inmediata': { en: 'Connected • Instant reply', pt: 'Conectado • Resposta imediata' },
-      '¿dudas antes de comprar? chatea en vivo': { en: 'Questions before buying? Chat live', pt: 'Dúvidas antes de comprar? Converse ao vivo' },
       'escribe tu consulta aquí...': { en: 'Type your message here...', pt: 'Digite sua mensagem aqui...' },
       'mis pedidos': { en: 'My Orders', pt: 'Meus Pedidos' },
       'centro de mensajería (chat)': { en: 'Message Center (Chat)', pt: 'Central de Mensagens (Chat)' },
@@ -7380,7 +7371,7 @@ class MythicApp {
       'chat privado con tu booster': { en: 'Private Chat with your Booster', pt: 'Chat privado com seu booster' },
       'servicios destacados': { en: 'FEATURED SERVICES', pt: 'SERVIÇOS EM DESTAQUE' },
       'oficial world of warcraft': { en: 'World of Warcraft Official', pt: 'World of Warcraft Oficial' },
-      'selecciona cualquier servicio para ver su página individual y configurar tus opciones.': { en: 'Select any service to view its individual page and configure your options.', pt: 'Selecione qualquer serviço para ver sua página individual e configurar suas opções.' },
+      'selecciona cualquier servicio para ver su página individual y configurar tus opciones.': { en: 'Select any service to view its individual page and configure your options.', pt: 'Selecione cualquier serviço para ver sua página individual e configurar suas opções.' },
       'piedras angulares míticas+, bandas heroicas y míticas, equipamiento bis y powerleveling. protección garantizada con vpn local, seguimiento en vivo de tu orden y chat directo con tu pro.': { en: 'Mythic Keystones+, Heroic and Mythic Raids, BiS Gear, and Powerleveling. Guaranteed protection with local VPN, live order tracking, and direct chat with your pro.', pt: 'Pedras-chave Míticas+, Raides Heróicas e Míticas, Equipamento BiS e Powerleveling. Proteção garantida com VPN local, rastreamento ao vivo do seu pedido e chat direto com seu pro.' },
       'desde': { en: 'FROM', pt: 'A PARTIR DE' },
       'configurar': { en: 'SET UP', pt: 'CONFIGURAR' },
@@ -7403,7 +7394,7 @@ class MythicApp {
     if (lang === 'es') {
       // Restore Spanish
       document.querySelectorAll('[data-i18n-orig]').forEach(el => {
-        if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+        if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]') || el.closest('.copper-gradient-bg')) return;
         const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
         if (nonIconChildren.length > 0) return;
 
@@ -7440,7 +7431,7 @@ class MythicApp {
     const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong');
     elements.forEach(el => {
       // Protect interactive and already localized header & widget containers
-      if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+      if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]') || el.closest('.copper-gradient-bg')) return;
 
       // Only process leaf elements or elements containing only an <i> icon
       const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
@@ -7471,15 +7462,35 @@ class MythicApp {
   cleanupGoogleTranslate() {
     try {
       if (typeof document === 'undefined') return;
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      if (typeof window !== 'undefined' && window.location) {
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + window.location.hostname + '; path=/;';
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + window.location.hostname + '; path=/;';
+      const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+      const domainVariants = ['', host, '.' + host];
+      if (host.includes('.')) {
+        const parts = host.split('.');
+        if (parts.length > 2) {
+          const rootDomain = parts.slice(-2).join('.');
+          domainVariants.push(rootDomain, '.' + rootDomain);
+        }
       }
+      const paths = ['/', '/mplus', '/raids', '/leveling', '/gearing', '/pro', '/admin', '/client-profile', '/product'];
+      domainVariants.forEach(dom => {
+        paths.forEach(p => {
+          document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${p};` + (dom ? ` domain=${dom};` : '');
+          document.cookie = `googtrans_v2=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${p};` + (dom ? ` domain=${dom};` : '');
+        });
+      });
+
       const el = document.getElementById('google_translate_element');
       if (el) el.remove();
-      const frames = document.querySelectorAll('.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame');
+      const frames = document.querySelectorAll('.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, iframe.goog-te-menu-frame');
       frames.forEach(f => f.remove());
+
+      // Strip any residual styles injecting .skiptranslate display none
+      document.querySelectorAll('style').forEach(s => {
+        if (s.textContent && (s.textContent.includes('goog-te') || s.textContent.includes('.skiptranslate'))) {
+          s.remove();
+        }
+      });
+
       const body = document.body;
       if (body) {
         body.classList.remove('translated-ltr', 'translated-rtl');

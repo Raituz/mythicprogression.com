@@ -328,3 +328,34 @@ input:checked + .slider:before {
   box-shadow: 0 0 10px rgba(238, 145, 79, 0.25);
 }
 
+/* ========================================================
+   HARDENED IMMUNITY RULES (LOGIN, LIVE CHAT & COPPER UI)
+   ======================================================== */
+#user-session-badge,
+#user-session-badge button,
+#header-lang-selector,
+#header-lang-btn,
+#mp-live-chat-launcher,
+#mp-live-chat-launcher button,
+#mp-chat-bubble-hint {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+#user-session-badge button.copper-gradient-bg,
+#mp-live-chat-launcher button.copper-gradient-bg,
+button.copper-gradient-bg,
+a.copper-gradient-bg {
+  background: linear-gradient(135deg, #fccc8f 0%, #ee914f 45%, #b85d1d 100%) !important;
+  color: #140f0c !important;
+  cursor: pointer !important;
+}
+
+/* Guard against external translation extension hiding */
+.skiptranslate:not(#google_translate_element) {
+  display: revert !important;
+}
+
+
