@@ -178,12 +178,22 @@ class MythicApp {
     // 3. Orders
     try {
       const storedOrders = localStorage.getItem('mp_orders');
-      if (storedOrders && JSON.parse(storedOrders).length > 0) {
+      const ordersVersion = localStorage.getItem('mp_orders_v');
+      if (storedOrders && JSON.parse(storedOrders).length > 0 && ordersVersion === MythicApp.ORDERS_VERSION) {
         this.orders = JSON.parse(storedOrders);
       } else {
         const res = await fetch('data/seed_orders.json');
-        this.orders = await res.json();
+        const seedOrders = await res.json();
+        let customOrders = [];
+        if (storedOrders) {
+          try {
+            const parsed = JSON.parse(storedOrders);
+            customOrders = parsed.filter(o => o && o.id && !seedOrders.some(so => so.id === o.id));
+          } catch (e) {}
+        }
+        this.orders = [...customOrders, ...seedOrders];
         this.saveOrders();
+        localStorage.setItem('mp_orders_v', MythicApp.ORDERS_VERSION);
       }
 
       // Sanitize legacy "Soporte / Gerencia" labels in stored chats
@@ -253,6 +263,7 @@ class MythicApp {
   // Owner identity. Only granted when the Discord ID comes from a real OAuth handshake.
   static get OWNER_DISCORD_ID() { return '443948776562884620'; }
   static get SESSION_VERSION() { return '3'; }
+  static get ORDERS_VERSION() { return '2.5.6'; }
 
   isVerifiedOwner(user = this.currentUser) {
     if (!user) return false;
@@ -4572,9 +4583,10 @@ class MythicApp {
     const clientsCount = document.getElementById('admin-clients-count');
     if (clientsCount) clientsCount.textContent = this.clients.length;
 
-    // Sidebar navigation badges
+    // Sidebar navigation badges (Órdenes Web count only available orders)
+    const availableOrdersCount = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING')).length;
     const badgeOrders = document.getElementById('badge-orders-count');
-    if (badgeOrders) badgeOrders.textContent = this.orders.length;
+    if (badgeOrders) badgeOrders.textContent = availableOrdersCount;
 
     const badgeBoosters = document.getElementById('badge-boosters-count');
     if (badgeBoosters) badgeBoosters.textContent = this.boosters.length;
@@ -5122,6 +5134,11 @@ class MythicApp {
     const container = document.getElementById('admin-orders-table');
     if (!container) return;
 
+    // Keep badge count strictly reflecting available orders
+    const availableOrdersCount = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING')).length;
+    const badgeOrders = document.getElementById('badge-orders-count');
+    if (badgeOrders) badgeOrders.textContent = availableOrdersCount;
+
     let list = this.orders;
     if (statusFilter !== 'ALL') {
       list = list.filter(o => o.status === statusFilter);
@@ -5195,6 +5212,9 @@ class MythicApp {
                 <i class="fa-solid fa-check"></i>
               </button>
             ` : ''}
+            <button onclick="app.adminDeleteOrder('${o.id}')" class="w-8 h-8 rounded-xl bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-800/60 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer" title="Eliminar Orden">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
           </div>
         </td>
       </tr>
@@ -5231,6 +5251,18 @@ class MythicApp {
       this.renderAdminOverview();
       this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
       this.showToast(`Orden #${orderId} marcada como completada.`, 'success');
+    }
+  }
+
+  adminDeleteOrder(orderId) {
+    const o = (this.orders || []).find(x => x.id === orderId);
+    if (!o) return;
+    if (confirm(`¿Seguro que quieres eliminar la orden #${orderId}?`)) {
+      this.orders = this.orders.filter(x => x.id !== orderId);
+      this.saveOrders();
+      this.renderAdminOverview();
+      this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+      this.showToast(`Orden #${orderId} eliminada correctamente.`, 'info');
     }
   }
 

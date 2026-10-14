@@ -46,14 +46,10 @@
     "boosterPayout": 15.00,
     "boosterPayoutRate": 30,
     "maxBidAllowed": 25.00,
-    "status": "IN_PROGRESS",
+    "status": "AVAILABLE",
     "bids": [],
-    "assignedBooster": {
-      "discordId": "443948776562884620",
-      "username": "Miguelb",
-      "payout": 15.00
-    },
-    "isOnAccount": true,
+    "assignedBooster": null,
+    "isOnAccount": false,
     "createdAt": "2026-10-11T23:10:00Z",
     "chat": [
       {
