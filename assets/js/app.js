@@ -404,7 +404,54 @@ class MythicApp {
     }
   }
 
+  sanitizeOrder(o) {
+    if (!o) return o;
+    let p = Number(o.totalPrice);
+    if (isNaN(p) || p <= 0) p = Number(o.price);
+    if (isNaN(p) || p <= 0) p = 45.00;
+    p = Math.round(p * 100) / 100;
+    o.totalPrice = p;
+    o.price = p;
+
+    let cShare = Number(o.companyShare);
+    if (isNaN(cShare) || cShare <= 0) {
+      o.companyShare = Math.round(p * 0.70 * 100) / 100;
+    } else {
+      o.companyShare = Math.round(cShare * 100) / 100;
+    }
+
+    let bPayout = Number(o.boosterPayout);
+    if (isNaN(bPayout) || bPayout <= 0) {
+      o.boosterPayout = Math.round(p * 0.30 * 100) / 100;
+    } else {
+      o.boosterPayout = Math.round(bPayout * 100) / 100;
+    }
+
+    let mBid = Number(o.maxBidAllowed);
+    if (isNaN(mBid) || mBid <= 0) {
+      o.maxBidAllowed = Math.round(p * 0.50 * 100) / 100;
+    } else {
+      o.maxBidAllowed = Math.round(mBid * 100) / 100;
+    }
+
+    if (!o.characterName && o.character) o.characterName = o.character;
+
+    if (o.assignedBooster) {
+      let bPay = Number(o.assignedBooster.payout);
+      if (isNaN(bPay) || bPay <= 0) o.assignedBooster.payout = o.boosterPayout;
+    }
+
+    if (o.details && typeof o.details === 'string' && /sin muertes/i.test(o.details)) {
+      o.details = o.details.replace(/sin muertes,\s*/gi, '').replace(/sin muertes\s*/gi, '').trim();
+    }
+
+    return o;
+  }
+
   saveOrders() {
+    if (Array.isArray(this.orders)) {
+      this.orders = this.orders.map(o => this.sanitizeOrder(o));
+    }
     localStorage.setItem('mp_orders', JSON.stringify(this.orders));
     if (this.db && Array.isArray(this.orders)) {
       this.orders.forEach(o => {
@@ -470,11 +517,20 @@ class MythicApp {
 
       const remoteOrders = [];
       snapshot.forEach(doc => {
-        const data = doc.data();
+        let data = doc.data();
         if (data && data.id) {
-          if (data.details && typeof data.details === 'string' && /sin muertes/i.test(data.details)) {
-            data.details = data.details.replace(/sin muertes,\s*/gi, '').replace(/sin muertes\s*/gi, '').trim();
-            this.db.collection('orders').doc(data.id).set({ details: data.details }, { merge: true }).catch(() => {});
+          const rawPrice = data.totalPrice;
+          const rawShare = data.companyShare;
+          data = this.sanitizeOrder(data);
+          if (rawPrice !== data.totalPrice || isNaN(Number(rawShare))) {
+            this.db.collection('orders').doc(data.id).set({
+              totalPrice: data.totalPrice,
+              price: data.price,
+              companyShare: data.companyShare,
+              boosterPayout: data.boosterPayout,
+              maxBidAllowed: data.maxBidAllowed,
+              details: data.details
+            }, { merge: true }).catch(() => {});
           }
           remoteOrders.push(data);
         }
@@ -4029,8 +4085,8 @@ class MythicApp {
       const details = order.details || 'Detalles de la orden de juego';
       const vpnLocation = order.vpnLocation || 'No requerida';
       const timeStr = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Reciente';
-      const basePayoutVal = Number(order.boosterPayout || (order.totalPrice ? order.totalPrice * 0.3 : 0)).toFixed(2);
-      const maxBidAllowedVal = Number(order.maxBidAllowed || (order.totalPrice ? order.totalPrice * 0.5 : (Number(basePayoutVal) * 1.5))).toFixed(2);
+      const basePayoutVal = (Math.max(0, Number(!isNaN(Number(order.boosterPayout)) ? order.boosterPayout : ((Number(order.totalPrice) || 45.00) * 0.30)) || 13.50)).toFixed(2);
+      const maxBidAllowedVal = (Math.max(0, Number(!isNaN(Number(order.maxBidAllowed)) ? order.maxBidAllowed : ((Number(order.totalPrice) || 45.00) * 0.50)) || (Number(basePayoutVal) * 1.5))).toFixed(2);
 
       const isMyBidWinning = myBid && bestBid && Number(myBid.bidAmount) <= Number(bestBid.bidAmount);
 
@@ -5298,7 +5354,7 @@ class MythicApp {
           </div>
           <div class="pt-2 border-t border-stone-800">
             <span class="text-stone-500 block">Tu ganancia:</span>
-            <span class="text-[#fcefc2] font-bold font-mono-gaming text-base">$${order.boosterPayout.toFixed(2)} (${order.boosterPayoutRate || 30}%)</span>
+            <span class="text-[#fcefc2] font-bold font-mono-gaming text-base">$${(Math.max(0, Number(!isNaN(Number(order.boosterPayout)) ? order.boosterPayout : ((Number(order.totalPrice) || 45.00) * 0.30)) || 13.50)).toFixed(2)} (${order.boosterPayoutRate || 30}%)</span>
           </div>
         </div>
       </div>
@@ -5542,9 +5598,13 @@ class MythicApp {
   }
 
   renderAdminOverview() {
-    const totalRev = this.orders.reduce((sum, o) => sum + (Number(o.totalPrice) || 0), 0);
-    const companyRev = totalRev * (COMPANY_MARGIN_PERCENT / 100);
-    const boosterRev = totalRev * (BOOSTER_DEFAULT_PERCENT / 100);
+    const totalRev = (this.orders || []).reduce((sum, o) => {
+      if (!o) return sum;
+      const p = Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00));
+      return sum + (isNaN(p) || p < 0 ? 0 : p);
+    }, 0);
+    const companyRev = Math.max(0, totalRev * (COMPANY_MARGIN_PERCENT / 100)) || 0;
+    const boosterRev = Math.max(0, totalRev * (BOOSTER_DEFAULT_PERCENT / 100)) || 0;
 
     const revElem = document.getElementById('admin-company-rev');
     if (revElem) revElem.textContent = `$${companyRev.toFixed(2)}`;
@@ -6143,6 +6203,10 @@ class MythicApp {
     }
 
     container.innerHTML = list.map(o => {
+      const safeTotal = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
+      const safeCompany = Math.max(0, Number(o.companyShare !== undefined && !isNaN(Number(o.companyShare)) ? o.companyShare : (safeTotal * 0.70)) || (safeTotal * 0.70));
+      const safeBoosterPayout = Math.max(0, Number(o.assignedBooster?.payout !== undefined && !isNaN(Number(o.assignedBooster?.payout)) ? o.assignedBooster.payout : (o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (safeTotal * 0.30))) || (safeTotal * 0.30));
+
       const bidsList = (o.bids && Array.isArray(o.bids)) ? o.bids : [];
       const bidsCount = bidsList.length;
       const bestBid = bidsCount > 0 ? [...bidsList].sort((a,b) => Number(a.bidAmount) - Number(b.bidAmount))[0] : null;
@@ -6159,10 +6223,10 @@ class MythicApp {
           <div class="text-[11px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
         </td>
         <td class="py-4 px-5 font-mono-gaming font-bold text-white text-sm whitespace-nowrap">
-          $${Number(o.totalPrice).toFixed(2)}
+          $${safeTotal.toFixed(2)}
         </td>
         <td class="py-4 px-5 font-mono-gaming text-[#f3e8ff] font-bold text-sm whitespace-nowrap">
-          $${(Number(o.companyShare) || (Number(o.totalPrice) * 0.70)).toFixed(2)}
+          $${safeCompany.toFixed(2)}
         </td>
         <td class="py-4 px-5 min-w-[210px]">
           ${o.status === 'COMPLETED' ? `
@@ -6170,7 +6234,7 @@ class MythicApp {
               <i class="fa-solid fa-bolt text-[11px] text-[#a855f7]"></i>
               <span>${o.assignedBooster ? o.assignedBooster.username : 'Sin asignar'}</span>
             </div>
-            ${o.assignedBooster ? `<div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>` : ''}
+            ${o.assignedBooster ? `<div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>` : ''}
           ` : `
             <div class="flex flex-col gap-1.5">
               <select onchange="app.adminAssignBoosterDropdown('${o.id}', this.value)" 
@@ -6189,7 +6253,7 @@ class MythicApp {
               ${o.assignedBooster ? `
                 <div class="flex items-center justify-between text-[10px] px-1">
                   <span class="text-stone-400">Pago:</span>
-                  <span class="font-mono-gaming text-[#a855f7] font-bold">$${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</span>
+                  <span class="font-mono-gaming text-[#a855f7] font-bold">$${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</span>
                 </div>
               ` : `
                 <span class="text-[10px] text-stone-500 italic px-1">Visible en Bolsa de Pedidos</span>
@@ -6197,7 +6261,7 @@ class MythicApp {
               ${bidsCount > 0 && o.status !== 'COMPLETED' ? `
                 <div class="mt-1 flex items-center justify-between bg-amber-950/70 border border-amber-600/60 rounded-lg px-2 py-1 text-[10px]">
                   <span class="text-amber-300 font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-crown text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} (Mejor: $${Number(bestBid.bidAmount).toFixed(2)})
+                    <i class="fa-solid fa-crown text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} (Mejor: $${Number(bestBid.bidAmount || 0).toFixed(2)})
                   </span>
                   <button onclick="app.openAdminOrderModal('${o.id}')" class="text-[#fcefc2] underline hover:text-white font-bold ml-1 cursor-pointer">Ver/Aceptar</button>
                 </div>
@@ -6370,7 +6434,7 @@ class MythicApp {
   adminApproveOrderCompletion(orderId) {
     const o = this.orders.find(x => x.id === orderId);
     if (!o) return;
-    const payout = (o.assignedBooster?.payout || o.boosterPayout || 0).toFixed(2);
+    const payout = (Math.max(0, Number(!isNaN(Number(o.assignedBooster?.payout)) ? o.assignedBooster.payout : (!isNaN(Number(o.boosterPayout)) ? o.boosterPayout : 13.50)) || 13.50)).toFixed(2);
     if (confirm(`¿Aprobar el reporte de finalización de la orden #${orderId}?\n\nSe marcará como COMPLETADA y se acreditarán $${payout} al saldo del booster.`)) {
       this.finalizeOrderCompletion(orderId, 'Administrador');
       this.showToast(`¡Reporte aprobado y orden #${orderId} completada!`, 'success');
@@ -6632,6 +6696,10 @@ class MythicApp {
     const sortedBids = [...orderBids].sort((a,b) => Number(a.bidAmount) - Number(b.bidAmount));
     const bestBid = sortedBids.length > 0 ? sortedBids[0] : null;
 
+    const safeTotal = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
+    const safeCompany = Math.max(0, Number(o.companyShare !== undefined && !isNaN(Number(o.companyShare)) ? o.companyShare : (safeTotal * 0.70)) || (safeTotal * 0.70));
+    const safeBooster = Math.max(0, Number(o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (safeTotal * 0.30)) || (safeTotal * 0.30));
+
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div>
@@ -6649,8 +6717,8 @@ class MythicApp {
           <div><span class="text-stone-500">Booster:</span> <strong class="text-[#a855f7]">${o.assignedBooster ? o.assignedBooster.username : 'Sin Asignar'}</strong></div>
           <div><span class="text-stone-500">Personaje:</span> <strong class="text-stone-200">${o.characterName || 'N/A'} (${o.realm || 'US'})</strong></div>
           <div><span class="text-stone-500">Modalidad:</span> <strong class="text-stone-200">${o.completionMethod || 'Self-play'}</strong></div>
-          <div><span class="text-stone-500">Total Pagado:</span> <strong class="text-white font-mono-gaming text-sm">$${o.totalPrice.toFixed(2)}</strong></div>
-          <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#f3e8ff] font-mono-gaming">$${(o.companyShare || o.totalPrice * 0.7).toFixed(2)} / $${(o.boosterPayout || o.totalPrice * 0.3).toFixed(2)}</strong></div>
+          <div><span class="text-stone-500">Total Pagado:</span> <strong class="text-white font-mono-gaming text-sm">$${safeTotal.toFixed(2)}</strong></div>
+          <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#f3e8ff] font-mono-gaming">$${safeCompany.toFixed(2)} / $${safeBooster.toFixed(2)}</strong></div>
         </div>
 
         ${o.status === 'PENDING_APPROVAL' ? `
@@ -7330,7 +7398,7 @@ class MythicApp {
                   <div class="text-[10px] text-stone-500">${new Date(o.createdAt).toLocaleDateString()} | ${o.status}</div>
                 </div>
                 <div class="text-right font-mono-gaming font-bold text-[#f3e8ff]">
-                  $${o.totalPrice.toFixed(2)}
+                  $${(Math.max(0, Number(!isNaN(Number(o.totalPrice)) ? o.totalPrice : (!isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00)).toFixed(2)}
                 </div>
               </div>
             `).join('') : '<div class="text-stone-500 text-center py-4">No hay órdenes registradas para este cliente aún.</div>'}
