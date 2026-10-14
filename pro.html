@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <base href="/">
@@ -31,13 +31,13 @@
         <button onclick="switchProTab('find')" id="tab-btn-find" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40">
           <i class="fa-solid fa-scroll text-[#ee914f] text-sm"></i>
           <span class="hidden md:inline">Bolsa de Pedidos</span>
-          <span id="badge-avail-sidebar" class="hidden md:inline ml-auto text-[10px] bg-[#1a130e] text-[#ee914f] px-2 py-0.5 rounded-full border border-stone-800">11</span>
+          <span id="badge-avail-sidebar" class="hidden md:inline ml-auto text-[10px] bg-[#1a130e] text-[#ee914f] px-2 py-0.5 rounded-full border border-stone-800">0</span>
         </button>
 
         <button onclick="switchProTab('myorders')" id="tab-btn-myorders" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
           <i class="fa-solid fa-shield-halved text-sm"></i>
           <span class="hidden md:inline">Mis Contratos</span>
-          <span id="badge-my-count" class="hidden md:inline ml-auto text-[10px] bg-stone-900 px-2 py-0.5 rounded-full">1</span>
+          <span id="badge-my-count" class="hidden md:inline ml-auto text-[10px] bg-stone-900 px-2 py-0.5 rounded-full">0</span>
         </button>
 
         <button onclick="switchProTab('chat')" id="tab-btn-chat" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
@@ -111,7 +111,7 @@
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 bg-[#17120e] px-3.5 py-1.5 rounded-xl border border-stone-800">
           <span class="text-xs text-stone-400">Saldo:</span>
-          <span id="booster-balance" class="text-base font-bold font-mono-gaming text-[#fcefc2]">$145.00</span>
+          <span id="booster-balance" class="text-base font-bold font-mono-gaming text-[#fcefc2]">$0.00</span>
         </div>
         <div id="header-lang-selector" class="relative shrink-0 notranslate" translate="no"></div>
         <div id="user-session-badge" class="notranslate" translate="no"></div>
@@ -188,7 +188,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="glass-panel p-6 rounded-2xl border border-[#ee914f]/40">
             <span class="text-xs text-stone-400 block mb-1">Saldo Disponible para Retiro</span>
-            <div class="text-3xl font-bold font-mono-gaming text-[#fcefc2]" id="wallet-avail-balance">$145.00</div>
+            <div class="text-3xl font-bold font-mono-gaming text-[#fcefc2]" id="wallet-avail-balance">$0.00</div>
             <span class="text-[10px] text-[#ee914f] mt-2 block"><i class="fa-solid fa-circle-check mr-1"></i>Aprobado para pago</span>
           </div>
 
@@ -213,7 +213,7 @@
           <form onsubmit="event.preventDefault(); app.showToast('Solicitud enviada a gerencia. Tus fondos serán transferidos a tu cuenta configurada.', 'success');" class="max-w-lg space-y-4">
             <div>
               <label class="block text-xs font-semibold text-stone-300 mb-1">Monto a retirar ($ USD):</label>
-              <input id="wallet-withdraw-amount" type="number" min="10" max="145" value="145" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white" required>
+              <input id="wallet-withdraw-amount" type="number" min="10" step="any" placeholder="0.00" value="0.00" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white" required>
             </div>
             <div>
               <label class="block text-xs font-semibold text-stone-300 mb-1">Método de Pago:</label>
@@ -285,7 +285,7 @@
                 </div>
                 <div class="bg-[#140e0a] p-2.5 rounded-xl border border-stone-800">
                   <span class="text-[10px] text-stone-500 block uppercase font-semibold">Saldo Retirable</span>
-                  <span id="pro-preview-balance" class="text-sm font-bold font-mono-gaming text-emerald-400">$145.00</span>
+                  <span id="pro-preview-balance" class="text-sm font-bold font-mono-gaming text-emerald-400">$0.00</span>
                 </div>
               </div>
 
@@ -531,7 +531,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=2.5.5"></script>
+  <script src="assets/js/app.js?v=2.5.6"></script>
   <script>
     function switchProTab(tabId) {
       document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));
@@ -560,8 +560,13 @@
       const titleEl = document.getElementById('pro-page-title');
       if (titleEl) titleEl.innerHTML = `<span>${titles[tabId] || 'Portal Pro Booster'}</span>`;
 
-      if (tabId === 'profile' && window.app && typeof app.initBoosterProfileForm === 'function') {
-        app.initBoosterProfileForm();
+      if (window.app) {
+        if (tabId === 'find' && typeof app.renderProOrderFeed === 'function') app.renderProOrderFeed();
+        else if (tabId === 'myorders' && typeof app.renderProMyOrders === 'function') app.renderProMyOrders();
+        else if (tabId === 'chat' && typeof app.renderChatList === 'function') app.renderChatList();
+        else if (tabId === 'upsell' && typeof app.renderBoosterUpsellCatalog === 'function') app.renderBoosterUpsellCatalog();
+        else if (tabId === 'wallet' && typeof app.renderProWallet === 'function') app.renderProWallet();
+        else if (tabId === 'profile' && typeof app.initBoosterProfileForm === 'function') app.initBoosterProfileForm();
       }
     }
 
@@ -575,56 +580,68 @@
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-      const b = (app.currentUser && (app.currentUser.type === 'booster' || app.currentUser.type === 'staff' || app.currentUser.type === 'admin' || app.isBooster() || app.isAdminOrGerente()))
-        ? app.currentUser
-        : null;
+      const runInit = () => {
+        const b = (window.app && app.currentUser && (app.currentUser.type === 'booster' || app.currentUser.type === 'staff' || app.currentUser.type === 'admin' || app.isBooster() || app.isAdminOrGerente()))
+          ? app.currentUser
+          : null;
 
-      if (!b) {
-        if (window.app && typeof window.app.showProAccessGate === 'function') {
-          window.app.showProAccessGate();
+        if (!b) {
+          if (window.app && typeof window.app.showProAccessGate === 'function') {
+            window.app.showProAccessGate();
+          }
+          return;
         }
-        return;
-      }
 
-      if (!b.avatar) {
-        const backup = localStorage.getItem('mp_discord_avatar_backup');
-        if (backup) b.avatar = backup;
-      }
+        if (window.app && typeof app.initProPortal === 'function') {
+          app.initProPortal();
+        }
 
-      if (b) {
-        const nameEl = document.getElementById('booster-sidebar-name');
-        if (nameEl) nameEl.textContent = b.username;
-        const roleEl = document.getElementById('booster-sidebar-role');
-        if (roleEl) roleEl.textContent = `${b.role || 'Booster'} (${b.points || 0} pts)`;
-        const avEl = document.getElementById('booster-avatar-initial');
-        if (avEl) avEl.textContent = (b.username || 'M')[0].toUpperCase();
-        const ptsEl = document.getElementById('wallet-points-display');
-        if (ptsEl) ptsEl.textContent = `${b.points || 0} Puntos`;
+        if (!b.avatar) {
+          const backup = localStorage.getItem('mp_discord_avatar_backup');
+          if (backup) b.avatar = backup;
+        }
 
-        if (b.avatar) {
-          const sImg = document.getElementById('booster-sidebar-avatar-img');
-          if (sImg) {
-            sImg.src = b.avatar;
-            sImg.classList.remove('hidden');
-            if (avEl) avEl.classList.add('hidden');
+        if (b) {
+          const nameEl = document.getElementById('booster-sidebar-name');
+          if (nameEl) nameEl.textContent = b.username;
+          const roleEl = document.getElementById('booster-sidebar-role');
+          if (roleEl) roleEl.textContent = `${b.role || 'Booster'} (${b.points || 0} pts)`;
+          const avEl = document.getElementById('booster-avatar-initial');
+          if (avEl) avEl.textContent = (b.username || 'M')[0].toUpperCase();
+          const ptsEl = document.getElementById('wallet-points-display');
+          if (ptsEl) ptsEl.textContent = `${b.points || 0} Puntos`;
+
+          if (b.avatar) {
+            const sImg = document.getElementById('booster-sidebar-avatar-img');
+            if (sImg) {
+              sImg.src = b.avatar;
+              sImg.classList.remove('hidden');
+              if (avEl) avEl.classList.add('hidden');
+            }
           }
         }
-      }
 
-      // Show Admin link in sidebar ONLY if user is admin or gerente
-      const adminLink = document.getElementById('pro-sidebar-admin-link');
-      if (adminLink) {
-        if (app.isAdminOrGerente()) {
-          adminLink.classList.remove('hidden');
-        } else {
-          adminLink.classList.add('hidden');
+        // Show Admin link in sidebar ONLY if user is admin or gerente
+        const adminLink = document.getElementById('pro-sidebar-admin-link');
+        if (adminLink) {
+          if (app.isAdminOrGerente()) {
+            adminLink.classList.remove('hidden');
+          } else {
+            adminLink.classList.add('hidden');
+          }
         }
-      }
 
-      // Check initial URL hash
-      const initialTab = (window.location.hash || '').replace('#', '');
-      if (['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].includes(initialTab)) {
-        switchProTab(initialTab);
+        // Check initial URL hash
+        const initialTab = (window.location.hash || '').replace('#', '') || 'find';
+        if (['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].includes(initialTab)) {
+          switchProTab(initialTab);
+        }
+      };
+
+      if (window.app && window.app.currentUser) {
+        runInit();
+      } else {
+        setTimeout(runInit, 120);
       }
     });
   </script>

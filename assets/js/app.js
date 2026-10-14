@@ -74,9 +74,10 @@ class MythicApp {
     try { this.cleanUrlBar(); } catch (e) { console.warn('cleanUrlBar:', e); }
     try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
     try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
+    try { this.initSession(); } catch (e) { console.warn('initSession pre-data:', e); }
     try { await this.loadInitialData(); } catch (e) { console.warn('loadInitialData:', e); }
     try { await this.checkDiscordOAuthCallback(); } catch (e) { console.warn('checkDiscordOAuthCallback:', e); }
-    try { this.initSession(); } catch (e) { console.warn('initSession:', e); }
+    try { this.initSession(); } catch (e) { console.warn('initSession post-data:', e); }
     try { this.renderHeader(); } catch (e) { console.warn('renderHeader:', e); }
     try { this.setupLiveSearch(); } catch (e) { console.warn('setupLiveSearch:', e); }
     try { this.updateCartCounter(); } catch (e) { console.warn('updateCartCounter:', e); }
@@ -90,9 +91,9 @@ class MythicApp {
         this.initSingleProductPage();
       } else if (cleanPath.endsWith('/client-profile') || cleanPath === 'client-profile') {
         this.initClientProfile();
-      } else if (cleanPath.endsWith('/pro') || cleanPath === 'pro') {
+      } else if (cleanPath.endsWith('/pro') || cleanPath === 'pro' || cleanPath.endsWith('/pro/index') || cleanPath === 'pro/index' || cleanPath.includes('/pro')) {
         this.initProPortal();
-      } else if (cleanPath.endsWith('/admin') || cleanPath === 'admin') {
+      } else if (cleanPath.endsWith('/admin') || cleanPath === 'admin' || cleanPath.endsWith('/admin/index') || cleanPath === 'admin/index' || cleanPath.includes('/admin')) {
         this.initAdminPortal();
       } else if (cleanPath.endsWith('/mplus') || cleanPath === 'mplus') {
         this.initCategoryPage('Míticas Plus');
@@ -2956,7 +2957,11 @@ class MythicApp {
     // Order's client has access
     if (order.clientId === this.currentUser.id || order.clientEmail === this.currentUser.email || order.clientName === this.currentUser.username || order.clientId === 'client_carlos' || order.clientId === 'client_guest') return true;
     // Order's assigned booster has access
-    if (order.assignedBooster && (order.assignedBooster.discordId === this.currentUser.discordId || order.assignedBooster.username === this.currentUser.username)) return true;
+    if (order.assignedBooster) {
+      if (this.currentUser.discordId && order.assignedBooster.discordId && String(this.currentUser.discordId) === String(order.assignedBooster.discordId)) return true;
+      if (this.currentUser.username && order.assignedBooster.username && this.currentUser.username.trim().toLowerCase() === order.assignedBooster.username.trim().toLowerCase()) return true;
+      if (this.currentUser.id && order.assignedBooster.id && String(this.currentUser.id) === String(order.assignedBooster.id)) return true;
+    }
     return false;
   }
 
@@ -3326,10 +3331,13 @@ class MythicApp {
     const container = document.getElementById('pro-orders-feed');
     if (!container) return;
 
-    const availableOrders = this.orders.filter(o => o.status === 'AVAILABLE' || o.status === 'BIDDING');
+    const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
     
     const countBadge = document.getElementById('available-orders-count');
     if (countBadge) countBadge.textContent = `${availableOrders.length} disponibles`;
+
+    const sidebarBadge = document.getElementById('badge-avail-sidebar');
+    if (sidebarBadge) sidebarBadge.textContent = availableOrders.length;
 
     if (availableOrders.length === 0) {
       container.innerHTML = `
@@ -3342,34 +3350,46 @@ class MythicApp {
       return;
     }
 
-    container.innerHTML = availableOrders.map(order => `
+    container.innerHTML = availableOrders.map(order => {
+      const category = order.category || 'Servicio WoW';
+      const orderId = order.id || 'N/A';
+      const region = order.region || 'US';
+      const method = order.completionMethod || 'Piloted';
+      const bidsCount = (order.bids && Array.isArray(order.bids)) ? order.bids.length : 0;
+      const serviceName = order.serviceName || 'Servicio Mythic Progression';
+      const details = order.details || 'Detalles de la orden de juego';
+      const vpnLocation = order.vpnLocation || 'No requerida';
+      const timeStr = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+      const payoutVal = Number(order.boosterPayout || 0).toFixed(2);
+
+      return `
       <div class="glass-panel rounded-2xl p-5 mb-4 border border-stone-800/80 hover:border-[#ee914f]/50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-2 flex-wrap">
             <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-[#251c14] text-[#ee914f] border border-[#ee914f]/30">
-              ${order.category}
+              ${category}
             </span>
             <span class="text-xs font-mono-gaming font-bold text-stone-400">
-              #${order.id}
+              #${orderId}
             </span>
             <span class="text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-300 border border-stone-800">
-              ${order.region}
+              ${region}
             </span>
-            <span class="text-[11px] px-2 py-0.5 rounded ${order.completionMethod === 'Piloted' ? 'bg-[#301c10] text-[#fccc8f] border border-[#b85d1d]/40' : 'bg-[#18231a] text-emerald-400 border border-emerald-900/40'}">
-              ${order.completionMethod}
+            <span class="text-[11px] px-2 py-0.5 rounded ${method === 'Piloted' ? 'bg-[#301c10] text-[#fccc8f] border border-[#b85d1d]/40' : 'bg-[#18231a] text-emerald-400 border border-emerald-900/40'}">
+              ${method}
             </span>
-            ${(order.bids && order.bids.length > 0) ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#2c1d14] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-gavel mr-1"></i>${order.bids.length} Oferta(s)</span>` : ''}
+            ${bidsCount > 0 ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#2c1d14] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-gavel mr-1"></i>${bidsCount} Oferta(s)</span>` : ''}
           </div>
 
           <h3 class="text-base font-bold text-white group-hover:text-[#fcefc2] transition-colors">
-            ${order.serviceName}
+            ${serviceName}
           </h3>
           <p class="text-xs text-stone-400 mt-1">
-            ${order.details}
+            ${details}
           </p>
           <div class="text-[11px] text-stone-500 mt-2 flex items-center gap-3">
-            <span><i class="fa-solid fa-shield-halved text-[#ee914f] mr-1"></i>VPN: ${order.vpnLocation}</span>
-            <span><i class="fa-solid fa-clock mr-1"></i>Hora: ${new Date(order.createdAt).toLocaleTimeString()}</span>
+            <span><i class="fa-solid fa-shield-halved text-[#ee914f] mr-1"></i>VPN: ${vpnLocation}</span>
+            <span><i class="fa-solid fa-clock mr-1"></i>Hora: ${timeStr}</span>
           </div>
         </div>
 
@@ -3377,24 +3397,25 @@ class MythicApp {
           <div class="text-right">
             <span class="text-[10px] text-stone-400 block uppercase tracking-wider">Pago al Pro</span>
             <div class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">
-              $${order.boosterPayout.toFixed(2)}
+              $${payoutVal}
             </div>
             <span class="text-[10px] text-emerald-400/90 font-medium"><i class="fa-solid fa-circle-check text-[8px] mr-1"></i>Oferta disponible</span>
           </div>
 
           <div class="flex flex-col gap-2 min-w-[135px]">
-            <button onclick="app.promptTakeOrder('${order.id}')" class="px-3.5 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110 active:scale-[0.98]">
+            <button onclick="app.promptTakeOrder('${orderId}')" class="px-3.5 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110 active:scale-[0.98]">
               <i class="fa-solid fa-bolt"></i>
               <span>Tomar Orden</span>
             </button>
-            <button onclick="app.openBidModal('${order.id}')" class="px-3.5 py-2 rounded-xl bg-[#1f1712] hover:bg-[#2c2018] text-[#eedaa2] border border-[#ee914f]/35 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
+            <button onclick="app.openBidModal('${orderId}')" class="px-3.5 py-2 rounded-xl bg-[#1f1712] hover:bg-[#2c2018] text-[#eedaa2] border border-[#ee914f]/35 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer">
               <i class="fa-solid fa-gavel"></i>
               <span>Hacer Oferta</span>
             </button>
           </div>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   promptTakeOrder(orderId) {
@@ -3617,7 +3638,18 @@ class MythicApp {
     const container = document.getElementById('pro-my-orders');
     if (!container) return;
 
-    const myOrders = this.orders.filter(o => o.assignedBooster && o.assignedBooster.discordId === this.currentUser?.discordId);
+    const myOrders = (this.orders || []).filter(o => {
+      if (!o || !o.assignedBooster) return false;
+      const u = this.currentUser;
+      if (!u) return false;
+      if (u.discordId && o.assignedBooster.discordId && String(u.discordId) === String(o.assignedBooster.discordId)) return true;
+      if (u.username && o.assignedBooster.username && u.username.trim().toLowerCase() === o.assignedBooster.username.trim().toLowerCase()) return true;
+      if (u.id && o.assignedBooster.id && String(u.id) === String(o.assignedBooster.id)) return true;
+      return false;
+    });
+
+    const sidebarMyCount = document.getElementById('badge-my-count');
+    if (sidebarMyCount) sidebarMyCount.textContent = myOrders.length;
 
     if (myOrders.length === 0) {
       container.innerHTML = `
@@ -3639,8 +3671,8 @@ class MythicApp {
               </span>
               ${order.boosterPayoutRate === 50 ? `<span class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 font-bold">⭐ Venta Adicional 50%</span>` : ''}
             </div>
-            <h4 class="text-sm font-bold text-white">${order.serviceName}</h4>
-            <p class="text-xs text-stone-400">Cliente: ${order.clientName} (${order.characterName})</p>
+            <h4 class="text-sm font-bold text-white">${order.serviceName || 'Servicio'}</h4>
+            <p class="text-xs text-stone-400">Cliente: ${order.clientName || 'Cliente'} (${order.characterName || 'Personaje'})</p>
           </div>
 
           <div class="flex items-center gap-4 flex-wrap">
@@ -3652,7 +3684,7 @@ class MythicApp {
               </label>
             </div>
 
-            <button onclick="app.openChat('${order.id}')" class="p-2.5 rounded-xl bg-[#201812] hover:bg-[#2b2118] text-[#fcefc2] border border-[#ee914f]/30 text-xs flex items-center gap-1.5">
+            <button onclick="app.openChat('${order.id}')" class="p-2.5 rounded-xl bg-[#201812] hover:bg-[#2b2118] text-[#fcefc2] border border-[#ee914f]/30 text-xs flex items-center gap-1.5 cursor-pointer">
               <i class="fa-solid fa-comments text-[#ee914f]"></i>
               <span>Chat</span>
             </button>
@@ -3715,7 +3747,24 @@ class MythicApp {
   }
 
   renderProWallet() {
-    const bal = this.currentUser?.balance !== undefined ? Number(this.currentUser.balance) : 145.00;
+    let completedEarnings = 0;
+    if (Array.isArray(this.orders)) {
+      this.orders.forEach(o => {
+        if (o && o.status === 'COMPLETED' && o.assignedBooster) {
+          const match = (this.currentUser?.discordId && o.assignedBooster.discordId && String(this.currentUser.discordId) === String(o.assignedBooster.discordId)) ||
+                        (this.currentUser?.username && o.assignedBooster.username && this.currentUser.username.trim().toLowerCase() === o.assignedBooster.username.trim().toLowerCase()) ||
+                        (this.currentUser?.id && o.assignedBooster.id && String(this.currentUser.id) === String(o.assignedBooster.id));
+          if (match) {
+            completedEarnings += Number(o.assignedBooster.payout || o.boosterPayout || 0);
+          }
+        }
+      });
+    }
+
+    const bal = (this.currentUser?.balance !== undefined && this.currentUser?.balance !== null)
+      ? Number(this.currentUser.balance)
+      : completedEarnings;
+
     const balanceElem = document.getElementById('booster-balance');
     if (balanceElem) {
       balanceElem.textContent = `$${bal.toFixed(2)}`;
@@ -3726,8 +3775,9 @@ class MythicApp {
     }
     const withdrawAmount = document.getElementById('wallet-withdraw-amount');
     if (withdrawAmount) {
-      withdrawAmount.value = bal;
+      withdrawAmount.value = bal > 0 ? bal : 0;
       withdrawAmount.max = bal;
+      withdrawAmount.placeholder = bal > 0 ? `$${bal.toFixed(2)}` : '$0.00';
     }
     const withdrawAddr = document.getElementById('wallet-withdraw-address');
     if (withdrawAddr && (this.currentUser?.payoutAddress || this.currentUser?.payout_address || this.currentUser?.wallet_id)) {
@@ -3883,7 +3933,7 @@ class MythicApp {
     if (prevPoints) prevPoints.textContent = `${b.points || 0} Pts`;
 
     const prevBalance = document.getElementById('pro-preview-balance');
-    if (prevBalance) prevBalance.textContent = `$${(b.balance !== undefined ? Number(b.balance) : 145).toFixed(2)}`;
+    if (prevBalance) prevBalance.textContent = `$${(b.balance !== undefined ? Number(b.balance) : 0).toFixed(2)}`;
 
     const prevMethod = document.getElementById('pro-preview-payout-method');
     if (prevMethod) {
@@ -4116,10 +4166,16 @@ class MythicApp {
     const isAdminUrl = (typeof window !== 'undefined' && window.location.pathname.toLowerCase().includes('admin'));
     const isStaffOrAdmin = isAdminUrl || this.currentUser?.type === 'admin' || this.currentUser?.type === 'staff' || this.isAdminOrGerente();
     const myChatOrders = isStaffOrAdmin 
-      ? this.orders 
-      : this.orders.filter(o => 
-          o.assignedBooster && (o.assignedBooster.discordId === this.currentUser?.discordId || o.assignedBooster.id === this.currentUser?.id)
-        );
+      ? (this.orders || []) 
+      : (this.orders || []).filter(o => {
+          if (!o || !o.assignedBooster) return false;
+          const u = this.currentUser;
+          if (!u) return false;
+          if (u.discordId && o.assignedBooster.discordId && String(u.discordId) === String(o.assignedBooster.discordId)) return true;
+          if (u.username && o.assignedBooster.username && u.username.trim().toLowerCase() === o.assignedBooster.username.trim().toLowerCase()) return true;
+          if (u.id && o.assignedBooster.id && String(u.id) === String(o.assignedBooster.id)) return true;
+          return false;
+        });
 
     let visitorChatCount = 0;
     try {
@@ -4141,14 +4197,14 @@ class MythicApp {
     ` : '';
 
     if (myChatOrders.length === 0) {
-      listContainer.innerHTML = liveItem + `<div class="p-4 text-xs text-stone-500">No hay chats de órdenes registrados</div>`;
+      listContainer.innerHTML = liveItem + `<div class="p-4 text-xs text-stone-500 text-center">No hay chats de órdenes registrados</div>`;
       return;
     }
 
     listContainer.innerHTML = liveItem + myChatOrders.map(o => `
       <div onclick="app.openChat('${o.id}')" class="p-3.5 rounded-xl cursor-pointer transition-all ${this.activeChatOrderId === o.id ? 'bg-[#291e16] border border-[#ee914f]/50' : 'hover:bg-[#1a140f] border border-transparent'}">
         <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-bold text-white">${o.clientName}</span>
+          <span class="text-xs font-bold text-white">${o.clientName || 'Cliente'}</span>
           <span class="text-[10px] text-stone-400">#${o.id}</span>
         </div>
         <div class="flex items-center justify-between text-[10px] text-stone-500 mb-1">
@@ -4158,6 +4214,10 @@ class MythicApp {
         <p class="text-[11px] text-stone-400 truncate">${o.chat && o.chat.length ? o.chat[o.chat.length - 1].message : 'Abrir chat...'}</p>
       </div>
     `).join('');
+
+    if (!this.activeChatOrderId && myChatOrders.length > 0) {
+      this.openChat(myChatOrders[0].id);
+    }
   }
 
   openChat(orderId) {
