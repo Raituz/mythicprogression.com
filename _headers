@@ -1,0 +1,18 @@
+# Cloudflare Pages Cache-Control Headers to prevent stale HTML/JS caching
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/admin*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/pro*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/client-profile*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/assets/js/*
+  Cache-Control: no-cache, no-store, must-revalidate
