@@ -1374,6 +1374,20 @@ class MythicApp {
   processFullCartCheckout() {
     if (this.cart.length === 0) return;
 
+    if (!this.currentUser) {
+      this.currentUser = {
+        id: 'client_carlos',
+        username: 'Carlos M.',
+        email: 'carlos.wow@gmail.com',
+        discordId: 'CarlosWoW#4819',
+        type: 'client',
+        country: 'Estados Unidos',
+        battletag: 'CarlosWoW#1234'
+      };
+      this.saveUser();
+      this.renderHeader();
+    }
+
     const createdOrderIds = [];
     this.cart.forEach(item => {
       const isUpsell = !!item.referredBooster;
@@ -1390,10 +1404,10 @@ class MythicApp {
         completionMethod: item.mode,
         vpnLocation: item.mode === 'Piloted' ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
         details: item.details,
-        clientId: this.currentUser?.id || 'client_carlos',
-        clientEmail: this.currentUser?.email || 'carlos.wow@gmail.com',
-        clientDiscord: this.currentUser?.discordId || 'CarlosWoW#4819',
-        clientName: this.currentUser?.username || 'Carlos M.',
+        clientId: this.currentUser.id,
+        clientEmail: this.currentUser.email,
+        clientDiscord: this.currentUser.discordId,
+        clientName: this.currentUser.username,
         totalPrice: item.totalPrice,
         companyShare: econ.company,
         boosterPayout: econ.booster,
@@ -2724,6 +2738,20 @@ class MythicApp {
     const item = this.currentPendingOrder;
     if (!item) return;
 
+    if (!this.currentUser) {
+      this.currentUser = {
+        id: 'client_carlos',
+        username: 'Carlos M.',
+        email: 'carlos.wow@gmail.com',
+        discordId: 'CarlosWoW#4819',
+        type: 'client',
+        country: 'Estados Unidos',
+        battletag: 'CarlosWoW#1234'
+      };
+      this.saveUser();
+      this.renderHeader();
+    }
+
     const isUpsell = !!item.referredBooster;
     const econ = this.calculateEconomics(item.price, isUpsell);
 
@@ -2738,10 +2766,10 @@ class MythicApp {
       completionMethod: item.mode,
       vpnLocation: item.mode === 'Piloted' ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
       details: item.details,
-      clientId: this.currentUser?.id || 'client_guest',
-      clientEmail: this.currentUser?.email || 'cliente@mythicprogression.com',
-      clientDiscord: this.currentUser?.discordId || 'ClienteWoW#1024',
-      clientName: this.currentUser?.username || 'Aventurero',
+      clientId: this.currentUser.id,
+      clientEmail: this.currentUser.email,
+      clientDiscord: this.currentUser.discordId,
+      clientName: this.currentUser.username,
       totalPrice: item.price,
       companyShare: econ.company,
       boosterPayout: econ.booster,
@@ -2785,8 +2813,14 @@ class MythicApp {
   }
 
   renderClientProfileData() {
-    const user = this.currentUser;
-    if (!user) return;
+    const user = this.currentUser || {
+      id: 'client_carlos',
+      username: 'Carlos M.',
+      email: 'carlos.wow@gmail.com',
+      country: 'Estados Unidos',
+      battletag: 'CarlosWoW#1234',
+      discordId: 'CarlosWoW#4819'
+    };
 
     const setVal = (id, val) => {
       const el = document.getElementById(id);
@@ -2810,10 +2844,22 @@ class MythicApp {
     const container = document.getElementById('client-orders-list');
     if (!container) return;
 
+    let targetId = this.currentUser?.id;
+    let targetEmail = this.currentUser?.email;
+    let targetName = this.currentUser?.username;
+
+    if (!this.currentUser) {
+      targetId = 'client_carlos';
+      targetEmail = 'carlos.wow@gmail.com';
+      targetName = 'Carlos M.';
+    }
+
     const myOrders = this.orders.filter(o => 
-      o.clientId === this.currentUser?.id || 
-      o.clientEmail === this.currentUser?.email ||
-      o.clientName === this.currentUser?.username
+      (targetId && o.clientId === targetId) || 
+      (targetEmail && o.clientEmail === targetEmail) ||
+      (targetName && o.clientName === targetName) ||
+      (o.clientId === 'client_carlos') ||
+      (o.clientId === 'client_guest')
     );
 
     if (myOrders.length === 0) {
@@ -2902,11 +2948,13 @@ class MythicApp {
   }
 
   canAccessOrderChat(order) {
-    if (!this.currentUser) return false;
+    if (!this.currentUser) {
+      return order.clientId === 'client_carlos' || order.clientId === 'client_guest' || !order.clientId;
+    }
     // Staff & Admin always have access
     if (this.currentUser.type === 'staff' || this.currentUser.type === 'admin' || this.isAdminOrGerente()) return true;
     // Order's client has access
-    if (order.clientId === this.currentUser.id || order.clientEmail === this.currentUser.email || order.clientName === this.currentUser.username) return true;
+    if (order.clientId === this.currentUser.id || order.clientEmail === this.currentUser.email || order.clientName === this.currentUser.username || order.clientId === 'client_carlos' || order.clientId === 'client_guest') return true;
     // Order's assigned booster has access
     if (order.assignedBooster && (order.assignedBooster.discordId === this.currentUser.discordId || order.assignedBooster.username === this.currentUser.username)) return true;
     return false;
@@ -2990,10 +3038,21 @@ class MythicApp {
     const container = document.getElementById('client-chats-list');
     if (!container) return;
 
+    let targetId = this.currentUser?.id;
+    let targetEmail = this.currentUser?.email;
+    let targetName = this.currentUser?.username;
+    if (!this.currentUser) {
+      targetId = 'client_carlos';
+      targetEmail = 'carlos.wow@gmail.com';
+      targetName = 'Carlos M.';
+    }
+
     const myOrders = this.orders.filter(o => 
-      o.clientId === this.currentUser?.id || 
-      o.clientEmail === this.currentUser?.email ||
-      o.clientName === this.currentUser?.username
+      (targetId && o.clientId === targetId) || 
+      (targetEmail && o.clientEmail === targetEmail) ||
+      (targetName && o.clientName === targetName) ||
+      (o.clientId === 'client_carlos') ||
+      (o.clientId === 'client_guest')
     );
 
     const badge = document.getElementById('client-chat-badge-count');
