@@ -70,10 +70,7 @@ class MythicApp {
   }
 
   async init() {
-    const savedLang = (typeof localStorage !== 'undefined') ? (localStorage.getItem('mp_lang') || 'es') : 'es';
-    if (savedLang === 'es') {
-      try { this.cleanupGoogleTranslate(); } catch (e) {}
-    }
+    try { this.cleanupGoogleTranslate(); } catch (e) {}
     try { this.cleanUrlBar(); } catch (e) { console.warn('cleanUrlBar:', e); }
     try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
     try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
@@ -7424,7 +7421,123 @@ class MythicApp {
       'total del carrito:': { en: 'Cart Total:', pt: 'Total do Carrinho:' },
       'proceder al pago / checkout': { en: 'Proceed to Checkout', pt: 'Finalizar Compra / Checkout' },
       'world of warcraft es una marca registrada de blizzard entertainment, inc. mythic progression es una plataforma independiente de servicios.': { en: 'World of Warcraft is a registered trademark of Blizzard Entertainment, Inc. Mythic Progression is an independent service platform.', pt: 'World of Warcraft é uma marca registrada da Blizzard Entertainment, Inc. Mythic Progression é uma plataforma de serviços independente.' },
-      'wow carry & mythic services': { en: 'WoW Carry & Mythic Services', pt: 'WoW Carry & Mythic Services' }
+      'wow carry & mythic services': { en: 'WoW Carry & Mythic Services', pt: 'WoW Carry & Mythic Services' },
+      '1 a 80 / 90 personalizado': { en: '1 to 80 / 90 Customized', pt: '1 a 80 / 90 Personalizado' },
+      'piedras angulares míticas plus': { en: 'MYTHIC PLUS KEYSTONES', pt: 'PEDRAS-CHAVE MÍTICAS PLUS' },
+      'runs garantizados a tiempo con traders de armadura específicos para equipar tu personaje y desbloquear tu gran cámara semanal.': {
+        en: 'Guaranteed in-time runs with specific armor traders to gear your character and unlock your weekly Grand Vault.',
+        pt: 'Runs garantidos no tempo com traders de armadura específicos para equipar seu personagem e desbloquear seu Grande Cofre semanal.'
+      },
+      'tu carrito de compra': { en: 'Your Shopping Cart', pt: 'Seu Carrinho de Compra' },
+      'servicios seleccionados para tu personaje': { en: 'Services selected for your character', pt: 'Serviços selecionados para seu personagem' },
+      'al completar el pedido serás redirigido a tu panel de cliente donde podrás coordinar el horario y detalles en el chat privado con tu booster.': {
+        en: 'Upon completing your order you will be redirected to your client dashboard where you can coordinate timing and details in private chat with your booster.',
+        pt: 'Ao concluir o pedido, você será redirecionado para o painel do cliente, onde poderá combinar horário e detalhes no chat privado com seu booster.'
+      },
+      'completar pedido (simular pago)': { en: 'Complete Order (Simulate Payment)', pt: 'Completar Pedido (Simular Pagamento)' },
+      'bandas y asaltos míticos': { en: 'Raids & Mythic Assaults', pt: 'Raides & Assaltos Míticos' },
+      'derrota a los jefes de raid más desafiantes con hermandades top mundiales. botín de nivel héroe y mito garantizado.': {
+        en: 'Defeat the most challenging raid bosses with top world guilds. Guaranteed Hero and Mythic quality loot.',
+        pt: 'Derrote os chefes de raide mais desafiadores com guildas de topo mundial. Saque de qualidade Herói e Mito garantido.'
+      },
+      'powerleveling profesional': { en: 'Professional Powerleveling', pt: 'Powerleveling Profissional' },
+      'sube de nivel en tiempo récord de forma 100% manual y segura con vpn dedicada. sin bots ni riesgos.': {
+        en: 'Level up in record time, 100% manually and safely with dedicated VPN. No bots, zero risk.',
+        pt: 'Suba de nível em tempo recorde, 100% manual e seguro com VPN dedicada. Sem bots, risco zero.'
+      },
+      'equipamiento y gear bis': { en: 'Gearing & BiS Gear', pt: 'Equipamento e Gear BiS' },
+      'optimiza tu item level con piezas de las fuentes más altas del juego: míticas altas, bandas y delves t8.': {
+        en: 'Optimize your item level with pieces from the highest endgame sources: high M+, Raids, and Tier 8 Delves.',
+        pt: 'Otimize seu nível de item com peças das fontes mais altas do jogo: Míticas altas, Raides e Delves T8.'
+      },
+      'descripción': { en: 'Description', pt: 'Descrição' },
+      'descripcion': { en: 'Description', pt: 'Descrição' },
+      '¿qué obtienes con nuestro servicio de míticas+?:': { en: 'What do you get with our Mythic+ service?:', pt: 'O que você ganha com nosso serviço de Míticas+?:' },
+      'compra boost de mazmorras míticas+ de wow midnight y completa piedras angulares de alto nivel con un equipo profesional sin lidiar con grupos aleatorios o piedras fallidas. aumenta tu puntuación m+, equipa a tu personaje y asegura recompensas semanales valiosas en la gran cámara.': {
+        en: 'Buy WoW Midnight Mythic+ dungeon boost and complete high-level keystones with a pro team without pug frustration or depleted keys. Boost your M+ score, gear your character, and secure valuable weekly Grand Vault rewards.',
+        pt: 'Compre boost de masmorras Míticas+ de WoW Midnight e complete pedras de alto nível com uma equipe profissional sem lidar com grupos aleatórios ou pedras quebradas. Aumente seu score M+, equipe seu personagem e garanta recompensas valiosas no Grande Cofre semanal.'
+      },
+      'runs de mazmorras míticas+ de la temporada oficial midnight con los mejores equipos de boosters de élite (master boosters).': {
+        en: 'Midnight official season Mythic+ dungeon runs with top elite booster teams (Master Boosters).',
+        pt: 'Runs de masmorras Míticas+ da temporada oficial Midnight com as melhores equipes de boosters de elite (Master Boosters).'
+      },
+      'equipo garantizado de hasta 318 ilvl en la gran cámara semanal para acelerar tu progresión.': {
+        en: 'Guaranteed gear up to 318 ilvl in the weekly Grand Vault to fast-track your progression.',
+        pt: 'Equipamento garantido de até 318 ilvl no Grande Cofre semanal para acelerar sua progressão.'
+      },
+      'probabilidad de obtener botín de 311 ilvl en el cofre al finalizar la mazmorra con tus traders de armadura.': {
+        en: 'Chance of 311 ilvl end-of-dungeon chest loot with your armor traders.',
+        pt: 'Chance de saque de 311 ilvl no baú final da masmorra com seus traders de armadura.'
+      },
+      'temporizador garantizado gratis (in-time) para piedras angulares de hasta nivel +13.': {
+        en: 'FREE guaranteed timer (In-Time) for keystones up to level +13.',
+        pt: 'Temporizador garantido GRÁTIS (In-Time) para pedras-chave até o nível +13.'
+      },
+      'añadir a favoritos': { en: 'Add to Favorites', pt: 'Adicionar aos Favoritos' },
+      'anadir a favoritos': { en: 'Add to Favorites', pt: 'Adicionar aos Favoritos' },
+      'mazmorras': { en: 'Dungeons', pt: 'Masmorras' },
+      'inicio estimado': { en: 'Estimated Start', pt: 'Início Estimado' },
+      'tiempo de ejecución': { en: 'Execution Time', pt: 'Tempo de Execução' },
+      'tiempo de ejecucion': { en: 'Execution Time', pt: 'Tempo de Execução' },
+      'ssl seguro': { en: 'Secure SSL', pt: 'SSL Seguro' },
+      'más opiniones ▾': { en: 'More Reviews ▾', pt: 'Mais Avaliações ▾' },
+      'mas opiniones ▾': { en: 'More Reviews ▾', pt: 'Mais Avaliações ▾' },
+      'aplicar código de descuento': { en: 'Apply Discount Code', pt: 'Aplicar Código de Desconto' },
+      'aplicar codigo de descuento': { en: 'Apply Discount Code', pt: 'Aplicar Código de Desconto' },
+      'aplicar': { en: 'Apply', pt: 'Aplicar' },
+      'añade 1 run más para 5% de descuento': { en: 'Add 1 more run for 5% discount', pt: 'Adicione mais 1 run para 5% de desconto' },
+      'anade 1 run mas para 5% de descuento': { en: 'Add 1 more run for 5% discount', pt: 'Adicione mais 1 run para 5% de desconto' },
+      '450 reinos encontrados': { en: '450 realms found', pt: '450 reinos encontrados' },
+      'selecciona uno': { en: 'Select one', pt: 'Selecione um' },
+      'ej: shadow': { en: 'Ex: Shadow', pt: 'Ex: Shadow' },
+      "buscar reino (ej: ragnaros, quel'thalas, whitemane, forever...)": { en: "Search realm (e.g. Ragnaros, Quel'Thalas, Whitemane, Forever...)", pt: "Buscar reino (ex: Ragnaros, Quel'Thalas, Whitemane, Forever...)" },
+      'timer garantizado (in-time)': { en: 'Beat the Timer (In-Time)', pt: 'No tempo garantido (In-Time)' },
+      'sin traders (+0$)': { en: 'No traders (+$0)', pt: 'Sem traders (+R$0)' },
+      '1 trader (+10$)': { en: '1 Trader (+$10)', pt: '1 Trader (+R$10)' },
+      '2 traders (+18$)': { en: '2 Traders (+$18)', pt: '2 Traders (+R$18)' },
+      '3 traders (+25$)': { en: '3 Traders (+$25)', pt: '3 Traders (+R$25)' },
+      'nivel de piedra angular (keystone):': { en: 'Keystone Level:', pt: 'Nível da Pedra Angular (Keystone):' },
+      'mazmorra específica:': { en: 'Specific Dungeon:', pt: 'Masmorra Específica:' },
+      'mazmorra especifica:': { en: 'Specific Dungeon:', pt: 'Masmorra Específica:' },
+      'traders de armadura:': { en: 'Armor Traders:', pt: 'Traders de Armadura:' },
+      'acceso con discord': { en: 'Discord Sign In', pt: 'Entrar com Discord' },
+      'sincronizado con el bot oficial': { en: 'Synced with Official Bot', pt: 'Sincronizado com o Bot Oficial' },
+      'mythic progression bot oficial': { en: 'Mythic Progression Official Bot', pt: 'Mythic Progression Bot Oficial' },
+      'en línea': { en: 'Online', pt: 'Online' },
+      'en linea': { en: 'Online', pt: 'Online' },
+      'verificación oficial • conexión cifrada oauth2': { en: 'Official Verification • OAuth2 Encrypted Connection', pt: 'Verificação Oficial • Conexão Criptografada OAuth2' },
+      'verificacion oficial • conexion cifrada oauth2': { en: 'Official Verification • OAuth2 Encrypted Connection', pt: 'Verificação Oficial • Conexão Criptografada OAuth2' },
+      'iniciar sesión con discord': { en: 'Sign In with Discord', pt: 'Entrar com Discord' },
+      'iniciar sesion con discord': { en: 'Sign In with Discord', pt: 'Entrar com Discord' },
+      'conexión oauth2 segura. reconoce automáticamente tu rango oficial.': { en: 'Secure OAuth2 connection. Automatically detects your official rank.', pt: 'Conexão OAuth2 segura. Reconhece automaticamente seu cargo oficial.' },
+      'conexion oauth2 segura. reconoce automaticamente tu rango oficial.': { en: 'Secure OAuth2 connection. Automatically detects your official rank.', pt: 'Conexão OAuth2 segura. Reconhece automaticamente seu cargo oficial.' },
+      'o ingresa manualmente': { en: 'Or enter manually', pt: 'Ou entre manualmente' },
+      'tu discord id, tag o usuario:': { en: 'Your Discord ID, Tag or Username:', pt: 'Seu Discord ID, Tag ou Usuário:' },
+      'entrar': { en: 'Enter', pt: 'Entrar' },
+      'acceso protegido para clientes y boosters autorizados.': { en: 'Protected access for authorized Clients and Boosters.', pt: 'Acesso protegido para Clientes e Boosters autorizados.' },
+      'bienvenido,': { en: 'Welcome,', pt: 'Bem-vindo,' },
+      'gestiona tus pedidos activos, comunícate con tu booster y actualiza tus datos.': { en: 'Manage active orders, communicate with your booster, and update your profile.', pt: 'Gerencie seus pedidos ativos, converse com seu booster e atualize seus dados.' },
+      'tus pedidos en curso': { en: 'Your Active Orders', pt: 'Seus Pedidos em Andamento' },
+      'haz clic en "chat con el booster" para hablar directamente con el jugador profesional asignado a tu pedido.': { en: 'Click "Chat with Booster" to speak directly with the pro player assigned to your order.', pt: 'Clique em "Chat com o Booster" para falar diretamente com o jogador profissional do seu pedido.' },
+      'nuevo servicio': { en: 'New Service', pt: 'Novo Serviço' },
+      'configuración de cuenta': { en: 'Account Settings', pt: 'Configurações de Conta' },
+      'configuracion de cuenta': { en: 'Account Settings', pt: 'Configurações de Conta' },
+      'billetera / pagos': { en: 'Wallet / Payouts', pt: 'Carteira / Pagamentos' },
+      'mi perfil pro': { en: 'My Pro Profile', pt: 'Meu Perfil Pro' },
+      'ver tienda con pro': { en: 'View Store as Pro', pt: 'Ver Loja como Pro' },
+      'bolsa de pedidos (find orders)': { en: 'Order Board (Find Orders)', pt: 'Mural de Pedidos (Find Orders)' },
+      'toma órdenes al 30% base o puja en subasta hasta el límite del 50%.': { en: 'Claim orders at 30% base or bid in auction up to 50% max.', pt: 'Pegue pedidos a 30% base ou dê lances no leilão até o limite de 50%.' },
+      'cargando...': { en: 'Loading...', pt: 'Carregando...' },
+      'self-play (juegas tú)': { en: 'Self-play (you play)', pt: 'Self-play (você joga)' },
+      'piloted (juega un pro)': { en: 'Piloted (pro plays)', pt: 'Pilotado (um pro joga)' },
+      'piloted (juega un pro con vpn)': { en: 'Piloted (pro plays with VPN)', pt: 'Pilotado (um pro joga com VPN)' },
+      'self-play (juegas tú con la hermandad)': { en: 'Self-play (play with guild)', pt: 'Self-play (você joga com a guilda)' },
+      'piloted (vpn de tu ciudad)': { en: 'Piloted (your city VPN)', pt: 'Pilotado (VPN da sua cidade)' },
+      'self-play (juegas tú con nuestro pro)': { en: 'Self-play (play with our pro)', pt: 'Self-play (você joga com nosso pro)' },
+      'piloted (vpn de tu país)': { en: 'Piloted (your country VPN)', pt: 'Pilotado (VPN do seu país)' },
+      'self-play (juegas en grupo con pros)': { en: 'Self-play (play with pros)', pt: 'Self-play (você joga em grupo com pros)' },
+      'piloted (vpn)': { en: 'Piloted (VPN)', pt: 'Pilotado (VPN)' },
+      'not required': { en: 'Not Required', pt: 'Não Necessário' }
     };
 
     const isProtected = (el) => {
@@ -7455,7 +7568,7 @@ class MythicApp {
         if (isProtected(el)) return;
         el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
       });
-      this.triggerGoogleTranslate('es');
+      this.cleanupGoogleTranslate();
       return;
     }
 
@@ -7471,8 +7584,8 @@ class MythicApp {
       }
     });
 
-    // Translate DOM Elements (leaf elements, headers, paragraphs, buttons, divs)
-    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong, div');
+    // Translate DOM Elements (leaf elements, headers, paragraphs, buttons, divs, options, etc.)
+    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong, div, option, li, th, td');
     elements.forEach(el => {
       if (isProtected(el)) return;
 
@@ -7502,97 +7615,8 @@ class MythicApp {
       }
     });
 
-    // Deep translation bridge via Google Translate (without hiding buttons)
-    this.triggerGoogleTranslate(lang);
-  }
-
-  triggerGoogleTranslate(lang) {
-    if (typeof window === 'undefined') return;
-
-    if (!window.googleTranslateElementInit) {
-      window.googleTranslateElementInit = function() {
-        try {
-          new window.google.translate.TranslateElement({
-            pageLanguage: 'es',
-            includedLanguages: 'en,es,pt',
-            autoDisplay: false
-          }, 'google_translate_element');
-        } catch (e) {
-          console.debug('TranslateElement init notice:', e);
-        }
-      };
-
-      if (!document.getElementById('google_translate_element')) {
-        const div = document.createElement('div');
-        div.id = 'google_translate_element';
-        div.style.display = 'none';
-        document.body.appendChild(div);
-
-        // Safe styles to hide top banner WITHOUT hiding skiptranslate elements
-        const style = document.createElement('style');
-        style.id = 'mp-gt-custom-styles';
-        style.innerHTML = `
-          .goog-te-banner-frame.skiptranslate,
-          .goog-te-banner-frame,
-          iframe.goog-te-banner-frame,
-          #goog-gt-tt,
-          .goog-te-balloon-frame {
-            display: none !important;
-          }
-          body {
-            top: 0px !important;
-          }
-          .goog-tooltip, .goog-tooltip:hover {
-            display: none !important;
-          }
-          .goog-text-highlight {
-            background-color: transparent !important;
-            box-shadow: none !important;
-          }
-        `;
-        document.head.appendChild(style);
-
-        const s = document.createElement('script');
-        s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-        s.async = true;
-        document.head.appendChild(s);
-      }
-    }
-
-    const fireChange = () => {
-      const combo = document.querySelector('.goog-te-combo');
-      if (combo) {
-        if (combo.value !== lang) {
-          combo.value = lang;
-          combo.dispatchEvent(new Event('change'));
-        }
-      }
-    };
-
-    if (lang === 'es') {
-      try {
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        if (window.location && window.location.hostname) {
-          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + window.location.hostname + '; path=/;';
-          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + window.location.hostname + '; path=/;';
-        }
-      } catch (e) {}
-      fireChange();
-      setTimeout(fireChange, 300);
-      return;
-    }
-
-    try {
-      document.cookie = `googtrans=/es/${lang}; path=/;`;
-      if (window.location && window.location.hostname) {
-        document.cookie = `googtrans=/es/${lang}; domain=${window.location.hostname}; path=/;`;
-      }
-    } catch (e) {}
-
-    fireChange();
-    setTimeout(fireChange, 300);
-    setTimeout(fireChange, 800);
-    setTimeout(fireChange, 1500);
+    // Clean up any stray Google Translate frames/cookies
+    this.cleanupGoogleTranslate();
   }
 
   cleanupGoogleTranslate() {
@@ -7617,13 +7641,26 @@ class MythicApp {
 
       const el = document.getElementById('google_translate_element');
       if (el) el.remove();
-      const frames = document.querySelectorAll('.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, iframe.goog-te-menu-frame');
-      frames.forEach(f => f.remove());
+      const style = document.getElementById('mp-gt-custom-styles');
+      if (style) style.remove();
+
+      document.querySelectorAll('script[src*="translate.google.com"], script[src*="element.js"]').forEach(s => s.remove());
+
+      const frames = document.querySelectorAll('.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, iframe.goog-te-menu-frame, .VIpgJd-ZVi9od-ORHb-OJyqT, .skiptranslate');
+      frames.forEach(f => {
+        if (f.tagName.toLowerCase() === 'iframe' || f.id === 'goog-gt-tt' || f.classList.contains('goog-te-banner-frame') || f.classList.contains('VIpgJd-ZVi9od-ORHb-OJyqT') || f.classList.contains('goog-te-balloon-frame')) {
+          f.remove();
+        }
+      });
 
       const body = document.body;
       if (body) {
         body.classList.remove('translated-ltr', 'translated-rtl');
         body.style.top = '0px';
+        body.style.position = '';
+      }
+      if (document.documentElement) {
+        document.documentElement.classList.remove('translated-ltr', 'translated-rtl');
       }
     } catch (e) {}
   }
