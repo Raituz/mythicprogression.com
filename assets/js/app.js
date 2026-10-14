@@ -1649,6 +1649,25 @@ class MythicApp {
     this.renderCartItems();
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+
+    // Backdrop click listener to close cart
+    if (!modal._hasBackdropClick) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closeCartModal();
+      });
+      modal._hasBackdropClick = true;
+    }
+
+    // Hide floating live chat widget launcher & window so they never overlap the checkout button
+    const chatLauncher = document.getElementById('mp-live-chat-launcher');
+    if (chatLauncher) {
+      chatLauncher.classList.add('hidden');
+      chatLauncher.classList.remove('flex');
+    }
+    const chatWindow = document.getElementById('mp-live-chat-window');
+    if (chatWindow) {
+      chatWindow.classList.add('hidden');
+    }
   }
 
   closeCartModal() {
@@ -1656,6 +1675,13 @@ class MythicApp {
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+    }
+
+    // Restore floating live chat launcher when cart drawer is closed
+    const chatLauncher = document.getElementById('mp-live-chat-launcher');
+    if (chatLauncher) {
+      chatLauncher.classList.remove('hidden');
+      chatLauncher.classList.add('flex');
     }
   }
 
@@ -7864,23 +7890,32 @@ class MythicApp {
         : (this.currentUser.username ? this.currentUser.username[0].toUpperCase() : 'A');
 
       userBadge.innerHTML = `
-        <div class="flex items-center gap-2.5">
-          <a href="admin" id="header-admin-btn" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2a170d] hover:bg-[#3d1f11] text-[#fcefc2] hover:text-white border border-[#ee914f] text-xs font-bold shadow-[0_0_15px_rgba(238,145,79,0.35)] transition-all">
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <a href="admin" id="header-admin-btn" title="Panel de Administración" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#2a170d] hover:bg-[#3d1f11] text-[#fcefc2] hover:text-white border border-[#ee914f] text-xs font-bold shadow-[0_0_15px_rgba(238,145,79,0.35)] transition-all">
             <i class="fa-solid fa-shield-halved text-[#ee914f]"></i>
-            <span>Panel Admin</span>
+            <span class="hidden sm:inline">Panel Admin</span>
+            <span class="sm:hidden">Admin</span>
           </a>
-          <a href="pro" title="Ir al Tablón de Boosters" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#18110b] hover:bg-[#251a11] text-stone-300 hover:text-white border border-stone-800 text-xs font-semibold transition-all">
+          <a href="pro" title="Ir al Tablón de Boosters (Portal Pro)" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#18110b] hover:bg-[#251a11] text-stone-300 hover:text-white border border-stone-800 text-xs font-semibold transition-all">
             <i class="fa-solid fa-bolt text-[#ee914f] text-[11px]"></i>
-            <span>Portal Pro</span>
+            <span class="hidden sm:inline">Portal Pro</span>
+            <span class="sm:hidden">Pro</span>
           </a>
-          <div class="flex items-center gap-2 bg-[#17120e] px-3.5 py-1.5 rounded-full border border-stone-800">
-            <div class="w-6 h-6 rounded-full bg-[#351c0f] border border-[#ee914f] flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0">
-              ${avatarHtml}
-            </div>
-            <div class="hidden sm:block">
-              <div class="text-xs font-bold text-white leading-none">${this.currentUser.username}</div>
-              <span class="text-[9px] text-[#ee914f] leading-none">${this.currentUser.role || 'Master Booster & Admin'}</span>
-            </div>
+          <a href="client-profile" title="Ver Mis Pedidos como Cliente" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#18110b] hover:bg-[#251a11] text-[#eedaa2] hover:text-white border border-stone-800 text-xs font-semibold transition-all">
+            <i class="fa-solid fa-receipt text-[#ee914f] text-[11px]"></i>
+            <span class="hidden sm:inline">Mis Pedidos</span>
+            <span class="sm:hidden">Pedidos</span>
+          </a>
+          <div class="flex items-center gap-1.5 bg-[#17120e] hover:bg-[#241a13] px-2.5 sm:px-3.5 py-1.5 rounded-full border border-stone-800 hover:border-[#ee914f]/50 transition-all">
+            <a href="admin" title="Panel Admin" class="flex items-center gap-2 text-left hover:opacity-90 transition-opacity">
+              <div class="w-6 h-6 rounded-full bg-[#351c0f] border border-[#ee914f] flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0">
+                ${avatarHtml}
+              </div>
+              <div class="flex flex-col text-left">
+                <div class="text-xs font-bold text-white leading-none">${this.currentUser.username}</div>
+                <span class="text-[9px] text-[#ee914f] leading-none mt-0.5">${this.currentUser.role || 'Staff / Admin'}</span>
+              </div>
+            </a>
             <button onclick="app.logout()" title="Cerrar Sesión" class="text-stone-400 hover:text-red-400 text-xs p-1.5 rounded-lg hover:bg-stone-900 transition-all cursor-pointer ml-1">
               <i class="fa-solid fa-right-from-bracket"></i>
             </button>
@@ -7888,20 +7923,23 @@ class MythicApp {
         </div>
       `;
       return;
-    } else if (this.currentUser.type === 'booster') {
+    } else if (this.currentUser.type === 'booster' || this.isBooster()) {
       const avatarSrc = this.currentUser.avatar || localStorage.getItem('mp_discord_avatar_backup') || '';
       const avatarHtml = avatarSrc 
         ? `<img src="${avatarSrc}" alt="Avatar" class="w-full h-full object-cover rounded-full" onerror="this.parentElement.textContent='${(this.currentUser.username || 'B')[0].toUpperCase()}'">`
         : (this.currentUser.username ? this.currentUser.username[0].toUpperCase() : 'B');
       userBadge.innerHTML = `
-        <div class="flex items-center gap-2 bg-[#17120e] px-3 py-1.5 rounded-full border border-stone-800">
-          <a href="pro" class="flex items-center gap-2 text-left hover:opacity-90 transition-opacity">
-            <div class="w-6 h-6 rounded-full bg-[#2a1e16] border border-[#ee914f]/40 flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 bg-[#17120e] hover:bg-[#20102b] px-2.5 sm:px-3.5 py-1.5 rounded-full border border-stone-800 hover:border-purple-500/50 transition-all">
+          <a href="pro" id="header-user-booster-link" title="Ir al Portal Pro (/pro)" class="flex items-center gap-2 text-left hover:opacity-90 transition-opacity">
+            <div class="w-7 h-7 rounded-full bg-[#2a1e16] border border-[#ee914f]/40 flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0 shadow-sm">
               ${avatarHtml}
             </div>
-            <div class="hidden sm:block">
-              <div class="text-xs font-bold text-white leading-none">${this.currentUser.username}</div>
-              <span class="text-[9px] text-[#ee914f] leading-none">Portal Pro (/pro)</span>
+            <div class="flex flex-col text-left">
+              <span class="text-xs font-bold text-white leading-tight flex items-center gap-1">
+                <span>${this.currentUser.username}</span>
+                <i class="fa-solid fa-chevron-right text-[8px] text-[#ee914f]"></i>
+              </span>
+              <span class="text-[9px] text-[#ee914f] leading-none font-medium mt-0.5">Portal Pro (/pro)</span>
             </div>
           </a>
           <button onclick="app.logout()" title="Cerrar Sesión" class="text-stone-400 hover:text-red-400 text-xs p-1.5 rounded-lg hover:bg-stone-900 transition-all cursor-pointer ml-1">
@@ -7910,19 +7948,23 @@ class MythicApp {
         </div>
       `;
     } else {
+      // Cliente normal: Dándole clic al nombre lleva directamente a client-profile
       const avatarSrc = this.currentUser.avatar || localStorage.getItem('mp_discord_avatar_backup') || '';
       const avatarHtml = avatarSrc
         ? `<img src="${avatarSrc}" alt="Avatar" class="w-full h-full object-cover rounded-full" onerror="this.parentElement.textContent='${(this.currentUser.username || 'C')[0].toUpperCase()}'">`
         : (this.currentUser.username ? this.currentUser.username[0].toUpperCase() : 'C');
       userBadge.innerHTML = `
-        <div class="flex items-center gap-2 bg-[#17120e] px-3 py-1.5 rounded-full border border-stone-800">
-          <a href="client-profile" class="flex items-center gap-2 text-left hover:opacity-80 transition-opacity">
-            <div class="w-6 h-6 rounded-full bg-[#241a13] border border-[#ee914f]/30 flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 bg-[#17120e] hover:bg-[#221811] px-2.5 sm:px-3.5 py-1.5 rounded-full border border-stone-800 hover:border-[#ee914f]/50 transition-all">
+          <a href="client-profile" id="header-user-client-link" title="Ir a Mi Perfil / Mis Pedidos" class="flex items-center gap-2 text-left hover:opacity-90 transition-opacity">
+            <div class="w-7 h-7 rounded-full bg-[#241a13] border border-[#ee914f]/40 flex items-center justify-center text-xs font-bold text-[#fcefc2] overflow-hidden shrink-0 shadow-sm">
               ${avatarHtml}
             </div>
-            <div class="hidden sm:block">
-              <div class="text-xs font-bold text-white leading-none">${this.currentUser.username}</div>
-              <span class="text-[9px] text-[#eedaa2] leading-none">Mi Perfil / Pedidos</span>
+            <div class="flex flex-col text-left">
+              <span class="text-xs font-bold text-white leading-tight flex items-center gap-1">
+                <span>${this.currentUser.username}</span>
+                <i class="fa-solid fa-chevron-right text-[8px] text-[#ee914f]"></i>
+              </span>
+              <span class="text-[9px] text-[#eedaa2] leading-none font-medium mt-0.5">Mi Perfil / Pedidos</span>
             </div>
           </a>
           <button onclick="app.logout()" title="Cerrar Sesión" class="text-stone-400 hover:text-red-400 text-xs p-1.5 rounded-lg hover:bg-stone-900 transition-all cursor-pointer ml-1">
