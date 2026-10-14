@@ -6406,36 +6406,41 @@ class MythicApp {
             </div>
             ${o.assignedBooster ? `<div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>` : ''}
           ` : `
-            <div class="flex flex-col gap-1">
-              <select onchange="app.adminAssignBoosterDropdown('${o.id}', this.value)" 
-                      class="w-full bg-[#140827] border ${o.assignedBooster ? 'border-emerald-600/60 text-emerald-300' : 'border-stone-700/80 text-stone-300'} rounded-lg px-2 py-1 text-xs font-semibold focus:border-[#a855f7] outline-none cursor-pointer hover:bg-[#1d0d38] transition-all">
-                <option value="" ${!o.assignedBooster ? 'selected' : ''}>-- Sin Asignar (En Bolsa) --</option>
-                ${(this.boosters || []).map(b => {
-                  const bName = b.username || b.discord_id || 'Booster';
-                  const isSelected = o.assignedBooster && (
-                    (o.assignedBooster.username && o.assignedBooster.username.toLowerCase() === bName.toLowerCase()) ||
-                    (o.assignedBooster.discordId && b.discord_id && String(o.assignedBooster.discordId) === String(b.discord_id))
-                  );
-                  const tag = b.role ? ` [${b.role}]` : '';
-                  return `<option value="${b.discord_id || bName}" ${isSelected ? 'selected' : ''}>⚡ ${bName}${tag}</option>`;
-                }).join('')}
-              </select>
+            <div class="flex flex-col gap-1.5">
               ${o.assignedBooster ? `
-                <div class="flex items-center justify-between text-[10px] px-0.5">
-                  <span class="text-stone-400">Pago:</span>
-                  <span class="font-mono-gaming text-[#a855f7] font-bold">$${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</span>
+                <div class="flex items-center justify-between gap-1.5 bg-emerald-950/70 border border-emerald-500/60 rounded-xl px-2.5 py-1.5 shadow-sm">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-xs shrink-0"></i>
+                    <span class="text-xs font-bold text-emerald-200 truncate">${o.assignedBooster.username || 'Booster Asignado'}</span>
+                  </div>
+                  <button onclick="app.adminUnassignBoosterOrder('${o.id}')" title="Quitar asignación y devolver a bolsa" class="text-rose-400 hover:text-rose-200 hover:bg-rose-950/80 p-1 rounded-lg cursor-pointer transition-all shrink-0">
+                    <i class="fa-solid fa-user-xmark text-xs"></i>
+                  </button>
+                </div>
+                <div class="flex items-center justify-between text-[10px] px-1">
+                  <span class="text-stone-400">Pago acordado:</span>
+                  <span class="font-mono-gaming text-emerald-400 font-bold">$${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</span>
                 </div>
               ` : `
+                <select onchange="app.adminAssignBoosterDropdown('${o.id}', this.value)" 
+                        class="w-full bg-[#140827] border border-stone-700/80 text-stone-300 rounded-lg px-2 py-1 text-xs font-semibold focus:border-[#a855f7] outline-none cursor-pointer hover:bg-[#1d0d38] transition-all">
+                  <option value="" selected>-- Sin Asignar (En Bolsa) --</option>
+                  ${(this.boosters || []).map(b => {
+                    const bName = b.username || b.discord_id || 'Booster';
+                    const tag = b.role ? ` [${b.role}]` : '';
+                    return `<option value="${b.discord_id || bName}">⚡ ${bName}${tag}</option>`;
+                  }).join('')}
+                </select>
                 <span class="text-[10px] text-stone-500 italic px-0.5">Visible en Bolsa de Pedidos</span>
+                ${bidsCount > 0 && o.status !== 'COMPLETED' && o.status !== 'IN_PROGRESS' ? `
+                  <div class="flex items-center justify-between bg-amber-950/70 border border-amber-600/60 rounded-lg px-1.5 py-0.5 text-[10px]">
+                    <span class="text-amber-300 font-bold flex items-center gap-1">
+                      <i class="fa-solid fa-crown text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} ($${Number(bestBid.bidAmount || 0).toFixed(2)})
+                    </span>
+                    <button onclick="app.openAdminOrderModal('${o.id}')" class="text-[#fcefc2] underline hover:text-white font-bold ml-1 cursor-pointer">Ver</button>
+                  </div>
+                ` : ''}
               `}
-              ${bidsCount > 0 && !o.assignedBooster && o.status !== 'COMPLETED' && o.status !== 'IN_PROGRESS' ? `
-                <div class="flex items-center justify-between bg-amber-950/70 border border-amber-600/60 rounded-lg px-1.5 py-0.5 text-[10px]">
-                  <span class="text-amber-300 font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-crown text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} ($${Number(bestBid.bidAmount || 0).toFixed(2)})
-                  </span>
-                  <button onclick="app.openAdminOrderModal('${o.id}')" class="text-[#fcefc2] underline hover:text-white font-bold ml-1 cursor-pointer">Ver</button>
-                </div>
-              ` : ''}
             </div>
           `}
         </td>
@@ -6671,6 +6676,24 @@ class MythicApp {
     }
   }
 
+  closeAdminOrderModal() {
+    const modal = document.getElementById('admin-order-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modal.style.display = 'none';
+    }
+  }
+
+  closeAdminClientModal() {
+    const modal = document.getElementById('admin-client-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modal.style.display = 'none';
+    }
+  }
+
   adminAssignBoosterDropdown(orderId, boosterIdOrUsername) {
     if (!this.checkAdminPermission()) return;
     const o = (this.orders || []).find(x => x.id === orderId);
@@ -6710,6 +6733,16 @@ class MythicApp {
       timestamp: new Date().toISOString()
     });
 
+    if (this.db) {
+      this.db.collection('orders').doc(o.id).set({
+        status: 'IN_PROGRESS',
+        assignedBooster: o.assignedBooster,
+        boosterPayout: o.assignedBooster.payout,
+        chat: o.chat,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore direct write notice:', err));
+    }
+
     this.saveOrders();
     this.renderAdminOverview();
     this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
@@ -6727,30 +6760,42 @@ class MythicApp {
     this.showToast(`Orden #${o.id} asignada con éxito a ${bName}.`, 'success');
   }
 
-  adminAcceptBid(orderId, boosterIdOrUsername, acceptedAmount) {
+  adminAcceptBid(orderId, boosterIdOrDiscordId, boosterNameOrAmount, maybeAmount) {
     if (!this.checkAdminPermission()) return;
 
     const order = (this.orders || []).find(o => o.id === orderId);
     if (!order) return;
 
+    let boosterDiscordId = '';
+    let boosterName = '';
+    let payout = 0;
+
+    if (typeof maybeAmount !== 'undefined') {
+      boosterDiscordId = String(boosterIdOrDiscordId || '');
+      boosterName = String(boosterNameOrAmount || '');
+      payout = Number(maybeAmount);
+    } else {
+      payout = Number(boosterNameOrAmount);
+      boosterDiscordId = String(boosterIdOrDiscordId || '');
+      boosterName = String(boosterIdOrDiscordId || '');
+    }
+
     const booster = (this.boosters || []).find(b => 
-      (b.discord_id && String(b.discord_id) === String(boosterIdOrUsername)) ||
-      (b.username && b.username.toLowerCase() === String(boosterIdOrUsername).toLowerCase()) ||
-      (b.id && String(b.id) === String(boosterIdOrUsername))
+      (boosterDiscordId && b.discord_id && String(b.discord_id) === String(boosterDiscordId)) ||
+      (boosterName && b.username && b.username.toLowerCase() === boosterName.toLowerCase()) ||
+      (boosterDiscordId && b.username && b.username.toLowerCase() === boosterDiscordId.toLowerCase())
     );
 
-    const bName = booster ? (booster.username || booster.discord_id) : String(boosterIdOrUsername);
-    const bDiscord = booster ? (booster.discord_id || booster.username) : String(boosterIdOrUsername);
-    const payout = Number(acceptedAmount);
+    const bName = booster ? (booster.username || boosterName) : (boosterName || boosterDiscordId || 'Booster');
+    const bDiscord = booster ? (booster.discord_id || boosterDiscordId) : boosterDiscordId;
 
     const confirmed = confirm(`¿Deseas aceptar la oferta de $${payout.toFixed(2)} del booster "${bName}" y asignarle la orden #${order.id}?`);
     if (!confirmed) return;
 
     order.assignedBooster = {
       username: bName,
-      discordId: bDiscord,
-      payout: payout,
-      id: booster ? booster.id : null
+      discordId: bDiscord || '',
+      payout: payout
     };
     order.boosterPayout = payout;
     if (order.totalPrice && order.totalPrice > 0) {
@@ -6760,10 +6805,10 @@ class MythicApp {
     order.status = 'IN_PROGRESS';
     order.acceptedBid = {
       boosterName: bName,
-      boosterDiscordId: bDiscord,
+      boosterDiscordId: bDiscord || '',
       bidAmount: payout,
       acceptedAt: new Date().toISOString(),
-      acceptedBy: (this.currentUser && this.currentUser.username) || 'Staff'
+      acceptedBy: (this.currentUser && (this.currentUser.username || this.currentUser.name)) || 'Staff'
     };
 
     if (!order.chat) order.chat = [];
@@ -6774,6 +6819,28 @@ class MythicApp {
       timestamp: new Date().toISOString()
     });
 
+    // 1. Direct Firestore write for instant real-time synchronization with Discord bot and web clients
+    if (this.db) {
+      const updateData = {
+        status: 'IN_PROGRESS',
+        assignedBooster: {
+          username: bName,
+          discordId: bDiscord || '',
+          payout: payout
+        },
+        boosterPayout: payout,
+        boosterPayoutRate: order.boosterPayoutRate || 30,
+        companyShare: order.companyShare || 0,
+        acceptedBid: order.acceptedBid,
+        chat: order.chat,
+        updatedAt: new Date().toISOString()
+      };
+      this.db.collection('orders').doc(order.id).set(updateData, { merge: true })
+        .then(() => console.log(`🔥 [Firestore] Orden #${order.id} asignada con éxito a ${bName}`))
+        .catch(e => console.warn('Firestore direct write notice:', e));
+    }
+
+    // 2. Persist in local storage
     this.saveOrders();
 
     if (this.liveChatChannel) {
@@ -6788,8 +6855,8 @@ class MythicApp {
 
     this.showToast(`¡Oferta aceptada! Orden #${order.id} asignada a ${bName} por $${payout.toFixed(2)}.`, 'success');
 
-    const modal = document.getElementById('admin-order-modal');
-    if (modal) modal.classList.add('hidden');
+    // 3. Immediately and cleanly close the modal popup
+    this.closeAdminOrderModal();
 
     this.renderAdminOverview();
     if (typeof this.renderAdminOrders === 'function') {
@@ -6854,6 +6921,16 @@ class MythicApp {
       timestamp: new Date().toISOString()
     });
 
+    if (this.db) {
+      this.db.collection('orders').doc(o.id).set({
+        status: 'AVAILABLE',
+        assignedBooster: null,
+        isOnAccount: false,
+        chat: o.chat,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore unassign notice:', err));
+    }
+
     this.saveOrders();
     this.renderAdminOverview();
     this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
@@ -6897,7 +6974,7 @@ class MythicApp {
           <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Auditoría de Orden #${o.id}</h3>
           <span class="text-xs text-[#a855f7]">${o.serviceName}</span>
         </div>
-        <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors">
+        <button onclick="app.closeAdminOrderModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -6924,10 +7001,10 @@ class MythicApp {
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="app.adminApproveOrderCompletion('${o.id}'); document.getElementById('admin-order-modal').classList.add('hidden');" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-md cursor-pointer">
+              <button onclick="app.adminApproveOrderCompletion('${o.id}'); app.closeAdminOrderModal();" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-md cursor-pointer">
                 <i class="fa-solid fa-circle-check"></i> Aprobar y Pagar
               </button>
-              <button onclick="app.adminRejectOrderCompletion('${o.id}'); document.getElementById('admin-order-modal').classList.add('hidden');" class="px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-md cursor-pointer">
+              <button onclick="app.adminRejectOrderCompletion('${o.id}'); app.closeAdminOrderModal();" class="px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-md cursor-pointer">
                 <i class="fa-solid fa-rotate-left"></i> Rechazar
               </button>
             </div>
@@ -6991,7 +7068,7 @@ class MythicApp {
                           <i class="fa-solid fa-check"></i> Asignado
                         </button>
                       ` : `
-                        <button onclick="app.adminAcceptBid('${o.id}', '${b.boosterDiscordId || b.boosterName}', ${b.bidAmount})" 
+                        <button onclick="app.adminAcceptBid('${o.id}', '${b.boosterDiscordId || ''}', '${(b.boosterName || '').replace(/'/g, "\\'")}', ${b.bidAmount})" 
                                 class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
                           <i class="fa-solid fa-circle-check"></i>
                           <span>Aceptar y Asignar</span>
@@ -7045,16 +7122,17 @@ class MythicApp {
 
         <div class="pt-4 border-t border-stone-800 flex items-center justify-between gap-2">
           ${o.assignedBooster && o.status !== 'COMPLETED' ? `
-            <button onclick="app.adminUnassignBoosterOrder('${o.id}'); document.getElementById('admin-order-modal').classList.add('hidden');" class="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/70 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-rose-950/40">
+            <button onclick="app.adminUnassignBoosterOrder('${o.id}'); app.closeAdminOrderModal();" class="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/70 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-rose-950/40">
               <i class="fa-solid fa-user-xmark text-rose-400"></i>
               <span>Quitar Orden al Booster y Devolver a Bolsa</span>
             </button>
           ` : '<div></div>'}
-          <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs cursor-pointer transition-colors">Cerrar</button>
+          <button onclick="app.closeAdminOrderModal()" class="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs cursor-pointer transition-colors">Cerrar</button>
         </div>
       </div>
     `;
 
+    modal.style.display = 'flex';
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
@@ -7344,7 +7422,7 @@ class MythicApp {
             <span class="text-xs text-[#a855f7] font-semibold">${o.cartera} | Fecha: ${o.fecha || 'N/A'}</span>
           </div>
         </div>
-        <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
+        <button onclick="app.closeAdminOrderModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -7445,13 +7523,14 @@ class MythicApp {
         </div>
 
         <div class="pt-4 border-t border-stone-800 flex justify-end gap-2">
-          <button onclick="document.getElementById('admin-order-modal').classList.add('hidden')" class="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs uppercase">
+          <button onclick="app.closeAdminOrderModal()" class="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs uppercase cursor-pointer">
             Cerrar Ficha
           </button>
         </div>
       </div>
     `;
 
+    modal.style.display = 'flex';
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
@@ -7566,7 +7645,7 @@ class MythicApp {
           <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Perfil del Cliente: ${c.username}</h3>
           <span class="text-xs text-[#a855f7]">${c.discordId} | ${c.country}</span>
         </div>
-        <button onclick="document.getElementById('admin-client-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
+        <button onclick="app.closeAdminClientModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -7597,11 +7676,12 @@ class MythicApp {
         </div>
 
         <div class="pt-4 border-t border-stone-800 flex justify-end gap-2">
-          <button onclick="document.getElementById('admin-client-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-stone-900 text-stone-300 font-bold text-xs">Cerrar</button>
+          <button onclick="app.closeAdminClientModal()" class="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs cursor-pointer">Cerrar</button>
         </div>
       </div>
     `;
 
+    modal.style.display = 'flex';
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
