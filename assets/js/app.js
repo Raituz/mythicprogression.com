@@ -5490,15 +5490,37 @@ class MythicApp {
         <td class="py-4 px-5 font-mono-gaming text-[#f3e8ff] font-bold text-sm whitespace-nowrap">
           $${(Number(o.companyShare) || (Number(o.totalPrice) * 0.70)).toFixed(2)}
         </td>
-        <td class="py-4 px-5">
-          ${o.assignedBooster ? `
+        <td class="py-4 px-5 min-w-[210px]">
+          ${o.status === 'COMPLETED' ? `
             <div class="font-semibold text-emerald-300 flex items-center gap-1.5 text-xs">
               <i class="fa-solid fa-bolt text-[11px] text-[#a855f7]"></i>
-              <span>${o.assignedBooster.username || 'Booster'}</span>
+              <span>${o.assignedBooster ? o.assignedBooster.username : 'Sin asignar'}</span>
             </div>
-            <div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>
+            ${o.assignedBooster ? `<div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>` : ''}
           ` : `
-            <span class="text-stone-500 italic text-[11px]">Sin asignar</span>
+            <div class="flex flex-col gap-1.5">
+              <select onchange="app.adminAssignBoosterDropdown('${o.id}', this.value)" 
+                      class="w-full bg-[#140827] border ${o.assignedBooster ? 'border-emerald-600/60 text-emerald-300' : 'border-stone-700/80 text-stone-300'} rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:border-[#a855f7] outline-none cursor-pointer hover:bg-[#1d0d38] transition-all">
+                <option value="" ${!o.assignedBooster ? 'selected' : ''}>-- Sin Asignar (En Bolsa) --</option>
+                ${(this.boosters || []).map(b => {
+                  const bName = b.username || b.discord_id || 'Booster';
+                  const isSelected = o.assignedBooster && (
+                    (o.assignedBooster.username && o.assignedBooster.username.toLowerCase() === bName.toLowerCase()) ||
+                    (o.assignedBooster.discordId && b.discord_id && String(o.assignedBooster.discordId) === String(b.discord_id))
+                  );
+                  const tag = b.role ? ` [${b.role}]` : '';
+                  return `<option value="${b.discord_id || bName}" ${isSelected ? 'selected' : ''}>⚡ ${bName}${tag}</option>`;
+                }).join('')}
+              </select>
+              ${o.assignedBooster ? `
+                <div class="flex items-center justify-between text-[10px] px-1">
+                  <span class="text-stone-400">Pago:</span>
+                  <span class="font-mono-gaming text-[#a855f7] font-bold">$${(Number(o.assignedBooster.payout) || Number(o.boosterPayout)).toFixed(2)} (${o.boosterPayoutRate || 30}%)</span>
+                </div>
+              ` : `
+                <span class="text-[10px] text-stone-500 italic px-1">Visible en Bolsa de Pedidos</span>
+              `}
+            </div>
           `}
         </td>
         <td class="py-4 px-5 text-center whitespace-nowrap">
@@ -5711,6 +5733,62 @@ class MythicApp {
     }
   }
 
+  adminAssignBoosterDropdown(orderId, boosterIdOrUsername) {
+    if (!this.checkAdminPermission()) return;
+    const o = (this.orders || []).find(x => x.id === orderId);
+    if (!o) return;
+
+    if (!boosterIdOrUsername) {
+      this.adminUnassignBoosterOrder(orderId);
+      return;
+    }
+
+    const booster = (this.boosters || []).find(b => 
+      (b.discord_id && String(b.discord_id) === String(boosterIdOrUsername)) ||
+      (b.username && b.username.toLowerCase() === String(boosterIdOrUsername).toLowerCase())
+    );
+
+    const bName = booster ? booster.username : boosterIdOrUsername;
+    const bDiscord = booster ? (booster.discord_id || booster.discordId || '') : '';
+
+    const confirmed = confirm(`¿Deseas asignar manualmente la orden #${o.id} al booster "${bName}"?`);
+    if (!confirmed) {
+      this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+      return;
+    }
+
+    o.status = 'IN_PROGRESS';
+    o.assignedBooster = {
+      username: bName,
+      discordId: bDiscord,
+      payout: o.boosterPayout || (o.totalPrice * 0.3)
+    };
+
+    o.chat = o.chat || [];
+    o.chat.push({
+      sender: 'system',
+      author: 'Administración Mythic',
+      message: `⚡ Asignación Administrativa: La administración ha asignado el pedido #${o.id} al booster ${bName}.`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.saveOrders();
+    this.renderAdminOverview();
+    this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    this.renderProOrderFeed();
+    this.renderProMyOrders();
+    this.renderChatList();
+    if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_CLAIMED', orderId: o.id, booster: bName });
+      } catch (e) {}
+    }
+
+    this.showToast(`Orden #${o.id} asignada con éxito a ${bName}.`, 'success');
+  }
+
   adminUnassignBoosterOrder(orderId) {
     if (!this.checkAdminPermission()) return;
 
@@ -5730,7 +5808,10 @@ class MythicApp {
       `• Se enviará un aviso automático en el chat compartido del pedido notificando que se retiró al booster y se espera un nuevo asignado.`
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+      return;
+    }
 
     // Reset order assignment and status to available pool
     o.status = 'AVAILABLE';
