@@ -258,12 +258,15 @@ class MythicApp {
     if (!this.realms || this.realms.length === 0) {
       this.realms = this.getFallbackRealmsList();
     }
+
+    // 7. Initialize Cloud Realtime Database (Firebase Firestore)
+    this.initFirebase();
   }
 
   // Owner identity. Only granted when the Discord ID comes from a real OAuth handshake.
   static get OWNER_DISCORD_ID() { return '443948776562884620'; }
   static get SESSION_VERSION() { return '3'; }
-  static get ORDERS_VERSION() { return '2.5.7'; }
+  static get ORDERS_VERSION() { return '3.0.0'; }
 
   isVerifiedOwner(user = this.currentUser) {
     if (!user) return false;
@@ -319,6 +322,129 @@ class MythicApp {
 
   saveOrders() {
     localStorage.setItem('mp_orders', JSON.stringify(this.orders));
+    if (this.db && Array.isArray(this.orders)) {
+      this.orders.forEach(o => {
+        if (o && o.id) {
+          this.db.collection('orders').doc(o.id).set(o, { merge: true }).catch(e => console.warn('Firestore order save err:', e));
+        }
+      });
+    }
+  }
+
+  async initFirebase() {
+    try {
+      if (typeof window === 'undefined') return;
+
+      if (!window.firebase || !window.firebase.firestore) {
+        await this.loadExternalScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+        await this.loadExternalScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js');
+      }
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAGtX_PQcju6CW1-_kdRRu1CzphZhZJqi8",
+        authDomain: "mythicprogression-a008b.firebaseapp.com",
+        projectId: "mythicprogression-a008b",
+        storageBucket: "mythicprogression-a008b.firebasestorage.app",
+        messagingSenderId: "726140596173",
+        appId: "1:726140596173:web:08889da65791925b011a84",
+        measurementId: "G-SWFH4KLEB1"
+      };
+
+      if (!window.firebase.apps || !window.firebase.apps.length) {
+        window.firebase.initializeApp(firebaseConfig);
+      }
+      this.db = window.firebase.firestore();
+      console.log('🔥 [Firebase Firestore] Conectado exitosamente en tiempo real a mythicprogression-a008b');
+
+      this.initFirestoreRealtimeSync();
+    } catch (err) {
+      console.warn('Firebase init notice:', err);
+    }
+  }
+
+  loadExternalScript(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) return resolve();
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  initFirestoreRealtimeSync() {
+    if (!this.db) return;
+
+    // 1. Escuchar cambios de Órdenes en tiempo real (Colección 'orders')
+    this.db.collection('orders').onSnapshot((snapshot) => {
+      if (snapshot.empty) {
+        this.seedFirestoreInitialOrders();
+        return;
+      }
+
+      const remoteOrders = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.id) remoteOrders.push(data);
+      });
+
+      if (remoteOrders.length > 0) {
+        remoteOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        this.orders = remoteOrders;
+        localStorage.setItem('mp_orders', JSON.stringify(remoteOrders));
+
+        if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+        if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
+        if (typeof this.renderAdminOverview === 'function') this.renderAdminOverview();
+        if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+        if (typeof this.renderChatList === 'function') this.renderChatList();
+        if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+
+        if (this.activeChatOrderId && this.activeChatOrderId !== 'live_support') {
+          this.openChat(this.activeChatOrderId);
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore orders sync notice:', error);
+    });
+
+    // 2. Escuchar mensajes de Soporte en Vivo Web (Colección 'live_support')
+    this.db.collection('live_support').doc('global_chat').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (Array.isArray(data.messages) && data.messages.length > 0) {
+          this.liveChatMessages = data.messages;
+          localStorage.setItem('mp_live_support_chat', JSON.stringify(data.messages));
+          this.renderLiveChatMessages();
+          if (typeof this.renderChatList === 'function') this.renderChatList();
+          if (this.activeChatOrderId === 'live_support' && typeof this.openAdminLiveSupportChat === 'function') {
+            this.openAdminLiveSupportChat();
+          }
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore live support sync notice:', error);
+    });
+  }
+
+  seedFirestoreInitialOrders() {
+    if (!this.db || !Array.isArray(this.orders) || this.orders.length === 0) return;
+    this.orders.forEach(o => {
+      if (o && o.id) {
+        this.db.collection('orders').doc(o.id).set(o).catch(e => console.warn('Seed order error:', e));
+      }
+    });
+  }
+
+  syncLiveSupportToCloud() {
+    if (this.db) {
+      this.db.collection('live_support').doc('global_chat').set({
+        messages: this.liveChatMessages || [],
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore live chat sync error:', err));
+    }
   }
 
   saveServices() {
@@ -4616,6 +4742,7 @@ class MythicApp {
     stored.push(replyMsg);
     localStorage.setItem('mp_live_support_chat', JSON.stringify(stored));
     this.liveChatMessages = stored;
+    this.syncLiveSupportToCloud();
     input.value = '';
 
     if (this.liveChatChannel) {
@@ -4632,14 +4759,17 @@ class MythicApp {
   clearLiveSupportChat() {
     localStorage.removeItem('mp_live_support_chat');
     this.liveChatMessages = [];
+    if (this.db) {
+      this.db.collection('live_support').doc('global_chat').delete().catch(e => console.warn(e));
+    }
     if (this.liveChatChannel) {
       try {
         this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG' });
       } catch (e) {}
     }
-    this.openAdminLiveSupportChat();
     this.renderLiveChatMessages();
-    this.showToast('Historial de chat preventa limpiado', 'info');
+    this.openAdminLiveSupportChat();
+    this.showToast('Historial de chat en vivo restablecido.', 'info');
   }
 
   // ==========================================
@@ -5512,6 +5642,9 @@ class MythicApp {
     if (confirm(`¿Seguro que quieres eliminar la orden #${orderId}?`)) {
       this.orders = this.orders.filter(x => x.id !== orderId);
       this.saveOrders();
+      if (this.db) {
+        this.db.collection('orders').doc(orderId).delete().catch(e => console.warn('Firestore delete order error:', e));
+      }
       this.renderAdminOverview();
       this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
       this.showToast(`Orden #${orderId} eliminada correctamente.`, 'info');
@@ -7526,6 +7659,7 @@ class MythicApp {
     this.liveChatMessages = this.liveChatMessages || [];
     this.liveChatMessages.push(userMsg);
     localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+    this.syncLiveSupportToCloud();
     if (this.liveChatChannel) {
       try {
         this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG', msg: userMsg });
@@ -7566,6 +7700,7 @@ class MythicApp {
 
       this.liveChatMessages.push(supportMsg);
       localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+      this.syncLiveSupportToCloud();
       if (this.liveChatChannel) {
         try {
           this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG', msg: supportMsg });
