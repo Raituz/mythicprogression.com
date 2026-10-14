@@ -402,6 +402,10 @@
                 <input id="admin-orders-search" type="text" oninput="app.searchAdminOrders(this.value)" placeholder="Buscar orden o cliente..." class="bg-[#14092b] border border-stone-800 focus:border-[#a855f7] rounded-xl px-3.5 py-2 pl-9 text-xs text-white placeholder-stone-500 outline-none w-48 sm:w-56">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 text-xs"></i>
               </div>
+              <button onclick="app.adminResetAllOrdersToAvailable()" class="px-3 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-800/50 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer" title="Restablecer todas las órdenes a disponibles en la nube">
+                <i class="fa-solid fa-rotate"></i>
+                <span class="hidden sm:inline">Liberar Todas</span>
+              </button>
             </div>
           </div>
 

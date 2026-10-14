@@ -3873,11 +3873,49 @@ class MythicApp {
               <button onclick="app.promptBoosterReportCompletion('${order.id}')" class="px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer hover:brightness-110 active:scale-[0.98]">
                 <i class="fa-solid fa-flag-checkered mr-1"></i> Enviar Reporte
               </button>
+              <button onclick="app.boosterReleaseOrder('${order.id}')" class="px-3 py-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-400 hover:text-rose-300 border border-stone-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors" title="Liberar contrato y devolver a la Bolsa de Pedidos">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Liberar</span>
+              </button>
             `)}
           </div>
         </div>
       </div>
     `).join('');
+  }
+
+  boosterReleaseOrder(orderId) {
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    if (confirm(`¿Deseas liberar la orden #${order.id} y devolverla a la Bolsa de Pedidos para que otro booster la tome?`)) {
+      order.status = 'AVAILABLE';
+      order.assignedBooster = null;
+      order.isOnAccount = false;
+      order.completionReport = null;
+
+      order.chat = order.chat || [];
+      order.chat.push({
+        sender: 'system',
+        author: 'Sistema Mythic Progression',
+        message: `⚠️ El booster ${this.currentUser?.username || 'Booster'} ha liberado la orden #${order.id}. Vuelve a estar disponible en la Bolsa de Pedidos.`,
+        timestamp: new Date().toISOString()
+      });
+
+      this.saveOrders();
+      this.renderProOrderFeed();
+      this.renderProMyOrders();
+      this.renderChatList();
+      if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+
+      if (this.liveChatChannel) {
+        try {
+          this.liveChatChannel.postMessage({ type: 'ORDER_UNASSIGNED', orderId: order.id });
+        } catch (e) {}
+      }
+
+      this.showToast(`Has liberado la orden #${order.id}. Devuelta a la Bolsa de Pedidos.`, 'info');
+    }
   }
 
   toggleOnAccount(orderId, isChecked) {
@@ -5526,6 +5564,28 @@ class MythicApp {
 
   searchAdminOrders(val) {
     this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL', val);
+  }
+
+  adminResetAllOrdersToAvailable() {
+    if (!this.checkAdminPermission()) return;
+    if (confirm('¿Restablecer TODAS las órdenes a DISPONIBLES y sin booster asignado en Firebase?')) {
+      (this.orders || []).forEach(o => {
+        if (o) {
+          o.status = 'AVAILABLE';
+          o.assignedBooster = null;
+          o.isOnAccount = false;
+          o.completionReport = null;
+        }
+      });
+      this.saveOrders();
+      this.renderAdminOverview();
+      this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+      this.renderProOrderFeed();
+      this.renderProMyOrders();
+      this.renderChatList();
+      if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+      this.showToast('Todas las órdenes se han restablecido a DISPONIBLES en la nube.', 'success');
+    }
   }
 
   finalizeOrderCompletion(orderId, approverName = 'Administración') {
