@@ -1167,6 +1167,7 @@ class MythicApp {
         bRoles.push('Staff / Admin');
       }
 
+      const isApproved = existingBooster.approved === true;
       this.currentUser = {
         id: 'booster_' + (existingBooster.discord_id || discordId),
         type: isStaffOrAdmin ? 'admin' : 'booster',
@@ -1174,10 +1175,10 @@ class MythicApp {
         discordTag: payload.discordTag || `${username}#0`,
         discordConnected: true,
         username: payload.username || existingBooster.username,
-        role: existingBooster.role || (isStaffOrAdmin ? 'Staff / Admin' : 'Booster'),
+        role: existingBooster.role || (isStaffOrAdmin ? 'Staff / Admin' : (isApproved ? 'Booster' : 'Booster (Pendiente)')),
         roles: bRoles,
         points: existingBooster.points || 0,
-        approved: existingBooster.approved !== false,
+        approved: isApproved,
         balance: existingBooster.balance || 0.00,
         email: payload.email || existingBooster.email || '',
         avatar: payload.avatar || existingBooster.avatar || '',
@@ -1186,10 +1187,14 @@ class MythicApp {
         wallet_id: existingBooster.wallet_id || '',
         isAdmin: isStaffOrAdmin,
         isStaff: isStaffOrAdmin,
-        isBooster: true
+        isBooster: isApproved
       };
       this.saveUser();
-      this.showToast(`¡Conectado como Booster ${this.currentUser.username}!`, 'success');
+      if (!isApproved && !isStaffOrAdmin) {
+        this.showToast(`Hola ${this.currentUser.username}, tu solicitud de Booster está pendiente de aprobación por el Staff.`, 'info');
+      } else {
+        this.showToast(`¡Conectado como Booster ${this.currentUser.username}!`, 'success');
+      }
       this.renderHeader();
       const returnUrl = sessionStorage.getItem('mp_oauth_return_url');
       sessionStorage.removeItem('mp_oauth_return_url');
@@ -1197,67 +1202,7 @@ class MythicApp {
       return { status: isStaffOrAdmin ? 'STAFF_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
     }
 
-    // 2b. Check if context is Booster registration/login (e.g. from Portal Pro or booster intent)
-    const returnUrl = sessionStorage.getItem('mp_oauth_return_url') || '';
-    const isProContext = returnUrl.includes('pro') || window.location.href.includes('pro') || sessionStorage.getItem('mp_auth_intent') === 'booster';
-
-    if (isProContext) {
-      // Register NEW Booster with 0 points and 'Booster' rank only
-      const newBooster = {
-        discord_id: discordId,
-        username: payload.username || username,
-        email: payload.email || `${username.toLowerCase()}@discord.com`,
-        role: 'Booster',
-        roles: ['Booster'],
-        points: 0,
-        approved: true,
-        web_registered: true,
-        balance: 0.00,
-        country: 'Global',
-        payout_method: 'Binance Pay / USDT',
-        createdAt: new Date().toISOString(),
-        last_login: new Date().toISOString()
-      };
-      this.boosters.push(newBooster);
-      this.saveBoosters();
-
-      if (this.db) {
-        this.db.collection('boosters').doc(String(discordId)).set(newBooster, { merge: true })
-          .then(() => console.log('🔥 [Firestore] Booster registrado en la web con éxito:', discordId))
-          .catch(err => console.warn('Firestore booster write notice:', err));
-      }
-
-      this.currentUser = {
-        id: 'booster_' + discordId,
-        type: 'booster',
-        discordId: discordId,
-        discordTag: payload.discordTag || `${username}#0`,
-        discordConnected: true,
-        username: payload.username || username,
-        role: 'Booster',
-        roles: ['Booster'],
-        points: 0,
-        approved: true,
-        balance: 0.00,
-        email: payload.email || '',
-        avatar: payload.avatar || '',
-        payoutMethod: 'Binance Pay / USDT',
-        payoutAddress: '',
-        wallet_id: '',
-        isAdmin: false,
-        isStaff: false,
-        isBooster: true
-      };
-      this.saveUser();
-      this.showToast(`¡Bienvenido Booster ${username}! Cuenta registrada con 0 puntos y rango Booster.`, 'success');
-      this.renderHeader();
-      sessionStorage.removeItem('mp_oauth_return_url');
-      sessionStorage.removeItem('mp_auth_intent');
-      window.location.href = returnUrl || 'pro';
-      return { status: 'BOOSTER_REGISTERED', user: this.currentUser };
-    }
-
-    // 3. Otherwise Client
+    // 3. Otherwise Normal Client (Protects clients from being automatically converted into boosters)
     this.currentUser = {
       id: 'client_' + discordId,
       type: 'client',
@@ -1272,12 +1217,20 @@ class MythicApp {
       avatar: payload.avatar || '',
       balance: 0.00,
       isAdmin: false,
-      isBooster: false
+      isBooster: false,
+      approved: false
     };
     this.saveUser();
     this.showToast(`¡Bienvenido ${username}! Conectado con Discord.`, 'success');
     this.renderHeader();
-    window.location.href = 'client-profile';
+    const returnUrl = sessionStorage.getItem('mp_oauth_return_url') || '';
+    sessionStorage.removeItem('mp_oauth_return_url');
+    sessionStorage.removeItem('mp_auth_intent');
+    if (returnUrl.includes('pro') || window.location.href.includes('pro')) {
+      window.location.href = 'pro';
+    } else {
+      window.location.href = returnUrl || 'client-profile';
+    }
     return { status: 'CLIENT_LOGGED_IN', user: this.currentUser };
   }
 
@@ -4208,15 +4161,339 @@ class MythicApp {
     gate.classList.add('flex');
   }
 
+  showBoosterApplicationScreen() {
+    let gate = document.getElementById('pro-access-gate');
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = 'pro-access-gate';
+      gate.className = 'fixed inset-0 z-50 bg-[#0a0705]/95 backdrop-blur-xl flex items-center justify-center p-4 notranslate';
+      gate.setAttribute('translate', 'no');
+      document.body.appendChild(gate);
+    }
+
+    const u = this.currentUser || {};
+    const dId = u.discordId || '';
+    const uName = u.username || 'Usuario';
+    const email = u.email || '';
+
+    gate.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-lg p-6 sm:p-8 border border-[#ee914f]/40 shadow-2xl relative overflow-hidden bg-[#120d09] text-left">
+        <div class="flex items-center gap-3 pb-4 border-b border-stone-800">
+          <div class="w-12 h-12 rounded-2xl bg-[#241a12] border border-[#ee914f]/50 flex items-center justify-center text-[#ee914f] text-xl shadow-lg shrink-0">
+            <i class="fa-solid fa-scroll"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-white font-cinzel leading-tight">Solicitud de Ingreso como Booster</h2>
+            <span class="text-xs text-[#eedaa2]">Mythic Progression • Aprobación por Staff</span>
+          </div>
+        </div>
+
+        <div class="py-4 space-y-4">
+          <div class="bg-[#18110b] p-3.5 rounded-2xl border border-stone-800 text-xs text-stone-300 space-y-2">
+            <p>👋 Hola <strong class="text-white">${uName}</strong>, actualmente tu cuenta está registrada como <span class="text-amber-400 font-bold">Cliente</span>.</p>
+            <p class="text-stone-400 text-[11px] leading-relaxed">
+              Para garantizar la calidad de los servicios y evitar que los clientes se conviertan por error en boosters, el acceso a la <strong>Bolsa de Pedidos</strong> requiere una solicitud formal que será revisada y <strong>confirmada por la administración</strong>.
+            </p>
+          </div>
+
+          <form id="booster-apply-form" onsubmit="event.preventDefault(); app.submitBoosterApplication();" class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-300 mb-1">Cuenta de Discord vinculada:</label>
+              <div class="flex items-center gap-2 bg-[#17120e] border border-stone-800 rounded-xl px-3.5 py-2 text-xs text-stone-300">
+                <i class="fa-brands fa-discord text-[#5865F2] text-sm"></i>
+                <span class="font-mono">${uName} (${dId || 'Discord Conectado'})</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-300 mb-1">Nombre o Personaje Principal de WoW:</label>
+              <input id="booster-apply-char" type="text" value="${uName}" required placeholder="Ej: Raituz-Ragnaros" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#ee914f]">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-300 mb-1">Correo Electrónico de Contacto:</label>
+              <input id="booster-apply-email" type="email" value="${email}" required placeholder="tu-email@gmail.com" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#ee914f]">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-300 mb-1">Método de Pago Preferido para Liquidaciones:</label>
+              <select id="booster-apply-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 outline-none">
+                <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada (0 fee)</option>
+                <option value="USDT TRC20 / BSC">USDT (TRC20 / BSC)</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Zelle">Zelle</option>
+                <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-300 mb-1">ID de Billetera o Cuenta de Destino:</label>
+              <input id="booster-apply-wallet" type="text" required placeholder="Ej: Binance Pay ID / Dirección USDT" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono outline-none focus:border-[#ee914f]">
+            </div>
+
+            <button type="submit" class="w-full py-3.5 px-4 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/30 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer mt-4">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Enviar Solicitud al Staff</span>
+            </button>
+          </form>
+
+          <div class="text-center pt-2">
+            <a href="/" class="text-xs text-stone-400 hover:text-white transition-colors">
+              <i class="fa-solid fa-arrow-left mr-1"></i> Volver a la Tienda Principal
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+    gate.classList.remove('hidden');
+    gate.classList.add('flex');
+  }
+
+  submitBoosterApplication() {
+    const charInput = document.getElementById('booster-apply-char');
+    const emailInput = document.getElementById('booster-apply-email');
+    const methodSelect = document.getElementById('booster-apply-method');
+    const walletInput = document.getElementById('booster-apply-wallet');
+
+    const character = charInput ? charInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+    const payoutMethod = methodSelect ? methodSelect.value : 'Binance Pay / USDT';
+    const walletId = walletInput ? walletInput.value.trim() : '';
+
+    if (!character || !email || !walletId) {
+      this.showToast('Por favor completa todos los campos requeridos.', 'warning');
+      return;
+    }
+
+    const discordId = String(this.currentUser?.discordId || '').trim();
+    if (!discordId) {
+      this.showToast('Error: No se encontró una cuenta de Discord vinculada.', 'error');
+      return;
+    }
+
+    const applicant = {
+      discord_id: discordId,
+      username: character || this.currentUser.username,
+      email: email,
+      payout_method: payoutMethod,
+      wallet_id: walletId,
+      role: 'Booster (Pendiente)',
+      roles: ['Booster (Pendiente)'],
+      points: 0,
+      balance: 0.00,
+      approved: false,
+      status: 'PENDING_APPROVAL',
+      web_registered: true,
+      appliedAt: new Date().toISOString(),
+      last_login: new Date().toISOString()
+    };
+
+    if (!Array.isArray(this.boosters)) this.boosters = [];
+    const idx = this.boosters.findIndex(b => b.discord_id === discordId);
+    if (idx >= 0) {
+      this.boosters[idx] = Object.assign(this.boosters[idx], applicant);
+    } else {
+      this.boosters.push(applicant);
+    }
+    this.saveBoosters();
+
+    if (this.db) {
+      this.db.collection('boosters').doc(discordId).set(applicant, { merge: true })
+        .then(() => console.log('🔥 [Firestore] Solicitud de booster guardada con éxito:', discordId))
+        .catch(err => console.warn('Firestore booster write notice:', err));
+    }
+
+    this.currentUser.approved = false;
+    this.currentUser.role = 'Booster (Pendiente)';
+    this.currentUser.roles = ['Booster (Pendiente)'];
+    this.currentUser.type = 'booster';
+    this.currentUser.isBooster = false;
+    this.currentUser.payoutMethod = payoutMethod;
+    this.currentUser.payoutAddress = walletId;
+    this.currentUser.wallet_id = walletId;
+    this.saveUser();
+
+    this.showToast('¡Solicitud de Booster enviada con éxito! Esperando confirmación del Staff.', 'success');
+    this.showBoosterPendingApprovalScreen(applicant);
+  }
+
+  showBoosterPendingApprovalScreen(booster) {
+    let gate = document.getElementById('pro-access-gate');
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = 'pro-access-gate';
+      gate.className = 'fixed inset-0 z-50 bg-[#0a0705]/95 backdrop-blur-xl flex items-center justify-center p-4 notranslate';
+      gate.setAttribute('translate', 'no');
+      document.body.appendChild(gate);
+    }
+
+    const b = booster || this.currentUser || {};
+    const uName = b.username || this.currentUser?.username || 'Usuario';
+    const method = b.payout_method || b.payoutMethod || 'Binance Pay / USDT';
+
+    gate.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-lg p-6 sm:p-8 border border-amber-600/40 shadow-2xl relative overflow-hidden bg-[#120d09] text-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-950/60 border border-amber-600/50 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-4 shadow-lg shadow-amber-900/30">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+
+        <h2 class="text-xl font-bold text-white font-cinzel mb-2">Solicitud Pendiente de Confirmación</h2>
+        <p class="text-xs text-stone-300 mb-6 leading-relaxed">
+          Hola <strong class="text-white">${uName}</strong>, tu solicitud de ingreso al equipo de Boosters fue registrada exitosamente y se encuentra en revisión.
+        </p>
+
+        <div class="bg-[#18110b] p-4 rounded-2xl border border-stone-800 text-left space-y-3 mb-6 text-xs text-stone-300">
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-amber-900/80 text-amber-300 border border-amber-700/60 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <strong class="text-white block">Revisión del Staff</strong>
+              <span class="text-stone-400 text-[11px]">Un Administrador verificará tus datos y método de cobro configurado (<span class="text-stone-200">${method}</span>).</span>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-amber-900/80 text-amber-300 border border-amber-700/60 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <strong class="text-white block">Asignación de Rol en Discord</strong>
+              <span class="text-stone-400 text-[11px]">El Staff te otorgará el rol de <strong>Booster</strong> en nuestro servidor de Discord para que puedas interactuar en los canales de contratos.</span>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-amber-900/80 text-amber-300 border border-amber-700/60 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <div>
+              <strong class="text-white block">Activación en la Web</strong>
+              <span class="text-stone-400 text-[11px]">Al ser confirmado en el Panel de Administración, tu acceso quedará desbloqueado y podrás tomar contratos y pujar al instante.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-950/70 border border-amber-700/60 text-amber-300 text-xs font-semibold mb-6">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Estado: Esperando aprobación de Administrador</span>
+        </div>
+
+        <div class="space-y-3">
+          <button type="button" onclick="app.checkBoosterApprovalStatus()" class="w-full py-3 px-4 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Comprobar Estado de Aprobación</span>
+          </button>
+
+          <a href="/" class="inline-block pt-1 text-xs text-stone-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Volver a la Tienda Principal
+          </a>
+        </div>
+      </div>
+    `;
+    gate.classList.remove('hidden');
+    gate.classList.add('flex');
+  }
+
+  async checkBoosterApprovalStatus() {
+    const discordId = String(this.currentUser?.discordId || '').trim();
+    if (!discordId) {
+      this.showToast('No se encontró una sesión activa.', 'warning');
+      return;
+    }
+
+    this.showToast('Comprobando estado con la base de datos...', 'info');
+
+    let approved = false;
+    let freshDoc = null;
+
+    if (this.db) {
+      try {
+        const snap = await this.db.collection('boosters').doc(discordId).get();
+        if (snap.exists) {
+          freshDoc = snap.data();
+          if (freshDoc && freshDoc.approved === true) {
+            approved = true;
+          }
+        }
+      } catch (err) {
+        console.warn('Error checking booster status in Firestore:', err);
+      }
+    }
+
+    if (!approved && Array.isArray(this.boosters)) {
+      const localB = this.boosters.find(b => b.discord_id === discordId);
+      if (localB && localB.approved === true) {
+        approved = true;
+        freshDoc = localB;
+      }
+    }
+
+    if (approved) {
+      const bRoles = (freshDoc && freshDoc.roles && freshDoc.roles.length > 0) ? freshDoc.roles : ['Booster'];
+      const bRole = (freshDoc && freshDoc.role) ? freshDoc.role : 'Booster';
+      
+      this.currentUser.approved = true;
+      this.currentUser.isBooster = true;
+      this.currentUser.type = 'booster';
+      this.currentUser.role = bRole;
+      this.currentUser.roles = bRoles;
+      this.saveUser();
+
+      const localB = this.boosters.find(b => b.discord_id === discordId);
+      if (localB) {
+        localB.approved = true;
+        localB.role = bRole;
+        localB.roles = bRoles;
+        localB.status = 'ACTIVE';
+        this.saveBoosters();
+      }
+
+      const gate = document.getElementById('pro-access-gate');
+      if (gate) gate.remove();
+
+      this.showToast('🎉 ¡Felicidades! Tu cuenta de Booster ha sido confirmada y activada por el Staff.', 'success');
+      this.initProPortal();
+    } else {
+      this.showToast('Tu solicitud aún se encuentra pendiente de revisión por el Staff.', 'info');
+    }
+  }
+
 // BOOSTER PRO PORTAL (WAR ROOM BOARD)
   // ==========================================
   initProPortal() {
-    // Check if user is Booster or Admin/Staff
-    if (!this.isBooster() && !this.isAdminOrGerente()) {
+    // 1. Not logged in at all -> show access gate
+    if (!this.currentUser) {
       this.showProAccessGate();
       return;
     }
 
+    // 2. Admin / Staff -> full war room access
+    if (this.isAdminOrGerente() || this.isAdmin() || this.currentUser.isStaff || this.currentUser.type === 'admin' || this.currentUser.type === 'staff' || this.currentUser.discordId === '443948776562884620') {
+      const gate = document.getElementById('pro-access-gate');
+      if (gate) gate.remove();
+      this.renderProOrderFeed();
+      this.renderProMyOrders();
+      this.renderProWallet();
+      this.renderChatList();
+      this.renderBoosterUpsellCatalog();
+      this.initBoosterProfileForm();
+      return;
+    }
+
+    // 3. Find booster record
+    const boosterRecord = this.boosters ? this.boosters.find(b => 
+      b.discord_id === this.currentUser.discordId || 
+      (b.username && this.currentUser.username && b.username.toLowerCase() === this.currentUser.username.toLowerCase())
+    ) : null;
+
+    // 4. Pending approval
+    if ((boosterRecord && boosterRecord.approved === false) || this.currentUser.approved === false || (boosterRecord && boosterRecord.status === 'PENDING_APPROVAL')) {
+      this.showBoosterPendingApprovalScreen(boosterRecord || this.currentUser);
+      return;
+    }
+
+    // 5. Client who has not applied yet -> show application screen
+    if (!boosterRecord || boosterRecord.approved !== true) {
+      this.showBoosterApplicationScreen();
+      return;
+    }
+
+    // 6. Active approved booster!
     const gate = document.getElementById('pro-access-gate');
     if (gate) gate.remove();
 
@@ -7861,13 +8138,30 @@ class MythicApp {
     const b = this.boosters.find(x => x.discord_id === discordId);
     if (!b) return;
     b.approved = true;
-    if (!b.roles || b.roles.length === 0) {
+    b.status = 'ACTIVE';
+    b.web_registered = true;
+    if (!b.roles || b.roles.length === 0 || (b.roles.length === 1 && b.roles[0].includes('Pendiente'))) {
       b.roles = ['Booster'];
       b.role = 'Booster';
+    } else {
+      b.roles = b.roles.filter(r => !r.includes('Pendiente'));
+      if (b.role && b.role.includes('Pendiente')) b.role = 'Booster';
     }
     this.saveBoosters();
+    if (this.db) {
+      this.db.collection('boosters').doc(String(discordId)).set({
+        approved: true,
+        status: 'ACTIVE',
+        role: b.role,
+        roles: b.roles,
+        web_registered: true,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).then(() => {
+        console.log('🔥 [Firestore] Booster aprobado por Staff:', discordId);
+      }).catch(err => console.error('Error aprobando booster en Firestore:', err));
+    }
     this.renderAdminBoosters();
-    this.showToast(`Booster ${b.username} aprobado por la administración.`, 'success');
+    this.showToast(`Booster ${b.username} aprobado con éxito por el Staff.`, 'success');
   }
 
   openEditBoosterRolesModal(discordId) {
@@ -8116,16 +8410,23 @@ class MythicApp {
 
   isBooster() {
     if (!this.currentUser) return false;
-    if (this.currentUser.isBooster === true) return true;
-    if (this.currentUser.type === 'booster') return true;
-    if (this.currentUser.discordId === '443948776562884620') return true;
+    if (this.currentUser.isAdmin === true || this.currentUser.isStaff === true) return true;
     if (this.currentUser.type === 'admin' || this.currentUser.type === 'staff') return true;
     if (this.isAdminOrGerente()) return true;
+    if (this.currentUser.discordId === '443948776562884620') return true;
+
+    // Unapproved booster applicants are NEVER active boosters
+    if (this.currentUser.approved === false) return false;
+
+    if (this.currentUser.isBooster === true && this.currentUser.approved !== false) return true;
+    if (this.currentUser.type === 'booster' && this.currentUser.approved !== false) return true;
+
     if (Array.isArray(this.currentUser.roles)) {
-      if (this.currentUser.roles.some(r => /booster|raider|supplier|master|admin|staff|gerente/i.test(r))) return true;
+      if (this.currentUser.roles.some(r => /master|elite|veteran|gold|supplier|raider/i.test(r))) return true;
+      if (this.currentUser.roles.some(r => r === 'Booster')) return true;
     }
     const role = (this.currentUser.role || '').toLowerCase();
-    return role.includes('booster') || role.includes('raider') || role.includes('supplier') || role.includes('master') || role.includes('admin') || role.includes('staff') || role.includes('gerente');
+    return role === 'booster' || role.includes('master') || role.includes('elite') || role.includes('veteran') || role.includes('gold');
   }
 
   hasRole(roleName) {

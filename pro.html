@@ -531,7 +531,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=3.3.7"></script>
+  <script src="assets/js/app.js?v=3.3.9"></script>
   <script>
     function switchProTab(tabId) {
       document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));
@@ -581,20 +581,17 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const runInit = () => {
-        const b = (window.app && app.currentUser && (app.currentUser.type === 'booster' || app.currentUser.type === 'staff' || app.currentUser.type === 'admin' || app.isBooster() || app.isAdminOrGerente()))
+        if (!window.app) return;
+
+        if (typeof app.initProPortal === 'function') {
+          app.initProPortal();
+        }
+
+        const b = (app.currentUser && (app.isBooster() || app.isAdminOrGerente() || app.currentUser.type === 'admin' || app.currentUser.type === 'staff'))
           ? app.currentUser
           : null;
 
-        if (!b) {
-          if (window.app && typeof window.app.showProAccessGate === 'function') {
-            window.app.showProAccessGate();
-          }
-          return;
-        }
-
-        if (window.app && typeof app.initProPortal === 'function') {
-          app.initProPortal();
-        }
+        if (!b) return;
 
         if (!b.avatar) {
           const backup = localStorage.getItem('mp_discord_avatar_backup');
