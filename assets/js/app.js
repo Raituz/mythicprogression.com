@@ -6656,9 +6656,11 @@ class MythicApp {
     const badgeOrders = document.getElementById('badge-orders-count');
     if (badgeOrders) badgeOrders.textContent = availableOrdersCount;
 
-    let list = this.orders;
-    if (statusFilter !== 'ALL') {
-      list = list.filter(o => o.status === statusFilter);
+    let list = this.orders || [];
+    if (statusFilter === 'AVAILABLE') {
+      list = list.filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
+    } else if (statusFilter !== 'ALL') {
+      list = list.filter(o => o && o.status === statusFilter);
     }
     if (searchFilter) {
       const q = searchFilter.toLowerCase();
