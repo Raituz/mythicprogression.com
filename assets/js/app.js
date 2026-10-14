@@ -70,7 +70,10 @@ class MythicApp {
   }
 
   async init() {
-    try { this.cleanupGoogleTranslate(); } catch (e) {}
+    const savedLang = (typeof localStorage !== 'undefined') ? (localStorage.getItem('mp_lang') || 'es') : 'es';
+    if (savedLang === 'es') {
+      try { this.cleanupGoogleTranslate(); } catch (e) {}
+    }
     try { this.cleanUrlBar(); } catch (e) { console.warn('cleanUrlBar:', e); }
     try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
     try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
@@ -7394,7 +7397,7 @@ class MythicApp {
     if (lang === 'es') {
       // Restore Spanish
       document.querySelectorAll('[data-i18n-orig]').forEach(el => {
-        if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]') || el.closest('.copper-gradient-bg')) return;
+        if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
         const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
         if (nonIconChildren.length > 0) return;
 
@@ -7412,7 +7415,7 @@ class MythicApp {
         if (el.closest('#mp-live-chat-root') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
         el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
       });
-      this.cleanupGoogleTranslate();
+      this.triggerGoogleTranslate('es');
       return;
     }
 
@@ -7431,7 +7434,7 @@ class MythicApp {
     const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong');
     elements.forEach(el => {
       // Protect interactive and already localized header & widget containers
-      if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]') || el.closest('.copper-gradient-bg')) return;
+      if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
 
       // Only process leaf elements or elements containing only an <i> icon
       const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
@@ -7456,7 +7459,97 @@ class MythicApp {
       }
     });
 
-    this.cleanupGoogleTranslate();
+    // Deep translation bridge via Google Translate (without hiding buttons)
+    this.triggerGoogleTranslate(lang);
+  }
+
+  triggerGoogleTranslate(lang) {
+    if (typeof window === 'undefined') return;
+
+    if (!window.googleTranslateElementInit) {
+      window.googleTranslateElementInit = function() {
+        try {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'es',
+            includedLanguages: 'en,es,pt',
+            autoDisplay: false
+          }, 'google_translate_element');
+        } catch (e) {
+          console.debug('TranslateElement init notice:', e);
+        }
+      };
+
+      if (!document.getElementById('google_translate_element')) {
+        const div = document.createElement('div');
+        div.id = 'google_translate_element';
+        div.style.display = 'none';
+        document.body.appendChild(div);
+
+        // Safe styles to hide top banner WITHOUT hiding skiptranslate elements
+        const style = document.createElement('style');
+        style.id = 'mp-gt-custom-styles';
+        style.innerHTML = `
+          .goog-te-banner-frame.skiptranslate,
+          .goog-te-banner-frame,
+          iframe.goog-te-banner-frame,
+          #goog-gt-tt,
+          .goog-te-balloon-frame {
+            display: none !important;
+          }
+          body {
+            top: 0px !important;
+          }
+          .goog-tooltip, .goog-tooltip:hover {
+            display: none !important;
+          }
+          .goog-text-highlight {
+            background-color: transparent !important;
+            box-shadow: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+
+        const s = document.createElement('script');
+        s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        s.async = true;
+        document.head.appendChild(s);
+      }
+    }
+
+    const fireChange = () => {
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        if (combo.value !== lang) {
+          combo.value = lang;
+          combo.dispatchEvent(new Event('change'));
+        }
+      }
+    };
+
+    if (lang === 'es') {
+      try {
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        if (window.location && window.location.hostname) {
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + window.location.hostname + '; path=/;';
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + window.location.hostname + '; path=/;';
+        }
+      } catch (e) {}
+      fireChange();
+      setTimeout(fireChange, 300);
+      return;
+    }
+
+    try {
+      document.cookie = `googtrans=/es/${lang}; path=/;`;
+      if (window.location && window.location.hostname) {
+        document.cookie = `googtrans=/es/${lang}; domain=${window.location.hostname}; path=/;`;
+      }
+    } catch (e) {}
+
+    fireChange();
+    setTimeout(fireChange, 300);
+    setTimeout(fireChange, 800);
+    setTimeout(fireChange, 1500);
   }
 
   cleanupGoogleTranslate() {
@@ -7483,13 +7576,6 @@ class MythicApp {
       if (el) el.remove();
       const frames = document.querySelectorAll('.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, iframe.goog-te-menu-frame');
       frames.forEach(f => f.remove());
-
-      // Strip any residual styles injecting .skiptranslate display none
-      document.querySelectorAll('style').forEach(s => {
-        if (s.textContent && (s.textContent.includes('goog-te') || s.textContent.includes('.skiptranslate'))) {
-          s.remove();
-        }
-      });
 
       const body = document.body;
       if (body) {
