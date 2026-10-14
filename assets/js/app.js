@@ -1137,7 +1137,25 @@ class MythicApp {
       if (discordId && !existingBooster.discord_id) {
         existingBooster.discord_id = discordId;
       }
+      existingBooster.web_registered = true;
+      existingBooster.last_login = new Date().toISOString();
       this.saveBoosters();
+
+      if (this.db) {
+        const bId = String(existingBooster.discord_id || discordId);
+        this.db.collection('boosters').doc(bId).set({
+          discord_id: bId,
+          username: existingBooster.username,
+          email: existingBooster.email || payload.email || '',
+          role: existingBooster.role || 'Booster',
+          roles: existingBooster.roles || ['Booster'],
+          points: existingBooster.points || 0,
+          approved: existingBooster.approved !== false,
+          web_registered: true,
+          last_login: new Date().toISOString(),
+          payout_method: existingBooster.payout_method || 'Binance Pay / USDT'
+        }, { merge: true }).catch(err => console.warn('Firestore booster sync notice:', err));
+      }
 
       const isStaffOrAdmin = (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
         (existingBooster.role && /admin|staff|gerente|soporte/i.test(existingBooster.role)) ||
@@ -1193,13 +1211,21 @@ class MythicApp {
         roles: ['Booster'],
         points: 0,
         approved: true,
+        web_registered: true,
         balance: 0.00,
         country: 'Global',
         payout_method: 'Binance Pay / USDT',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        last_login: new Date().toISOString()
       };
       this.boosters.push(newBooster);
       this.saveBoosters();
+
+      if (this.db) {
+        this.db.collection('boosters').doc(String(discordId)).set(newBooster, { merge: true })
+          .then(() => console.log('🔥 [Firestore] Booster registrado en la web con éxito:', discordId))
+          .catch(err => console.warn('Firestore booster write notice:', err));
+      }
 
       this.currentUser = {
         id: 'booster_' + discordId,
