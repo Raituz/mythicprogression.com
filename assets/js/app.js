@@ -1523,6 +1523,10 @@ class MythicApp {
         </div>
       </div>
     `;
+
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   loginAsDemoBooster() {
@@ -3431,32 +3435,32 @@ class MythicApp {
             <div class="space-y-2 flex-1">
               <!-- Top Badges Row -->
               <div class="flex items-center gap-2 flex-wrap text-[11px]">
-                <span class="font-mono-gaming font-bold text-[#ee914f] bg-[#22170f] px-2.5 py-0.5 rounded-lg border border-[#ee914f]/30">#${order.id}</span>
+                <span class="font-mono-gaming font-bold text-[#ee914f] bg-[#22170f] px-2.5 py-0.5 rounded-lg border border-[#ee914f]/30 notranslate" translate="no">#${order.id}</span>
                 <span class="px-2.5 py-0.5 rounded-lg font-bold flex items-center gap-1.5 ${statusClass}">
                   <i class="fa-solid ${statusIcon} text-[10px]"></i>
                   <span>${statusText}</span>
                 </span>
                 <span class="px-2.5 py-0.5 rounded-lg bg-[#18110b] text-stone-300 border border-stone-800">
-                  ${order.category || 'Servicio WoW'}
+                  <span>${order.category || 'Servicio WoW'}</span>
                 </span>
                 <span class="px-2.5 py-0.5 rounded-lg bg-[#18110b] text-stone-300 border border-stone-800">
-                  ${order.completionMethod || 'Piloted'} (${order.region || 'US'})
+                  <span>${order.completionMethod || 'Piloted'}</span> <span class="notranslate" translate="no">(${order.region || 'US'})</span>
                 </span>
                 <span class="text-stone-500 text-[10px] ml-auto">
-                  <i class="fa-regular fa-clock mr-1"></i>${orderDate}
+                  <i class="fa-regular fa-clock mr-1"></i><span>${orderDate}</span>
                 </span>
               </div>
 
               <!-- Main Title & Details -->
               <div>
-                <h4 class="text-base font-bold text-white hover:text-[#eedaa2] transition-colors leading-snug">${order.serviceName}</h4>
+                <h4 class="text-base font-bold text-white hover:text-[#eedaa2] transition-colors leading-snug notranslate" translate="no">${order.serviceName}</h4>
                 <div class="flex items-center gap-2 text-xs text-stone-400 mt-1 flex-wrap">
-                  <span>Personaje: <strong class="text-stone-200">${charName}</strong></span>
+                  <span><span>Personaje:</span> <strong class="text-stone-200 notranslate" translate="no">${charName}</strong></span>
                   <span class="text-stone-600">•</span>
-                  <span>Reino: <strong class="text-stone-200">${realmName}</strong></span>
+                  <span><span>Reino:</span> <strong class="text-stone-200 notranslate" translate="no">${realmName}</strong></span>
                   ${order.details ? `
                     <span class="text-stone-600">•</span>
-                    <span class="text-stone-400 text-[11px] truncate max-w-md italic">${order.details}</span>
+                    <span class="text-stone-400 text-[11px] truncate max-w-md italic notranslate" translate="no">${order.details}</span>
                   ` : ''}
                 </div>
               </div>
@@ -3467,14 +3471,14 @@ class MythicApp {
                   <div class="w-6 h-6 rounded-full bg-[#2a1d13] border border-[#ee914f]/40 flex items-center justify-center text-[10px] text-[#fcefc2] font-black">
                     ${order.assignedBooster.avatar ? `<img src="${order.assignedBooster.avatar}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-gamepad text-[#ee914f]"></i>`}
                   </div>
-                  <span class="text-stone-300">Booster asignado: <strong class="text-[#fcefc2]">${order.assignedBooster.username}</strong></span>
+                  <span class="text-stone-300"><span>Booster asignado:</span> <strong class="text-[#fcefc2] notranslate" translate="no">${order.assignedBooster.username}</strong></span>
                   ${order.isOnAccount ? `
                     <span class="ml-2 text-[10px] bg-red-950 text-red-300 px-2 py-0.5 rounded border border-red-800 font-semibold animate-pulse flex items-center gap-1">
-                      <i class="fa-solid fa-lock text-[9px]"></i> En tu cuenta ahora
+                      <i class="fa-solid fa-lock text-[9px]"></i> <span>En tu cuenta ahora</span>
                     </span>
                   ` : `
                     <span class="ml-2 text-[10px] bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/50 flex items-center gap-1">
-                      <i class="fa-solid fa-circle text-[6px]"></i> En línea
+                      <i class="fa-solid fa-circle text-[6px]"></i> <span>En línea</span>
                     </span>
                   `}
                 </div>
@@ -3490,15 +3494,15 @@ class MythicApp {
                 <div class="mt-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
                   <div>
                     <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                      <i class="fa-solid fa-bell"></i> ¡El booster ha reportado tu orden como completada!
+                      <i class="fa-solid fa-bell"></i> <span>¡El booster ha reportado tu orden como completada!</span>
                     </div>
                     <p class="text-[11px] text-stone-300 mt-0.5">
-                      ${order.completionReport?.notes ? `<span class="text-stone-400 italic font-mono">"${order.completionReport.notes}"</span><br>` : ''}
-                      Por favor verifica tu personaje. Si todo está en orden, confirma para finalizar el servicio y liberar el pago.
+                      ${order.completionReport?.notes ? `<span class="text-stone-400 italic font-mono notranslate" translate="no">"${order.completionReport.notes}"</span><br>` : ''}
+                      <span>Por favor verifica tu personaje. Si todo está en orden, confirma para finalizar el servicio y liberar el pago.</span>
                     </p>
                   </div>
                   <button onclick="app.clientConfirmOrderCompletion('${order.id}')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer whitespace-nowrap">
-                    <i class="fa-solid fa-check-double"></i> Confirmar y Finalizar
+                    <i class="fa-solid fa-check-double"></i> <span>Confirmar y Finalizar</span>
                   </button>
                 </div>
               ` : ''}
@@ -3509,7 +3513,7 @@ class MythicApp {
             <div class="flex items-center md:flex-col md:items-end justify-between md:justify-center gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-stone-800/80 shrink-0">
               <div class="text-left md:text-right">
                 <span class="text-[10px] text-stone-400 block uppercase font-semibold">Total Pagado</span>
-                <span class="text-2xl font-black font-mono-gaming text-[#fcefc2]">$${safeTotal.toFixed(2)}</span>
+                <span class="text-2xl font-black font-mono-gaming text-[#fcefc2] notranslate" translate="no">$${safeTotal.toFixed(2)}</span>
               </div>
               <button onclick="app.openClientFullChat('${order.id}')" class="px-4 py-2.5 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md hover:border-[#ee914f]">
                 <i class="fa-solid fa-comments text-[#ee914f]"></i>
@@ -3523,6 +3527,10 @@ class MythicApp {
     }).join('');
 
     container.innerHTML = metricsHtml + cardsHtml;
+
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   clientConfirmOrderCompletion(orderId) {
@@ -3645,6 +3653,36 @@ class MythicApp {
   // ==========================================
   // CLIENT FULL SCREEN CHAT (EXACT BOOSTER LAYOUT)
   // ==========================================
+  translateSystemChatMessage(msgText) {
+    if (!msgText || typeof msgText !== 'string') return msgText;
+    const lang = this.currentLang || 'es';
+    if (lang === 'es') return msgText;
+
+    let res = msgText;
+
+    if (lang === 'en') {
+      res = res.replace(/El booster (.+?) ha tomado tu orden/i, 'Booster $1 has claimed your order');
+      res = res.replace(/Aviso del Sistema: Se ha desasignado al booster actual \((.+?)\) de este pedido\. La orden ha vuelto a la Bolsa de Pedidos y está a la espera de que otro booster tome la orden\./i, 'System Notice: Booster ($1) was unassigned from this order. The order is back on the Board waiting for another booster to claim it.');
+      res = res.replace(/Aviso del Sistema: Se ha desasignado al booster actual de este pedido\. La orden ha vuelto a la Bolsa de Pedidos y está a la espera de que otro booster tome la orden\./i, 'System Notice: The current booster was unassigned from this order. The order is back on the Board waiting for another booster.');
+      res = res.replace(/El booster (.+?) ha ingresado a la cuenta/i, 'Booster $1 has logged into the account');
+      res = res.replace(/El booster (.+?) ha salido de la cuenta/i, 'Booster $1 has logged out of the account');
+      res = res.replace(/Chat iniciado\. Coordina con tu booster\./i, 'Chat started. Coordinate with your booster.');
+      res = res.replace(/¡Servicio verificado y aprobado por Administrador! La orden (.+?) ha sido marcada como completada con éxito\./i, 'Service verified and approved by Administrator! Order $1 has been marked as successfully completed.');
+      res = res.replace(/Nueva Puja: El booster (.+?) ha ofertado (\$[0-9.]+) por tu orden\./i, 'New Bid: Booster $1 placed a bid of $2 on your order.');
+    } else if (lang === 'pt') {
+      res = res.replace(/El booster (.+?) ha tomado tu orden/i, 'O booster $1 pegou seu pedido');
+      res = res.replace(/Aviso del Sistema: Se ha desasignado al booster actual \((.+?)\) de este pedido\. La orden ha vuelto a la Bolsa de Pedidos y está a la espera de que otro booster tome la orden\./i, 'Aviso do Sistema: O booster ($1) foi desvinculado deste pedido. O pedido voltou ao Mural aguardando outro booster.');
+      res = res.replace(/Aviso del Sistema: Se ha desasignado al booster actual de este pedido\. La orden ha vuelto a la Bolsa de Pedidos y está a la espera de que otro booster tome la orden\./i, 'Aviso do Sistema: O booster atual foi desvinculado deste pedido. O pedido voltou ao Mural aguardando outro booster.');
+      res = res.replace(/El booster (.+?) ha ingresado a la cuenta/i, 'O booster $1 entrou na conta');
+      res = res.replace(/El booster (.+?) ha salido de la cuenta/i, 'O booster $1 saiu da conta');
+      res = res.replace(/Chat iniciado\. Coordina con tu booster\./i, 'Chat iniciado. Combine os detalhes com seu booster.');
+      res = res.replace(/¡Servicio verificado y aprobado por Administrador! La orden (.+?) ha sido marcada como completada con éxito\./i, 'Serviço verificado e aprovado pelo Administrador! O pedido $1 foi marcado como concluído com sucesso.');
+      res = res.replace(/Nueva Puja: El booster (.+?) ha ofertado (\$[0-9.]+) por tu orden\./i, 'Novo Lance: O booster $1 fez uma oferta de $2 no seu pedido.');
+    }
+
+    return res;
+  }
+
   renderClientChatsList() {
     const container = document.getElementById('client-chats-list');
     if (!container) return;
@@ -3671,25 +3709,34 @@ class MythicApp {
 
     if (myOrders.length === 0) {
       container.innerHTML = '<div class="p-4 text-xs text-stone-500 text-center">No tienes pedidos activos.</div>';
+      if (this.currentLang && this.currentLang !== 'es') this.applyTranslations();
       return;
     }
 
+    const lang = this.currentLang || 'es';
+    const pendingText = lang === 'en' ? 'Looking for Booster' : (lang === 'pt' ? 'Procurando Booster' : 'Buscando Booster');
+
     container.innerHTML = myOrders.map(order => {
       const isSelected = this.activeClientChatOrderId === order.id;
-      const lastMsg = (order.chat && order.chat.length > 0) ? order.chat[order.chat.length - 1].message : 'Chat iniciado. Coordina con tu booster.';
-      const boosterName = order.assignedBooster ? order.assignedBooster.username : 'Buscando Booster';
+      const rawLastMsg = (order.chat && order.chat.length > 0) ? order.chat[order.chat.length - 1].message : 'Chat iniciado. Coordina con tu booster.';
+      const lastMsg = this.translateSystemChatMessage(rawLastMsg);
+      const boosterName = order.assignedBooster ? order.assignedBooster.username : pendingText;
 
       return `
-        <div onclick="app.openClientFullChat('${order.id}')" class="p-3 rounded-xl cursor-pointer transition-all ${isSelected ? 'bg-[#2a1d13] border border-[#ee914f]/50' : 'bg-[#18120d] border border-stone-800 hover:border-stone-700'}">
+        <div onclick="app.openClientFullChat('${order.id}')" class="p-3 rounded-xl cursor-pointer transition-all ${isSelected ? 'bg-[#2a1d13] border border-[#ee914f]/50 shadow-md' : 'bg-[#18120d] border border-stone-800 hover:border-stone-700'}">
           <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-bold text-white truncate max-w-[120px]">${boosterName}</span>
-            <span class="text-[10px] font-mono-gaming text-[#ee914f]">#${order.id}</span>
+            <span class="text-xs font-bold text-white truncate max-w-[120px] ${order.assignedBooster ? 'notranslate' : ''}" ${order.assignedBooster ? 'translate="no"' : ''}>${boosterName}</span>
+            <span class="text-[10px] font-mono-gaming text-[#ee914f] notranslate" translate="no">#${order.id}</span>
           </div>
-          <div class="text-[11px] text-[#eedaa2] font-semibold truncate mb-1">${order.serviceName}</div>
+          <div class="text-[11px] text-[#eedaa2] font-semibold truncate mb-1 notranslate" translate="no">${order.serviceName}</div>
           <p class="text-[10px] text-stone-400 line-clamp-1 italic">${lastMsg}</p>
         </div>
       `;
     }).join('');
+
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   openClientFullChat(orderId) {
@@ -3726,12 +3773,13 @@ class MythicApp {
           <div class="flex items-center justify-between pb-3 border-b border-stone-800">
             <div>
               <h4 class="text-sm font-bold text-white flex items-center gap-2">
-                <span>${boosterName}</span>
-                <span class="text-xs text-[#eedaa2] font-normal">(${order.assignedBooster ? 'Booster Asignado' : 'Asignación Pendiente'})</span>
+                <span class="${order.assignedBooster ? 'notranslate' : ''}" ${order.assignedBooster ? 'translate="no"' : ''}>${boosterName}</span>
+                <span class="text-xs text-[#eedaa2] font-normal">(${order.assignedBooster ? '<span>Booster Asignado</span>' : '<span>Asignación Pendiente</span>'})</span>
               </h4>
               <span class="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
                 <i class="fa-solid fa-circle text-[7px]"></i>
-                <span>En línea para orden #${order.id}</span>
+                <span>En línea para orden</span>
+                <span class="notranslate font-mono-gaming" translate="no">#${order.id}</span>
               </span>
             </div>
             ${order.isOnAccount ? `
@@ -3748,10 +3796,11 @@ class MythicApp {
               if (msg.sender === 'system') {
                 const isWarning = msg.message.includes('Aviso del Sistema') || msg.message.includes('desasignado') || msg.message.includes('ha ingresado');
                 const isSuccess = msg.message.includes('ha salido') || msg.message.includes('tomado tu orden');
+                const translatedSys = this.translateSystemChatMessage(msg.message);
                 return `
                   <div class="flex flex-col items-center">
                     <div class="max-w-md p-2.5 rounded-xl text-center text-[10px] ${isWarning ? 'bg-amber-950/70 border border-amber-800 text-amber-200 shadow-sm' : (isSuccess ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-200' : 'bg-[#1b140f] border border-stone-800 text-stone-300')}">
-                      ${msg.message}
+                      ${translatedSys}
                     </div>
                   </div>
                 `;
@@ -3762,11 +3811,11 @@ class MythicApp {
                 <div class="flex flex-col ${isClientMsg ? 'items-end' : 'items-start'}">
                   <div class="max-w-[80%] p-3 rounded-2xl text-xs ${info.bubbleClass} ${isClientMsg ? 'rounded-br-none' : 'rounded-bl-none'}">
                     <div class="text-[10px] mb-1 font-semibold flex items-center justify-between gap-4" style="color: ${info.authorColor}">
-                      <span class="flex items-center gap-1.5">
+                      <span class="flex items-center gap-1.5 notranslate" translate="no">
                         <span>${info.cleanName}</span>
                         ${info.badgeHtml}
                       </span>
-                      <span class="text-[9px] text-stone-500 font-normal">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                      <span class="text-[9px] text-stone-500 font-normal notranslate" translate="no">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
                     <div class="leading-relaxed break-words">${msg.message}</div>
                   </div>
@@ -3778,7 +3827,7 @@ class MythicApp {
           <!-- Input Box -->
           <form onsubmit="event.preventDefault(); app.sendClientFullChatMessage();" class="pt-3 border-t border-stone-800 flex gap-2">
             <input id="client-full-chat-input" type="text" placeholder="Escribe un mensaje a tu booster sobre la orden..." class="flex-1 bg-[#17110d] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none">
-            <button type="submit" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-[#ee914f]/20">
+            <button type="submit" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-[#ee914f]/20 cursor-pointer">
               <i class="fa-solid fa-paper-plane text-stone-950"></i>
             </button>
           </form>
@@ -3792,42 +3841,42 @@ class MythicApp {
             
             <div>
               <span class="text-[10px] text-stone-500 uppercase block font-semibold">ID:</span>
-              <span class="font-mono-gaming font-bold text-base text-[#ee914f]">#${order.id}</span>
+              <span class="font-mono-gaming font-bold text-base text-[#ee914f] notranslate" translate="no">#${order.id}</span>
             </div>
 
             <div>
               <span class="text-[10px] text-stone-500 uppercase block font-semibold">Servicio:</span>
-              <span class="font-bold text-white leading-tight block">${order.serviceName}</span>
+              <span class="font-bold text-white leading-tight block notranslate" translate="no">${order.serviceName}</span>
             </div>
 
             <div>
               <span class="text-[10px] text-stone-500 uppercase block font-semibold">Personaje:</span>
-              <span class="text-stone-300 font-medium">${order.characterName} (${order.realm})</span>
+              <span class="text-stone-300 font-medium notranslate" translate="no">${order.characterName || 'Heroe'} (${order.realm || 'Ragnaros'})</span>
             </div>
 
             <div>
               <span class="text-[10px] text-stone-500 uppercase block font-semibold">Modalidad:</span>
-              <span class="px-2 py-0.5 rounded bg-[#1f1610] text-[#eedaa2] border border-[#ee914f]/30 font-semibold inline-block mt-0.5">${order.completionMethod} (${order.region})</span>
+              <span class="px-2 py-0.5 rounded bg-[#1f1610] text-[#eedaa2] border border-[#ee914f]/30 font-semibold inline-block mt-0.5"><span>${order.completionMethod || 'Piloted'}</span> <span class="notranslate" translate="no">(${order.region || 'US'})</span></span>
             </div>
 
             <div>
               <span class="text-[10px] text-stone-500 uppercase block font-semibold">Estado del Booster:</span>
               ${order.isOnAccount ? `
-                <span class="text-red-400 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i> En tu cuenta ahora</span>
+                <span class="text-red-400 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i> <span>En tu cuenta ahora</span></span>
               ` : `
-                <span class="text-emerald-400 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-circle-check"></i> Fuera de la cuenta</span>
+                <span class="text-emerald-400 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-circle-check"></i> <span>Fuera de la cuenta</span></span>
               `}
             </div>
 
             <div>
               <span class="text-[10px] text-stone-500 uppercase block font-semibold">Protección VPN:</span>
-              <span class="text-stone-300">${order.vpnLocation || 'VPN Local Configurada'}</span>
+              <span class="text-stone-300"><span>${order.vpnLocation || 'VPN Local Configurada'}</span></span>
             </div>
           </div>
 
           <div class="pt-4 border-t border-stone-800">
             <span class="text-[10px] text-stone-500 uppercase block font-semibold">Total Pagado:</span>
-            <span class="text-2xl font-black font-mono-gaming text-[#fcefc2]">$${(Math.max(0, Number(order.totalPrice !== undefined && !isNaN(Number(order.totalPrice)) ? order.totalPrice : (order.price !== undefined && !isNaN(Number(order.price)) ? order.price : 45.00)) || 45.00)).toFixed(2)}</span>
+            <span class="text-2xl font-black font-mono-gaming text-[#fcefc2] notranslate" translate="no">$${(Math.max(0, Number(order.totalPrice !== undefined && !isNaN(Number(order.totalPrice)) ? order.totalPrice : (order.price !== undefined && !isNaN(Number(order.price)) ? order.price : 45.00)) || 45.00)).toFixed(2)}</span>
           </div>
 
         </div>
@@ -3838,6 +3887,10 @@ class MythicApp {
     // Scroll chat to bottom
     const stream = document.getElementById('client-full-chat-stream');
     if (stream) stream.scrollTop = stream.scrollHeight;
+
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   sendClientFullChatMessage() {
@@ -8930,6 +8983,21 @@ class MythicApp {
 
     this.renderHeader();
     this.updateLiveChatTranslations(lang);
+
+    // Re-render client profile dynamic components if present
+    if (typeof this.renderClientOrders === 'function') {
+      try { this.renderClientOrders(); } catch(e) {}
+    }
+    if (typeof this.renderClientChatsList === 'function') {
+      try { this.renderClientChatsList(); } catch(e) {}
+    }
+    if (this.activeClientChatOrderId && typeof this.openClientFullChat === 'function') {
+      try { this.openClientFullChat(this.activeClientChatOrderId); } catch(e) {}
+    }
+    if (typeof this.renderLinkedAccountsWidget === 'function') {
+      try { this.renderLinkedAccountsWidget('client-linked-accounts-container'); } catch(e) {}
+    }
+
     this.applyTranslations();
 
     // Re-apply on short ticks to catch any dynamic content
@@ -9207,7 +9275,119 @@ class MythicApp {
       'piloted (vpn de tu país)': { en: 'Piloted (your country VPN)', pt: 'Pilotado (VPN do seu país)' },
       'self-play (juegas en grupo con pros)': { en: 'Self-play (play with pros)', pt: 'Self-play (você joga em grupo com pros)' },
       'piloted (vpn)': { en: 'Piloted (VPN)', pt: 'Pilotado (VPN)' },
-      'not required': { en: 'Not Required', pt: 'Não Necessário' }
+      'not required': { en: 'Not Required', pt: 'Não Necessário' },
+
+      // CLIENT PROFILE & ORDERS
+      'panel de cliente': { en: 'Client Panel', pt: 'Painel do Cliente' },
+      'buscar mazmorras, bandas, equipo...': { en: 'Search dungeons, raids, gear...', pt: 'Buscar masmorras, raides, equipamento...' },
+      'tienda': { en: 'Store', pt: 'Loja' },
+      'total pedidos': { en: 'Total Orders', pt: 'Total de Pedidos' },
+      'en proceso': { en: 'In Progress', pt: 'Em Andamento' },
+      'buscando booster': { en: 'Looking for Booster', pt: 'Procurando Booster' },
+      'inversión total': { en: 'Total Investment', pt: 'Investimento Total' },
+      'inversion total': { en: 'Total Investment', pt: 'Investimento Total' },
+      'completados': { en: 'Completed', pt: 'Concluídos' },
+      'completado': { en: 'Completed', pt: 'Concluído' },
+      'reporte recibido (en revisión)': { en: 'Report Received (In Review)', pt: 'Relatório Recebido (Em Revisão)' },
+      'reporte recibido (en revision)': { en: 'Report Received (In Review)', pt: 'Relatório Recebido (Em Revisão)' },
+      'no hay pedidos con el filtro seleccionado.': { en: 'No orders found for the selected filter.', pt: 'Nenhum pedido com o filtro selecionado.' },
+      'aún no tienes pedidos activos': { en: 'You have no active orders yet', pt: 'Você ainda não tem pedidos ativos' },
+      'aun no tienes pedidos activos': { en: 'You have no active orders yet', pt: 'Você ainda não tem pedidos activos' },
+      'explora nuestro catálogo para adquirir tu primera piedra angular mítica+, raid completa o subida de nivel profesional con booster asignado.': {
+        en: 'Explore our catalog to get your first Mythic+ keystone, full raid, or pro leveling with an assigned booster.',
+        pt: 'Explore nosso catálogo para adquirir sua primeira pedra-chave Mítica+, raide completa ou nivelamento profissional com booster atribuído.'
+      },
+      'ver catálogo de servicios': { en: 'View Services Catalog', pt: 'Ver Catálogo de Serviços' },
+      'ver catalogo de servicios': { en: 'View Services Catalog', pt: 'Ver Catálogo de Serviços' },
+      'servicio wow': { en: 'WoW Service', pt: 'Serviço WoW' },
+      'reciente': { en: 'Recent', pt: 'Recente' },
+      'booster asignado:': { en: 'Assigned Booster:', pt: 'Booster atribuído:' },
+      'booster asignado': { en: 'Assigned Booster', pt: 'Booster atribuído' },
+      'asignación pendiente': { en: 'Assignment Pending', pt: 'Atribuição Pendente' },
+      'asignacion pendiente': { en: 'Assignment Pending', pt: 'Atribuição Pendente' },
+      'en tu cuenta ahora': { en: 'On your account now', pt: 'Na sua conta agora' },
+      'fuera de la cuenta': { en: 'Logged out of account', pt: 'Fora da conta' },
+      'tu orden está en el tablón pro. un booster calificado la tomará en breve.': {
+        en: 'Your order is on the Pro board. A qualified booster will claim it shortly.',
+        pt: 'Seu pedido está no mural Pro. Um booster qualificado irá pegá-lo em breve.'
+      },
+      '¡el booster ha reportado tu orden como completada!': {
+        en: 'The booster has reported your order as completed!',
+        pt: 'O booster relatou seu pedido como concluído!'
+      },
+      'por favor verifica tu personaje. si todo está en orden, confirma para finalizar el servicio y liberar el pago.': {
+        en: 'Please check your character. If everything looks good, confirm to finalize the service and release payment.',
+        pt: 'Por favor, verifique seu personagem. Se tudo estiver correto, confirme para finalizar o serviço e liberar o pagamento.'
+      },
+      'confirmar y finalizar': { en: 'Confirm & Finalize', pt: 'Confirmar e Finalizar' },
+      'total pagado': { en: 'Total Paid', pt: 'Total Pago' },
+      'total pagado:': { en: 'Total Paid:', pt: 'Total Pago:' },
+      'chat con el booster': { en: 'Chat with Booster', pt: 'Chat com o Booster' },
+
+      // MULTI-CHAT & ORDER DETAILS COLUMN
+      'normativa mythic progression:': { en: 'MYTHIC PROGRESSION POLICY:', pt: 'REGULAMENTO MYTHIC PROGRESSION:' },
+      'canal directo, privado y cifrado entre tú y tu booster asignado. la conversación está protegida y respaldada por nuestra garantía 100% de servicio.': {
+        en: 'Direct, private, and encrypted channel between you and your assigned booster. The conversation is protected and backed by our 100% service guarantee.',
+        pt: 'Canal direto, privado e criptografado entre você e seu booster atribuído. A conversa é protegida e apoiada por nossa garantia de 100% de serviço.'
+      },
+      'mis chats activos': { en: 'My Active Chats', pt: 'Meus Chats Ativos' },
+      'selecciona un chat en la lista': { en: 'Select a chat from the list', pt: 'Selecione um chat na lista' },
+      'podrás hablar directamente con tu booster asignado y ver los detalles de tu servicio en vivo.': {
+        en: 'You will be able to speak directly with your assigned booster and view your live service details.',
+        pt: 'Você poderá falar diretamente com seu booster atribuído e ver os detalhes do seu serviço ao vivo.'
+      },
+      'no tienes pedidos activos.': { en: 'You have no active orders.', pt: 'Você não tem pedidos ativos.' },
+      'en línea para orden': { en: 'Online for order', pt: 'Online para o pedido' },
+      'en linea para orden': { en: 'Online for order', pt: 'Online para o pedido' },
+      'escribe un mensaje a tu booster sobre la orden...': {
+        en: 'Write a message to your booster about the order...',
+        pt: 'Escreva uma mensagem para o seu booster sobre o pedido...'
+      },
+      'detalles de la orden': { en: 'Order Details', pt: 'Detalhes do Pedido' },
+      'id:': { en: 'ID:', pt: 'ID:' },
+      'servicio:': { en: 'Service:', pt: 'Serviço:' },
+      'modalidad:': { en: 'Mode:', pt: 'Modalidade:' },
+      'estado del booster:': { en: 'Booster Status:', pt: 'Status do Booster:' },
+      'protección vpn:': { en: 'VPN Protection:', pt: 'Proteção VPN:' },
+      'proteccion vpn:': { en: 'VPN Protection:', pt: 'Proteção VPN:' },
+      'vpn local configurada': { en: 'Local VPN Configured', pt: 'VPN Local Configurada' },
+
+      // ACCOUNT SETTINGS TAB
+      'cuentas vinculadas (unificación de perfil)': { en: 'Linked Accounts (Profile Unification)', pt: 'Contas Vinculadas (Unificação de Perfil)' },
+      'cuentas vinculadas (unificacion de perfil)': { en: 'Linked Accounts (Profile Unification)', pt: 'Contas Vinculadas (Unificação de Perfil)' },
+      'vincula tus cuentas de google y discord para acceder indistintamente con cualquiera de las dos a tu mismo perfil, compras y saldo.': {
+        en: 'Link your Google and Discord accounts to access your profile, orders, and balance seamlessly with either.',
+        pt: 'Vincule suas contas do Google e Discord para acessar seu perfil, pedidos e saldo indistintamente com qualquer uma delas.'
+      },
+      'datos personales y de juego': { en: 'Personal & Gaming Details', pt: 'Dados Pessoais e de Jogo' },
+      'nombre completo:': { en: 'Full Name:', pt: 'Nome Completo:' },
+      'correo electrónico:': { en: 'Email Address:', pt: 'E-mail:' },
+      'correo electronico:': { en: 'Email Address:', pt: 'E-mail:' },
+      'país:': { en: 'Country:', pt: 'País:' },
+      'pais:': { en: 'Country:', pt: 'País:' },
+      'battletag (opcional):': { en: 'BattleTag (Optional):', pt: 'BattleTag (Opcional):' },
+      'usuario de discord:': { en: 'Discord Username:', pt: 'Usuário do Discord:' },
+      'cambiar contraseña:': { en: 'Change Password:', pt: 'Alterar Senha:' },
+      'cambiar contrasena:': { en: 'Change Password:', pt: 'Alterar Senha:' },
+      'dejar en blanco para no cambiarla': { en: 'Leave blank to keep current', pt: 'Deixar em branco para não alterar' },
+      'guardar cambios': { en: 'Save Changes', pt: 'Salvar Alterações' },
+      'sin vincular': { en: 'Not linked', pt: 'Não vinculado' },
+      'vinculado': { en: 'Linked', pt: 'Vinculado' },
+      'no vinculado': { en: 'Not linked', pt: 'Não vinculado' },
+      'tu bot de discord y roles oficiales están sincronizados con este perfil.': {
+        en: 'Your Discord bot and official roles are synced with this profile.',
+        pt: 'Seu bot do Discord e cargos oficiais estão sincronizados com este perfil.'
+      },
+      'vincular mi discord': { en: 'Link my Discord', pt: 'Vincular meu Discord' },
+      'puedes iniciar sesión directamente con tu correo de google.': {
+        en: 'You can log in directly with your Google email.',
+        pt: 'Você pode entrar diretamente com seu e-mail do Google.'
+      },
+      'vincular mi google': { en: 'Link my Google', pt: 'Vincular meu Google' },
+      '© 2026 mythic progression. todos los derechos reservados.': {
+        en: '© 2026 Mythic Progression. All rights reserved.',
+        pt: '© 2026 Mythic Progression. Todos os direitos reservados.'
+      }
     };
 
     const isProtected = (el) => {
@@ -9217,6 +9397,7 @@ class MythicApp {
       if (el.closest('#user-session-badge')) return true;
       if (el.closest('.product-card-title') || el.classList.contains('product-card-title')) return true;
       if (el.closest('.player-role') || el.classList.contains('player-role')) return true;
+      if (el.closest('.notranslate') || el.classList.contains('notranslate') || el.getAttribute('translate') === 'no') return true;
       return false;
     };
 
@@ -9225,7 +9406,7 @@ class MythicApp {
       document.querySelectorAll('[data-i18n-orig]').forEach(el => {
         if (isProtected(el)) return;
         const orig = el.getAttribute('data-i18n-orig');
-        const icon = el.querySelector('i');
+        const icon = el.querySelector('i, svg');
         if (icon) {
           el.innerHTML = '';
           el.appendChild(icon);
@@ -9274,13 +9455,20 @@ class MythicApp {
 
       if (dict[key] && dict[key][lang]) {
         if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', cleanText);
-        const icon = el.querySelector('i');
+        
+        let targetText = dict[key][lang];
+        // If source text was completely UPPERCASE (and contains letters), convert translation to UPPERCASE
+        if (cleanText === cleanText.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(cleanText)) {
+          targetText = targetText.toUpperCase();
+        }
+
+        const icon = el.querySelector('i, svg');
         if (icon) {
           el.innerHTML = '';
           el.appendChild(icon);
-          el.appendChild(document.createTextNode(' ' + dict[key][lang]));
+          el.appendChild(document.createTextNode(' ' + targetText));
         } else {
-          el.textContent = dict[key][lang];
+          el.textContent = targetText;
         }
       }
     });
