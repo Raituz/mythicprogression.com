@@ -7265,6 +7265,10 @@ class MythicApp {
     this.updateLiveChatTranslations(lang);
     this.applyTranslations();
 
+    // Re-apply on short ticks to catch any dynamic content
+    setTimeout(() => this.applyTranslations(), 50);
+    setTimeout(() => this.applyTranslations(), 250);
+
     const msgs = {
       es: 'Idioma cambiado a Español',
       en: 'Language switched to English',
@@ -7373,11 +7377,18 @@ class MythicApp {
       'inicio en 15 minutos': { en: 'Start in 15 minutes', pt: 'Início em 15 minutos' },
       'chat privado con tu booster': { en: 'Private Chat with your Booster', pt: 'Chat privado com seu booster' },
       'servicios destacados': { en: 'FEATURED SERVICES', pt: 'SERVIÇOS EM DESTAQUE' },
+      'world of warcraft oficial': { en: 'World of Warcraft Official', pt: 'World of Warcraft Oficial' },
       'oficial world of warcraft': { en: 'World of Warcraft Official', pt: 'World of Warcraft Oficial' },
       'selecciona cualquier servicio para ver su página individual y configurar tus opciones.': { en: 'Select any service to view its individual page and configure your options.', pt: 'Selecione cualquier serviço para ver sua página individual e configurar suas opções.' },
       'piedras angulares míticas+, bandas heroicas y míticas, equipamiento bis y powerleveling. protección garantizada con vpn local, seguimiento en vivo de tu orden y chat directo con tu pro.': { en: 'Mythic Keystones+, Heroic and Mythic Raids, BiS Gear, and Powerleveling. Guaranteed protection with local VPN, live order tracking, and direct chat with your pro.', pt: 'Pedras-chave Míticas+, Raides Heróicas e Míticas, Equipamento BiS e Powerleveling. Proteção garantida com VPN local, rastreamento ao vivo do seu pedido e chat direto com seu pro.' },
+      '+2 a +15 timed': { en: '+2 to +15 Timed', pt: '+2 a +15 no Tempo' },
+      '+2 a +20 timed': { en: '+2 to +20 Timed', pt: '+2 a +20 no Tempo' },
+      '1 a 80 / 80 personalizado': { en: '1 to 80 / 80 Customized', pt: '1 a 80 / 80 Personalizado' },
+      'bis gear 619+': { en: 'BiS Gear 619+', pt: 'Equipamento BiS 619+' },
+      'profundidades / delves': { en: 'Depths / Delves', pt: 'Profundezas / Delves' },
+      'ver servicio': { en: 'View Service', pt: 'Ver Serviço' },
       'desde': { en: 'FROM', pt: 'A PARTIR DE' },
-      'configurar': { en: 'SET UP', pt: 'CONFIGURAR' },
+      'configurar': { en: 'CONFIGURE', pt: 'CONFIGURAR' },
       'temporada 2 activa': { en: 'Season 2 Active', pt: 'Temporada 2 Ativa' },
       'nueva raid temporada 2': { en: 'New Raid Season 2', pt: 'Novo Raide Temporada 2' },
       'sweet spot tier 8': { en: 'Sweet Spot Tier 8', pt: 'Ponto Ideal Tier 8' },
@@ -7390,17 +7401,46 @@ class MythicApp {
       'mítica+ keystone run (+2 a +20)': { en: 'Mythic+ Keystone Run (+2 to +20)', pt: 'Mítica+ Keystone Run (+2 a +20)' },
       'delves tier 8-11 & némesis de temporada': { en: 'Delves Tier 8-11 & Season Nemesis', pt: 'Delves Tier 8-11 & Nêmesis de Temporada' },
       'full equipamiento de temporada (ilvl 292 - 344)': { en: 'Full Season Gear (ilvl 292 - 344)', pt: 'Equipamento Completo de Temporada (ilvl 292 - 344)' },
+      'completa mazmorras míticas plus de midnight a tiempo con nuestro equipo profesional. obtén botín hasta 311 ilvl en cofre final y 318 ilvl (mítico) en tu gran cámara semanal.': {
+        en: "Complete Midnight's Mythic+ dungeons on time with our professional team. Earn loot up to 311 ilvl in final chest and 318 ilvl (Mythic) in your weekly Grand Vault.",
+        pt: "Complete masmorras míticas plus de Midnight no tempo com nossa equipe profissional. Obtenha saques de até 311 ilvl no baú final e 318 ilvl (Mítico) no seu Grande Cofre semanal."
+      },
+      'derrota a los 8 jefes del abismo venenoso en las cámaras de atal\'utek incluyendo a ula\'tek. botín garantizado de 292 a 344 ilvl, logro ahead of the curve (aotc) / cutting edge y recompensas bis de temporada.': {
+        en: "Defeat all 8 bosses of the Poisonous Abyss in the Atal'Utek Vaults, including Ula'tek. Guaranteed loot from 292 to 344 ilvl, Ahead of the Curve (AOTC) / Cutting Edge achievement and season BiS rewards.",
+        pt: "Derrote todos os 8 chefes do Abismo Venenoso nas Câmaras de Atal'Utek, incluindo Ula'tek. Saques garantidos de 292 a 344 ilvl, conquista Ahead of the Curve (AOTC) / Cutting Edge e recompensas BiS da temporada."
+      },
+      'completa profundidades abundantes tier 8 (sweet spot) para botín directo de 295-298 ilvl (campeón) en cofre abundante con llave y gran cámara semanal de 308-311 ilvl (héroe). desbloquea hasta 3 ranuras semanales.': {
+        en: "Complete Tier 8 Abundant Delves (Sweet Spot) for direct 295-298 ilvl (Champion) loot in Bountiful Chest with Key and 308-311 ilvl (Hero) weekly Grand Vault. Unlocks up to 3 weekly slots.",
+        pt: "Complete Profundezas Abundantes Tier 8 (Ponto Ideal) para saque direto de 295-298 ilvl (Campeão) no Baú Abundante com Chave e Grande Cofre semanal de 308-311 ilvl (Herói). Desbloqueia até 3 espaços semanais."
+      },
+      'equipa a tu personaje con los mejores objetos de la temporada actual mediante míticas+, delves tier 8 y raid el abismo venenoso. tu personaje listo para míticas altas y pvp.': {
+        en: "Equip your character with the season's top gear through Mythic+, Tier 8 Delves, and The Venomous Abyss Raid. Ready for high keys and PvP.",
+        pt: "Equipe seu personagem com os melhores itens da temporada atual através de Míticas+, Delves Tier 8 e Raide O Abismo Venenoso. Seu personagem pronto para míticas altas e PvP."
+      },
+      'sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.': {
+        en: "Level up your character from any level (1 to 80/90) in record time. Choose your current and desired level with our real-time interactive calculator, 100% manual and secure methods.",
+        pt: "Suba seu personagem de qualquer nível (1 ao 80/90) em tempo recorde. Escolha seu nível atual e desejado com nossa calculadora interativa em tempo real, métodos 100% manuais e seguros."
+      },
+      'total del carrito:': { en: 'Cart Total:', pt: 'Total do Carrinho:' },
+      'proceder al pago / checkout': { en: 'Proceed to Checkout', pt: 'Finalizar Compra / Checkout' },
       'world of warcraft es una marca registrada de blizzard entertainment, inc. mythic progression es una plataforma independiente de servicios.': { en: 'World of Warcraft is a registered trademark of Blizzard Entertainment, Inc. Mythic Progression is an independent service platform.', pt: 'World of Warcraft é uma marca registrada da Blizzard Entertainment, Inc. Mythic Progression é uma plataforma de serviços independente.' },
       'wow carry & mythic services': { en: 'WoW Carry & Mythic Services', pt: 'WoW Carry & Mythic Services' }
+    };
+
+    const isProtected = (el) => {
+      if (!el) return true;
+      if (el.closest('#mp-live-chat-root')) return true;
+      if (el.closest('#header-lang-selector')) return true;
+      if (el.closest('#user-session-badge')) return true;
+      if (el.closest('.product-card-title') || el.classList.contains('product-card-title')) return true;
+      if (el.closest('.player-role') || el.classList.contains('player-role')) return true;
+      return false;
     };
 
     if (lang === 'es') {
       // Restore Spanish
       document.querySelectorAll('[data-i18n-orig]').forEach(el => {
-        if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
-        const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
-        if (nonIconChildren.length > 0) return;
-
+        if (isProtected(el)) return;
         const orig = el.getAttribute('data-i18n-orig');
         const icon = el.querySelector('i');
         if (icon) {
@@ -7412,7 +7452,7 @@ class MythicApp {
         }
       });
       document.querySelectorAll('[data-i18n-orig-ph]').forEach(el => {
-        if (el.closest('#mp-live-chat-root') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+        if (isProtected(el)) return;
         el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
       });
       this.triggerGoogleTranslate('es');
@@ -7421,33 +7461,36 @@ class MythicApp {
 
     // Translate Inputs & Placeholders
     document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
-      if (el.closest('#mp-live-chat-root') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
-      const orig = el.getAttribute('data-i18n-orig-ph') || el.getAttribute('placeholder');
-      if (!el.hasAttribute('data-i18n-orig-ph')) el.setAttribute('data-i18n-orig-ph', orig);
-      const key = orig.trim().toLowerCase();
+      if (isProtected(el)) return;
+      const raw = el.getAttribute('data-i18n-orig-ph') || el.getAttribute('placeholder') || '';
+      const clean = raw.replace(/\s+/g, ' ').trim();
+      if (!el.hasAttribute('data-i18n-orig-ph')) el.setAttribute('data-i18n-orig-ph', clean);
+      const key = clean.toLowerCase();
       if (dict[key] && dict[key][lang]) {
         el.setAttribute('placeholder', dict[key][lang]);
       }
     });
 
-    // Translate DOM Elements (strictly leaf elements, never containers or divs)
-    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong');
+    // Translate DOM Elements (leaf elements, headers, paragraphs, buttons, divs)
+    const elements = document.querySelectorAll('span, button, a, label, h1, h2, h3, h4, h5, p, strong, div');
     elements.forEach(el => {
-      // Protect interactive and already localized header & widget containers
-      if (el.closest('#mp-live-chat-root') || el.closest('#mp-live-chat-launcher') || el.closest('#mp-live-chat-window') || el.closest('#mp-lang-dropdown-wrapper') || el.closest('#header-lang-selector') || el.closest('#user-session-badge') || el.closest('.notranslate') || el.closest('[translate="no"]')) return;
+      if (isProtected(el)) return;
 
-      // Only process leaf elements or elements containing only an <i> icon
-      const nonIconChildren = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'i');
-      if (nonIconChildren.length > 0) return;
+      // Only process leaf elements or elements containing only an <i> or <svg> or <br>
+      const nonLeafChildren = Array.from(el.children).filter(c => {
+        const tag = c.tagName.toLowerCase();
+        return tag !== 'i' && tag !== 'svg' && tag !== 'br';
+      });
+      if (nonLeafChildren.length > 0) return;
 
-      const fullText = el.textContent.trim();
-      if (!fullText) return;
+      const raw = el.getAttribute('data-i18n-orig') || el.textContent || '';
+      const cleanText = raw.replace(/\s+/g, ' ').trim();
+      if (!cleanText) return;
 
-      const orig = el.getAttribute('data-i18n-orig') || fullText;
-      const key = orig.trim().toLowerCase();
+      const key = cleanText.toLowerCase();
 
       if (dict[key] && dict[key][lang]) {
-        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', orig);
+        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', cleanText);
         const icon = el.querySelector('i');
         if (icon) {
           el.innerHTML = '';
