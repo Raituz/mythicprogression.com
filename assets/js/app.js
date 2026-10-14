@@ -6383,22 +6383,22 @@ class MythicApp {
 
       return `
       <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
-        <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap text-xs">#${o.id}</td>
-        <td class="py-4 px-5">
-          <div class="font-bold text-white text-sm leading-snug">${o.serviceName}</div>
-          <div class="text-[11px] text-stone-400 mt-1">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
+        <td class="py-3 px-3 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap text-xs">#${o.id}</td>
+        <td class="py-3 px-3 min-w-[220px]">
+          <div class="font-bold text-white text-xs leading-snug">${o.serviceName}</div>
+          <div class="text-[10px] text-stone-400 mt-0.5 line-clamp-2">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
         </td>
-        <td class="py-4 px-5">
+        <td class="py-3 px-3 min-w-[120px]">
           <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
-          <div class="text-[11px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
+          <div class="text-[10px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
         </td>
-        <td class="py-4 px-5 font-mono-gaming font-bold text-white text-sm whitespace-nowrap">
+        <td class="py-3 px-3 font-mono-gaming font-bold text-white text-xs whitespace-nowrap">
           $${safeTotal.toFixed(2)}
         </td>
-        <td class="py-4 px-5 font-mono-gaming text-[#f3e8ff] font-bold text-sm whitespace-nowrap">
+        <td class="py-3 px-3 font-mono-gaming text-[#f3e8ff] font-bold text-xs whitespace-nowrap">
           $${safeCompany.toFixed(2)}
         </td>
-        <td class="py-4 px-5 min-w-[210px]">
+        <td class="py-3 px-3 min-w-[175px]">
           ${o.status === 'COMPLETED' ? `
             <div class="font-semibold text-emerald-300 flex items-center gap-1.5 text-xs">
               <i class="fa-solid fa-bolt text-[11px] text-[#a855f7]"></i>
@@ -6406,9 +6406,9 @@ class MythicApp {
             </div>
             ${o.assignedBooster ? `<div class="text-[10px] font-mono-gaming text-[#a855f7] mt-0.5">Pago: $${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</div>` : ''}
           ` : `
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-1">
               <select onchange="app.adminAssignBoosterDropdown('${o.id}', this.value)" 
-                      class="w-full bg-[#140827] border ${o.assignedBooster ? 'border-emerald-600/60 text-emerald-300' : 'border-stone-700/80 text-stone-300'} rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:border-[#a855f7] outline-none cursor-pointer hover:bg-[#1d0d38] transition-all">
+                      class="w-full bg-[#140827] border ${o.assignedBooster ? 'border-emerald-600/60 text-emerald-300' : 'border-stone-700/80 text-stone-300'} rounded-lg px-2 py-1 text-xs font-semibold focus:border-[#a855f7] outline-none cursor-pointer hover:bg-[#1d0d38] transition-all">
                 <option value="" ${!o.assignedBooster ? 'selected' : ''}>-- Sin Asignar (En Bolsa) --</option>
                 ${(this.boosters || []).map(b => {
                   const bName = b.username || b.discord_id || 'Booster';
@@ -6421,69 +6421,69 @@ class MythicApp {
                 }).join('')}
               </select>
               ${o.assignedBooster ? `
-                <div class="flex items-center justify-between text-[10px] px-1">
+                <div class="flex items-center justify-between text-[10px] px-0.5">
                   <span class="text-stone-400">Pago:</span>
                   <span class="font-mono-gaming text-[#a855f7] font-bold">$${safeBoosterPayout.toFixed(2)} (${o.boosterPayoutRate || 30}%)</span>
                 </div>
               ` : `
-                <span class="text-[10px] text-stone-500 italic px-1">Visible en Bolsa de Pedidos</span>
+                <span class="text-[10px] text-stone-500 italic px-0.5">Visible en Bolsa de Pedidos</span>
               `}
-              ${bidsCount > 0 && o.status !== 'COMPLETED' ? `
-                <div class="mt-1 flex items-center justify-between bg-amber-950/70 border border-amber-600/60 rounded-lg px-2 py-1 text-[10px]">
+              ${bidsCount > 0 && !o.assignedBooster && o.status !== 'COMPLETED' && o.status !== 'IN_PROGRESS' ? `
+                <div class="flex items-center justify-between bg-amber-950/70 border border-amber-600/60 rounded-lg px-1.5 py-0.5 text-[10px]">
                   <span class="text-amber-300 font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-crown text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} (Mejor: $${Number(bestBid.bidAmount || 0).toFixed(2)})
+                    <i class="fa-solid fa-crown text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} ($${Number(bestBid.bidAmount || 0).toFixed(2)})
                   </span>
-                  <button onclick="app.openAdminOrderModal('${o.id}')" class="text-[#fcefc2] underline hover:text-white font-bold ml-1 cursor-pointer">Ver/Aceptar</button>
+                  <button onclick="app.openAdminOrderModal('${o.id}')" class="text-[#fcefc2] underline hover:text-white font-bold ml-1 cursor-pointer">Ver</button>
                 </div>
               ` : ''}
             </div>
           `}
         </td>
-        <td class="py-4 px-5 text-center whitespace-nowrap">
-          <span class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider ${
+        <td class="py-3 px-3 text-center whitespace-nowrap min-w-[110px]">
+          <span class="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${
             o.status === 'COMPLETED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-sm' :
             o.status === 'PENDING_APPROVAL' ? 'bg-amber-950/90 text-amber-300 border border-amber-600/70 shadow-sm animate-pulse' :
             o.status === 'IN_PROGRESS' ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60 shadow-sm' :
             o.status === 'BIDDING' ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm animate-pulse' :
             'bg-[#281b13] text-[#a855f7] border border-[#a855f7]/40 shadow-sm'
           }">
-            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : o.status === 'BIDDING' ? 'SUBASTA / PUJAS' : 'DISPONIBLE'}
+            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : o.status === 'BIDDING' ? 'SUBASTA' : 'DISPONIBLE'}
           </span>
         </td>
-        <td class="py-4 px-5 text-right whitespace-nowrap">
-          <div class="flex items-center justify-end gap-2">
-            <button onclick="app.openAdminOrderModal('${o.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer" title="Ver Detalles y Chat">
+        <td class="py-3 px-3 text-right whitespace-nowrap min-w-[170px]">
+          <div class="flex items-center justify-end gap-1.5 flex-nowrap">
+            <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2.5 py-1.5 rounded-lg bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Ver Detalles y Chat">
               <i class="fa-solid fa-eye text-[#a855f7] text-xs"></i>
               <span>Auditar</span>
             </button>
-            ${bidsCount > 0 && o.status !== 'COMPLETED' ? `
-              <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Ver y aceptar ofertas de boosters">
-                <i class="fa-solid fa-gavel text-amber-400"></i>
-                <span class="hidden xl:inline">Pujas (${bidsCount})</span>
+            ${bidsCount > 0 && !o.assignedBooster && o.status !== 'COMPLETED' && o.status !== 'IN_PROGRESS' ? `
+              <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Ver y aceptar ofertas de boosters">
+                <i class="fa-solid fa-gavel text-amber-400 text-xs"></i>
+                <span>Pujas (${bidsCount})</span>
               </button>
             ` : ''}
             ${o.status === 'PENDING_APPROVAL' ? `
-              <button onclick="app.adminApproveOrderCompletion('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Aprobar reporte y liberar pago al booster">
-                <i class="fa-solid fa-circle-check"></i>
-                <span class="hidden xl:inline">Aprobar</span>
+              <button onclick="app.adminApproveOrderCompletion('${o.id}')" class="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Aprobar reporte y liberar pago al booster">
+                <i class="fa-solid fa-circle-check text-xs"></i>
+                <span>Aprobar</span>
               </button>
-              <button onclick="app.adminRejectOrderCompletion('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Rechazar reporte y devolver a En Proceso">
-                <i class="fa-solid fa-rotate-left"></i>
-                <span class="hidden xl:inline">Rechazar</span>
+              <button onclick="app.adminRejectOrderCompletion('${o.id}')" class="px-2 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Rechazar reporte y devolver a En Proceso">
+                <i class="fa-solid fa-rotate-left text-xs"></i>
+                <span>Rechazar</span>
               </button>
             ` : ''}
             ${o.assignedBooster && o.status !== 'COMPLETED' ? `
-              <button onclick="app.adminUnassignBoosterOrder('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 text-rose-300 border border-rose-700/60 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer" title="Quitar orden al booster y devolverla a la Bolsa de Pedidos">
-                <i class="fa-solid fa-user-xmark text-rose-400"></i>
-                <span class="hidden xl:inline">Quitar Booster</span>
+              <button onclick="app.adminUnassignBoosterOrder('${o.id}')" class="px-2 py-1.5 rounded-lg bg-rose-950/70 hover:bg-rose-900/90 text-rose-300 border border-rose-700/60 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Quitar orden al booster y devolverla a la Bolsa de Pedidos">
+                <i class="fa-solid fa-user-xmark text-rose-400 text-xs"></i>
+                <span>Quitar</span>
               </button>
             ` : ''}
             ${o.status !== 'COMPLETED' && o.status !== 'PENDING_APPROVAL' ? `
-              <button onclick="app.adminCompleteOrder('${o.id}')" class="w-8 h-8 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer" title="Completar Orden">
+              <button onclick="app.adminCompleteOrder('${o.id}')" class="w-7 h-7 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0" title="Completar Orden">
                 <i class="fa-solid fa-check"></i>
               </button>
             ` : ''}
-            <button onclick="app.adminDeleteOrder('${o.id}')" class="w-8 h-8 rounded-xl bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-800/60 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer" title="Eliminar Orden">
+            <button onclick="app.adminDeleteOrder('${o.id}')" class="w-7 h-7 rounded-lg bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-800/60 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0" title="Eliminar Orden">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
