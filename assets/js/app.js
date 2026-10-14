@@ -3600,15 +3600,25 @@ class MythicApp {
       const orderId = order.id || 'N/A';
       const region = order.region || 'US';
       const method = order.completionMethod || 'Piloted';
-      const bidsCount = (order.bids && Array.isArray(order.bids)) ? order.bids.length : 0;
+      const bids = (order.bids && Array.isArray(order.bids)) ? order.bids : [];
+      const bidsCount = bids.length;
+      let highestBid = null;
+      if (bidsCount > 0) {
+        highestBid = [...bids].sort((a,b) => Number(b.bidAmount) - Number(a.bidAmount))[0];
+      }
+      const myBid = (this.currentUser && bidsCount > 0)
+        ? bids.find(b => (this.currentUser.discordId && b.boosterDiscordId && String(b.boosterDiscordId) === String(this.currentUser.discordId)) || (this.currentUser.username && b.boosterName && b.boosterName.toLowerCase() === this.currentUser.username.toLowerCase()))
+        : null;
+
       const serviceName = order.serviceName || 'Servicio Mythic Progression';
       const details = order.details || 'Detalles de la orden de juego';
       const vpnLocation = order.vpnLocation || 'No requerida';
       const timeStr = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Reciente';
-      const payoutVal = Number(order.boosterPayout || 0).toFixed(2);
+      const basePayoutVal = Number(order.boosterPayout || (order.totalPrice ? order.totalPrice * 0.3 : 0)).toFixed(2);
+      const maxBidAllowedVal = Number(order.maxBidAllowed || (order.totalPrice ? order.totalPrice * 0.5 : (Number(basePayoutVal) * 1.5))).toFixed(2);
 
       return `
-      <div class="glass-panel rounded-2xl p-5 mb-4 border border-stone-800/80 hover:border-[#ee914f]/50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group">
+      <div class="glass-panel rounded-2xl p-5 mb-4 border ${highestBid ? 'border-amber-500/50 shadow-lg shadow-amber-950/20' : 'border-stone-800/80'} hover:border-[#ee914f]/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-2 flex-wrap">
             <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-[#251c14] text-[#ee914f] border border-[#ee914f]/30">
@@ -3623,7 +3633,12 @@ class MythicApp {
             <span class="text-[11px] px-2 py-0.5 rounded ${method === 'Piloted' ? 'bg-[#301c10] text-[#fccc8f] border border-[#b85d1d]/40' : 'bg-[#18231a] text-emerald-400 border border-emerald-900/40'}">
               ${method}
             </span>
-            ${bidsCount > 0 ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#2c1d14] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-gavel mr-1"></i>${bidsCount} Oferta(s)</span>` : ''}
+            ${highestBid ? `
+              <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-amber-950 text-amber-300 border border-amber-500/60 font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-gavel text-amber-400"></i>
+                <span>${bidsCount} Puja${bidsCount > 1 ? 's' : ''} (Subasta Activa)</span>
+              </span>
+            ` : ''}
           </div>
 
           <h3 class="text-base font-bold text-white group-hover:text-[#fcefc2] transition-colors">
@@ -3632,6 +3647,33 @@ class MythicApp {
           <p class="text-xs text-stone-400 mt-1">
             ${details}
           </p>
+
+          ${highestBid ? `
+            <div class="mt-3 p-3 rounded-xl bg-[#1e130c] border border-amber-500/40 flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-inner">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs">
+                  <i class="fa-solid fa-gavel"></i>
+                </span>
+                <span class="text-stone-300 font-semibold">Puja más alta actual:</span>
+                <span class="font-mono-gaming text-sm font-bold text-amber-300 bg-amber-950/80 px-2.5 py-0.5 rounded-md border border-amber-500/50 shadow-sm">
+                  $${Number(highestBid.bidAmount).toFixed(2)}
+                </span>
+                <span class="text-stone-400 text-[11px]">por</span>
+                <strong class="text-[#fcefc2]">${highestBid.boosterName}</strong>
+                <span class="text-[10px] text-stone-500 font-mono">(${bidsCount} oferta${bidsCount > 1 ? 's' : ''})</span>
+                ${myBid ? `
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700/50 font-bold ml-1">
+                    <i class="fa-solid fa-check mr-0.5"></i> Tu oferta: $${Number(myBid.bidAmount).toFixed(2)}
+                  </span>
+                ` : ''}
+              </div>
+              <div class="text-[11px] text-stone-400 flex items-center gap-1 font-mono">
+                <span class="text-stone-500">Máx permitido:</span>
+                <strong class="text-stone-300">$${maxBidAllowedVal}</strong>
+              </div>
+            </div>
+          ` : ''}
+
           <div class="text-[11px] text-stone-500 mt-2 flex items-center gap-3">
             <span><i class="fa-solid fa-shield-halved text-[#ee914f] mr-1"></i>VPN: ${vpnLocation}</span>
             <span><i class="fa-solid fa-clock mr-1"></i>Hora: ${timeStr}</span>
@@ -3640,11 +3682,21 @@ class MythicApp {
 
         <div class="flex items-center gap-4 border-t md:border-t-0 md:border-l border-stone-800 pt-3 md:pt-0 md:pl-6 justify-between md:justify-end">
           <div class="text-right">
-            <span class="text-[10px] text-stone-400 block uppercase tracking-wider">Pago al Pro</span>
-            <div class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">
-              $${payoutVal}
-            </div>
-            <span class="text-[10px] text-emerald-400/90 font-medium"><i class="fa-solid fa-circle-check text-[8px] mr-1"></i>Oferta disponible</span>
+            ${highestBid ? `
+              <span class="text-[10px] text-amber-400 block uppercase tracking-wider font-semibold">
+                <i class="fa-solid fa-gavel text-xs mr-0.5"></i> Puja Más Alta
+              </span>
+              <div class="text-2xl font-bold font-mono-gaming text-amber-300">
+                $${Number(highestBid.bidAmount).toFixed(2)}
+              </div>
+              <span class="text-[10px] text-stone-400 block">Base: $${basePayoutVal}</span>
+            ` : `
+              <span class="text-[10px] text-stone-400 block uppercase tracking-wider">Pago al Pro</span>
+              <div class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">
+                $${basePayoutVal}
+              </div>
+              <span class="text-[10px] text-emerald-400/90 font-medium"><i class="fa-solid fa-circle-check text-[8px] mr-1"></i>Oferta disponible</span>
+            `}
           </div>
 
           <div class="flex flex-col gap-2 min-w-[135px]">
@@ -3654,7 +3706,7 @@ class MythicApp {
             </button>
             <button onclick="app.openBidModal('${orderId}')" class="px-3.5 py-2 rounded-xl bg-[#1f1712] hover:bg-[#2c2018] text-[#eedaa2] border border-[#ee914f]/35 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer">
               <i class="fa-solid fa-gavel"></i>
-              <span>Hacer Oferta</span>
+              <span>${myBid ? 'Mejorar Oferta' : 'Hacer Oferta'}</span>
             </button>
           </div>
         </div>
@@ -3822,31 +3874,105 @@ class MythicApp {
     const content = document.getElementById('bid-modal-content');
     if (!modal || !content) return;
 
+    const basePayout = Number(order.boosterPayout || (order.totalPrice ? order.totalPrice * 0.3 : 10));
+    const maxBid = Number(order.maxBidAllowed || (order.totalPrice ? order.totalPrice * 0.5 : (basePayout * 1.5)));
+    const bids = Array.isArray(order.bids) ? order.bids : [];
+    const highestBid = bids.length > 0 ? [...bids].sort((a,b) => Number(b.bidAmount) - Number(a.bidAmount))[0] : null;
+
+    const myBid = (this.currentUser && bids.length > 0)
+      ? bids.find(b => (this.currentUser.discordId && b.boosterDiscordId && String(b.boosterDiscordId) === String(this.currentUser.discordId)) || (this.currentUser.username && b.boosterName && b.boosterName.toLowerCase() === this.currentUser.username.toLowerCase()))
+      : null;
+
+    // Suggest default value: if highest bid exists, suggest highestBid + 1.0 (capped at maxBid)
+    const suggestedBid = highestBid 
+      ? Math.min(maxBid, Math.max(basePayout, Number(highestBid.bidAmount) + 1.0))
+      : Math.min(maxBid, basePayout + 2.0);
+
     content.innerHTML = `
       <div class="p-6">
-        <h3 class="text-lg font-bold text-[#fcefc2] mb-1 font-cinzel">Hacer Oferta (Subasta)</h3>
-        <p class="text-xs text-stone-400 mb-4">Orden #${order.id} - ${order.serviceName}</p>
+        <div class="flex items-center justify-between pb-3 border-b border-stone-800 mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400">
+              <i class="fa-solid fa-gavel text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Subasta de Contrato</h3>
+              <p class="text-[11px] text-stone-400">Orden #${order.id} - ${order.serviceName}</p>
+            </div>
+          </div>
+          <button onclick="document.getElementById('bid-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
 
         <div class="bg-[#140e0b] p-4 rounded-xl border border-stone-800 space-y-2 mb-4 text-xs">
-          <div class="flex justify-between">
-            <span class="text-stone-400">Pago actual del Booster:</span>
-            <span class="font-bold text-[#ee914f]">$${order.boosterPayout.toFixed(2)}</span>
+          <div class="flex justify-between items-center">
+            <span class="text-stone-400">Pago base de la orden:</span>
+            <span class="font-bold font-mono-gaming text-stone-300">$${basePayout.toFixed(2)}</span>
           </div>
-          <div class="flex justify-between">
+          <div class="flex justify-between items-center">
             <span class="text-stone-400">Oferta máxima permitida:</span>
-            <span class="font-bold text-[#fcefc2]">$${order.maxBidAllowed.toFixed(2)}</span>
+            <span class="font-bold font-mono-gaming text-amber-400">$${maxBid.toFixed(2)}</span>
           </div>
+          ${highestBid ? `
+            <div class="pt-2 border-t border-stone-800 flex justify-between items-center">
+              <span class="text-amber-300 font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-fire text-amber-500"></i> Puja más alta actual:
+              </span>
+              <span class="font-bold font-mono-gaming text-emerald-400 text-sm">$${Number(highestBid.bidAmount).toFixed(2)} <span class="text-[10px] text-stone-400 font-normal">(${highestBid.boosterName})</span></span>
+            </div>
+          ` : `
+            <div class="pt-2 border-t border-stone-800 text-[11px] text-stone-500 italic">
+              No hay pujas activas aún. ¡Sé el primero en ofertar!
+            </div>
+          `}
+          ${myBid ? `
+            <div class="pt-1 flex justify-between items-center text-[11px]">
+              <span class="text-stone-400">Tu oferta previa:</span>
+              <span class="font-bold font-mono-gaming text-cyan-400">$${Number(myBid.bidAmount).toFixed(2)}</span>
+            </div>
+          ` : ''}
         </div>
 
         <div class="mb-4">
-          <label class="block text-xs font-semibold text-stone-300 mb-1">Monto de tu oferta ($):</label>
-          <input id="input-bid-amount" type="number" step="0.5" min="${order.boosterPayout}" max="${order.maxBidAllowed}" value="${(order.boosterPayout + 2).toFixed(2)}" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-base text-white focus:border-[#ee914f] outline-none">
-          <p class="text-[11px] text-stone-500 mt-1">El monto puede estar entre $${order.boosterPayout.toFixed(2)} y $${order.maxBidAllowed.toFixed(2)}.</p>
+          <label class="block text-xs font-semibold text-stone-300 mb-1.5 flex items-center justify-between">
+            <span>Monto de tu oferta ($):</span>
+            <span class="text-[11px] text-stone-400">Mín: $${basePayout.toFixed(2)} | Máx: $${maxBid.toFixed(2)}</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono-gaming text-stone-400 text-base">$</span>
+            <input id="input-bid-amount" type="number" step="0.50" min="${basePayout.toFixed(2)}" max="${maxBid.toFixed(2)}" value="${suggestedBid.toFixed(2)}" class="w-full bg-[#17120e] border border-stone-700 focus:border-[#ee914f] rounded-xl pl-8 pr-4 py-2.5 text-base font-mono-gaming text-white outline-none">
+          </div>
+          <p class="text-[11px] text-stone-500 mt-1.5 leading-relaxed">
+            Ingresa el monto que solicitas por completar este contrato. El Staff evaluará todas las ofertas y seleccionará al booster ganador.
+          </p>
         </div>
 
-        <div class="flex justify-end gap-3">
-          <button onclick="document.getElementById('bid-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-stone-900 text-stone-300 text-xs font-bold">Cancelar</button>
-          <button onclick="app.submitBid('${order.id}')" class="px-5 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider">Enviar Oferta</button>
+        ${bids.length > 0 ? `
+          <div class="mb-4 bg-[#110c08] border border-stone-800/80 rounded-xl p-3">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-400 block mb-2">Historial de Pujas (${bids.length}):</span>
+            <div class="max-h-28 overflow-y-auto space-y-1.5 pr-1">
+              ${[...bids].sort((a,b) => Number(b.bidAmount) - Number(a.bidAmount)).map((b, idx) => `
+                <div class="flex items-center justify-between text-xs py-1 px-2 rounded ${idx === 0 ? 'bg-amber-950/40 text-amber-200 border border-amber-800/30' : 'bg-stone-900/40 text-stone-300'}">
+                  <span class="flex items-center gap-1.5">
+                    ${idx === 0 ? '<i class="fa-solid fa-crown text-amber-400 text-[10px]"></i>' : '<span class="text-stone-500 text-[10px]">#' + (idx + 1) + '</span>'}
+                    <strong class="font-medium">${b.boosterName}</strong>
+                  </span>
+                  <span class="font-mono-gaming font-bold text-white">$${Number(b.bidAmount).toFixed(2)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button onclick="document.getElementById('bid-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-stone-900 text-stone-300 hover:text-white text-xs font-bold transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button onclick="app.submitBid('${order.id}')" class="px-5 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-1.5">
+            <i class="fa-solid fa-gavel"></i>
+            <span>${myBid ? 'Actualizar Oferta' : 'Enviar Oferta'}</span>
+          </button>
         </div>
       </div>
     `;
@@ -3859,24 +3985,62 @@ class MythicApp {
     const order = this.orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const amount = Number(document.getElementById('input-bid-amount')?.value);
-    if (isNaN(amount) || amount > order.maxBidAllowed || amount < order.boosterPayout) {
-      this.showToast(`La oferta debe estar entre $${order.boosterPayout.toFixed(2)} y el máximo de $${order.maxBidAllowed.toFixed(2)}`, 'error');
+    if (!order.bids || !Array.isArray(order.bids)) {
+      order.bids = [];
+    }
+
+    const basePayout = Number(order.boosterPayout || (order.totalPrice ? order.totalPrice * 0.3 : 10));
+    const maxBid = Number(order.maxBidAllowed || (order.totalPrice ? order.totalPrice * 0.5 : (basePayout * 1.5)));
+
+    const inputEl = document.getElementById('input-bid-amount');
+    const amount = Number(inputEl ? inputEl.value : 0);
+
+    if (isNaN(amount) || amount < basePayout || amount > maxBid) {
+      this.showToast(`La oferta debe estar entre $${basePayout.toFixed(2)} y el máximo de $${maxBid.toFixed(2)}`, 'error');
       return;
     }
 
     order.status = 'BIDDING';
-    order.bids.push({
-      boosterDiscordId: this.currentUser.discordId,
-      boosterName: this.currentUser.username,
+
+    const boosterName = (this.currentUser && this.currentUser.username) || 'Booster';
+    const boosterDiscord = (this.currentUser && (this.currentUser.discordId || this.currentUser.id)) || '';
+    const highestRole = typeof this.getHighestUserRole === 'function' ? this.getHighestUserRole(this.currentUser) : 'Booster';
+
+    const existingIndex = order.bids.findIndex(b => 
+      (boosterDiscord && b.boosterDiscordId && String(b.boosterDiscordId) === String(boosterDiscord)) ||
+      (b.boosterName && b.boosterName.toLowerCase() === boosterName.toLowerCase())
+    );
+
+    const bidData = {
+      boosterDiscordId: boosterDiscord,
+      boosterName: boosterName,
+      boosterRole: highestRole,
       bidAmount: amount,
+      timestamp: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      order.bids[existingIndex] = bidData;
+    } else {
+      order.bids.push(bidData);
+    }
+
+    if (!order.chat) order.chat = [];
+    order.chat.push({
+      sender: 'system',
+      message: `🔨 Nueva Puja: El booster ${boosterName} (${highestRole}) ha ofertado $${amount.toFixed(2)} por este pedido.`,
       timestamp: new Date().toISOString()
     });
 
     this.saveOrders();
-    document.getElementById('bid-modal').classList.add('hidden');
-    this.renderProOrderFeed();
-    this.showToast(`¡Oferta de $${amount.toFixed(2)} registrada!`, 'success');
+
+    const modal = document.getElementById('bid-modal');
+    if (modal) modal.classList.add('hidden');
+
+    if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+
+    this.showToast(`¡Oferta de $${amount.toFixed(2)} registrada con éxito!`, 'success');
   }
 
   renderProMyOrders() {
@@ -5548,7 +5712,12 @@ class MythicApp {
       return;
     }
 
-    container.innerHTML = list.map(o => `
+    container.innerHTML = list.map(o => {
+      const bidsList = (o.bids && Array.isArray(o.bids)) ? o.bids : [];
+      const bidsCount = bidsList.length;
+      const highestBid = bidsCount > 0 ? [...bidsList].sort((a,b) => Number(b.bidAmount) - Number(a.bidAmount))[0] : null;
+
+      return `
       <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
         <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap text-xs">#${o.id}</td>
         <td class="py-4 px-5">
@@ -5595,6 +5764,14 @@ class MythicApp {
               ` : `
                 <span class="text-[10px] text-stone-500 italic px-1">Visible en Bolsa de Pedidos</span>
               `}
+              ${bidsCount > 0 && o.status !== 'COMPLETED' ? `
+                <div class="mt-1 flex items-center justify-between bg-amber-950/70 border border-amber-600/60 rounded-lg px-2 py-1 text-[10px]">
+                  <span class="text-amber-300 font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-gavel text-amber-400"></i> ${bidsCount} Puja${bidsCount > 1 ? 's' : ''} (Máx: $${Number(highestBid.bidAmount).toFixed(2)})
+                  </span>
+                  <button onclick="app.openAdminOrderModal('${o.id}')" class="text-[#fcefc2] underline hover:text-white font-bold ml-1 cursor-pointer">Ver/Aceptar</button>
+                </div>
+              ` : ''}
             </div>
           `}
         </td>
@@ -5603,9 +5780,10 @@ class MythicApp {
             o.status === 'COMPLETED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-sm' :
             o.status === 'PENDING_APPROVAL' ? 'bg-amber-950/90 text-amber-300 border border-amber-600/70 shadow-sm animate-pulse' :
             o.status === 'IN_PROGRESS' ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60 shadow-sm' :
+            o.status === 'BIDDING' ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm animate-pulse' :
             'bg-[#281b13] text-[#a855f7] border border-[#a855f7]/40 shadow-sm'
           }">
-            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : 'DISPONIBLE'}
+            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : o.status === 'BIDDING' ? 'SUBASTA / PUJAS' : 'DISPONIBLE'}
           </span>
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
@@ -5614,6 +5792,12 @@ class MythicApp {
               <i class="fa-solid fa-eye text-[#a855f7] text-xs"></i>
               <span>Auditar</span>
             </button>
+            ${bidsCount > 0 && o.status !== 'COMPLETED' ? `
+              <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Ver y aceptar ofertas de boosters">
+                <i class="fa-solid fa-gavel text-amber-400"></i>
+                <span class="hidden xl:inline">Pujas (${bidsCount})</span>
+              </button>
+            ` : ''}
             ${o.status === 'PENDING_APPROVAL' ? `
               <button onclick="app.adminApproveOrderCompletion('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Aprobar reporte y liberar pago al booster">
                 <i class="fa-solid fa-circle-check"></i>
@@ -5641,7 +5825,8 @@ class MythicApp {
           </div>
         </td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
   }
 
   filterAdminOrdersByStatus(status) {
@@ -5864,6 +6049,88 @@ class MythicApp {
     this.showToast(`Orden #${o.id} asignada con éxito a ${bName}.`, 'success');
   }
 
+  adminAcceptBid(orderId, boosterIdOrUsername, acceptedAmount) {
+    if (!this.checkAdminPermission()) return;
+
+    const order = (this.orders || []).find(o => o.id === orderId);
+    if (!order) return;
+
+    const booster = (this.boosters || []).find(b => 
+      (b.discord_id && String(b.discord_id) === String(boosterIdOrUsername)) ||
+      (b.username && b.username.toLowerCase() === String(boosterIdOrUsername).toLowerCase()) ||
+      (b.id && String(b.id) === String(boosterIdOrUsername))
+    );
+
+    const bName = booster ? (booster.username || booster.discord_id) : String(boosterIdOrUsername);
+    const bDiscord = booster ? (booster.discord_id || booster.username) : String(boosterIdOrUsername);
+    const payout = Number(acceptedAmount);
+
+    const confirmed = confirm(`¿Deseas aceptar la oferta de $${payout.toFixed(2)} del booster "${bName}" y asignarle la orden #${order.id}?`);
+    if (!confirmed) return;
+
+    order.assignedBooster = {
+      username: bName,
+      discordId: bDiscord,
+      payout: payout,
+      id: booster ? booster.id : null
+    };
+    order.boosterPayout = payout;
+    if (order.totalPrice && order.totalPrice > 0) {
+      order.boosterPayoutRate = Math.round((payout / order.totalPrice) * 100);
+      order.companyShare = Math.max(0, order.totalPrice - payout);
+    }
+    order.status = 'IN_PROGRESS';
+    order.acceptedBid = {
+      boosterName: bName,
+      boosterDiscordId: bDiscord,
+      bidAmount: payout,
+      acceptedAt: new Date().toISOString(),
+      acceptedBy: (this.currentUser && this.currentUser.username) || 'Staff'
+    };
+
+    if (!order.chat) order.chat = [];
+    order.chat.push({
+      sender: 'system',
+      author: 'Administración Mythic',
+      message: `🔨 OFERTA ACEPTADA: La administración ha aceptado la oferta de puja del booster ${bName} por un monto acordado de $${payout.toFixed(2)}. La orden pasa a estar EN PROCESO.`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.saveOrders();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({
+          type: 'ORDER_CLAIMED',
+          orderId: order.id,
+          booster: bName
+        });
+      } catch (e) {}
+    }
+
+    this.showToast(`¡Oferta aceptada! Orden #${order.id} asignada a ${bName} por $${payout.toFixed(2)}.`, 'success');
+
+    const modal = document.getElementById('admin-order-modal');
+    if (modal) modal.classList.add('hidden');
+
+    this.renderAdminOverview();
+    if (typeof this.renderAdminOrders === 'function') {
+      this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    }
+    if (typeof this.renderProOrderFeed === 'function') {
+      this.renderProOrderFeed();
+    }
+    if (typeof this.renderProMyOrders === 'function') {
+      this.renderProMyOrders();
+    }
+    if (typeof this.renderChatList === 'function') {
+      this.renderChatList();
+    }
+    if (typeof this.renderClientOrders === 'function') {
+      this.renderClientOrders();
+    }
+  }
+
   adminUnassignBoosterOrder(orderId) {
     if (!this.checkAdminPermission()) return;
 
@@ -5930,6 +6197,10 @@ class MythicApp {
     const content = document.getElementById('admin-order-modal-content');
     if (!modal || !content) return;
 
+    const orderBids = Array.isArray(o.bids) ? o.bids : [];
+    const sortedBids = [...orderBids].sort((a,b) => Number(b.bidAmount) - Number(a.bidAmount));
+    const highestBid = sortedBids.length > 0 ? sortedBids[0] : null;
+
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div>
@@ -5972,6 +6243,81 @@ class MythicApp {
             </div>
           </div>
         ` : ''}
+
+        <!-- SECCIÓN DE SUBASTA Y PUJAS (BIDS) -->
+        <div class="bg-[#120822] border ${orderBids.length > 0 ? 'border-amber-600/60 shadow-lg shadow-amber-950/30' : 'border-stone-800'} rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <h4 class="font-bold text-white text-xs flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-gavel"></i>
+              </span>
+              <span>Ofertas de Boosters (Subasta / Bids)</span>
+              <span class="px-2 py-0.5 rounded-full ${orderBids.length > 0 ? 'bg-amber-950 text-amber-300 border border-amber-700/50' : 'bg-stone-900 text-stone-500'} font-mono-gaming font-bold text-[10px]">
+                ${orderBids.length} oferta${orderBids.length === 1 ? '' : 's'}
+              </span>
+            </h4>
+            ${highestBid ? `
+              <div class="text-[11px] text-amber-300 bg-amber-950/80 border border-amber-600/60 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-bold shadow-sm">
+                <i class="fa-solid fa-crown text-amber-400"></i>
+                <span>Puja más alta: <strong class="font-mono-gaming text-white text-xs">$${Number(highestBid.bidAmount).toFixed(2)}</strong> (${highestBid.boosterName})</span>
+              </div>
+            ` : ''}
+          </div>
+
+          ${orderBids.length > 0 ? `
+            <div class="space-y-2">
+              ${sortedBids.map((b, idx) => {
+                const isHighest = idx === 0;
+                const isCurrentAssigned = o.assignedBooster && (
+                  (o.assignedBooster.username && o.assignedBooster.username.toLowerCase() === b.boosterName.toLowerCase()) ||
+                  (o.assignedBooster.discordId && b.boosterDiscordId && String(o.assignedBooster.discordId) === String(b.boosterDiscordId))
+                );
+                return `
+                  <div class="p-3 rounded-xl ${isHighest ? 'bg-[#221035] border border-amber-500/60' : 'bg-[#180a2c] border border-stone-800'} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full ${isHighest ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50' : 'bg-stone-800 text-stone-400'} flex items-center justify-center font-bold font-mono text-xs">
+                        ${isHighest ? '<i class="fa-solid fa-crown text-xs"></i>' : '#' + (idx + 1)}
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <strong class="text-white text-sm">${b.boosterName}</strong>
+                          <span class="text-[10px] px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-700/40 font-semibold">${b.boosterRole || 'Booster'}</span>
+                          ${isHighest ? `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600/50 font-bold uppercase tracking-wider">Mejor Oferta</span>` : ''}
+                          ${isCurrentAssigned ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/50 font-bold">Asignado Actualmente</span>` : ''}
+                        </div>
+                        <div class="text-[10px] text-stone-400 mt-0.5">
+                          Enviada el: ${b.timestamp ? new Date(b.timestamp).toLocaleString() : 'Reciente'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                      <div class="text-right">
+                        <span class="text-[10px] text-stone-400 block uppercase">Oferta</span>
+                        <span class="font-mono-gaming font-bold text-base text-amber-300">$${Number(b.bidAmount).toFixed(2)}</span>
+                      </div>
+                      ${isCurrentAssigned ? `
+                        <button disabled class="px-3 py-1.5 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 text-xs font-bold opacity-80 cursor-default flex items-center gap-1.5">
+                          <i class="fa-solid fa-check"></i> Asignado
+                        </button>
+                      ` : `
+                        <button onclick="app.adminAcceptBid('${o.id}', '${b.boosterDiscordId || b.boosterName}', ${b.bidAmount})" 
+                                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
+                          <i class="fa-solid fa-circle-check"></i>
+                          <span>Aceptar y Asignar</span>
+                        </button>
+                      `}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `
+            <div class="text-center py-3 text-stone-500 text-xs italic">
+              No hay ofertas de boosters registradas para esta orden todavía.
+            </div>
+          `}
+        </div>
 
         <div>
           <h4 class="font-bold text-stone-300 mb-2 flex items-center gap-2">
