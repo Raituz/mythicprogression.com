@@ -839,12 +839,23 @@ class MythicApp {
     // 2. Check if Booster in database
     const existingBooster = this.boosters ? this.boosters.find(b => 
       b.discord_id === discordId || 
-      (b.email && payload.email && b.email.toLowerCase() === payload.email.toLowerCase())
+      (b.email && payload.email && b.email.toLowerCase() === payload.email.toLowerCase()) ||
+      (b.username && payload.username && b.username.toLowerCase() === payload.username.toLowerCase())
     ) : null;
 
     if (existingBooster) {
-      const isStaffOrAdmin = (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente/i.test(r))) ||
-        (existingBooster.role && /admin|staff|gerente/i.test(existingBooster.role));
+      if (payload.username && existingBooster.username !== payload.username) {
+        existingBooster.username = payload.username;
+      }
+      if (discordId && !existingBooster.discord_id) {
+        existingBooster.discord_id = discordId;
+      }
+      this.saveBoosters();
+
+      const isStaffOrAdmin = (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
+        (existingBooster.role && /admin|staff|gerente|soporte/i.test(existingBooster.role)) ||
+        existingBooster.isAdmin === true ||
+        existingBooster.isStaff === true;
 
       const bRoles = Array.isArray(existingBooster.roles) ? [...existingBooster.roles] : [existingBooster.role || 'Booster'];
       if (isStaffOrAdmin && !bRoles.some(r => /admin|staff/i.test(r))) {
@@ -4718,18 +4729,20 @@ class MythicApp {
     const order = this.orders.find(o => o.id === this.activeChatOrderId);
     if (!order) return;
 
-    const roleLabel = this.getUserChatRole();
+    const roleLabel = this.getHighestUserRole(this.currentUser);
     const authorName = this.currentUser?.username || (roleLabel === 'Admin' ? 'Admin' : (roleLabel === 'Staff' ? 'Staff' : 'Pro'));
 
     let senderKey = 'booster';
-    if (roleLabel === 'Admin') senderKey = 'admin';
-    else if (roleLabel === 'Staff') senderKey = 'staff';
-    else if (roleLabel === 'Cliente') senderKey = 'client';
+    if (this.isAdmin()) senderKey = 'admin';
+    else if (this.isStaffOnly()) senderKey = 'staff';
+    else if (this.currentUser?.type === 'client') senderKey = 'client';
 
     order.chat = order.chat || [];
     order.chat.push({
       sender: senderKey,
       author: `${authorName} (${roleLabel})`,
+      role: roleLabel,
+      discordId: this.currentUser?.discordId || this.currentUser?.discord_id || '',
       message: input.value.trim(),
       timestamp: new Date().toISOString()
     });
@@ -6917,45 +6930,51 @@ class MythicApp {
     );
   }
 
-  getUserChatRole(user = this.currentUser) {
-    if (!user) return 'Cliente';
-    const discordId = String(user.discordId || user.discord_id || '').trim();
-    const username = (user.username || '').trim().toLowerCase();
-    const email = (user.email || '').trim().toLowerCase();
-    const role = (user.role || '').trim().toLowerCase();
-    const roles = Array.isArray(user.roles) ? user.roles.map(r => String(r).toLowerCase()) : [];
-
-    // Admin detection (Priority #1): Owner, Gerente, Admin
-    const isAdmin =
-      discordId === MythicApp.OWNER_DISCORD_ID ||
-      role.includes('admin') ||
-      role.includes('gerente') ||
-      role.includes('owner') ||
-      role.includes('director') ||
-      role.includes('ceo') ||
-      roles.some(r => /admin|gerente|owner|director|ceo/i.test(r)) ||
-      (user.type === 'admin' && !roles.some(r => /staff|soporte/i.test(r)) && !role.includes('staff'));
-
-    if (isAdmin) return 'Admin';
-
-    // Staff detection (Priority #2): Staff roles, Soporte, Moderador
-    const isStaff =
-      user.type === 'staff' ||
-      role.includes('staff') ||
-      role.includes('soporte') ||
-      role.includes('moderador') ||
-      roles.some(r => /staff|soporte|mod/i.test(r)) ||
-      (user.isAdmin === true && !isAdmin);
-
-    if (isStaff) return 'Staff';
-
-    // Booster detection (Priority #3)
-    if (user.type === 'booster' || user.isBooster === true || roles.some(r => /booster|raider/i.test(r))) {
-      return 'Booster';
+  getHighestUserRole(userOrBooster) {
+    if (!userOrBooster) return 'Cliente';
+    const discordId = String(userOrBooster.discordId || userOrBooster.discord_id || '').trim();
+    if (discordId === MythicApp.OWNER_DISCORD_ID || (userOrBooster.username && userOrBooster.username.toLowerCase() === 'miguelb')) {
+      return 'Master Booster & Admin';
     }
 
-    // Default: Cliente
+    const roles = Array.isArray(userOrBooster.roles) ? userOrBooster.roles : (userOrBooster.role ? [userOrBooster.role] : []);
+    const rolesStr = (roles.join(' ') + ' ' + (userOrBooster.role || '')).toLowerCase();
+
+    if (rolesStr.includes('master') && (rolesStr.includes('admin') || rolesStr.includes('staff'))) {
+      return 'Master Booster & Admin';
+    }
+    if (rolesStr.includes('staff') || userOrBooster.isStaff || userOrBooster.type === 'staff') {
+      return 'Staff';
+    }
+    if (rolesStr.includes('admin') || rolesStr.includes('gerente') || rolesStr.includes('owner') || userOrBooster.isAdmin) {
+      return 'Admin';
+    }
+    if (rolesStr.includes('master')) {
+      return 'Master Booster';
+    }
+    if (rolesStr.includes('elite')) {
+      return 'Elite Booster';
+    }
+    if (rolesStr.includes('veteran')) {
+      return 'Veteran Booster';
+    }
+    if (rolesStr.includes('gold')) {
+      return 'Gold Booster';
+    }
+    if (rolesStr.includes('raider')) {
+      return 'Raider';
+    }
+    if (rolesStr.includes('supplier')) {
+      return 'Supplier';
+    }
+    if (userOrBooster.type === 'booster' || userOrBooster.isBooster || rolesStr.includes('booster')) {
+      return 'Booster';
+    }
     return 'Cliente';
+  }
+
+  getUserChatRole(user = this.currentUser) {
+    return this.getHighestUserRole(user);
   }
 
   formatChatAuthorDisplay(msg) {
@@ -6964,59 +6983,99 @@ class MythicApp {
     let author = String(msg.author || '').trim();
     let sender = String(msg.sender || '').toLowerCase().trim();
 
-    // Retroactive conversion of legacy "Soporte / Gerencia"
-    if (/soporte\s*\/\s*gerencia/i.test(author)) {
-      if (/miguelb/i.test(author) || sender === 'admin') {
-        author = author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Admin)');
-        sender = 'admin';
-      } else {
-        author = author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Staff)');
-        sender = 'staff';
-      }
+    // Clean name without parenthesized role
+    const cleanName = author.replace(/\s*\([^)]*\)\s*$/, '').trim() || author;
+
+    // Look up booster / user profile dynamically to resolve their true registered highest role
+    let userOrBooster = null;
+    if (msg.discordId) {
+      userOrBooster = (this.boosters || []).find(b => String(b.discord_id) === String(msg.discordId));
+    }
+    if (!userOrBooster && cleanName) {
+      userOrBooster = (this.boosters || []).find(b => 
+        (b.username && b.username.toLowerCase() === cleanName.toLowerCase()) ||
+        (b.email && b.email.toLowerCase().includes(cleanName.toLowerCase()))
+      );
+    }
+    if (!userOrBooster && this.currentUser && this.currentUser.username && this.currentUser.username.toLowerCase() === cleanName.toLowerCase()) {
+      userOrBooster = this.currentUser;
     }
 
     // Determine role label
     let roleLabel = 'Cliente';
     if (sender === 'system' || /sistema/i.test(author) || /notificaci[oó]n/i.test(author)) {
       roleLabel = 'Sistema';
-    } else if (sender === 'admin' || /\(admin\)/i.test(author) || /miguelb/i.test(author)) {
-      roleLabel = 'Admin';
-    } else if (sender === 'staff' || /\(staff\)/i.test(author)) {
-      roleLabel = 'Staff';
-    } else if (sender === 'booster' || /\(booster\)|\(pro\)/i.test(author)) {
-      roleLabel = 'Booster';
-    } else if (sender === 'client' || /\(cliente\)/i.test(author)) {
-      roleLabel = 'Cliente';
+    } else if (userOrBooster) {
+      roleLabel = this.getHighestUserRole(userOrBooster);
+    } else if (msg.role) {
+      roleLabel = msg.role;
+    } else {
+      const match = author.match(/\(([^)]+)\)$/);
+      if (match && match[1]) {
+        roleLabel = match[1].trim();
+      } else if (sender === 'admin' || /miguelb/i.test(author)) {
+        roleLabel = 'Admin';
+      } else if (sender === 'staff') {
+        roleLabel = 'Staff';
+      } else if (sender === 'booster') {
+        roleLabel = 'Booster';
+      } else {
+        roleLabel = 'Cliente';
+      }
     }
-
-    // Clean name without parenthesized role
-    const cleanName = author.replace(/\s*\([^)]*\)\s*$/, '').trim() || author;
 
     // Check if sent by current viewer
     const myName = (this.currentUser?.username || '').toLowerCase().trim();
-    const myRole = this.getUserChatRole();
-    const isSelf = (myName && cleanName.toLowerCase() === myName) ||
-                   (roleLabel === 'Admin' && myRole === 'Admin') ||
-                   (roleLabel === 'Staff' && myRole === 'Staff' && myName && cleanName.toLowerCase() === myName);
+    const isSelf = myName && cleanName.toLowerCase() === myName;
 
-    // Badges & styling
+    // Badges & styling per role
     let badgeHtml = '';
     let authorColor = '#ee914f';
     let bubbleClass = 'bg-[#18120d] text-stone-200 border border-stone-800';
 
-    if (roleLabel === 'Sistema') {
+    const rLower = roleLabel.toLowerCase();
+
+    if (rLower === 'sistema') {
       authorColor = '#fbbf24';
       badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-950/70 text-amber-300 border border-amber-600/50 shadow-sm"><i class="fa-solid fa-triangle-exclamation text-[8px] text-amber-400"></i> Sistema</span>`;
       bubbleClass = 'bg-[#1a1208] text-amber-100 border border-amber-700/50 shadow-sm';
-    } else if (roleLabel === 'Admin') {
-      authorColor = '#c084fc';
-      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#2d124d] text-purple-200 border border-purple-500/50 shadow-sm"><i class="fa-solid fa-crown text-[8px] text-amber-300"></i> Admin</span>`;
-      bubbleClass = 'bg-[#1b0b2e] text-purple-100 border border-purple-600/40 shadow-sm shadow-purple-950/30';
-    } else if (roleLabel === 'Staff') {
+    } else if (rLower.includes('master') && (rLower.includes('admin') || rLower.includes('staff'))) {
+      authorColor = '#ee914f';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#3a1d0d] text-[#ee914f] border border-[#ee914f]/50 shadow-[0_0_8px_rgba(238,145,79,0.3)]"><i class="fa-solid fa-crown text-[8px] text-[#ee914f]"></i> Master & Admin</span>`;
+      bubbleClass = 'bg-[#26170d] text-[#fcefc2] border border-[#ee914f]/40 shadow-sm';
+    } else if (rLower.includes('staff')) {
       authorColor = '#38bdf8';
       badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0c2338] text-sky-200 border border-sky-500/40 shadow-sm"><i class="fa-solid fa-shield-halved text-[8px] text-sky-400"></i> Staff</span>`;
       bubbleClass = 'bg-[#0b1926] text-sky-100 border border-sky-600/35 shadow-sm shadow-sky-950/30';
-    } else if (roleLabel === 'Booster') {
+    } else if (rLower.includes('admin') || rLower.includes('gerente')) {
+      authorColor = '#c084fc';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#2d124d] text-purple-200 border border-purple-500/50 shadow-sm"><i class="fa-solid fa-crown text-[8px] text-amber-300"></i> Admin</span>`;
+      bubbleClass = 'bg-[#1b0b2e] text-purple-100 border border-purple-600/40 shadow-sm shadow-purple-950/30';
+    } else if (rLower.includes('master')) {
+      authorColor = '#ee914f';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#3a1d0d] text-[#ee914f] border border-[#ee914f]/50 shadow-[0_0_8px_rgba(238,145,79,0.3)]"><i class="fa-solid fa-crown text-[8px] text-[#ee914f]"></i> Master Booster</span>`;
+      bubbleClass = 'bg-[#26170d] text-[#fcefc2] border border-[#ee914f]/40 shadow-sm';
+    } else if (rLower.includes('elite')) {
+      authorColor = '#c084fc';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-950/60 text-purple-300 border border-purple-700/50 shadow-sm"><i class="fa-solid fa-star text-[8px] text-purple-400"></i> Elite Booster</span>`;
+      bubbleClass = 'bg-[#1c0f33] text-purple-100 border border-purple-700/40 shadow-sm';
+    } else if (rLower.includes('veteran')) {
+      authorColor = '#67e8f9';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-950/60 text-cyan-300 border border-cyan-700/50"><i class="fa-solid fa-medal text-[8px] text-cyan-400"></i> Veteran Booster</span>`;
+      bubbleClass = 'bg-[#0d2229] text-cyan-100 border border-cyan-700/40';
+    } else if (rLower.includes('gold')) {
+      authorColor = '#fbbf24';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-950/60 text-[#fcefc2] border border-amber-600/50"><i class="fa-solid fa-coins text-[8px] text-amber-400"></i> Gold Booster</span>`;
+      bubbleClass = 'bg-[#241a0d] text-amber-100 border border-amber-700/40';
+    } else if (rLower.includes('raider')) {
+      authorColor = '#60a5fa';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-950/60 text-blue-300 border border-blue-700/50"><i class="fa-solid fa-shield text-[8px] text-blue-400"></i> Raider</span>`;
+      bubbleClass = 'bg-[#0c1a2e] text-blue-100 border border-blue-700/40';
+    } else if (rLower.includes('supplier')) {
+      authorColor = '#34d399';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-700/50"><i class="fa-solid fa-box text-[8px] text-emerald-400"></i> Supplier</span>`;
+      bubbleClass = 'bg-[#0c261a] text-emerald-100 border border-emerald-700/40';
+    } else if (rLower.includes('booster')) {
       authorColor = '#ee914f';
       badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#291e16] text-[#fcefc2] border border-[#ee914f]/40"><i class="fa-solid fa-bolt text-[8px] text-[#ee914f]"></i> Booster</span>`;
       bubbleClass = 'bg-[#261a12] text-[#fcefc2] border border-[#ee914f]/35';
