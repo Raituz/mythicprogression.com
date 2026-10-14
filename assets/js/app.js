@@ -134,12 +134,48 @@ class MythicApp {
             if (!b.roles.includes('Staff / Admin')) b.roles.push('Staff / Admin');
             b.role = 'Master Booster & Admin';
             b.isAdmin = true;
+            b.isStaff = true;
             if (!b.avatar) {
               const backup = localStorage.getItem('mp_discord_avatar_backup');
               if (backup) b.avatar = backup;
             }
           }
+          if (b.discord_id === '238855576992481280' || b.discord_id === '23885576992481280' || (b.username && b.username.toLowerCase() === 'mollys') || (b.email && b.email.toLowerCase() === 'jaiker.mencias@gmail.com')) {
+            if (!b.roles.includes('Elite Booster')) b.roles.unshift('Elite Booster');
+            if (!b.roles.includes('Staff / Admin')) b.roles.push('Staff / Admin');
+            b.role = 'Elite Booster & Staff';
+            b.isAdmin = true;
+            b.isStaff = true;
+          }
         });
+
+        // Synchronize current logged-in user with their booster roles in memory
+        if (this.currentUser) {
+          const cDiscord = String(this.currentUser.discordId || this.currentUser.discord_id || '');
+          const cEmail = (this.currentUser.email || '').toLowerCase();
+          const cUser = (this.currentUser.username || '').toLowerCase();
+
+          const matchedBooster = this.boosters.find(b => 
+            (cDiscord && b.discord_id && (b.discord_id === cDiscord || String(b.discord_id).includes(cDiscord) || cDiscord.includes(String(b.discord_id)))) ||
+            (cEmail && b.email && b.email.toLowerCase() === cEmail) ||
+            (cUser && b.username && b.username.toLowerCase() === cUser)
+          );
+
+          if (matchedBooster) {
+            const isStaffOrAdmin = (matchedBooster.roles && matchedBooster.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
+              (matchedBooster.role && /admin|staff|gerente|soporte/i.test(matchedBooster.role)) ||
+              matchedBooster.isAdmin === true || matchedBooster.isStaff === true;
+
+            if (isStaffOrAdmin) {
+              this.currentUser.isAdmin = true;
+              this.currentUser.isStaff = true;
+              this.currentUser.type = 'admin';
+              this.currentUser.roles = matchedBooster.roles || ['Staff / Admin'];
+              this.currentUser.role = matchedBooster.role || 'Staff / Admin';
+              this.saveUser();
+            }
+          }
+        }
       }
     } catch (e) {
       console.warn('Fallback loading boosters:', e);
@@ -436,18 +472,24 @@ class MythicApp {
           let updatedAny = false;
           data.staff.forEach(s => {
             const b = (this.boosters || []).find(x => 
-              (x.discord_id && String(x.discord_id) === String(s.discord_id)) ||
-              (x.username && s.username && x.username.toLowerCase() === s.username.toLowerCase())
+              (x.discord_id && s.discord_id && String(x.discord_id) === String(s.discord_id)) ||
+              (x.username && s.username && x.username.toLowerCase() === s.username.toLowerCase()) ||
+              (x.email && s.email && x.email.toLowerCase() === s.email.toLowerCase())
             );
             if (b) {
               b.role = s.role || 'Staff / Admin';
               b.roles = s.roles || ['Booster', 'Staff / Admin'];
+              b.isAdmin = true;
+              b.isStaff = true;
               updatedAny = true;
             }
             // Elevate privileges instantly for currently logged-in user if they are staff!
             if (this.currentUser && (
-              (this.currentUser.discordId && s.discord_id && String(this.currentUser.discordId) === String(s.discord_id)) ||
-              (this.currentUser.username && s.username && this.currentUser.username.toLowerCase() === s.username.toLowerCase())
+              (this.currentUser.discordId && s.discord_id && (String(this.currentUser.discordId) === String(s.discord_id) || String(this.currentUser.discordId).includes(String(s.discord_id)) || String(s.discord_id).includes(String(this.currentUser.discordId)))) ||
+              (this.currentUser.username && s.username && this.currentUser.username.toLowerCase() === s.username.toLowerCase()) ||
+              (this.currentUser.email && s.email && this.currentUser.email.toLowerCase() === s.email.toLowerCase()) ||
+              (this.currentUser.username && this.currentUser.username.toLowerCase() === 'mollys') ||
+              (this.currentUser.email && this.currentUser.email.toLowerCase() === 'jaiker.mencias@gmail.com')
             )) {
               this.currentUser.isAdmin = true;
               this.currentUser.isStaff = true;
@@ -458,6 +500,8 @@ class MythicApp {
               this.renderHeader();
               const adminLink = document.getElementById('pro-sidebar-admin-link');
               if (adminLink) adminLink.classList.remove('hidden');
+              const headerAdminBtn = document.getElementById('header-admin-btn');
+              if (headerAdminBtn) headerAdminBtn.classList.remove('hidden');
               if (typeof this.renderChatList === 'function') this.renderChatList();
             }
           });
@@ -469,6 +513,20 @@ class MythicApp {
       }
     }, (error) => {
       console.warn('Firestore staff_roles sync notice:', error);
+    });
+
+    // 4. Escuchar lista de boosters completa en tiempo real
+    this.db.collection('system').doc('boosters_list').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.boosters) && data.boosters.length > 0) {
+          this.boosters = data.boosters;
+          localStorage.setItem('mp_boosters', JSON.stringify(data.boosters));
+          if (typeof this.renderAdminBoosters === 'function') this.renderAdminBoosters();
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore boosters_list sync notice:', error);
     });
   }
 
@@ -507,6 +565,7 @@ class MythicApp {
         staff: staffList.map(b => ({
           discord_id: b.discord_id || '',
           username: b.username || '',
+          email: (b.email || '').toLowerCase(),
           role: b.role || 'Staff / Admin',
           roles: b.roles || ['Staff / Admin'],
           isAdmin: true,
@@ -514,6 +573,11 @@ class MythicApp {
         })),
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(err => console.warn('Firestore staff_roles save error:', err));
+
+      this.db.collection('system').doc('boosters_list').set({
+        boosters: this.boosters,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore boosters_list save error:', err));
     }
   }
 
@@ -5057,12 +5121,18 @@ class MythicApp {
   // ==========================================
   initAdminPortal() {
     // STRICT ACCESS GUARD: Staff & Admin Only
+    if (!this.currentUser) {
+      this.showToast('Inicia sesión con tu cuenta de Staff o Administrador para acceder al panel.', 'info');
+      if (typeof this.openAuthModal === 'function') this.openAuthModal();
+      return;
+    }
+
     if (!this.isAdminOrGerente()) {
       document.body.style.display = 'none';
       this.showToast('Acceso Denegado: Se requieren permisos de Administrador o Staff.', 'error');
       setTimeout(() => {
         window.location.replace('/');
-      }, 350);
+      }, 500);
       return;
     }
     const adminDisplay = document.getElementById('admin-user-display');
@@ -7205,13 +7275,36 @@ class MythicApp {
     if (!this.currentUser) return false;
     if (this.currentUser.isAdmin === true || this.currentUser.isStaff === true) return true;
     if (this.currentUser.type === 'admin' || this.currentUser.type === 'staff') return true;
-    if (this.currentUser.discordId === '443948776562884620') return true;
+
+    const discordId = String(this.currentUser.discordId || this.currentUser.discord_id || '').trim();
+    const username = (this.currentUser.username || '').trim().toLowerCase();
+    const email = (this.currentUser.email || '').trim().toLowerCase();
+    const role = (this.currentUser.role || '').trim().toLowerCase();
+
+    // Permanent Admin & Staff IDs / Users
+    if (discordId === '443948776562884620' || username === 'miguelb' || email === 'charquin50@gmail.com') return true;
+    if (discordId === '238855576992481280' || discordId === '23885576992481280' || username === 'mollys' || email === 'jaiker.mencias@gmail.com') return true;
+
     if (Array.isArray(this.currentUser.roles)) {
       if (this.currentUser.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) return true;
     }
-    const role = (this.currentUser.role || '').toLowerCase();
-    const username = (this.currentUser.username || '').toLowerCase();
-    return role.includes('admin') || role.includes('gerente') || role.includes('staff') || role.includes('soporte') || username === 'miguelb' || username.includes('admin') || username.includes('gerente');
+
+    // Check against this.boosters
+    if (this.boosters && Array.isArray(this.boosters)) {
+      const match = this.boosters.find(b => 
+        (discordId && b.discord_id && (String(b.discord_id) === discordId || String(b.discord_id).includes(discordId) || discordId.includes(String(b.discord_id)))) ||
+        (email && b.email && b.email.toLowerCase() === email) ||
+        (username && b.username && b.username.toLowerCase() === username)
+      );
+      if (match) {
+        const hasStaff = (match.roles && match.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
+          (match.role && /admin|staff|gerente|soporte/i.test(match.role)) ||
+          match.isAdmin === true || match.isStaff === true;
+        if (hasStaff) return true;
+      }
+    }
+
+    return role.includes('admin') || role.includes('gerente') || role.includes('staff') || role.includes('soporte') || username.includes('admin') || username.includes('gerente');
   }
 
   isBooster() {
@@ -7242,11 +7335,30 @@ class MythicApp {
     if (!this.currentUser) return false;
     if (this.currentUser.isAdmin === true || this.currentUser.isStaff === true) return true;
     if (this.currentUser.type === 'admin' || this.currentUser.type === 'staff') return true;
+
     const discordId = String(this.currentUser.discordId || this.currentUser.discord_id || '').trim();
     const username = (this.currentUser.username || '').trim().toLowerCase();
     const email = (this.currentUser.email || '').trim().toLowerCase();
     const role = (this.currentUser.role || '').trim().toLowerCase();
     const roles = Array.isArray(this.currentUser.roles) ? this.currentUser.roles.map(r => String(r).toLowerCase()) : [];
+
+    if (discordId === '443948776562884620' || username === 'miguelb' || email === 'charquin50@gmail.com') return true;
+    if (discordId === '238855576992481280' || discordId === '23885576992481280' || username === 'mollys' || email === 'jaiker.mencias@gmail.com') return true;
+
+    // Check against this.boosters
+    if (this.boosters && Array.isArray(this.boosters)) {
+      const match = this.boosters.find(b => 
+        (discordId && b.discord_id && (String(b.discord_id) === discordId || String(b.discord_id).includes(discordId) || discordId.includes(String(b.discord_id)))) ||
+        (email && b.email && b.email.toLowerCase() === email) ||
+        (username && b.username && b.username.toLowerCase() === username)
+      );
+      if (match) {
+        const hasStaff = (match.roles && match.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
+          (match.role && /admin|staff|gerente|soporte/i.test(match.role)) ||
+          match.isAdmin === true || match.isStaff === true;
+        if (hasStaff) return true;
+      }
+    }
 
     return (
       discordId === MythicApp.OWNER_DISCORD_ID ||
@@ -7447,6 +7559,17 @@ class MythicApp {
   // ==========================================
   renderHeader() {
     this.renderLanguageSelector();
+
+    // Dynamically toggle pro-sidebar-admin-link if on /pro page
+    const sidebarAdminLink = document.getElementById('pro-sidebar-admin-link');
+    if (sidebarAdminLink) {
+      if (this.isAdminOrGerente()) {
+        sidebarAdminLink.classList.remove('hidden');
+      } else {
+        sidebarAdminLink.classList.add('hidden');
+      }
+    }
+
     const userBadge = document.getElementById('user-session-badge');
     if (!userBadge) return;
     userBadge.classList.add('notranslate');

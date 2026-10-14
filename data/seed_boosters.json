@@ -113,8 +113,11 @@
   {
     "discord_id": "238855576992481280",
     "username": "Mollys",
-    "role": "Elite Booster",
-    "points": 422,
+    "role": "Elite Booster & Staff",
+    "roles": ["Elite Booster", "Booster", "Staff / Admin"],
+    "isAdmin": true,
+    "isStaff": true,
+    "points": 423,
     "email": "jaiker.mencias@gmail.com",
     "wallet_id": "6",
     "approved": true,
