@@ -123,15 +123,16 @@ class MythicApp {
         this.boosters = await res.json();
         this.saveBoosters();
       }
-      // Normalize multi-roles across all boosters
+      // Normalize multi-roles and point-based ranks across all boosters
       if (this.boosters && Array.isArray(this.boosters)) {
         this.boosters.forEach(b => {
-          if (!b.roles || !Array.isArray(b.roles)) {
-            b.roles = [b.role || 'Booster'];
-          }
+          if (!b) return;
+          b.points = Math.max(0, Number(b.points) || 0);
+          this.updateBoosterRank(b);
+
           if (b.discord_id === '443948776562884620' || (b.username && b.username.toLowerCase() === 'miguelb')) {
-            if (!b.roles.includes('Master Booster')) b.roles.unshift('Master Booster');
-            if (!b.roles.includes('Staff / Admin')) b.roles.push('Staff / Admin');
+            if (!b.points || b.points < 700) b.points = 750;
+            this.updateBoosterRank(b);
             b.role = 'Master Booster & Admin';
             b.isAdmin = true;
             b.isStaff = true;
@@ -141,9 +142,8 @@ class MythicApp {
             }
           }
           if (b.discord_id === '238855576992481280' || b.discord_id === '23885576992481280' || (b.username && b.username.toLowerCase() === 'mollys') || (b.email && b.email.toLowerCase() === 'jaiker.mencias@gmail.com')) {
-            if (!b.roles.includes('Elite Booster')) b.roles.unshift('Elite Booster');
+            this.updateBoosterRank(b);
             if (!b.roles.includes('Staff / Admin')) b.roles.push('Staff / Admin');
-            b.role = 'Elite Booster & Staff';
             b.isAdmin = true;
             b.isStaff = true;
           }
@@ -662,7 +662,101 @@ class MythicApp {
     localStorage.setItem('mp_services', JSON.stringify(this.services));
   }
 
+  calculateBoosterRankFromPoints(points) {
+    const pts = Math.max(0, Number(points) || 0);
+    if (pts >= 700) return 'Master Booster';
+    if (pts >= 500) return 'Elite Booster';
+    if (pts >= 200) return 'Veteran Booster';
+    if (pts >= 20) return 'Gold Booster';
+    return 'Booster';
+  }
+
+  updateBoosterRank(booster) {
+    if (!booster) return null;
+    const pts = Math.max(0, Number(booster.points) || 0);
+    booster.points = pts;
+    const baseRank = this.calculateBoosterRankFromPoints(pts);
+
+    const isOwner = String(booster.discord_id || booster.discordId || '').trim() === MythicApp.OWNER_DISCORD_ID || 
+      (booster.username && booster.username.toLowerCase() === 'miguelb');
+    const isStaffOrAdmin = isOwner || booster.isAdmin === true || booster.isStaff === true ||
+      (Array.isArray(booster.roles) && booster.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
+      (typeof booster.role === 'string' && /admin|staff|gerente|soporte/i.test(booster.role));
+
+    // Preserve special secondary roles like Raider, Supplier
+    const specialRoles = (Array.isArray(booster.roles) ? booster.roles : []).filter(r => 
+      !/master|elite|veteran|gold|booster|admin|staff|gerente/i.test(r)
+    );
+
+    if (isOwner) {
+      booster.role = `${baseRank} & Admin`;
+      booster.roles = [baseRank, 'Staff / Admin', ...specialRoles];
+      booster.isAdmin = true;
+      booster.isStaff = true;
+    } else if (isStaffOrAdmin) {
+      booster.role = `${baseRank} & Staff`;
+      booster.roles = [baseRank, 'Staff / Admin', ...specialRoles];
+      booster.isAdmin = true;
+      booster.isStaff = true;
+    } else {
+      booster.role = baseRank;
+      booster.roles = [baseRank, ...specialRoles];
+    }
+
+    return booster;
+  }
+
+  modifyBoosterPoints(boosterIdentifier, delta, reason = '') {
+    if (!boosterIdentifier) return null;
+    const ident = String(boosterIdentifier).toLowerCase().trim();
+    
+    // Find booster in this.boosters
+    let b = (this.boosters || []).find(x => 
+      (x.discord_id && String(x.discord_id).toLowerCase() === ident) ||
+      (x.username && x.username.toLowerCase() === ident) ||
+      (x.email && x.email.toLowerCase() === ident) ||
+      (x.id && String(x.id).toLowerCase() === ident)
+    );
+
+    if (!b) return null;
+
+    const oldPoints = Math.max(0, Number(b.points) || 0);
+    const newPoints = Math.max(0, oldPoints + delta);
+    b.points = newPoints;
+    this.updateBoosterRank(b);
+
+    // If currently logged-in user matches this booster, synchronize session
+    if (this.currentUser && (
+      (this.currentUser.discordId && b.discord_id && String(this.currentUser.discordId) === String(b.discord_id)) ||
+      (this.currentUser.username && b.username && this.currentUser.username.toLowerCase() === b.username.toLowerCase()) ||
+      (this.currentUser.email && b.email && this.currentUser.email.toLowerCase() === b.email.toLowerCase())
+    )) {
+      this.currentUser.points = b.points;
+      this.currentUser.role = b.role;
+      this.currentUser.roles = b.roles;
+      this.saveUser();
+      this.renderHeader();
+      if (typeof this.renderProWallet === 'function') this.renderProWallet();
+      if (typeof this.initBoosterProfileForm === 'function') this.initBoosterProfileForm();
+    }
+
+    this.saveBoosters();
+    if (typeof this.renderAdminBoosters === 'function') this.renderAdminBoosters();
+    if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+
+    console.log(`🎖️ [Puntos Booster] ${b.username}: ${oldPoints} -> ${newPoints} (${delta > 0 ? '+' : ''}${delta}) | Rango: ${b.role} | Razón: ${reason}`);
+    return b;
+  }
+
   saveBoosters() {
+    if (Array.isArray(this.boosters)) {
+      this.boosters.forEach(b => {
+        if (b) {
+          b.points = Math.max(0, Number(b.points) || 0);
+          this.updateBoosterRank(b);
+        }
+      });
+    }
     localStorage.setItem('mp_boosters', JSON.stringify(this.boosters));
     if (this.db && Array.isArray(this.boosters)) {
       const staffList = this.boosters.filter(b => 
@@ -678,6 +772,7 @@ class MythicApp {
           email: (b.email || '').toLowerCase(),
           role: b.role || 'Staff / Admin',
           roles: b.roles || ['Staff / Admin'],
+          points: b.points || 0,
           isAdmin: true,
           isStaff: true
         })),
@@ -688,6 +783,24 @@ class MythicApp {
         boosters: this.boosters,
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(err => console.warn('Firestore boosters_list save error:', err));
+
+      // Also sync each booster to the 'boosters' collection for individual live document reads
+      this.boosters.forEach(b => {
+        if (b && b.discord_id) {
+          this.db.collection('boosters').doc(String(b.discord_id)).set({
+            discord_id: String(b.discord_id),
+            username: b.username || '',
+            email: (b.email || '').toLowerCase(),
+            role: b.role || 'Booster',
+            roles: b.roles || ['Booster'],
+            points: b.points || 0,
+            balance: b.balance || 0,
+            approved: b.approved !== false,
+            payout_method: b.payout_method || 'Binance Pay / USDT',
+            updatedAt: new Date().toISOString()
+          }, { merge: true }).catch(() => {});
+        }
+      });
     }
   }
 
@@ -1064,6 +1177,58 @@ class MythicApp {
       sessionStorage.removeItem('mp_oauth_return_url');
       window.location.href = returnUrl || (isStaffOrAdmin ? 'admin' : 'pro');
       return { status: isStaffOrAdmin ? 'STAFF_LOGGED_IN' : 'BOOSTER_LOGGED_IN', user: this.currentUser };
+    }
+
+    // 2b. Check if context is Booster registration/login (e.g. from Portal Pro or booster intent)
+    const returnUrl = sessionStorage.getItem('mp_oauth_return_url') || '';
+    const isProContext = returnUrl.includes('pro') || window.location.href.includes('pro') || sessionStorage.getItem('mp_auth_intent') === 'booster';
+
+    if (isProContext) {
+      // Register NEW Booster with 0 points and 'Booster' rank only
+      const newBooster = {
+        discord_id: discordId,
+        username: payload.username || username,
+        email: payload.email || `${username.toLowerCase()}@discord.com`,
+        role: 'Booster',
+        roles: ['Booster'],
+        points: 0,
+        approved: true,
+        balance: 0.00,
+        country: 'Global',
+        payout_method: 'Binance Pay / USDT',
+        createdAt: new Date().toISOString()
+      };
+      this.boosters.push(newBooster);
+      this.saveBoosters();
+
+      this.currentUser = {
+        id: 'booster_' + discordId,
+        type: 'booster',
+        discordId: discordId,
+        discordTag: payload.discordTag || `${username}#0`,
+        discordConnected: true,
+        username: payload.username || username,
+        role: 'Booster',
+        roles: ['Booster'],
+        points: 0,
+        approved: true,
+        balance: 0.00,
+        email: payload.email || '',
+        avatar: payload.avatar || '',
+        payoutMethod: 'Binance Pay / USDT',
+        payoutAddress: '',
+        wallet_id: '',
+        isAdmin: false,
+        isStaff: false,
+        isBooster: true
+      };
+      this.saveUser();
+      this.showToast(`¡Bienvenido Booster ${username}! Cuenta registrada con 0 puntos y rango Booster.`, 'success');
+      this.renderHeader();
+      sessionStorage.removeItem('mp_oauth_return_url');
+      sessionStorage.removeItem('mp_auth_intent');
+      window.location.href = returnUrl || 'pro';
+      return { status: 'BOOSTER_REGISTERED', user: this.currentUser };
     }
 
     // 3. Otherwise Client
@@ -4605,7 +4770,12 @@ class MythicApp {
     const order = this.orders.find(o => o.id === orderId);
     if (!order) return;
 
-    if (confirm(`¿Deseas liberar la orden #${order.id} y devolverla a la Bolsa de Pedidos para que otro booster la tome?`)) {
+    if (confirm(`¿Deseas liberar la orden #${order.id} y devolverla a la Bolsa de Pedidos para que otro booster la tome?\n\nNota: Se restará 1 punto a tu perfil de booster por cancelar/abandonar el contrato.`)) {
+      const boosterIdent = (order.assignedBooster && (order.assignedBooster.discordId || order.assignedBooster.username)) || this.currentUser?.discordId || this.currentUser?.username;
+      if (boosterIdent) {
+        this.modifyBoosterPoints(boosterIdent, -1, `Booster canceló/liberó orden #${order.id} (-1 pt)`);
+      }
+      order.boosterPenalty = -1;
       order.status = 'AVAILABLE';
       order.assignedBooster = null;
       order.isOnAccount = false;
@@ -4615,7 +4785,7 @@ class MythicApp {
       order.chat.push({
         sender: 'system',
         author: 'Sistema Mythic Progression',
-        message: `⚠️ El booster ${this.currentUser?.username || 'Booster'} ha liberado la orden #${order.id}. Vuelve a estar disponible en la Bolsa de Pedidos.`,
+        message: `⚠️ El booster ${this.currentUser?.username || 'Booster'} ha cancelado/liberado la orden #${order.id} (-1 punto aplicado). Vuelve a estar disponible en la Bolsa de Pedidos.`,
         timestamp: new Date().toISOString()
       });
 
@@ -6375,8 +6545,9 @@ class MythicApp {
 
     const payout = Number(o.assignedBooster?.payout || o.boosterPayout || 0);
 
-    // Credit payout to booster
+    // Credit payout and award point to booster
     if (o.assignedBooster) {
+      const bIdent = o.assignedBooster.discordId || o.assignedBooster.username || o.assignedBooster.id;
       const bIdx = (this.boosters || []).findIndex(b => 
         (b.discord_id && o.assignedBooster.discordId && String(b.discord_id) === String(o.assignedBooster.discordId)) ||
         (b.username && o.assignedBooster.username && b.username.toLowerCase() === o.assignedBooster.username.toLowerCase()) ||
@@ -6384,8 +6555,6 @@ class MythicApp {
       );
       if (bIdx >= 0) {
         this.boosters[bIdx].balance = (Number(this.boosters[bIdx].balance) || 0) + payout;
-        this.boosters[bIdx].points = (Number(this.boosters[bIdx].points) || 0) + 1;
-        this.saveBoosters();
       }
 
       if (this.currentUser && (
@@ -6393,8 +6562,17 @@ class MythicApp {
         (this.currentUser.username && o.assignedBooster.username && this.currentUser.username.toLowerCase() === o.assignedBooster.username.toLowerCase())
       )) {
         this.currentUser.balance = (Number(this.currentUser.balance) || 0) + payout;
-        this.currentUser.points = (Number(this.currentUser.points) || 0) + 1;
-        this.saveUser();
+      }
+
+      // Add 1 booster point and re-evaluate rank automatically
+      const updatedB = this.modifyBoosterPoints(bIdent, +1, `Orden #${o.id} completada exitosamente (+1 pt)`);
+      if (updatedB) {
+        o.assignedBooster.points = updatedB.points;
+        o.assignedBooster.role = updatedB.role;
+        o.assignedBooster.roles = updatedB.roles;
+        o.boosterPointsAwarded = 1;
+        o.boosterPointsAtCompletion = updatedB.points;
+        o.boosterRankAtCompletion = updatedB.role;
       }
     }
 
@@ -6447,13 +6625,19 @@ class MythicApp {
     const reason = prompt(`Indica el motivo del rechazo del reporte para la orden #${orderId}:`, 'Faltan objetivos acordados o evidencia insuficiente');
     if (reason === null) return;
 
+    if (o.assignedBooster) {
+      const bIdent = o.assignedBooster.discordId || o.assignedBooster.username || o.assignedBooster.id;
+      this.modifyBoosterPoints(bIdent, -1, `Reporte rechazado en orden #${orderId} (-1 pt)`);
+      o.boosterPenalty = -1;
+    }
+
     o.status = 'IN_PROGRESS';
     o.completionReport = null;
     o.chat = o.chat || [];
     o.chat.push({
       sender: 'system',
       author: 'Administración Mythic',
-      message: `⚠️ El reporte de finalización fue RECHAZADO por la administración.\nMotivo: ${reason}\nLa orden ha vuelto a estado EN PROCESO.`,
+      message: `⚠️ El reporte de finalización fue RECHAZADO por la administración (-1 punto al booster por fallo).\nMotivo: ${reason}\nLa orden ha vuelto a estado EN PROCESO.`,
       timestamp: new Date().toISOString()
     });
 
@@ -6648,6 +6832,13 @@ class MythicApp {
       this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
       return;
     }
+
+    // Deduct 1 point from unassigned booster for failing / losing order
+    const boosterIdent = o.assignedBooster.discordId || o.assignedBooster.username || o.assignedBooster.id;
+    if (boosterIdent) {
+      this.modifyBoosterPoints(boosterIdent, -1, `Orden #${o.id} desasignada por la administración (-1 pt)`);
+    }
+    o.boosterPenalty = -1;
 
     // Reset order assignment and status to available pool
     o.status = 'AVAILABLE';
@@ -7581,21 +7772,23 @@ class MythicApp {
     const nameEl = document.getElementById('modal-booster-role-name');
     const idEl = document.getElementById('modal-booster-role-id');
     const container = document.getElementById('modal-booster-role-checkboxes');
+    const pointsInput = document.getElementById('modal-booster-points-input');
     const modal = document.getElementById('admin-booster-role-modal');
 
-    if (nameEl) nameEl.textContent = `Roles de ${booster.username}`;
+    if (nameEl) nameEl.textContent = `Roles y Puntos de ${booster.username}`;
     if (idEl) idEl.textContent = `Discord ID: ${booster.discord_id}`;
+    if (pointsInput) pointsInput.value = Number(booster.points) || 0;
 
     const currentRoles = Array.isArray(booster.roles) && booster.roles.length > 0 
       ? booster.roles 
       : [booster.role || 'Booster'];
 
     const availableRoles = [
-      { id: 'Master Booster', label: '👑 Master Booster', desc: 'Rango máximo de boosting y prioridad en contratos' },
-      { id: 'Elite Booster', label: '⭐ Elite Booster', desc: 'Booster con alto puntaje y rendimiento élite' },
-      { id: 'Veteran Booster', label: '🎖️ Veteran Booster', desc: 'Booster veterano de largo recorrido' },
-      { id: 'Gold Booster', label: '🪙 Gold Booster', desc: 'Especialista en farmeo de oro y transacciones WoW Gold' },
-      { id: 'Booster', label: '⚡ Booster', desc: 'Rango estándar de ejecutor de servicios' },
+      { id: 'Master Booster', label: '👑 Master Booster (700+ pts)', desc: 'Rango máximo de boosting y prioridad en contratos' },
+      { id: 'Elite Booster', label: '⭐ Elite Booster (500-699 pts)', desc: 'Booster con alto puntaje y rendimiento élite' },
+      { id: 'Veteran Booster', label: '🎖️ Veteran Booster (200-499 pts)', desc: 'Booster veterano de largo recorrido' },
+      { id: 'Gold Booster', label: '🪙 Gold Booster (20-199 pts)', desc: 'Especialista en farmeo de oro y transacciones WoW Gold' },
+      { id: 'Booster', label: '⚡ Booster (0-19 pts)', desc: 'Rango inicial de ejecutor de servicios' },
       { id: 'Staff / Admin', label: '🛡️ Staff / Admin', desc: 'Permisos de administración, supervisión y gestión' },
       { id: 'Raider', label: '⚔️ Raider', desc: 'Miembro enfocado en contenido de Bandas / Míticas' },
       { id: 'Supplier', label: '📦 Supplier', desc: 'Proveedor logístico de recursos e ítems' }
@@ -7643,16 +7836,32 @@ class MythicApp {
       selectedRoles = ['Booster'];
     }
 
+    const pointsInput = document.getElementById('modal-booster-points-input');
+    if (pointsInput && pointsInput.value !== '') {
+      booster.points = Math.max(0, parseInt(pointsInput.value, 10) || 0);
+    }
+
     const hasStaff = selectedRoles.some(r => /admin|staff|gerente|soporte/i.test(r));
-    booster.roles = selectedRoles;
-    booster.role = selectedRoles.join(' & ');
+    const hasRaider = selectedRoles.some(r => /raider/i.test(r));
+    const hasSupplier = selectedRoles.some(r => /supplier/i.test(r));
+
+    // Recalculate rank tier based on points
+    const baseRank = this.calculateBoosterRankFromPoints(booster.points || 0);
+    const finalRoles = [baseRank];
+    if (hasStaff) finalRoles.push('Staff / Admin');
+    if (hasRaider) finalRoles.push('Raider');
+    if (hasSupplier) finalRoles.push('Supplier');
+
+    booster.roles = finalRoles;
+    booster.role = finalRoles.join(' & ');
     booster.isAdmin = hasStaff;
     booster.isStaff = hasStaff;
 
     // If editing the currently logged in user, synchronize session
-    if (this.currentUser && this.currentUser.discordId === booster.discord_id) {
-      this.currentUser.roles = selectedRoles;
+    if (this.currentUser && (this.currentUser.discordId === booster.discord_id || this.currentUser.username === booster.username)) {
+      this.currentUser.roles = finalRoles;
       this.currentUser.role = booster.role;
+      this.currentUser.points = booster.points;
       this.currentUser.isAdmin = hasStaff;
       this.currentUser.isStaff = hasStaff;
       this.currentUser.type = hasStaff ? 'admin' : 'booster';
@@ -7663,7 +7872,70 @@ class MythicApp {
     this.saveBoosters();
     this.renderAdminBoosters();
     this.closeBoosterRoleModal();
-    this.showToast(`Roles de ${booster.username} actualizados con éxito.`, 'success');
+    this.showToast(`Roles y Puntos de ${booster.username} actualizados con éxito (${booster.points} pts - ${booster.role}).`, 'success');
+  }
+
+  openAdminNewBoosterModal() {
+    const modal = document.getElementById('admin-new-booster-modal');
+    if (modal) {
+      const dId = document.getElementById('new-booster-discord-id');
+      const uName = document.getElementById('new-booster-username');
+      const email = document.getElementById('new-booster-email');
+      if (dId) dId.value = '';
+      if (uName) uName.value = '';
+      if (email) email.value = '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  closeAdminNewBoosterModal() {
+    const modal = document.getElementById('admin-new-booster-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  adminRegisterNewBooster() {
+    const discordId = (document.getElementById('new-booster-discord-id')?.value || '').trim();
+    const username = (document.getElementById('new-booster-username')?.value || '').trim();
+    const email = (document.getElementById('new-booster-email')?.value || '').trim();
+
+    if (!discordId || !username) {
+      this.showToast('Discord ID y Nombre de Usuario son obligatorios.', 'warning');
+      return;
+    }
+
+    // Check if booster already exists
+    const exists = (this.boosters || []).some(b => 
+      String(b.discord_id) === String(discordId) || 
+      (b.username && b.username.toLowerCase() === username.toLowerCase())
+    );
+    if (exists) {
+      this.showToast(`El booster con ID ${discordId} o usuario "${username}" ya está registrado.`, 'warning');
+      return;
+    }
+
+    const newBooster = {
+      discord_id: String(discordId),
+      username: username,
+      email: email.toLowerCase() || `${username.toLowerCase()}@discord.com`,
+      role: 'Booster',
+      roles: ['Booster'],
+      points: 0,
+      approved: true,
+      balance: 0.00,
+      country: 'Global',
+      payout_method: 'Binance Pay / USDT',
+      createdAt: new Date().toISOString()
+    };
+
+    this.boosters.push(newBooster);
+    this.saveBoosters();
+    this.renderAdminBoosters();
+    this.closeAdminNewBoosterModal();
+    this.showToast(`Booster ${username} registrado exitosamente con 0 puntos y rango Booster.`, 'success');
   }
 
   renderBoosterRoleBadges(roles) {

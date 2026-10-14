@@ -108,25 +108,6 @@
           <span class="hidden md:inline ml-auto text-[9px] bg-[#271d15] text-[#a855f7] px-1.5 py-0.5 rounded border border-[#a855f7]/30 font-bold">Live</span>
         </button>
 
-        <!-- Separator -->
-        <div class="pt-2 pb-1 border-t border-stone-800/80 my-2">
-          <span class="hidden md:block px-3 text-[10px] font-bold uppercase tracking-wider text-stone-500">Enlaces Rápidos</span>
-        </div>
-
-        <a href="/" class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-stone-500 hover:text-[#a855f7] hover:bg-[#190a33]">
-          <i class="fa-solid fa-store text-sm"></i>
-          <span class="hidden md:inline">Ver Tienda</span>
-        </a>
-
-        <a href="pro" class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-stone-500 hover:text-[#a855f7] hover:bg-[#190a33]">
-          <i class="fa-solid fa-bolt text-sm text-[#a855f7]"></i>
-          <span class="hidden md:inline">Portal Pro Booster</span>
-        </a>
-
-        <a href="client-profile" class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-stone-500 hover:text-[#a855f7] hover:bg-[#190a33]">
-          <i class="fa-solid fa-user-circle text-sm"></i>
-          <span class="hidden md:inline">Vista Cliente</span>
-        </a>
       </nav>
     </div>
 
@@ -662,6 +643,12 @@
                 <input id="admin-boosters-search" type="text" oninput="app.filterAdminBoosters(this.value)" placeholder="Buscar por usuario, rol o ID..." class="bg-[#14092b] border border-stone-800 focus:border-[#a855f7] rounded-xl px-3.5 py-2 pl-9 text-xs text-white placeholder-stone-500 outline-none w-52 sm:w-64">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 text-xs"></i>
               </div>
+
+              <!-- Botón Registrar Nuevo Booster -->
+              <button onclick="app.openAdminNewBoosterModal()" class="px-3.5 py-2 rounded-xl purple-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-[1.02] transition-all">
+                <i class="fa-solid fa-user-plus text-xs"></i>
+                <span>Registrar Booster</span>
+              </button>
             </div>
           </div>
 
@@ -704,8 +691,17 @@
             <div class="py-4 space-y-3">
               <p class="text-xs text-stone-400">Selecciona uno o varios roles para asignar a este miembro (Sistema Multi-Rol):</p>
               
-              <div class="space-y-2 bg-[#120726] p-3 rounded-2xl border border-stone-800 max-h-64 overflow-y-auto" id="modal-booster-role-checkboxes">
+              <div class="space-y-2 bg-[#120726] p-3 rounded-2xl border border-stone-800 max-h-56 overflow-y-auto" id="modal-booster-role-checkboxes">
                 <!-- Generado dinámicamente -->
+              </div>
+
+              <!-- Campo de Puntos con Escala -->
+              <div class="p-3 rounded-xl bg-[#140827] border border-stone-800 flex items-center justify-between gap-2">
+                <div>
+                  <span class="text-xs font-bold text-white block">Puntos del Booster:</span>
+                  <span class="text-[10px] text-stone-400">&lt;20 Booster, 20+ Gold, 200+ Veteran, 500+ Elite, 700+ Master</span>
+                </div>
+                <input type="number" id="modal-booster-points-input" min="0" class="w-20 bg-[#1e0d38] border border-[#a855f7]/40 rounded-lg px-2.5 py-1 text-xs font-mono-gaming text-amber-300 font-bold text-center outline-none focus:border-[#a855f7]">
               </div>
             </div>
 
@@ -714,9 +710,58 @@
                 Cancelar
               </button>
               <button onclick="app.saveBoosterRolesFromModal()" class="px-5 py-2 rounded-xl purple-gradient-bg font-bold text-xs uppercase tracking-wider transition-all shadow-md">
-                Guardar Roles
+                Guardar Roles y Puntos
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- MODAL: REGISTRAR NUEVO BOOSTER -->
+        <div id="admin-new-booster-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+          <div class="admin-glass-panel rounded-3xl w-full max-w-md p-6 border border-[#a855f7]/40 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-800">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-[#28114d] border border-[#a855f7]/40 flex items-center justify-center text-[#a855f7]">
+                  <i class="fa-solid fa-user-plus text-base"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-bold text-white font-cinzel leading-tight">Registrar Nuevo Booster</h3>
+                  <span class="text-[10px] text-stone-400">Inicia con 0 puntos y rango Booster</span>
+                </div>
+              </div>
+              <button onclick="app.closeAdminNewBoosterModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <form onsubmit="event.preventDefault(); app.adminRegisterNewBooster();" class="py-4 space-y-3 text-xs">
+              <div>
+                <label class="block text-stone-300 font-bold mb-1">Discord ID (Numérico) *</label>
+                <input type="text" id="new-booster-discord-id" required placeholder="Ej: 112233445566778899" class="w-full bg-[#140827] border border-stone-700 focus:border-[#a855f7] rounded-xl px-3 py-2 text-white font-mono-gaming outline-none">
+              </div>
+              <div>
+                <label class="block text-stone-300 font-bold mb-1">Nombre de Usuario en Discord *</label>
+                <input type="text" id="new-booster-username" required placeholder="Ej: ShadowPlayer" class="w-full bg-[#140827] border border-stone-700 focus:border-[#a855f7] rounded-xl px-3 py-2 text-white outline-none">
+              </div>
+              <div>
+                <label class="block text-stone-300 font-bold mb-1">Correo Electrónico (Opcional)</label>
+                <input type="email" id="new-booster-email" placeholder="booster@example.com" class="w-full bg-[#140827] border border-stone-700 focus:border-[#a855f7] rounded-xl px-3 py-2 text-white outline-none">
+              </div>
+
+              <div class="p-3 rounded-xl bg-[#170a30] border border-[#a855f7]/30 text-[11px] text-stone-300 flex items-start gap-2">
+                <i class="fa-solid fa-circle-info text-[#a855f7] mt-0.5"></i>
+                <span>El nuevo booster comenzará automáticamente con <strong>0 puntos</strong> y rango <strong>Booster</strong>. Conforme complete órdenes sumará 1 punto cada vez.</span>
+              </div>
+
+              <div class="pt-4 border-t border-stone-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="app.closeAdminNewBoosterModal()" class="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl purple-gradient-bg font-bold text-xs uppercase tracking-wider transition-all shadow-md">
+                  Registrar en Base de Datos
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
@@ -1079,7 +1124,7 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=3.3.6"></script>
+  <script src="assets/js/app.js?v=3.3.7"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
