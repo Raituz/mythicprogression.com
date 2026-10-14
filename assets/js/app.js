@@ -8578,13 +8578,72 @@ class MythicApp {
     this.renderLiveChatMessages();
   }
 
+  translateLiveChatMessageText(rawText, lang = this.currentLang) {
+    if (!rawText || typeof rawText !== 'string') return rawText;
+    if (lang === 'es') return rawText;
+
+    let text = rawText.trim();
+
+    if (lang === 'en') {
+      if (text.includes('¡Hola! 👋 Bienvenido a Mythic Progression. Estamos disponibles 24/7') || text.includes('Bienvenido a Mythic Progression')) {
+        return 'Hello! 👋 Welcome to Mythic Progression. We are available 24/7 to answer your questions about Mythic+, Raids, Leveling, or booster availability before ordering.';
+      }
+      if (text.includes('¡Hola! ¿Cómo estás? Dime con qué servicio o mazmorra necesitas ayuda') || text.includes('Dime con qué servicio o mazmorra')) {
+        return "Hello! How are you? Let me know which service or dungeon you need help with, and I'll gladly give you details and immediate availability.";
+      }
+      if (text.includes('¡Mensaje recibido! Nuestro Staff y Master Booster están en línea') || text.includes('Nuestro Staff y Master Booster')) {
+        return "Message received! Our Staff and Master Boosters are online. If you have any special requirements (specific schedule, don't touch gold, Discord streaming), let us know here.";
+      }
+      if (text.includes('¡Sí! Tenemos boosters verificados disponibles en este momento') || text.includes('Tenemos boosters verificados disponibles')) {
+        return 'Yes! We have verified boosters available right now. Upon confirming your order, your booster is assigned in 10-15 minutes and your private coordination chat opens.';
+      }
+      if (text.includes('100% seguro. Todos nuestros boosters juegan con VPN dedicada') || text.includes('VPN dedicada configurada')) {
+        return '100% safe. All our boosters play with dedicated VPN configured in your exact region and city for maximum discretion and total safety of your Blizzard account.';
+      }
+      if (text.includes('Las míticas+ y raids inician habitualmente entre 15 y 30 minutos') || text.includes('inician habitualmente entre 15 y 30 minutos')) {
+        return "Mythic+ and Raids typically start within 15 to 30 minutes after checkout. If you choose Powerleveling, we can adapt to your preferred schedule when you're not using the account.";
+      }
+      if (text.includes('¡Tenemos garantía de mejor precio! Si viste la misma oferta') || text.includes('garantía de mejor precio')) {
+        return 'We have a best price guarantee! If you found the same offer cheaper on another established platform, we price match and you also earn 5% cashback on your balance.';
+      }
+      text = text.replace(/Consultando sobre /g, 'Inquiring about ');
+      text = text.replace(/Personaje: /g, 'Character: ');
+    } else if (lang === 'pt') {
+      if (text.includes('¡Hola! 👋 Bienvenido a Mythic Progression. Estamos disponibles 24/7') || text.includes('Bienvenido a Mythic Progression')) {
+        return 'Olá! 👋 Bem-vindo ao Mythic Progression. Estamos disponíveis 24/7 para tirar suas dúvidas sobre míticas+, raides, nivelamento ou disponibilidade de boosters antes de fazer o pedido.';
+      }
+      if (text.includes('¡Hola! ¿Cómo estás? Dime con qué servicio o mazmorra necesitas ayuda') || text.includes('Dime con qué servicio o mazmorra')) {
+        return 'Olá! Como vai? Diga-me com qual serviço ou masmorra você precisa de ajuda e com prazer lhe darei detalhes e disponibilidade imediata.';
+      }
+      if (text.includes('¡Mensaje recibido! Nuestro Staff y Master Booster están en línea') || text.includes('Nuestro Staff y Master Booster')) {
+        return 'Mensagem recebida! Nossa equipe e Master Boosters estão online. Se você tiver qualquer requisito especial (horário específico, não mexer no ouro, streaming no Discord), avise-nos por aqui.';
+      }
+      if (text.includes('¡Sí! Tenemos boosters verificados disponibles en este momento') || text.includes('Tenemos boosters verificados disponibles')) {
+        return 'Sim! Temos boosters verificados disponíveis agora mesmo. Ao confirmar seu pedido, seu booster é atribuído em 10-15 minutos e seu chat privado de coordenação é aberto.';
+      }
+      if (text.includes('100% seguro. Todos nuestros boosters juegan con VPN dedicada') || text.includes('VPN dedicada configurada')) {
+        return '100% seguro. Todos os nossos boosters jogam com VPN dedicada configurada na sua mesma região e cidade para máxima discrição e segurança total da sua conta Blizzard.';
+      }
+      if (text.includes('Las míticas+ y raids inician habitualmente entre 15 y 30 minutos') || text.includes('inician habitualmente entre 15 y 30 minutos')) {
+        return 'Míticas+ e raides normalmente começam entre 15 e 30 minutos após o pagamento. Se você escolher Powerleveling, podemos nos adaptar ao horário em que você não usa a conta.';
+      }
+      if (text.includes('¡Tenemos garantía de mejor precio! Si viste la misma oferta') || text.includes('garantía de mejor precio')) {
+        return 'Temos garantia de melhor preço! Se você viu a mesma oferta mais barata em outra plataforma formal, nós cobrimos o preço e você ainda acumula 5% de cashback no seu saldo.';
+      }
+      text = text.replace(/Consultando sobre /g, 'Consultando sobre ');
+      text = text.replace(/Personaje: /g, 'Personagem: ');
+    }
+
+    return text;
+  }
+
   updateLiveChatTranslations(lang = this.currentLang) {
     const isEn = lang === 'en';
     const isPt = lang === 'pt';
 
     const hintEl = document.getElementById('mp-chat-bubble-hint-text');
     if (hintEl) {
-      hintEl.textContent = '¿Dudas antes de comprar? Chatea en vivo';
+      hintEl.textContent = isEn ? 'Questions before ordering? Chat live' : (isPt ? 'Dúvidas antes de pedir? Fale ao vivo' : '¿Dudas antes de comprar? Chatea en vivo');
     }
 
     const titleEl = document.getElementById('mp-live-chat-title');
@@ -8624,34 +8683,53 @@ class MythicApp {
         `;
       }
     }
+
+    this.renderLiveChatMessages();
   }
 
   renderLiveChatMessages() {
     const list = document.getElementById('mp-live-chat-messages');
     if (!list) return;
 
+    const lang = this.currentLang || 'es';
+    const isEn = lang === 'en';
+    const isPt = lang === 'pt';
+
+    const defaultSupportName = isEn ? 'Mythic Support (Alex)' : (isPt ? 'Suporte Mythic (Alex)' : 'Soporte Mythic (Alex)');
+    const youLabel = isEn ? 'You' : (isPt ? 'Você' : 'Tú');
+    const inquiryBadge = isEn ? 'Product Inquiry' : (isPt ? 'Consulta de Produto' : 'Consulta de Producto');
+
     list.innerHTML = (this.liveChatMessages || []).map(m => {
       const isSupport = m.sender === 'support';
+      const authorName = isSupport ? (m.author ? (isEn ? m.author.replace('Soporte', 'Support') : (isPt ? m.author.replace('Soporte', 'Suporte') : m.author)) : defaultSupportName) : (this.currentUser ? this.currentUser.username : youLabel);
+      const displayMsg = (isSupport || m.isContext) ? this.translateLiveChatMessageText(m.message, lang) : m.message;
+      let displayTime = m.time || '';
+      if (displayTime === 'En línea' || displayTime === 'Online') {
+        displayTime = isEn ? 'Online' : (isPt ? 'Online' : 'En línea');
+      } else if (displayTime === 'Ahora' || displayTime === 'Now' || displayTime === 'Agora') {
+        displayTime = isEn ? 'Now' : (isPt ? 'Agora' : 'Ahora');
+      }
+
       if (m.isContext) {
         return `
           <div class="p-2.5 rounded-xl bg-[#22160f] border border-[#ee914f]/40 text-[#fcefc2] text-[11px] space-y-1 my-1">
             <div class="font-bold flex items-center gap-1.5 text-[#ee914f]">
               <i class="fa-solid fa-cart-shopping text-[10px]"></i>
-              <span>Consulta de Producto</span>
+              <span>${inquiryBadge}</span>
             </div>
-            <div class="text-stone-300 leading-snug">${m.message}</div>
+            <div class="text-stone-300 leading-snug">${displayMsg}</div>
           </div>
         `;
       }
       return `
         <div class="flex flex-col ${isSupport ? 'items-start' : 'items-end'}">
           <div class="flex items-center gap-1.5 mb-0.5 text-[10px] text-stone-500">
-            ${isSupport ? `<span class="text-[#ee914f] font-semibold">${m.author || 'Soporte'}</span>` : '<span class="text-stone-400 font-semibold">Tú</span>'}
+            ${isSupport ? `<span class="text-[#ee914f] font-semibold">${authorName}</span>` : `<span class="text-stone-400 font-semibold">${authorName}</span>`}
             <span>•</span>
-            <span>${m.time || ''}</span>
+            <span>${displayTime}</span>
           </div>
           <div class="max-w-[85%] px-3.5 py-2 rounded-2xl ${isSupport ? 'bg-[#1e140d] border border-stone-800 text-stone-200' : 'bg-gradient-to-r from-[#ee914f] to-[#b85d1d] text-white font-medium shadow-md shadow-[#ee914f]/15'} text-xs leading-relaxed break-words">
-            ${m.message}
+            ${displayMsg}
           </div>
         </div>
       `;
@@ -8743,7 +8821,11 @@ class MythicApp {
       // Pre-fill input with ready question so user can just click send or customize
       const inp = document.getElementById('mp-live-chat-input');
       if (inp) {
-        inp.value = `Hola, ¿tienen disponibilidad ahora para ${prodTitle}?`;
+        const lang = this.currentLang || 'es';
+        const readyQ = lang === 'en'
+          ? `Hello, do you have slots available now for ${prodTitle}?`
+          : (lang === 'pt' ? `Olá, vocês têm vagas disponíveis agora para ${prodTitle}?` : `Hola, ¿tienen disponibilidad ahora para ${prodTitle}?`);
+        inp.value = readyQ;
         inp.focus();
         inp.select();
       }
@@ -8762,11 +8844,16 @@ class MythicApp {
     const text = inp.value.trim();
     if (!text) return;
 
+    const lang = this.currentLang || 'es';
+    const isEn = lang === 'en';
+    const isPt = lang === 'pt';
+
+    const youAuthor = isEn ? 'You' : (isPt ? 'Você' : 'Tú');
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg = {
       id: 'msg_' + Date.now(),
       sender: 'client',
-      author: this.currentUser ? this.currentUser.username : 'Tú',
+      author: this.currentUser ? this.currentUser.username : youAuthor,
       message: text,
       time: timeStr
     };
@@ -8790,25 +8877,61 @@ class MythicApp {
 
     setTimeout(() => {
       this.showLiveChatTyping(false);
-      let replyText = '¡Mensaje recibido! Nuestro Staff y Master Booster están en línea. Si tienes cualquier requerimiento especial (horario específico, no tocar oro, streaming en Discord), puedes indicárnoslo aquí.';
+      let replyText = isEn
+        ? "Message received! Our Staff and Master Boosters are online. If you have any special requirements (specific schedule, don't touch gold, Discord streaming), let us know here."
+        : (isPt
+          ? "Mensagem recebida! Nossa equipe e Master Boosters estão online. Se você tiver qualquer requisito especial (horário específico, não mexer no ouro, streaming no Discord), avise-nos por aqui."
+          : "¡Mensaje recibido! Nuestro Staff y Master Booster están en línea. Si tienes cualquier requerimiento especial (horario específico, no tocar oro, streaming en Discord), puedes indicárnoslo aquí.");
+
       const lower = text.toLowerCase();
 
-      if (lower.includes('cupo') || lower.includes('disponible') || lower.includes('iniciar') || lower.includes('hoy') || lower.includes('ahora')) {
-        replyText = '¡Sí! Tenemos boosters verificados disponibles en este momento. Al confirmar tu pedido, tu booster se asigna en 10-15 minutos y se abre tu chat privado de coordinación.';
-      } else if (lower.includes('seguro') || lower.includes('ban') || lower.includes('vpn') || lower.includes('riesgo')) {
-        replyText = '100% seguro. Todos nuestros boosters juegan con VPN dedicada configurada en tu misma región y ciudad para máxima discreción y seguridad total de tu cuenta Blizzard.';
-      } else if (lower.includes('tarda') || lower.includes('tiempo') || lower.includes('demora') || lower.includes('duracion')) {
-        replyText = 'Las míticas+ y raids inician habitualmente entre 15 y 30 minutos tras el pago. Si eliges Powerleveling, podemos adaptarnos al horario en que tú no uses la cuenta.';
-      } else if (lower.includes('precio') || lower.includes('barato') || lower.includes('descuento') || lower.includes('igualar')) {
-        replyText = '¡Tenemos garantía de mejor precio! Si viste la misma oferta más barata en otra plataforma formal, te igualamos el precio y además acumulas 5% de cashback en tu saldo.';
-      } else if (lower.includes('hola') || lower.includes('buenas') || lower.includes('hey')) {
-        replyText = '¡Hola! ¿Cómo estás? Dime con qué servicio o mazmorra necesitas ayuda y con gusto te doy detalles y disponibilidad inmediata.';
+      if (lower.includes('cupo') || lower.includes('disponible') || lower.includes('iniciar') || lower.includes('hoy') || lower.includes('ahora') ||
+          lower.includes('slot') || lower.includes('available') || lower.includes('start') || lower.includes('today') || lower.includes('now') ||
+          lower.includes('vaga') || lower.includes('disponivel') || lower.includes('disponível') || lower.includes('hoje') || lower.includes('agora')) {
+        replyText = isEn
+          ? "Yes! We have verified boosters available right now. Upon confirming your order, your booster is assigned in 10-15 minutes and your private coordination chat opens."
+          : (isPt
+            ? "Sim! Temos boosters verificados disponíveis agora mesmo. Ao confirmar seu pedido, seu booster é atribuído em 10-15 minutos e seu chat privado de coordenação é aberto."
+            : "¡Sí! Tenemos boosters verificados disponibles en este momento. Al confirmar tu pedido, tu booster se asigna en 10-15 minutos y se abre tu chat privado de coordinación.");
+      } else if (lower.includes('seguro') || lower.includes('ban') || lower.includes('vpn') || lower.includes('riesgo') ||
+                 lower.includes('safe') || lower.includes('risk')) {
+        replyText = isEn
+          ? "100% safe. All our boosters play with dedicated VPN configured in your exact region and city for maximum discretion and total safety of your Blizzard account."
+          : (isPt
+            ? "100% seguro. Todos os nossos boosters jogam com VPN dedicada configurada na sua mesma região e cidade para máxima discrição e segurança total da sua conta Blizzard."
+            : "100% seguro. Todos nuestros boosters juegan con VPN dedicada configurada en tu misma región y ciudad para máxima discreción y seguridad total de tu cuenta Blizzard.");
+      } else if (lower.includes('tarda') || lower.includes('tiempo') || lower.includes('demora') || lower.includes('duracion') ||
+                 lower.includes('how fast') || lower.includes('how long') || lower.includes('duration') ||
+                 lower.includes('quanto tempo') || lower.includes('demora')) {
+        replyText = isEn
+          ? "Mythic+ and Raids typically start within 15 to 30 minutes after checkout. If you choose Powerleveling, we can adapt to your preferred schedule when you're not using the account."
+          : (isPt
+            ? "Míticas+ e raides normalmente começam entre 15 e 30 minutos após o pagamento. Se você escolher Powerleveling, podemos nos adaptar ao horário em que você não usa a conta."
+            : "Las míticas+ y raids inician habitualmente entre 15 y 30 minutos tras el pago. Si eliges Powerleveling, podemos adaptarnos al horario en que tú no uses la cuenta.");
+      } else if (lower.includes('precio') || lower.includes('barato') || lower.includes('descuento') || lower.includes('igualar') ||
+                 lower.includes('price') || lower.includes('cheap') || lower.includes('discount') || lower.includes('match') ||
+                 lower.includes('preco') || lower.includes('preço') || lower.includes('cobrir')) {
+        replyText = isEn
+          ? "We have a best price guarantee! If you found the same offer cheaper on another established platform, we price match and you also earn 5% cashback on your balance."
+          : (isPt
+            ? "Temos garantia de melhor preço! Se você viu a mesma oferta mais barata em outra plataforma formal, nós cobrimos o preço e você ainda acumula 5% de cashback no seu saldo."
+            : "¡Tenemos garantía de mejor precio! Si viste la misma oferta más barata en otra plataforma formal, te igualamos el precio y además acumulas 5% de cashback en tu saldo.");
+      } else if (lower.includes('hola') || lower.includes('buenas') || lower.includes('hey') ||
+                 lower.includes('hello') || lower.includes('hi') ||
+                 lower.includes('ola') || lower.includes('olá') || lower.includes('oi') || lower.includes('bom dia') || lower.includes('boa tarde')) {
+        replyText = isEn
+          ? "Hello! How are you? Let me know which service or dungeon you need help with, and I'll gladly give you details and immediate availability."
+          : (isPt
+            ? "Olá! Como vai? Diga-me com qual serviço ou masmorra você precisa de ajuda e com prazer lhe darei detalhes e disponibilidade imediata."
+            : "¡Hola! ¿Cómo estás? Dime con qué servicio o mazmorra necesitas ayuda y con gusto te doy detalles y disponibilidad inmediata.");
       }
+
+      const supportAuthor = isEn ? 'Mythic Support (Alex)' : (isPt ? 'Suporte Mythic (Alex)' : 'Soporte Mythic (Alex)');
 
       const supportMsg = {
         id: 'msg_' + Date.now(),
         sender: 'support',
-        author: 'Soporte Mythic (Alex)',
+        author: supportAuthor,
         message: replyText,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -8833,6 +8956,8 @@ class MythicApp {
     if (existing) existing.remove();
 
     if (show) {
+      const lang = this.currentLang || 'es';
+      const typingText = lang === 'en' ? 'Support is typing...' : (lang === 'pt' ? 'O suporte está digitando...' : 'Soporte está respondiendo...');
       const typingEl = document.createElement('div');
       typingEl.id = 'mp-live-chat-typing';
       typingEl.className = 'flex items-center gap-1.5 text-[11px] text-[#ee914f] bg-[#1e140d] border border-stone-800 rounded-xl px-3 py-1.5 w-fit';
@@ -8840,7 +8965,7 @@ class MythicApp {
         <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] animate-bounce"></span>
         <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] animate-bounce [animation-delay:0.2s]"></span>
         <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] animate-bounce [animation-delay:0.4s]"></span>
-        <span class="text-stone-400 text-[10px] ml-1">Soporte está respondiendo...</span>
+        <span class="text-stone-400 text-[10px] ml-1">${typingText}</span>
       `;
       list.appendChild(typingEl);
       list.scrollTop = list.scrollHeight;
