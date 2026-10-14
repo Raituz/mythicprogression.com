@@ -531,7 +531,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=3.2.1"></script>
+  <script src="assets/js/app.js?v=3.2.2"></script>
   <script>
     function switchProTab(tabId) {
       document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));
@@ -621,10 +621,10 @@
           }
         }
 
-        // Show Admin link in sidebar ONLY if user is admin or gerente
+        // Show Admin link in sidebar for admin, staff or gerente
         const adminLink = document.getElementById('pro-sidebar-admin-link');
         if (adminLink) {
-          if (app.isAdminOrGerente()) {
+          if (app.isAdminOrGerente() || app.isAdmin() || app.currentUser?.isStaff || app.currentUser?.type === 'staff') {
             adminLink.classList.remove('hidden');
           } else {
             adminLink.classList.add('hidden');
