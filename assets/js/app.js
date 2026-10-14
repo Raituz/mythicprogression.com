@@ -263,7 +263,7 @@ class MythicApp {
   // Owner identity. Only granted when the Discord ID comes from a real OAuth handshake.
   static get OWNER_DISCORD_ID() { return '443948776562884620'; }
   static get SESSION_VERSION() { return '3'; }
-  static get ORDERS_VERSION() { return '2.5.6'; }
+  static get ORDERS_VERSION() { return '2.5.7'; }
 
   isVerifiedOwner(user = this.currentUser) {
     if (!user) return false;
@@ -2888,8 +2888,16 @@ class MythicApp {
 
     container.innerHTML = myOrders.map(order => {
       const isAssigned = !!order.assignedBooster;
-      const statusText = order.status === 'COMPLETED' ? 'COMPLETADO' : (isAssigned ? 'EN PROCESO' : 'BUSCANDO BOOSTER');
-      const statusClass = order.status === 'COMPLETED' ? 'bg-[#152319] text-emerald-400 border border-emerald-800/40' : (isAssigned ? 'bg-[#2b1f15] text-[#fcefc2] border border-[#ee914f]/40' : 'bg-stone-900 text-stone-400 border border-stone-800');
+      let statusText = isAssigned ? 'EN PROCESO' : 'BUSCANDO BOOSTER';
+      let statusClass = isAssigned ? 'bg-[#2b1f15] text-[#fcefc2] border border-[#ee914f]/40' : 'bg-stone-900 text-stone-400 border border-stone-800';
+
+      if (order.status === 'COMPLETED') {
+        statusText = 'COMPLETADO';
+        statusClass = 'bg-[#152319] text-emerald-400 border border-emerald-800/40';
+      } else if (order.status === 'PENDING_APPROVAL') {
+        statusText = 'REPORTE RECIBIDO (EN REVISIÓN)';
+        statusClass = 'bg-amber-950/80 text-amber-300 border border-amber-600/60 animate-pulse';
+      }
 
       return `
         <div class="glass-panel p-5 rounded-2xl border border-stone-800 hover:border-[#ee914f]/50 transition-all mb-4">
@@ -2922,6 +2930,23 @@ class MythicApp {
                   <i class="fa-solid fa-hourglass-half mr-1"></i> Tu orden está en el tablón. Un booster la tomará en breve.
                 </div>
               `}
+
+              ${order.status === 'PENDING_APPROVAL' ? `
+                <div class="mt-3 p-3.5 rounded-xl bg-amber-950/40 border border-amber-600/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      <i class="fa-solid fa-bell"></i> ¡El booster ha reportado tu orden como completada!
+                    </div>
+                    <p class="text-[11px] text-stone-300 mt-0.5">
+                      ${order.completionReport?.notes ? `<span class="text-stone-400 italic font-mono">"${order.completionReport.notes}"</span><br>` : ''}
+                      Por favor verifica tu personaje. Si todo está en orden, confirma para finalizar el servicio y liberar el pago.
+                    </p>
+                  </div>
+                  <button onclick="app.clientConfirmOrderCompletion('${order.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-check-double"></i> Confirmar y Finalizar
+                  </button>
+                </div>
+              ` : ''}
             </div>
 
             <div class="flex items-center gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-stone-800 justify-between md:justify-end">
@@ -2938,6 +2963,16 @@ class MythicApp {
         </div>
       `;
     }).join('');
+  }
+
+  clientConfirmOrderCompletion(orderId) {
+    const o = this.orders.find(x => x.id === orderId);
+    if (!o) return;
+    if (confirm(`¿Confirmas que recibiste el servicio #${orderId} a entera satisfacción?\n\nAl confirmar, se liberará el pago al booster y la orden quedará cerrada.`)) {
+      this.finalizeOrderCompletion(orderId, 'Cliente');
+      this.renderClientOrders();
+      this.showToast(`¡Servicio confirmado! Gracias por confiar en Mythic Progression.`, 'success');
+    }
   }
 
   openClientChat(orderId) {
@@ -3700,11 +3735,19 @@ class MythicApp {
               <span>Chat</span>
             </button>
 
-            ${order.status !== 'COMPLETED' ? `
-              <button onclick="app.finishOrderModal('${order.id}')" class="px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider">
-                <i class="fa-solid fa-check mr-1"></i> Finalizar Orden
+            ${order.status === 'COMPLETED' ? `
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-check"></i> Finalizada
+              </span>
+            ` : (order.status === 'PENDING_APPROVAL' ? `
+              <span class="px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-600/60 text-amber-300 text-xs font-bold flex items-center gap-1.5 animate-pulse" title="Reporte enviado, esperando aprobación del admin o cliente">
+                <i class="fa-solid fa-clock"></i> En Revisión
+              </span>
+            ` : `
+              <button onclick="app.promptBoosterReportCompletion('${order.id}')" class="px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer hover:brightness-110 active:scale-[0.98]">
+                <i class="fa-solid fa-flag-checkered mr-1"></i> Enviar Reporte
               </button>
-            ` : ''}
+            `)}
           </div>
         </div>
       </div>
@@ -3730,31 +3773,122 @@ class MythicApp {
     this.showToast(isChecked ? 'Notificado al cliente: Estás en la cuenta' : 'Notificado al cliente: Saliste de la cuenta', 'info');
   }
 
-  finishOrderModal(orderId) {
+  promptBoosterReportCompletion(orderId) {
     const order = this.orders.find(o => o.id === orderId);
     if (!order) return;
 
-    if (confirm(`¿Confirmas que has completado la orden #${order.id}? Se acreditarán $${order.boosterPayout.toFixed(2)} a tu saldo.`)) {
-      order.status = 'COMPLETED';
-      order.completedAt = new Date().toISOString();
-      order.isOnAccount = false;
-      
-      this.currentUser.balance = (this.currentUser.balance || 0) + order.boosterPayout;
-      this.currentUser.points = (this.currentUser.points || 0) + 1;
-      this.saveUser();
-
-      const bIdx = this.boosters.findIndex(b => b.discord_id === this.currentUser.discordId);
-      if (bIdx >= 0) {
-        this.boosters[bIdx].balance = this.currentUser.balance;
-        this.boosters[bIdx].points = this.currentUser.points;
-        this.saveBoosters();
-      }
-
-      this.saveOrders();
-      this.renderProMyOrders();
-      this.renderProWallet();
-      this.showToast(`¡Orden completada! Se añadieron $${order.boosterPayout.toFixed(2)} a tu balance.`, 'success');
+    let modal = document.getElementById('report-completion-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'report-completion-modal';
+      modal.className = 'fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4';
+      modal.innerHTML = '<div id="report-completion-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>';
+      document.body.appendChild(modal);
     }
+
+    const content = document.getElementById('report-completion-modal-content');
+    if (!content) return;
+
+    const payout = Number(order.boosterPayout || order.assignedBooster?.payout || 0);
+
+    content.innerHTML = `
+      <div class="p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-stone-800 mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-flag-checkered text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Reporte de Finalización</h3>
+              <p class="text-[11px] text-stone-400">Orden #${order.id} - ${order.serviceName}</p>
+            </div>
+          </div>
+          <button onclick="app.closeReportCompletionModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <div class="p-3.5 rounded-xl bg-[#221811] border border-[#ee914f]/30">
+            <div class="text-stone-300 mb-1 leading-relaxed">
+              Al enviar tu reporte, el staff de administración o el cliente verificarán los objetivos del servicio. Una vez aprobado, se acreditarán <strong class="text-[#fcefc2] font-mono-gaming font-bold">$${payout.toFixed(2)}</strong> a tu saldo retirable.
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1.5">
+              Notas de entrega / Enlace de captura (Opcional):
+            </label>
+            <textarea id="completion-report-notes" rows="3" placeholder="Ej: Keystone +10 completada a tiempo en 24min. Enlace imgur con screenshot..." class="w-full bg-[#17120e] border border-stone-700 rounded-xl p-3 text-xs text-white focus:border-[#ee914f] outline-none resize-none"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button onclick="app.closeReportCompletionModal()" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-bold transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button onclick="app.submitBoosterCompletionReport('${order.id}')" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Enviar Reporte</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  closeReportCompletionModal() {
+    const modal = document.getElementById('report-completion-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  submitBoosterCompletionReport(orderId) {
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const notesEl = document.getElementById('completion-report-notes');
+    const notes = notesEl ? notesEl.value.trim() : '';
+
+    this.closeReportCompletionModal();
+
+    order.status = 'PENDING_APPROVAL';
+    order.isOnAccount = false;
+    order.completionReport = {
+      reportedAt: new Date().toISOString(),
+      notes: notes,
+      booster: this.currentUser?.username || 'Booster'
+    };
+
+    order.chat = order.chat || [];
+    order.chat.push({
+      sender: 'system',
+      author: 'Reporte de Servicio',
+      message: `📋 El booster ${this.currentUser?.username || 'Booster'} ha enviado el reporte de finalización del servicio.${notes ? '\nNotas/Evidencia: ' + notes : ''}\n\nEn espera de verificación y aprobación por el Administrador o el Cliente.`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.saveOrders();
+    this.renderProMyOrders();
+    this.renderChatList();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_REPORTED', orderId: order.id });
+      } catch (e) {}
+    }
+
+    this.showToast('Reporte de finalización enviado a revisión.', 'success');
+  }
+
+  finishOrderModal(orderId) {
+    this.promptBoosterReportCompletion(orderId);
   }
 
   renderProWallet() {
@@ -4242,6 +4376,13 @@ class MythicApp {
       return;
     }
 
+    if (typeof window.switchProTab === 'function') {
+      window.switchProTab('chat');
+    }
+    if (typeof window.switchAdminTab === 'function') {
+      window.switchAdminTab('chat');
+    }
+
     this.renderChatList();
     const chatContainer = document.getElementById('chat-active-window');
     if (!chatContainer) return;
@@ -4370,6 +4511,12 @@ class MythicApp {
     this.saveOrders();
     input.value = '';
     this.openChat(this.activeChatOrderId);
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_CHAT_MESSAGE', orderId: this.activeChatOrderId });
+      } catch (e) {}
+    }
   }
 
   openAdminLiveSupportChat() {
@@ -5189,10 +5336,11 @@ class MythicApp {
         <td class="py-4 px-5 text-center whitespace-nowrap">
           <span class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider ${
             o.status === 'COMPLETED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-sm' :
+            o.status === 'PENDING_APPROVAL' ? 'bg-amber-950/90 text-amber-300 border border-amber-600/70 shadow-sm animate-pulse' :
             o.status === 'IN_PROGRESS' ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60 shadow-sm' :
             'bg-[#281b13] text-[#a855f7] border border-[#a855f7]/40 shadow-sm'
           }">
-            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : 'DISPONIBLE'}
+            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : 'DISPONIBLE'}
           </span>
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
@@ -5201,13 +5349,23 @@ class MythicApp {
               <i class="fa-solid fa-eye text-[#a855f7] text-xs"></i>
               <span>Auditar</span>
             </button>
+            ${o.status === 'PENDING_APPROVAL' ? `
+              <button onclick="app.adminApproveOrderCompletion('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Aprobar reporte y liberar pago al booster">
+                <i class="fa-solid fa-circle-check"></i>
+                <span class="hidden xl:inline">Aprobar</span>
+              </button>
+              <button onclick="app.adminRejectOrderCompletion('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer" title="Rechazar reporte y devolver a En Proceso">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span class="hidden xl:inline">Rechazar</span>
+              </button>
+            ` : ''}
             ${o.assignedBooster && o.status !== 'COMPLETED' ? `
               <button onclick="app.adminUnassignBoosterOrder('${o.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 text-rose-300 border border-rose-700/60 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer" title="Quitar orden al booster y devolverla a la Bolsa de Pedidos">
                 <i class="fa-solid fa-user-xmark text-rose-400"></i>
                 <span class="hidden xl:inline">Quitar Booster</span>
               </button>
             ` : ''}
-            ${o.status !== 'COMPLETED' ? `
+            ${o.status !== 'COMPLETED' && o.status !== 'PENDING_APPROVAL' ? `
               <button onclick="app.adminCompleteOrder('${o.id}')" class="w-8 h-8 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer" title="Completar Orden">
                 <i class="fa-solid fa-check"></i>
               </button>
@@ -5240,18 +5398,112 @@ class MythicApp {
     this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL', val);
   }
 
+  finalizeOrderCompletion(orderId, approverName = 'Administración') {
+    const o = this.orders.find(x => x.id === orderId);
+    if (!o) return;
+
+    o.status = 'COMPLETED';
+    o.completedAt = new Date().toISOString();
+    o.isOnAccount = false;
+    o.approvedBy = approverName;
+
+    const payout = Number(o.assignedBooster?.payout || o.boosterPayout || 0);
+
+    // Credit payout to booster
+    if (o.assignedBooster) {
+      const bIdx = (this.boosters || []).findIndex(b => 
+        (b.discord_id && o.assignedBooster.discordId && String(b.discord_id) === String(o.assignedBooster.discordId)) ||
+        (b.username && o.assignedBooster.username && b.username.toLowerCase() === o.assignedBooster.username.toLowerCase()) ||
+        (b.id && o.assignedBooster.id && String(b.id) === String(o.assignedBooster.id))
+      );
+      if (bIdx >= 0) {
+        this.boosters[bIdx].balance = (Number(this.boosters[bIdx].balance) || 0) + payout;
+        this.boosters[bIdx].points = (Number(this.boosters[bIdx].points) || 0) + 1;
+        this.saveBoosters();
+      }
+
+      if (this.currentUser && (
+        (this.currentUser.discordId && o.assignedBooster.discordId && String(this.currentUser.discordId) === String(o.assignedBooster.discordId)) ||
+        (this.currentUser.username && o.assignedBooster.username && this.currentUser.username.toLowerCase() === o.assignedBooster.username.toLowerCase())
+      )) {
+        this.currentUser.balance = (Number(this.currentUser.balance) || 0) + payout;
+        this.currentUser.points = (Number(this.currentUser.points) || 0) + 1;
+        this.saveUser();
+      }
+    }
+
+    o.chat = o.chat || [];
+    o.chat.push({
+      sender: 'system',
+      author: 'Notificación del Sistema',
+      message: `🎉 ¡Servicio verificado y aprobado por ${approverName}! La orden #${o.id} ha sido completada con éxito. Se acreditaron $${payout.toFixed(2)} al saldo del booster.`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.saveOrders();
+    this.renderAdminOverview();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+    if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
+    if (typeof this.renderProWallet === 'function') this.renderProWallet();
+    if (typeof this.renderChatList === 'function') this.renderChatList();
+    if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_COMPLETED', orderId: o.id, approver: approverName });
+      } catch (e) {}
+    }
+  }
+
   adminCompleteOrder(orderId) {
     const o = this.orders.find(x => x.id === orderId);
     if (!o) return;
-    if (confirm(`¿Marcar la orden #${orderId} como COMPLETADA administrativamente?`)) {
-      o.status = 'COMPLETED';
-      o.completedAt = new Date().toISOString();
-      o.isOnAccount = false;
-      this.saveOrders();
-      this.renderAdminOverview();
-      this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
-      this.showToast(`Orden #${orderId} marcada como completada.`, 'success');
+    if (confirm(`¿Marcar la orden #${orderId} como COMPLETADA administrativamente y liberar el pago al booster?`)) {
+      this.finalizeOrderCompletion(orderId, 'Administrador');
+      this.showToast(`Orden #${orderId} completada administrativamente.`, 'success');
     }
+  }
+
+  adminApproveOrderCompletion(orderId) {
+    const o = this.orders.find(x => x.id === orderId);
+    if (!o) return;
+    const payout = (o.assignedBooster?.payout || o.boosterPayout || 0).toFixed(2);
+    if (confirm(`¿Aprobar el reporte de finalización de la orden #${orderId}?\n\nSe marcará como COMPLETADA y se acreditarán $${payout} al saldo del booster.`)) {
+      this.finalizeOrderCompletion(orderId, 'Administrador');
+      this.showToast(`¡Reporte aprobado y orden #${orderId} completada!`, 'success');
+    }
+  }
+
+  adminRejectOrderCompletion(orderId) {
+    const o = this.orders.find(x => x.id === orderId);
+    if (!o) return;
+    const reason = prompt(`Indica el motivo del rechazo del reporte para la orden #${orderId}:`, 'Faltan objetivos acordados o evidencia insuficiente');
+    if (reason === null) return;
+
+    o.status = 'IN_PROGRESS';
+    o.completionReport = null;
+    o.chat = o.chat || [];
+    o.chat.push({
+      sender: 'system',
+      author: 'Administración Mythic',
+      message: `⚠️ El reporte de finalización fue RECHAZADO por la administración.\nMotivo: ${reason}\nLa orden ha vuelto a estado EN PROCESO.`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.saveOrders();
+    this.renderAdminOverview();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
+    if (typeof this.renderChatList === 'function') this.renderChatList();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'ORDER_REJECTED', orderId: o.id, reason });
+      } catch (e) {}
+    }
+
+    this.showToast(`Reporte rechazado. La orden #${orderId} regresó a En Proceso.`, 'info');
   }
 
   adminDeleteOrder(orderId) {
@@ -5349,6 +5601,28 @@ class MythicApp {
           <div><span class="text-stone-500">Total Pagado:</span> <strong class="text-white font-mono-gaming text-sm">$${o.totalPrice.toFixed(2)}</strong></div>
           <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#f3e8ff] font-mono-gaming">$${(o.companyShare || o.totalPrice * 0.7).toFixed(2)} / $${(o.boosterPayout || o.totalPrice * 0.3).toFixed(2)}</strong></div>
         </div>
+
+        ${o.status === 'PENDING_APPROVAL' ? `
+          <div class="p-3.5 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
+                <i class="fa-solid fa-clock"></i> Reporte de Finalización Pendiente de Revisión
+              </div>
+              <div class="text-[11px] text-stone-300 mt-1">
+                Booster: <strong class="text-white">${o.completionReport?.booster || o.assignedBooster?.username || 'Booster'}</strong>
+                ${o.completionReport?.notes ? `<br><span class="italic text-stone-300 font-mono text-[10px]">"${o.completionReport.notes}"</span>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="app.adminApproveOrderCompletion('${o.id}'); document.getElementById('admin-order-modal').classList.add('hidden');" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-md cursor-pointer">
+                <i class="fa-solid fa-circle-check"></i> Aprobar y Pagar
+              </button>
+              <button onclick="app.adminRejectOrderCompletion('${o.id}'); document.getElementById('admin-order-modal').classList.add('hidden');" class="px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-md cursor-pointer">
+                <i class="fa-solid fa-rotate-left"></i> Rechazar
+              </button>
+            </div>
+          </div>
+        ` : ''}
 
         <div>
           <h4 class="font-bold text-stone-300 mb-2 flex items-center gap-2">
@@ -6893,7 +7167,15 @@ class MythicApp {
               if (this.activeChatOrderId === 'live_support' && typeof this.openAdminLiveSupportChat === 'function') {
                 this.openAdminLiveSupportChat();
               }
-            } else if (evt.data.type === 'ORDER_CLAIMED' || evt.data.type === 'ORDER_UNASSIGNED' || evt.data.type === 'ORDER_UPDATED') {
+            } else if (
+              evt.data.type === 'ORDER_CLAIMED' || 
+              evt.data.type === 'ORDER_UNASSIGNED' || 
+              evt.data.type === 'ORDER_UPDATED' || 
+              evt.data.type === 'ORDER_CHAT_MESSAGE' || 
+              evt.data.type === 'ORDER_REPORTED' || 
+              evt.data.type === 'ORDER_COMPLETED' || 
+              evt.data.type === 'ORDER_REJECTED'
+            ) {
               try {
                 const stored = localStorage.getItem('mp_orders');
                 if (stored) this.orders = JSON.parse(stored);
@@ -6903,6 +7185,10 @@ class MythicApp {
               this.renderAdminOverview();
               this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
               this.renderChatList();
+              if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+              if (this.activeChatOrderId && this.activeChatOrderId !== 'live_support') {
+                this.openChat(this.activeChatOrderId);
+              }
             }
           };
         } catch (e) {
@@ -6930,6 +7216,10 @@ class MythicApp {
           this.renderAdminOverview();
           this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
           this.renderChatList();
+          if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+          if (this.activeChatOrderId && this.activeChatOrderId !== 'live_support') {
+            this.openChat(this.activeChatOrderId);
+          }
         }
       });
     } catch (e) {

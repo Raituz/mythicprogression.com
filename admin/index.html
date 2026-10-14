@@ -395,6 +395,7 @@
                 <button onclick="app.filterAdminOrdersByStatus('ALL')" class="admin-order-filter-btn active px-3 py-1 rounded-lg font-bold text-stone-300 hover:text-white" data-filter="ALL">Todas</button>
                 <button onclick="app.filterAdminOrdersByStatus('AVAILABLE')" class="admin-order-filter-btn px-3 py-1 rounded-lg font-bold text-stone-400 hover:text-white" data-filter="AVAILABLE">Disponibles</button>
                 <button onclick="app.filterAdminOrdersByStatus('IN_PROGRESS')" class="admin-order-filter-btn px-3 py-1 rounded-lg font-bold text-stone-400 hover:text-white" data-filter="IN_PROGRESS">En Proceso</button>
+                <button onclick="app.filterAdminOrdersByStatus('PENDING_APPROVAL')" class="admin-order-filter-btn px-3 py-1 rounded-lg font-bold text-amber-400 hover:text-amber-200" data-filter="PENDING_APPROVAL">En Revisión</button>
                 <button onclick="app.filterAdminOrdersByStatus('COMPLETED')" class="admin-order-filter-btn px-3 py-1 rounded-lg font-bold text-stone-400 hover:text-white" data-filter="COMPLETED">Completadas</button>
               </div>
               <div class="relative">
@@ -1074,7 +1075,7 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=2.5.6"></script>
+  <script src="assets/js/app.js?v=2.5.7"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
