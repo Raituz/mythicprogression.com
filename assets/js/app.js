@@ -279,6 +279,11 @@ class MythicApp {
             ordersNeedSave = true;
           }
 
+          if (o.details && typeof o.details === 'string' && /sin muertes/i.test(o.details)) {
+            o.details = o.details.replace(/sin muertes,\s*/gi, '').replace(/sin muertes\s*/gi, '').trim();
+            ordersNeedSave = true;
+          }
+
           if (Array.isArray(o.chat)) {
             o.chat.forEach(msg => {
               if (msg && msg.author && /soporte\s*\/\s*gerencia/i.test(msg.author)) {
@@ -466,7 +471,13 @@ class MythicApp {
       const remoteOrders = [];
       snapshot.forEach(doc => {
         const data = doc.data();
-        if (data && data.id) remoteOrders.push(data);
+        if (data && data.id) {
+          if (data.details && typeof data.details === 'string' && /sin muertes/i.test(data.details)) {
+            data.details = data.details.replace(/sin muertes,\s*/gi, '').replace(/sin muertes\s*/gi, '').trim();
+            this.db.collection('orders').doc(data.id).set({ details: data.details }, { merge: true }).catch(() => {});
+          }
+          remoteOrders.push(data);
+        }
       });
 
       if (remoteOrders.length > 0) {
