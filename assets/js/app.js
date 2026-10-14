@@ -4341,6 +4341,12 @@ class MythicApp {
     this.liveChatMessages = stored;
     input.value = '';
 
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG', msg: replyMsg });
+      } catch (e) {}
+    }
+
     this.openAdminLiveSupportChat();
     this.renderLiveChatMessages();
     this.showToast('Respuesta enviada al visitante en vivo', 'success');
@@ -4349,6 +4355,11 @@ class MythicApp {
   clearLiveSupportChat() {
     localStorage.removeItem('mp_live_support_chat');
     this.liveChatMessages = [];
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG' });
+      } catch (e) {}
+    }
     this.openAdminLiveSupportChat();
     this.renderLiveChatMessages();
     this.showToast('Historial de chat preventa limpiado', 'info');
@@ -6728,6 +6739,9 @@ class MythicApp {
               if (list) this.renderLiveChatMessages();
               const adminList = document.getElementById('chat-conversations-list');
               if (adminList) this.renderChatList();
+              if (this.activeChatOrderId === 'live_support' && typeof this.openAdminLiveSupportChat === 'function') {
+                this.openAdminLiveSupportChat();
+              }
             } else if (evt.data.type === 'ORDER_CLAIMED' || evt.data.type === 'ORDER_UNASSIGNED' || evt.data.type === 'ORDER_UPDATED') {
               try {
                 const stored = localStorage.getItem('mp_orders');
@@ -6753,6 +6767,9 @@ class MythicApp {
           } catch (err) {}
           this.renderLiveChatMessages();
           if (typeof this.renderChatList === 'function') this.renderChatList();
+          if (this.activeChatOrderId === 'live_support' && typeof this.openAdminLiveSupportChat === 'function') {
+            this.openAdminLiveSupportChat();
+          }
         } else if (e.key === 'mp_orders') {
           try {
             this.orders = JSON.parse(e.newValue || '[]');
@@ -7026,6 +7043,11 @@ class MythicApp {
           time: 'Ahora'
         });
         localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+        if (this.liveChatChannel) {
+          try {
+            this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG' });
+          } catch (e) {}
+        }
         this.renderLiveChatMessages();
       }
 
@@ -7063,6 +7085,11 @@ class MythicApp {
     this.liveChatMessages = this.liveChatMessages || [];
     this.liveChatMessages.push(userMsg);
     localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG', msg: userMsg });
+      } catch (e) {}
+    }
     inp.value = '';
 
     this.renderLiveChatMessages();
@@ -7098,6 +7125,11 @@ class MythicApp {
 
       this.liveChatMessages.push(supportMsg);
       localStorage.setItem('mp_live_support_chat', JSON.stringify(this.liveChatMessages));
+      if (this.liveChatChannel) {
+        try {
+          this.liveChatChannel.postMessage({ type: 'NEW_LIVE_CHAT_MSG', msg: supportMsg });
+        } catch (e) {}
+      }
       this.renderLiveChatMessages();
       this.playChatChime();
     }, 1200);
