@@ -131,7 +131,12 @@ class MythicApp {
           this.updateBoosterRank(b);
 
           if (b.discord_id === '443948776562884620' || (b.username && b.username.toLowerCase() === 'miguelb')) {
-            if (!b.points || b.points < 700) b.points = 750;
+            // Restore accurate real points from sheets (546 base + any completed orders) if previously clamped to 750+
+            if (b.points >= 750 && b.points <= 760) {
+              b.points = 546 + (b.points - 750);
+            } else if (!b.points) {
+              b.points = 546;
+            }
             this.updateBoosterRank(b);
             b.role = 'Master Booster & Admin';
             b.isAdmin = true;
@@ -149,6 +154,8 @@ class MythicApp {
           }
         });
 
+        this.saveBoosters();
+
         // Synchronize current logged-in user with their booster roles in memory
         if (this.currentUser) {
           const cDiscord = String(this.currentUser.discordId || this.currentUser.discord_id || '');
@@ -162,6 +169,7 @@ class MythicApp {
           );
 
           if (matchedBooster) {
+            this.currentUser.points = matchedBooster.points;
             const isStaffOrAdmin = (matchedBooster.roles && matchedBooster.roles.some(r => /admin|staff|gerente|soporte/i.test(r))) ||
               (matchedBooster.role && /admin|staff|gerente|soporte/i.test(matchedBooster.role)) ||
               matchedBooster.isAdmin === true || matchedBooster.isStaff === true;
@@ -172,8 +180,8 @@ class MythicApp {
               this.currentUser.type = 'admin';
               this.currentUser.roles = matchedBooster.roles || ['Staff / Admin'];
               this.currentUser.role = matchedBooster.role || 'Staff / Admin';
-              this.saveUser();
             }
+            this.saveUser();
           }
         }
       }
@@ -664,9 +672,9 @@ class MythicApp {
 
   calculateBoosterRankFromPoints(points) {
     const pts = Math.max(0, Number(points) || 0);
-    if (pts >= 700) return 'Master Booster';
-    if (pts >= 500) return 'Elite Booster';
-    if (pts >= 200) return 'Veteran Booster';
+    if (pts >= 500) return 'Master Booster';
+    if (pts >= 300) return 'Elite Booster';
+    if (pts >= 100) return 'Veteran Booster';
     if (pts >= 20) return 'Gold Booster';
     return 'Booster';
   }
@@ -1087,6 +1095,12 @@ class MythicApp {
         this.currentUser.type = 'admin';
         this.currentUser.role = 'Master Booster & Admin';
         this.currentUser.roles = ['Master Booster', 'Staff / Admin'];
+        if (existingBooster) {
+          this.currentUser.points = existingBooster.points || 546;
+          this.currentUser.balance = existingBooster.balance || 0.00;
+        } else {
+          this.currentUser.points = 546;
+        }
       } else if (existingBooster) {
         const isStaffOrAdmin = (existingBooster.roles && existingBooster.roles.some(r => /admin|staff|gerente/i.test(r))) ||
           (existingBooster.role && /admin|staff|gerente/i.test(existingBooster.role));
@@ -8186,10 +8200,10 @@ class MythicApp {
       : [booster.role || 'Booster'];
 
     const availableRoles = [
-      { id: 'Master Booster', label: '👑 Master Booster (700+ pts)', desc: 'Rango máximo de boosting y prioridad en contratos' },
-      { id: 'Elite Booster', label: '⭐ Elite Booster (500-699 pts)', desc: 'Booster con alto puntaje y rendimiento élite' },
-      { id: 'Veteran Booster', label: '🎖️ Veteran Booster (200-499 pts)', desc: 'Booster veterano de largo recorrido' },
-      { id: 'Gold Booster', label: '🪙 Gold Booster (20-199 pts)', desc: 'Especialista en farmeo de oro y transacciones WoW Gold' },
+      { id: 'Master Booster', label: '👑 Master Booster (500+ pts)', desc: 'Rango máximo de boosting y prioridad en contratos' },
+      { id: 'Elite Booster', label: '⭐ Elite Booster (300-499 pts)', desc: 'Booster con alto puntaje y rendimiento élite' },
+      { id: 'Veteran Booster', label: '🎖️ Veteran Booster (100-299 pts)', desc: 'Booster veterano de largo recorrido' },
+      { id: 'Gold Booster', label: '🪙 Gold Booster (20-99 pts)', desc: 'Especialista en farmeo de oro y transacciones WoW Gold' },
       { id: 'Booster', label: '⚡ Booster (0-19 pts)', desc: 'Rango inicial de ejecutor de servicios' },
       { id: 'Staff / Admin', label: '🛡️ Staff / Admin', desc: 'Permisos de administración, supervisión y gestión' },
       { id: 'Raider', label: '⚔️ Raider', desc: 'Miembro enfocado en contenido de Bandas / Míticas' },
