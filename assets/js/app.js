@@ -232,10 +232,53 @@ class MythicApp {
         localStorage.setItem('mp_orders_v', MythicApp.ORDERS_VERSION);
       }
 
-      // Sanitize legacy "Soporte / Gerencia" labels in stored chats
+      // Sanitize legacy "Soporte / Gerencia" labels and ensure valid numeric totalPrice across stored orders
       if (Array.isArray(this.orders)) {
-        let orderChatsUpdated = false;
+        let ordersNeedSave = false;
         this.orders.forEach(o => {
+          if (!o) return;
+
+          // Repair any NaN or missing total prices
+          let p = Number(o.totalPrice);
+          if (isNaN(p) || p <= 0) {
+            p = Number(o.price);
+          }
+          if (isNaN(p) || p <= 0) {
+            p = 45.00;
+            ordersNeedSave = true;
+          }
+          if (o.totalPrice !== p || o.price !== p) {
+            o.totalPrice = Math.round(p * 100) / 100;
+            o.price = o.totalPrice;
+            ordersNeedSave = true;
+          }
+
+          // Ensure valid economics
+          let cShare = Number(o.companyShare);
+          if (isNaN(cShare) || cShare <= 0) {
+            o.companyShare = Math.round(o.totalPrice * 0.70 * 100) / 100;
+            ordersNeedSave = true;
+          }
+          let bPayout = Number(o.boosterPayout);
+          if (isNaN(bPayout) || bPayout <= 0) {
+            o.boosterPayout = Math.round(o.totalPrice * 0.30 * 100) / 100;
+            ordersNeedSave = true;
+          }
+          let mBid = Number(o.maxBidAllowed);
+          if (isNaN(mBid) || mBid <= 0) {
+            o.maxBidAllowed = Math.round(o.totalPrice * 0.50 * 100) / 100;
+            ordersNeedSave = true;
+          }
+
+          if (!o.characterName && o.character) {
+            o.characterName = o.character;
+            ordersNeedSave = true;
+          }
+          if (!o.realm && o.characterName && o.characterName.includes('-')) {
+            o.realm = o.characterName.split('-')[1].trim();
+            ordersNeedSave = true;
+          }
+
           if (Array.isArray(o.chat)) {
             o.chat.forEach(msg => {
               if (msg && msg.author && /soporte\s*\/\s*gerencia/i.test(msg.author)) {
@@ -246,12 +289,12 @@ class MythicApp {
                   msg.author = msg.author.replace(/\(Soporte\s*\/\s*Gerencia\)/i, '(Staff)');
                   msg.sender = 'staff';
                 }
-                orderChatsUpdated = true;
+                ordersNeedSave = true;
               }
             });
           }
         });
-        if (orderChatsUpdated) this.saveOrders();
+        if (ordersNeedSave) this.saveOrders();
       }
     } catch (e) {
       console.warn('Fallback loading orders:', e);
@@ -1523,24 +1566,43 @@ class MythicApp {
 // CART MANAGEMENT (Req 2: Add to cart & Total)
   // ==========================================
   addToCart(item, openDrawer = true) {
+    if (!item) return;
+
+    // Resolve robust unit and total prices
+    const rawUnitPrice = Math.max(0, Number(
+      item.unitPrice !== undefined && !isNaN(Number(item.unitPrice))
+        ? item.unitPrice
+        : (item.price !== undefined && !isNaN(Number(item.price)) ? item.price : (item.totalPrice || 0))
+    ) || 0);
+
+    const qty = Math.max(1, Number(item.quantity || 1));
+    const rawTotalPrice = Math.max(0, Number(
+      item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
+        ? item.totalPrice
+        : (rawUnitPrice * qty)
+    ) || (rawUnitPrice * qty));
+
     // Generate unique cart item id
     const cartItem = {
-      cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random()*1000),
-      serviceId: item.serviceId,
-      serviceName: item.serviceName,
-      category: item.category,
-      unitPrice: Number(item.price),
-      quantity: Number(item.quantity || 1),
-      totalPrice: Number(item.price) * Number(item.quantity || 1),
+      cartId: item.cartId || ('item_' + Date.now() + '_' + Math.floor(Math.random() * 1000)),
+      serviceId: item.serviceId || 'svc_custom',
+      serviceName: item.serviceName || 'Servicio WoW',
+      category: item.category || 'Servicios',
+      unitPrice: rawUnitPrice,
+      price: rawUnitPrice,
+      quantity: qty,
+      totalPrice: rawTotalPrice,
       character: item.character || 'Personaje-Reino',
       mode: item.mode || 'Self-Play',
       region: item.region || 'US',
       details: item.details || '',
-      referredBooster: sessionStorage.getItem('mp_upsell_booster') || null
+      referredBooster: item.referredBooster || sessionStorage.getItem('mp_upsell_booster') || null
     };
 
     this.cart.push(cartItem);
     this.saveCart();
+    this.updateCartCounter();
+    this.renderCartItems();
     this.showToast(`¡Añadido al carrito: ${cartItem.serviceName}!`, 'success');
 
     if (openDrawer) {
@@ -1560,13 +1622,14 @@ class MythicApp {
     if (!item) return;
 
     item.quantity = Math.max(1, item.quantity + delta);
-    item.totalPrice = item.unitPrice * item.quantity;
+    const unit = Number(item.unitPrice || item.price || 0) || 0;
+    item.totalPrice = Math.round(unit * item.quantity * 100) / 100;
     this.saveCart();
     this.renderCartItems();
   }
 
   getCartTotal() {
-    return this.cart.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+    return this.cart.reduce((sum, item) => sum + (Number(item.totalPrice || item.price || 0) || 0), 0);
   }
 
   updateCartCounter() {
@@ -1581,7 +1644,7 @@ class MythicApp {
   }
 
   openCartModal() {
-    const modal = document.getElementById('cart-drawer-modal');
+    const modal = document.getElementById('cart-drawer-modal') || document.getElementById('cart-modal');
     if (!modal) return;
     this.renderCartItems();
     modal.classList.remove('hidden');
@@ -1589,13 +1652,16 @@ class MythicApp {
   }
 
   closeCartModal() {
-    const modal = document.getElementById('cart-drawer-modal');
-    if (modal) modal.classList.add('hidden');
+    const modal = document.getElementById('cart-drawer-modal') || document.getElementById('cart-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
   }
 
   renderCartItems() {
     const container = document.getElementById('cart-items-container');
-    const totalElem = document.getElementById('cart-total-display');
+    const totalElem = document.getElementById('cart-total-display') || document.getElementById('cart-total-price');
     if (!container) return;
 
     const total = this.getCartTotal();
@@ -1617,33 +1683,36 @@ class MythicApp {
     const btn = document.getElementById('btn-checkout-cart');
     if (btn) btn.disabled = false;
 
-    container.innerHTML = this.cart.map(item => `
-      <div class="bg-[#150f0c] p-3.5 rounded-xl border border-stone-800 flex items-center justify-between gap-3 mb-3">
-        <div class="flex-1">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#251b14] text-[#ee914f] border border-[#ee914f]/30">${item.category}</span>
-            <span class="text-[10px] text-stone-400">${item.mode} (${item.region})</span>
-          </div>
-          <h5 class="text-xs font-bold text-[#fcefc2] leading-tight">${item.serviceName}</h5>
-          <span class="text-[11px] text-stone-400">Pj: ${item.character}</span>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-1 bg-[#1c1510] border border-stone-700 rounded-lg p-1">
-            <button onclick="app.updateCartItemQty('${item.cartId}', -1)" class="w-6 h-6 flex items-center justify-center text-xs text-stone-400 hover:text-white">-</button>
-            <span class="text-xs font-bold font-mono-gaming text-white px-1.5">${item.quantity}</span>
-            <button onclick="app.updateCartItemQty('${item.cartId}', 1)" class="w-6 h-6 flex items-center justify-center text-xs text-stone-400 hover:text-white">+</button>
+    container.innerHTML = this.cart.map(item => {
+      const itemPrice = Number(item.totalPrice || item.price || 0) || 0;
+      return `
+        <div class="bg-[#150f0c] p-3.5 rounded-xl border border-stone-800 flex items-center justify-between gap-3 mb-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#251b14] text-[#ee914f] border border-[#ee914f]/30">${item.category}</span>
+              <span class="text-[10px] text-stone-400">${item.mode} (${item.region})</span>
+            </div>
+            <h5 class="text-xs font-bold text-[#fcefc2] leading-tight">${item.serviceName}</h5>
+            <span class="text-[11px] text-stone-400">Pj: ${item.character}</span>
           </div>
 
-          <div class="text-right min-w-[70px]">
-            <div class="text-sm font-bold font-mono-gaming text-[#fcefc2]">$${item.totalPrice.toFixed(2)}</div>
-            <button onclick="app.removeFromCart('${item.cartId}')" class="text-[10px] text-stone-500 hover:text-red-400">
-              <i class="fa-solid fa-trash mr-1"></i>Quitar
-            </button>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 bg-[#1c1510] border border-stone-700 rounded-lg p-1">
+              <button onclick="app.updateCartItemQty('${item.cartId}', -1)" class="w-6 h-6 flex items-center justify-center text-xs text-stone-400 hover:text-white">-</button>
+              <span class="text-xs font-bold font-mono-gaming text-white px-1.5">${item.quantity}</span>
+              <button onclick="app.updateCartItemQty('${item.cartId}', 1)" class="w-6 h-6 flex items-center justify-center text-xs text-stone-400 hover:text-white">+</button>
+            </div>
+
+            <div class="text-right min-w-[70px]">
+              <div class="text-sm font-bold font-mono-gaming text-[#fcefc2]">$${itemPrice.toFixed(2)}</div>
+              <button onclick="app.removeFromCart('${item.cartId}')" class="text-[10px] text-stone-500 hover:text-red-400">
+                <i class="fa-solid fa-trash mr-1"></i>Quitar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   processFullCartCheckout() {
@@ -1666,24 +1735,35 @@ class MythicApp {
     const createdOrderIds = [];
     this.cart.forEach(item => {
       const isUpsell = !!item.referredBooster;
-      const econ = this.calculateEconomics(item.totalPrice, isUpsell);
+      const finalPrice = Math.max(0, Number(
+        item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
+          ? item.totalPrice
+          : (item.price !== undefined && !isNaN(Number(item.price))
+              ? item.price
+              : ((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1)))
+      ) || 45.00);
+
+      const econ = this.calculateEconomics(finalPrice, isUpsell);
+      const charStr = item.character || 'Heroe-Area 52';
+      const realmName = (charStr.includes('-')) ? charStr.split('-')[1].trim() : 'Area 52';
 
       const newOrder = {
         id: 'MP-' + Math.floor(10000 + Math.random() * 90000),
-        serviceName: `${item.serviceName} (x${item.quantity})`,
-        category: item.category,
-        region: item.region,
+        serviceName: `${item.serviceName}${item.quantity > 1 ? ` (x${item.quantity})` : ''}`,
+        category: item.category || 'Servicios',
+        region: item.region || 'US',
         faction: 'Horda',
-        realm: (item.character.split('-')[1] || 'Area 52').trim(),
-        characterName: item.character,
-        completionMethod: item.mode,
-        vpnLocation: item.mode === 'Piloted' ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
-        details: item.details,
+        realm: realmName,
+        characterName: charStr,
+        completionMethod: item.mode || 'Piloted',
+        vpnLocation: (item.mode && String(item.mode).toLowerCase().includes('piloted')) ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
+        details: item.details || '',
         clientId: this.currentUser.id,
         clientEmail: this.currentUser.email,
         clientDiscord: this.currentUser.discordId,
         clientName: this.currentUser.username,
-        totalPrice: item.totalPrice,
+        totalPrice: finalPrice,
+        price: finalPrice,
         companyShare: econ.company,
         boosterPayout: econ.booster,
         boosterPayoutRate: econ.boosterRate,
@@ -2546,6 +2626,7 @@ class MythicApp {
       unit += Number(cb.dataset.price || 0);
     });
 
+    unit = Math.max(0, Number(unit) || 0);
     let subtotal = unit * (this.currentRunsQuantity || 1);
 
     // Volume discount
@@ -2560,6 +2641,8 @@ class MythicApp {
     if (this.currentPromoDiscount > 0) {
       subtotal = subtotal * (1 - this.currentPromoDiscount);
     }
+
+    subtotal = Math.max(0, Math.round((Number(subtotal) || unit) * 100) / 100);
 
     this.currentUnitCalcPrice = unit;
     this.currentTotalCalculated = subtotal;
@@ -2585,6 +2668,10 @@ class MythicApp {
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
     const selectedMode = document.querySelector('input[name="sp_mode"]:checked')?.value || 'Piloted (VPN)';
 
+    const calcUnit = Math.max(0, Number(this.currentUnitCalcPrice !== undefined ? this.currentUnitCalcPrice : (this.currentProduct?.basePrice || 38.00)) || 0);
+    const runsQty = Math.max(1, Number(this.currentRunsQuantity || 1));
+    const calcTotal = Math.max(0, Number(this.currentTotalCalculated !== undefined ? this.currentTotalCalculated : (calcUnit * runsQty)) || (calcUnit * runsQty));
+
     if (isLeveling) {
       const gearSelect = document.getElementById('sp-gearing-select');
       const gearLabel = gearSelect ? (gearSelect.options[gearSelect.selectedIndex]?.dataset.label || gearSelect.options[gearSelect.selectedIndex]?.text) : 'Not Required';
@@ -2604,9 +2691,10 @@ class MythicApp {
         serviceId: svc.id,
         serviceName: `WoW Powerleveling (${this.levelCurrent || 1} - ${this.levelDesired || 80})`,
         category: svc.category,
-        unitPrice: this.currentUnitCalcPrice,
-        quantity: this.currentRunsQuantity || 1,
-        totalPrice: this.currentTotalCalculated || this.currentUnitCalcPrice,
+        unitPrice: calcUnit,
+        price: calcUnit,
+        quantity: runsQty,
+        totalPrice: calcTotal,
         character: char,
         mode: selectedMode,
         region: region,
@@ -2641,9 +2729,10 @@ class MythicApp {
       serviceId: svc.id,
       serviceName: `${svc.name} (${dungeon})`,
       category: svc.category,
-      unitPrice: this.currentUnitCalcPrice,
-      quantity: this.currentRunsQuantity || 1,
-      totalPrice: this.currentTotalCalculated || this.currentUnitCalcPrice,
+      unitPrice: calcUnit,
+      price: calcUnit,
+      quantity: runsQty,
+      totalPrice: calcTotal,
       character: char,
       mode: selectedMode,
       region: region,
@@ -2971,6 +3060,12 @@ class MythicApp {
     const modal = document.getElementById('checkout-modal');
     if (!modal) return;
 
+    const finalPrice = Math.max(0, Number(
+      orderItem.totalPrice !== undefined && !isNaN(Number(orderItem.totalPrice))
+        ? orderItem.totalPrice
+        : (orderItem.price !== undefined && !isNaN(Number(orderItem.price)) ? orderItem.price : 0)
+    ) || 0);
+
     const summary = document.getElementById('checkout-summary');
     if (summary) {
       summary.innerHTML = `
@@ -2989,7 +3084,7 @@ class MythicApp {
           </div>
           <div class="pt-2 border-t border-stone-800 flex justify-between items-center">
             <span class="text-xs text-stone-400">Total a Pagar:</span>
-            <span class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">$${orderItem.price.toFixed(2)}</span>
+            <span class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">$${finalPrice.toFixed(2)}</span>
           </div>
         </div>
         <div class="text-[11px] text-stone-300 bg-[#251b14] border border-[#ee914f]/30 p-3 rounded-lg flex items-center gap-2">
@@ -3028,24 +3123,33 @@ class MythicApp {
     }
 
     const isUpsell = !!item.referredBooster;
-    const econ = this.calculateEconomics(item.price, isUpsell);
+    const finalPrice = Math.max(0, Number(
+      item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
+        ? item.totalPrice
+        : (item.price !== undefined && !isNaN(Number(item.price)) ? item.price : 0)
+    ) || 45.00);
+
+    const econ = this.calculateEconomics(finalPrice, isUpsell);
+    const charStr = item.character || 'Heroe-Area 52';
+    const realmName = (charStr.includes('-')) ? charStr.split('-')[1].trim() : 'Area 52';
 
     const newOrder = {
-      id: item.orderId,
+      id: item.orderId || ('MP-' + Math.floor(10000 + Math.random() * 90000)),
       serviceName: item.serviceName,
-      category: item.category,
-      region: item.region,
+      category: item.category || 'Servicios',
+      region: item.region || 'US',
       faction: 'Horda',
-      realm: item.character.split('-')[1] || 'Área 52',
-      characterName: item.character,
-      completionMethod: item.mode,
-      vpnLocation: item.mode === 'Piloted' ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
-      details: item.details,
+      realm: realmName,
+      characterName: charStr,
+      completionMethod: item.mode || 'Piloted',
+      vpnLocation: (item.mode && String(item.mode).toLowerCase().includes('piloted')) ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
+      details: item.details || '',
       clientId: this.currentUser.id,
       clientEmail: this.currentUser.email,
       clientDiscord: this.currentUser.discordId,
       clientName: this.currentUser.username,
-      totalPrice: item.price,
+      totalPrice: finalPrice,
+      price: finalPrice,
       companyShare: econ.company,
       boosterPayout: econ.booster,
       boosterPayoutRate: econ.boosterRate, // 30% base o 50% upsell
@@ -3115,87 +3219,238 @@ class MythicApp {
     this.renderLinkedAccountsWidget('client-linked-accounts-container');
   }
 
+  setClientOrdersFilter(filter) {
+    this.clientOrdersFilter = filter;
+    this.renderClientOrders();
+  }
+
   renderClientOrders() {
     const container = document.getElementById('client-orders-list');
     if (!container) return;
 
     let targetId = this.currentUser?.id;
-    let targetEmail = this.currentUser?.email;
-    let targetName = this.currentUser?.username;
+    let targetEmail = (this.currentUser?.email || '').toLowerCase();
+    let targetName = (this.currentUser?.username || '').toLowerCase();
+    let targetDiscord = String(this.currentUser?.discordId || this.currentUser?.discord_id || '');
 
     if (!this.currentUser) {
       targetId = 'client_carlos';
       targetEmail = 'carlos.wow@gmail.com';
-      targetName = 'Carlos M.';
+      targetName = 'carlos m.';
     }
 
-    const myOrders = this.orders.filter(o => 
-      (targetId && o.clientId === targetId) || 
-      (targetEmail && o.clientEmail === targetEmail) ||
-      (targetName && o.clientName === targetName) ||
-      (o.clientId === 'client_carlos') ||
-      (o.clientId === 'client_guest')
-    );
+    // Match all orders placed by this client, plus demo orders
+    let allMyOrders = (this.orders || []).filter(o => {
+      if (!o) return false;
+      const cId = String(o.clientId || '');
+      const cEmail = (o.clientEmail || '').toLowerCase();
+      const cName = (o.clientName || '').toLowerCase();
+      const cDiscord = String(o.clientDiscord || '');
 
-    if (myOrders.length === 0) {
+      if (targetId && (cId === String(targetId) || cId.includes(String(targetId)))) return true;
+      if (targetEmail && cEmail && cEmail === targetEmail) return true;
+      if (targetName && cName && (cName === targetName || cName.includes(targetName))) return true;
+      if (targetDiscord && cDiscord && (cDiscord === targetDiscord || cDiscord.includes(targetDiscord))) return true;
+      if (cId === 'client_carlos' || cId === 'client_guest') return true;
+      return false;
+    });
+
+    // Fallback: If logged in as staff/admin and no client orders matched, show all orders
+    if (allMyOrders.length === 0 && (this.isAdminOrGerente() || this.currentUser?.isAdmin || this.currentUser?.isStaff)) {
+      allMyOrders = this.orders || [];
+    }
+
+    // Metrics
+    const totalCount = allMyOrders.length;
+    const inProgressCount = allMyOrders.filter(o => o.assignedBooster && o.status !== 'COMPLETED').length;
+    const pendingBoosterCount = allMyOrders.filter(o => !o.assignedBooster && o.status !== 'COMPLETED').length;
+    const completedCount = allMyOrders.filter(o => o.status === 'COMPLETED').length;
+    const totalSpent = allMyOrders.reduce((sum, o) => {
+      const p = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
+      return sum + p;
+    }, 0);
+
+    const currentFilter = this.clientOrdersFilter || 'ALL';
+
+    // Apply active tab filter
+    let filteredOrders = allMyOrders;
+    if (currentFilter === 'IN_PROGRESS') {
+      filteredOrders = allMyOrders.filter(o => o.assignedBooster && o.status !== 'COMPLETED');
+    } else if (currentFilter === 'PENDING_BOOSTER') {
+      filteredOrders = allMyOrders.filter(o => !o.assignedBooster && o.status !== 'COMPLETED');
+    } else if (currentFilter === 'COMPLETED') {
+      filteredOrders = allMyOrders.filter(o => o.status === 'COMPLETED');
+    }
+
+    if (totalCount === 0) {
       container.innerHTML = `
-        <div class="glass-panel p-10 rounded-2xl text-center">
-          <i class="fa-solid fa-receipt text-3xl text-stone-600 mb-2"></i>
-          <h4 class="text-sm font-bold text-stone-300">Aún no tienes pedidos activos</h4>
-          <p class="text-xs text-stone-500 mt-1">Explora nuestra tienda para adquirir tu primera piedra mítica o raid.</p>
-          <a href="/" class="inline-block mt-4 px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider">Ver Servicios</a>
+        <div class="glass-panel p-10 rounded-2xl text-center border border-stone-800 bg-[#120d09]">
+          <i class="fa-solid fa-receipt text-4xl text-[#ee914f]/40 mb-3"></i>
+          <h4 class="text-base font-bold text-stone-200 font-cinzel">Aún no tienes pedidos activos</h4>
+          <p class="text-xs text-stone-400 max-w-md mx-auto mt-1.5 leading-relaxed">Explora nuestro catálogo para adquirir tu primera piedra angular mítica+, raid completa o subida de nivel profesional con booster asignado.</p>
+          <a href="/" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl copper-gradient-bg text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all">
+            <i class="fa-solid fa-store"></i>
+            <span>Ver Catálogo de Servicios</span>
+          </a>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = myOrders.map(order => {
+    const metricsHtml = `
+      <!-- SUMMARY METRICS -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Total Pedidos</span>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-xl font-black font-mono-gaming text-[#fcefc2]">${totalCount}</span>
+            <i class="fa-solid fa-boxes-stacked text-[#ee914f]/60 text-sm"></i>
+          </div>
+        </div>
+        <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">En Proceso</span>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-xl font-black font-mono-gaming text-sky-400">${inProgressCount}</span>
+            <i class="fa-solid fa-gamepad text-sky-400/60 text-sm"></i>
+          </div>
+        </div>
+        <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Buscando Booster</span>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-xl font-black font-mono-gaming text-amber-400">${pendingBoosterCount}</span>
+            <i class="fa-solid fa-hourglass-half text-amber-400/60 text-sm"></i>
+          </div>
+        </div>
+        <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Inversión Total</span>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-xl font-black font-mono-gaming text-emerald-400">$${totalSpent.toFixed(2)}</span>
+            <i class="fa-solid fa-shield-halved text-emerald-400/60 text-sm"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER TABS -->
+      <div class="flex flex-wrap items-center gap-2 mb-4 border-b border-stone-800/80 pb-3">
+        <button onclick="app.setClientOrdersFilter('ALL')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'ALL' ? 'bg-[#2b1f15] text-[#fcefc2] border border-[#ee914f]/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
+          <span>Todos</span>
+          <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-stone-900 border border-stone-700 font-mono-gaming">${totalCount}</span>
+        </button>
+        <button onclick="app.setClientOrdersFilter('IN_PROGRESS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'IN_PROGRESS' ? 'bg-[#2b1f15] text-sky-300 border border-sky-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
+          <span>En Proceso</span>
+          <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-sky-950/80 border border-sky-800 font-mono-gaming text-sky-300">${inProgressCount}</span>
+        </button>
+        <button onclick="app.setClientOrdersFilter('PENDING_BOOSTER')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'PENDING_BOOSTER' ? 'bg-[#2b1f15] text-amber-300 border border-amber-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
+          <span>Buscando Booster</span>
+          <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-800 font-mono-gaming text-amber-300">${pendingBoosterCount}</span>
+        </button>
+        <button onclick="app.setClientOrdersFilter('COMPLETED')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'COMPLETED' ? 'bg-[#2b1f15] text-emerald-300 border border-emerald-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
+          <span>Completados</span>
+          <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800 font-mono-gaming text-emerald-300">${completedCount}</span>
+        </button>
+      </div>
+    `;
+
+    if (filteredOrders.length === 0) {
+      container.innerHTML = metricsHtml + `
+        <div class="glass-panel p-8 rounded-2xl text-center border border-stone-800 bg-[#140e0a]">
+          <p class="text-xs text-stone-400">No hay pedidos con el filtro seleccionado.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const cardsHtml = filteredOrders.map(order => {
       const isAssigned = !!order.assignedBooster;
       let statusText = isAssigned ? 'EN PROCESO' : 'BUSCANDO BOOSTER';
-      let statusClass = isAssigned ? 'bg-[#2b1f15] text-[#fcefc2] border border-[#ee914f]/40' : 'bg-stone-900 text-stone-400 border border-stone-800';
+      let statusClass = isAssigned ? 'bg-[#1a2332] text-sky-300 border border-sky-700/50' : 'bg-amber-950/50 text-amber-300 border border-amber-700/50';
+      let statusIcon = isAssigned ? 'fa-gamepad' : 'fa-hourglass-half';
 
       if (order.status === 'COMPLETED') {
         statusText = 'COMPLETADO';
-        statusClass = 'bg-[#152319] text-emerald-400 border border-emerald-800/40';
+        statusClass = 'bg-[#152319] text-emerald-400 border border-emerald-800/60';
+        statusIcon = 'fa-circle-check';
       } else if (order.status === 'PENDING_APPROVAL') {
         statusText = 'REPORTE RECIBIDO (EN REVISIÓN)';
-        statusClass = 'bg-amber-950/80 text-amber-300 border border-amber-600/60 animate-pulse';
+        statusClass = 'bg-amber-950/90 text-amber-300 border border-amber-500/70 animate-pulse';
+        statusIcon = 'fa-bell';
       }
 
+      // Safe price calculation that will NEVER result in NaN or throw
+      const safeTotal = Math.max(0, Number(
+        order.totalPrice !== undefined && !isNaN(Number(order.totalPrice))
+          ? order.totalPrice
+          : (order.price !== undefined && !isNaN(Number(order.price)) ? order.price : 45.00)
+      ) || 45.00);
+
+      const charName = order.characterName || order.character || 'Heroe-Ragnaros';
+      const realmName = order.realm || (charName.includes('-') ? charName.split('-')[1].trim() : 'Área 52');
+      const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+
       return `
-        <div class="glass-panel p-5 rounded-2xl border border-stone-800 hover:border-[#ee914f]/50 transition-all mb-4">
+        <div class="glass-panel p-5 rounded-2xl border border-stone-800 hover:border-[#ee914f]/50 transition-all bg-[#130d09] mb-4 shadow-xl">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span class="text-xs font-mono-gaming font-bold text-[#ee914f]">#${order.id}</span>
-                <span class="px-2.5 py-0.5 text-[10px] rounded font-bold ${statusClass}">
-                  ${statusText}
+            
+            <div class="space-y-2 flex-1">
+              <!-- Top Badges Row -->
+              <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                <span class="font-mono-gaming font-bold text-[#ee914f] bg-[#22170f] px-2.5 py-0.5 rounded-lg border border-[#ee914f]/30">#${order.id}</span>
+                <span class="px-2.5 py-0.5 rounded-lg font-bold flex items-center gap-1.5 ${statusClass}">
+                  <i class="fa-solid ${statusIcon} text-[10px]"></i>
+                  <span>${statusText}</span>
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded bg-[#17120e] text-stone-300 border border-stone-800">
-                  ${order.category}
+                <span class="px-2.5 py-0.5 rounded-lg bg-[#18110b] text-stone-300 border border-stone-800">
+                  ${order.category || 'Servicio WoW'}
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded bg-[#17120e] text-stone-300 border border-stone-800">
-                  ${order.completionMethod} (${order.region})
+                <span class="px-2.5 py-0.5 rounded-lg bg-[#18110b] text-stone-300 border border-stone-800">
+                  ${order.completionMethod || 'Piloted'} (${order.region || 'US'})
+                </span>
+                <span class="text-stone-500 text-[10px] ml-auto">
+                  <i class="fa-regular fa-clock mr-1"></i>${orderDate}
                 </span>
               </div>
 
-              <h4 class="text-base font-bold text-white">${order.serviceName}</h4>
-              <p class="text-xs text-stone-400 mt-0.5">Personaje: <span class="text-stone-200 font-semibold">${order.characterName}</span> | Reino: ${order.realm}</p>
-              
+              <!-- Main Title & Details -->
+              <div>
+                <h4 class="text-base font-bold text-white hover:text-[#eedaa2] transition-colors leading-snug">${order.serviceName}</h4>
+                <div class="flex items-center gap-2 text-xs text-stone-400 mt-1 flex-wrap">
+                  <span>Personaje: <strong class="text-stone-200">${charName}</strong></span>
+                  <span class="text-stone-600">•</span>
+                  <span>Reino: <strong class="text-stone-200">${realmName}</strong></span>
+                  ${order.details ? `
+                    <span class="text-stone-600">•</span>
+                    <span class="text-stone-400 text-[11px] truncate max-w-md italic">${order.details}</span>
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Booster Status Box -->
               ${isAssigned ? `
-                <div class="mt-2.5 inline-flex items-center gap-2 bg-[#201812] px-3 py-1 rounded-xl border border-[#ee914f]/30 text-xs">
-                  <i class="fa-solid fa-gamepad text-[#ee914f]"></i>
-                  <span class="text-stone-300">Booster Asignado: <strong class="text-[#fcefc2]">${order.assignedBooster.username}</strong></span>
-                  ${order.isOnAccount ? `<span class="ml-2 text-[10px] bg-red-950 text-red-300 px-2 py-0.5 rounded border border-red-800 font-semibold animate-pulse">En tu cuenta ahora</span>` : ''}
+                <div class="inline-flex items-center gap-2.5 bg-[#1b140f] px-3.5 py-1.5 rounded-xl border border-[#ee914f]/30 text-xs mt-1">
+                  <div class="w-6 h-6 rounded-full bg-[#2a1d13] border border-[#ee914f]/40 flex items-center justify-center text-[10px] text-[#fcefc2] font-black">
+                    ${order.assignedBooster.avatar ? `<img src="${order.assignedBooster.avatar}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-gamepad text-[#ee914f]"></i>`}
+                  </div>
+                  <span class="text-stone-300">Booster asignado: <strong class="text-[#fcefc2]">${order.assignedBooster.username}</strong></span>
+                  ${order.isOnAccount ? `
+                    <span class="ml-2 text-[10px] bg-red-950 text-red-300 px-2 py-0.5 rounded border border-red-800 font-semibold animate-pulse flex items-center gap-1">
+                      <i class="fa-solid fa-lock text-[9px]"></i> En tu cuenta ahora
+                    </span>
+                  ` : `
+                    <span class="ml-2 text-[10px] bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/50 flex items-center gap-1">
+                      <i class="fa-solid fa-circle text-[6px]"></i> En línea
+                    </span>
+                  `}
                 </div>
               ` : `
-                <div class="mt-2 text-xs text-stone-500">
-                  <i class="fa-solid fa-hourglass-half mr-1"></i> Tu orden está en el tablón. Un booster la tomará en breve.
+                <div class="inline-flex items-center gap-2 bg-[#17110c] px-3 py-1 rounded-xl border border-stone-800 text-xs text-stone-400 mt-1">
+                  <i class="fa-solid fa-hourglass-half text-amber-400/80"></i>
+                  <span>Tu orden está en el tablón pro. Un booster calificado la tomará en breve.</span>
                 </div>
               `}
 
+              <!-- Completion Report Alert -->
               ${order.status === 'PENDING_APPROVAL' ? `
-                <div class="mt-3 p-3.5 rounded-xl bg-amber-950/40 border border-amber-600/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="mt-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
                   <div>
                     <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
                       <i class="fa-solid fa-bell"></i> ¡El booster ha reportado tu orden como completada!
@@ -3205,27 +3460,32 @@ class MythicApp {
                       Por favor verifica tu personaje. Si todo está en orden, confirma para finalizar el servicio y liberar el pago.
                     </p>
                   </div>
-                  <button onclick="app.clientConfirmOrderCompletion('${order.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer whitespace-nowrap">
+                  <button onclick="app.clientConfirmOrderCompletion('${order.id}')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer whitespace-nowrap">
                     <i class="fa-solid fa-check-double"></i> Confirmar y Finalizar
                   </button>
                 </div>
               ` : ''}
+
             </div>
 
-            <div class="flex items-center gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-stone-800 justify-between md:justify-end">
-              <div class="text-right">
-                <span class="text-[10px] text-stone-500 block uppercase">Total Pagado</span>
-                <span class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">$${order.totalPrice.toFixed(2)}</span>
+            <!-- Right Column: Price & Chat Button -->
+            <div class="flex items-center md:flex-col md:items-end justify-between md:justify-center gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-stone-800/80 shrink-0">
+              <div class="text-left md:text-right">
+                <span class="text-[10px] text-stone-400 block uppercase font-semibold">Total Pagado</span>
+                <span class="text-2xl font-black font-mono-gaming text-[#fcefc2]">$${safeTotal.toFixed(2)}</span>
               </div>
-              <button onclick="app.openClientFullChat('${order.id}')" class="px-4 py-2.5 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all">
+              <button onclick="app.openClientFullChat('${order.id}')" class="px-4 py-2.5 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md hover:border-[#ee914f]">
                 <i class="fa-solid fa-comments text-[#ee914f]"></i>
                 <span>Chat con el Booster</span>
               </button>
             </div>
+
           </div>
         </div>
       `;
     }).join('');
+
+    container.innerHTML = metricsHtml + cardsHtml;
   }
 
   clientConfirmOrderCompletion(orderId) {
@@ -3530,7 +3790,7 @@ class MythicApp {
 
           <div class="pt-4 border-t border-stone-800">
             <span class="text-[10px] text-stone-500 uppercase block font-semibold">Total Pagado:</span>
-            <span class="text-2xl font-black font-mono-gaming text-[#fcefc2]">$${order.totalPrice.toFixed(2)}</span>
+            <span class="text-2xl font-black font-mono-gaming text-[#fcefc2]">$${(Math.max(0, Number(order.totalPrice !== undefined && !isNaN(Number(order.totalPrice)) ? order.totalPrice : (order.price !== undefined && !isNaN(Number(order.price)) ? order.price : 45.00)) || 45.00)).toFixed(2)}</span>
           </div>
 
         </div>
@@ -7702,12 +7962,13 @@ class MythicApp {
 
   // Common helpers
   calculateEconomics(totalPrice, isUpsell = false) {
-    const boosterRate = isUpsell ? BOOSTER_UPSELL_PERCENT : BOOSTER_DEFAULT_PERCENT;
+    const safePrice = Math.max(0, Number(totalPrice) || 0);
+    const boosterRate = isUpsell ? (typeof BOOSTER_UPSELL_PERCENT !== 'undefined' ? BOOSTER_UPSELL_PERCENT : 50) : (typeof BOOSTER_DEFAULT_PERCENT !== 'undefined' ? BOOSTER_DEFAULT_PERCENT : 30);
     const companyRate = 100 - boosterRate;
 
-    const company = Number((totalPrice * (companyRate / 100)).toFixed(2));
-    const booster = Number((totalPrice * (boosterRate / 100)).toFixed(2));
-    const maxBid = Number((totalPrice * (BOOSTER_MAX_BID_PERCENT / 100)).toFixed(2));
+    const company = Number((safePrice * (companyRate / 100)).toFixed(2));
+    const booster = Number((safePrice * (boosterRate / 100)).toFixed(2));
+    const maxBid = Number((safePrice * (typeof BOOSTER_MAX_BID_PERCENT !== 'undefined' ? (BOOSTER_MAX_BID_PERCENT / 100) : 0.50)).toFixed(2));
     return { company, booster, maxBid, boosterRate };
   }
 

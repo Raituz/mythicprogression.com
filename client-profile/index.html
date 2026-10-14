@@ -258,48 +258,64 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.0.0"></script>
+  <script src="assets/js/app.js?v=3.3.0"></script>
   <script>
-    function switchClientTab(tab) {
-      const tabs = ['orders', 'chat', 'settings'];
-      tabs.forEach(t => {
-        const el = document.getElementById('client-tab-' + t);
-        const btn = document.getElementById('btn-tab-' + t);
-        if (el) el.classList.add('hidden');
-        if (btn) btn.className = "px-4 py-2 rounded-xl text-xs font-bold text-stone-400 hover:text-white transition-all";
-      });
+     function switchClientTab(tab) {
+       const tabs = ['orders', 'chat', 'settings'];
+       tabs.forEach(t => {
+         const el = document.getElementById('client-tab-' + t);
+         const btn = document.getElementById('btn-tab-' + t);
+         if (el) el.classList.add('hidden');
+         if (btn) btn.className = "px-4 py-2 rounded-xl text-xs font-bold text-stone-400 hover:text-white transition-all";
+       });
 
-      const activeEl = document.getElementById('client-tab-' + tab);
-      const activeBtn = document.getElementById('btn-tab-' + tab);
-      if (activeEl) activeEl.classList.remove('hidden');
-      if (activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40 transition-all";
+       const activeEl = document.getElementById('client-tab-' + tab);
+       const activeBtn = document.getElementById('btn-tab-' + tab);
+       if (activeEl) activeEl.classList.remove('hidden');
+       if (activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40 transition-all";
 
-      if (tab === 'chat') {
-        app.renderClientChatsList();
-        // If no active chat selected yet, open the first one
-        if (!app.activeClientChatOrderId && app.orders.length > 0) {
-          const myOrders = app.orders.filter(o => 
-            o.clientId === app.currentUser?.id || 
-            o.clientEmail === app.currentUser?.email ||
-            o.clientName === app.currentUser?.username
-          );
-          if (myOrders.length > 0) {
-            app.openClientFullChat(myOrders[0].id);
-          }
-        }
-      }
-    }
+       if (tab === 'orders') {
+         if (window.app && typeof app.renderClientOrders === 'function') {
+           app.renderClientOrders();
+         }
+       } else if (tab === 'chat') {
+         if (window.app && typeof app.renderClientChatsList === 'function') {
+           app.renderClientChatsList();
+         }
+         // If no active chat selected yet, open the first one
+         if (window.app && !app.activeClientChatOrderId && app.orders && app.orders.length > 0) {
+           const myOrders = app.orders.filter(o => 
+             (app.currentUser?.id && o.clientId === app.currentUser.id) || 
+             (app.currentUser?.email && o.clientEmail === app.currentUser.email) ||
+             (app.currentUser?.username && o.clientName === app.currentUser.username) ||
+             o.clientId === 'client_carlos' ||
+             o.clientId === 'client_guest'
+           );
+           if (myOrders.length > 0) {
+             app.openClientFullChat(myOrders[0].id);
+           }
+         }
+       }
+     }
 
-    function saveProfileChanges() {
-      const username = document.getElementById('prof-username').value;
-      const email = document.getElementById('prof-email').value;
-      const country = document.getElementById('prof-country').value;
-      const battletag = document.getElementById('prof-battletag').value;
-      const discordId = document.getElementById('prof-discord').value;
-      const password = document.getElementById('prof-password').value;
+     function saveProfileChanges() {
+       const username = document.getElementById('prof-username').value;
+       const email = document.getElementById('prof-email').value;
+       const country = document.getElementById('prof-country').value;
+       const battletag = document.getElementById('prof-battletag').value;
+       const discordId = document.getElementById('prof-discord').value;
+       const password = document.getElementById('prof-password').value;
 
-      app.updateClientProfile({ username, email, country, battletag, discordId, password });
-    }
-  </script>
+       app.updateClientProfile({ username, email, country, battletag, discordId, password });
+     }
+
+     document.addEventListener('DOMContentLoaded', () => {
+       setTimeout(() => {
+         if (window.app && typeof app.renderClientOrders === 'function') {
+           app.renderClientOrders();
+         }
+       }, 100);
+     });
+   </script>
 </body>
 </html>
