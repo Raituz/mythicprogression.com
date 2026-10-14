@@ -5019,68 +5019,127 @@ class MythicApp {
       return false;
     });
 
+    const activeCount = myOrders.filter(o => o.status !== 'COMPLETED').length;
     const sidebarMyCount = document.getElementById('badge-my-count');
-    if (sidebarMyCount) sidebarMyCount.textContent = myOrders.length;
+    if (sidebarMyCount) sidebarMyCount.textContent = activeCount > 0 ? activeCount : myOrders.length;
 
     if (myOrders.length === 0) {
       container.innerHTML = `
         <div class="glass-panel rounded-2xl p-8 text-center text-stone-500 text-xs">
-          No tienes contratos activos asignados. Toma uno en la "Bolsa de Pedidos".
+          No tienes contratos asignados. Toma uno en la "Bolsa de Pedidos".
         </div>
       `;
       return;
     }
 
-    container.innerHTML = myOrders.map(order => `
-      <div class="glass-panel rounded-2xl p-5 mb-4 border border-stone-800">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-xs font-mono-gaming font-bold text-[#ee914f]">#${order.id}</span>
-              <span class="px-2 py-0.5 text-[10px] rounded font-bold ${order.status === 'COMPLETED' ? 'bg-[#152319] text-emerald-400 border border-emerald-800/40' : 'bg-[#2b1f15] text-[#fcefc2] border border-[#ee914f]/40'}">
-                ${order.status === 'COMPLETED' ? 'COMPLETADO' : 'EN PROCESO'}
-              </span>
-              ${order.boosterPayoutRate === 50 ? `<span class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 font-bold">⭐ Venta Adicional 50%</span>` : ''}
+    // Sort: Active first (green), then in review (yellow), then completed (grey)
+    myOrders.sort((a, b) => {
+      const isACompleted = a.status === 'COMPLETED';
+      const isBCompleted = b.status === 'COMPLETED';
+      if (isACompleted !== isBCompleted) return isACompleted ? 1 : -1;
+
+      const isAPending = a.status === 'PENDING_APPROVAL';
+      const isBPending = b.status === 'PENDING_APPROVAL';
+      if (isAPending !== isBPending) return isAPending ? 1 : -1;
+
+      return (b.id || '').localeCompare(a.id || '');
+    });
+
+    container.innerHTML = myOrders.map(order => {
+      const isCompleted = order.status === 'COMPLETED';
+      const isPendingReview = order.status === 'PENDING_APPROVAL';
+      const isActive = !isCompleted && !isPendingReview;
+
+      const safeTotal = Math.max(0, Number(order.totalPrice !== undefined && !isNaN(Number(order.totalPrice)) ? order.totalPrice : (order.price !== undefined && !isNaN(Number(order.price)) ? order.price : 45.00)) || 45.00);
+      const safePayout = Math.max(0, Number(order.assignedBooster?.payout !== undefined && !isNaN(Number(order.assignedBooster?.payout)) ? order.assignedBooster.payout : (order.boosterPayout !== undefined && !isNaN(Number(order.boosterPayout)) ? order.boosterPayout : (safeTotal * 0.30))) || (safeTotal * 0.30));
+
+      const cardClass = isCompleted
+        ? 'bg-[#121116]/85 border border-stone-800/80 rounded-2xl p-5 mb-4 shadow-sm opacity-80 hover:opacity-100 transition-all'
+        : isPendingReview
+          ? 'glass-panel rounded-2xl p-5 mb-4 border border-amber-500/50 bg-[#161208]/90 shadow-lg shadow-amber-950/20 transition-all'
+          : 'glass-panel rounded-2xl p-5 mb-4 border border-emerald-500/50 bg-[#0c1611]/85 shadow-lg shadow-emerald-950/25 hover:border-emerald-400/60 transition-all';
+
+      return `
+        <div class="${cardClass}">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span class="text-xs font-mono-gaming font-bold ${isCompleted ? 'text-stone-500' : isPendingReview ? 'text-amber-400' : 'text-emerald-400'}">
+                  #${order.id}
+                </span>
+
+                <span class="px-2.5 py-0.5 text-[10px] rounded-full font-bold flex items-center gap-1.5 ${
+                  isCompleted 
+                    ? 'bg-[#1e1d24] text-stone-400 border border-stone-700/60' 
+                    : isPendingReview 
+                      ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm animate-pulse' 
+                      : 'bg-emerald-950/90 text-emerald-300 border border-emerald-500/70 shadow-sm'
+                }">
+                  ${
+                    isCompleted 
+                      ? '<i class="fa-solid fa-check text-[9px] text-stone-400"></i> FINALIZADA' 
+                      : isPendingReview 
+                        ? '<i class="fa-solid fa-clock text-[9px] text-amber-400"></i> EN REVISIÓN' 
+                        : '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ACTIVA'
+                  }
+                </span>
+
+                ${order.boosterPayoutRate === 50 ? `<span class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 font-bold">⭐ Venta Adicional 50%</span>` : ''}
+              </div>
+
+              <h4 class="text-sm font-bold ${isCompleted ? 'text-stone-300' : 'text-white'} truncate">${order.serviceName || 'Servicio'}</h4>
+              <p class="text-xs ${isCompleted ? 'text-stone-500' : 'text-stone-400'}">Cliente: ${order.clientName || 'Cliente'} (${order.characterName || 'Personaje'})</p>
             </div>
-            <h4 class="text-sm font-bold text-white">${order.serviceName || 'Servicio'}</h4>
-            <p class="text-xs text-stone-400">Cliente: ${order.clientName || 'Cliente'} (${order.characterName || 'Personaje'})</p>
-          </div>
 
-          <div class="flex items-center gap-4 flex-wrap">
-            <div class="flex items-center gap-2 bg-[#17110d] px-3 py-1.5 rounded-xl border border-stone-800">
-              <span class="text-[11px] text-stone-300 font-semibold">Estoy en la cuenta:</span>
-              <label class="switch">
-                <input type="checkbox" ${order.isOnAccount ? 'checked' : ''} onchange="app.toggleOnAccount('${order.id}', this.checked)">
-                <span class="slider"></span>
-              </label>
+            <div class="flex items-center gap-3 sm:gap-4 flex-wrap justify-between md:justify-end">
+              <!-- Booster Payout Display (matching reference UI) -->
+              <div class="text-right">
+                <span class="text-[10px] ${isCompleted ? 'text-stone-500' : isPendingReview ? 'text-amber-400/80' : 'text-emerald-400/80'} block font-semibold uppercase tracking-wider">Tu Ganancia</span>
+                <span class="font-mono-gaming font-extrabold text-base sm:text-lg ${isCompleted ? 'text-stone-400' : isPendingReview ? 'text-amber-300' : 'text-emerald-400'}">
+                  $${safePayout.toFixed(2)}
+                </span>
+              </div>
+
+              <!-- Switch on account (only if active) -->
+              ${isActive ? `
+                <div class="flex items-center gap-2 bg-[#0e2417] px-3 py-1.5 rounded-xl border border-emerald-800/60 shadow-sm">
+                  <span class="text-[11px] text-emerald-200 font-semibold">Estoy en la cuenta:</span>
+                  <label class="switch">
+                    <input type="checkbox" ${order.isOnAccount ? 'checked' : ''} onchange="app.toggleOnAccount('${order.id}', this.checked)">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              ` : ''}
+
+              <!-- Chat button -->
+              <button onclick="app.openChat('${order.id}')" class="p-2.5 rounded-xl ${isCompleted ? 'bg-[#1b1922] hover:bg-[#262430] text-stone-300 border border-stone-700/60' : isPendingReview ? 'bg-[#241a0d] hover:bg-[#332412] text-amber-200 border border-amber-600/50' : 'bg-[#10291a] hover:bg-[#183d27] text-emerald-200 border border-emerald-600/50'} text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm" title="Abrir chat del pedido">
+                <i class="fa-solid fa-comments ${isCompleted ? 'text-stone-400' : isPendingReview ? 'text-amber-400' : 'text-emerald-400'}"></i>
+                <span class="hidden sm:inline">Chat</span>
+              </button>
+
+              <!-- Main action button by status -->
+              ${isCompleted ? `
+                <button disabled class="px-5 py-2 rounded-xl bg-[#201e26] text-stone-300 border border-stone-700/80 text-xs font-bold flex items-center gap-1.5 cursor-default shadow-sm select-none" title="Contrato completado y verificado">
+                  <i class="fa-solid fa-check text-stone-400"></i> Done
+                </button>
+              ` : isPendingReview ? `
+                <span class="px-4 py-2 rounded-xl bg-amber-950/90 border border-amber-500/80 text-amber-300 text-xs font-bold flex items-center gap-2 shadow-md shadow-amber-950/40 animate-pulse select-none" title="Reporte enviado. Esperando aprobación del administrador">
+                  <i class="fa-solid fa-hourglass-half text-amber-400"></i> En Revisión
+                </span>
+              ` : `
+                <button onclick="app.promptBoosterReportCompletion('${order.id}')" class="px-5 py-2 rounded-xl bg-[#16a34a] hover:bg-[#22c55e] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-green-950/60 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]">
+                  <i class="fa-solid fa-flag-checkered mr-0.5"></i> Finalizar Orden
+                </button>
+                <button onclick="app.boosterReleaseOrder('${order.id}')" class="px-3 py-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-400 hover:text-rose-300 border border-stone-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors" title="Liberar contrato y devolver a la Bolsa de Pedidos">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                  <span class="hidden sm:inline">Liberar</span>
+                </button>
+              `}
             </div>
-
-            <button onclick="app.openChat('${order.id}')" class="p-2.5 rounded-xl bg-[#201812] hover:bg-[#2b2118] text-[#fcefc2] border border-[#ee914f]/30 text-xs flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-comments text-[#ee914f]"></i>
-              <span>Chat</span>
-            </button>
-
-            ${order.status === 'COMPLETED' ? `
-              <span class="px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 text-xs font-bold flex items-center gap-1.5">
-                <i class="fa-solid fa-circle-check"></i> Finalizada
-              </span>
-            ` : (order.status === 'PENDING_APPROVAL' ? `
-              <span class="px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-600/60 text-amber-300 text-xs font-bold flex items-center gap-1.5 animate-pulse" title="Reporte enviado, esperando aprobación del admin o cliente">
-                <i class="fa-solid fa-clock"></i> En Revisión
-              </span>
-            ` : `
-              <button onclick="app.promptBoosterReportCompletion('${order.id}')" class="px-4 py-2 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer hover:brightness-110 active:scale-[0.98]">
-                <i class="fa-solid fa-flag-checkered mr-1"></i> Enviar Reporte
-              </button>
-              <button onclick="app.boosterReleaseOrder('${order.id}')" class="px-3 py-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-400 hover:text-rose-300 border border-stone-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors" title="Liberar contrato y devolver a la Bolsa de Pedidos">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span>Liberar</span>
-              </button>
-            `)}
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   boosterReleaseOrder(orderId) {
@@ -5194,7 +5253,7 @@ class MythicApp {
             <button onclick="app.closeReportCompletionModal()" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-bold transition-colors cursor-pointer">
               Cancelar
             </button>
-            <button onclick="app.submitBoosterCompletionReport('${order.id}')" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+            <button onclick="app.submitBoosterCompletionReport('${order.id}')" class="px-5 py-2.5 rounded-xl bg-[#16a34a] hover:bg-[#22c55e] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-green-950/40 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
               <i class="fa-solid fa-paper-plane"></i>
               <span>Enviar Reporte</span>
             </button>
