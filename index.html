@@ -37,6 +37,11 @@
 
       <!-- User & Cart (Req 2) -->
       <div class="flex items-center gap-2.5 shrink-0">
+        <a href="forever" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600/30 to-amber-500/20 hover:from-amber-600/40 hover:to-amber-500/30 border border-amber-500/50 text-[#fcefc2] hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-amber-950/20">
+          <i class="fa-solid fa-hourglass-half text-amber-400 text-xs"></i>
+          <span class="hidden sm:inline">WoW</span> Forever
+          <span class="px-1.5 py-0.2 bg-amber-500 text-stone-950 text-[9px] font-black rounded uppercase">Nuevo</span>
+        </a>
         <button onclick="app.openCartModal()" class="relative p-2.5 rounded-xl bg-[#17110d] border border-stone-800 text-stone-300 hover:text-[#ee914f] transition-colors">
           <i class="fa-solid fa-cart-shopping text-sm"></i>
           <span class="cart-counter-badge absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full copper-gradient-bg text-stone-950 text-[10px] font-black flex items-center justify-center hidden">0</span>
@@ -86,8 +91,23 @@
     </div>
   </header>
 
-  <!-- 4 EXCLUSIVE CATEGORIES TABS -->
-  <section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-6 relative z-20">
+  <!-- GAME MODE SELECTOR TABS (RETAIL VS FOREVER) -->
+  <section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-6 relative z-30">
+    <div class="glass-panel p-2 rounded-2xl border border-stone-800/90 flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto shadow-2xl backdrop-blur-xl">
+      <button type="button" id="tab-game-retail" onclick="app.switchCatalogGame('retail')" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#ee914f] text-stone-950 shadow-lg shadow-[#ee914f]/30 border border-[#ee914f] flex items-center justify-center gap-2">
+        <i class="fa-solid fa-dragon text-sm"></i>
+        <span>WoW Retail</span>
+      </button>
+      <button type="button" id="tab-game-forever" onclick="app.switchCatalogGame('forever')" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-amber-300/90 hover:text-white border border-amber-900/40 hover:border-amber-500/50 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-hourglass-half text-amber-400 text-sm"></i>
+        <span>WoW Forever</span>
+        <span class="px-1.5 py-0.5 rounded bg-amber-500 text-stone-950 text-[9px] font-black uppercase tracking-normal">Nuevo</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 4 EXCLUSIVE CATEGORIES TABS: RETAIL -->
+  <section id="categories-retail" class="max-w-6xl mx-auto px-4 lg:px-8 mt-6 relative z-20">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       
       <a href="mplus" class="glass-panel p-5 rounded-2xl border border-[#ee914f]/40 text-center hover:border-[#ee914f] transition-all group block shadow-lg shadow-black/40">
@@ -125,16 +145,62 @@
     </div>
   </section>
 
+  <!-- 4 EXCLUSIVE CATEGORIES TABS: WOW FOREVER (NUEVO) -->
+  <section id="categories-forever" class="max-w-6xl mx-auto px-4 lg:px-8 mt-6 relative z-20" style="display: none;">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      
+      <a href="product?id=forever-dungeon-bundle" class="glass-panel p-5 rounded-2xl border border-amber-500/40 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+        <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
+          <i class="fa-solid fa-dungeon"></i>
+        </div>
+        <div class="text-sm font-bold text-[#fcefc2] font-cinzel">35 Mazmorras</div>
+        <div class="text-xs text-amber-300/80 mt-1">26 Clásicas + 9 Inéditas</div>
+      </a>
+
+      <a href="product?id=forever-shapers-terrace" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+        <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-300 text-2xl mb-3 group-hover:scale-110 transition-transform">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="text-sm font-bold text-[#fcefc2] font-cinzel">The Shapers Terrace</div>
+        <div class="text-xs text-stone-400 mt-1">Nv 58-60 BiS Pre-Raid</div>
+      </a>
+
+      <a href="product?id=forever-legacy-challenges" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+        <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div class="text-sm font-bold text-[#fcefc2] font-cinzel">Desafíos de Legado</div>
+        <div class="text-xs text-stone-400 mt-1">1 a 3 Puntos + Títulos</div>
+      </a>
+
+      <a href="product?id=forever-leveling-mount-bundle" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+        <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-300 text-2xl mb-3 group-hover:scale-110 transition-transform">
+          <i class="fa-solid fa-horse"></i>
+        </div>
+        <div class="text-sm font-bold text-[#fcefc2] font-cinzel">Leveling 1-60</div>
+        <div class="text-xs text-stone-400 mt-1">100% Montura Incluida</div>
+      </a>
+
+    </div>
+  </section>
+
   <!-- MAIN SERVICES CATALOG -->
-  <main id="services-section" class="max-w-7xl mx-auto px-4 lg:px-8 py-16 flex-1">
-    <div class="flex items-center justify-between mb-8">
+  <main id="services-section" class="max-w-7xl mx-auto px-4 lg:px-8 py-12 flex-1">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
       <div>
-        <h2 class="font-cinzel text-2xl font-black text-[#fcefc2]">SERVICIOS DESTACADOS</h2>
-        <p class="text-xs text-stone-400">Selecciona cualquier servicio para ver su página individual y configurar tus opciones.</p>
+        <h2 id="catalog-section-title" class="font-cinzel text-2xl font-black text-[#fcefc2]">SERVICIOS DESTACADOS (RETAIL)</h2>
+        <p id="catalog-section-sub" class="text-xs text-stone-400">Selecciona cualquier servicio para ver su página individual y configurar tus opciones.</p>
       </div>
-      <span class="text-xs text-[#ee914f] font-semibold bg-[#261d15] px-3.5 py-1.5 rounded-full border border-[#ee914f]/30">
-        World of Warcraft Oficial
-      </span>
+      <div class="flex items-center gap-3">
+        <span id="catalog-section-badge" class="text-xs text-[#ee914f] font-semibold bg-[#261d15] px-3.5 py-1.5 rounded-full border border-[#ee914f]/30">
+          World of Warcraft Oficial
+        </span>
+        <a href="forever" class="text-xs text-amber-400 hover:text-amber-300 font-bold bg-[#1f1610] hover:bg-[#281c14] px-3.5 py-1.5 rounded-full border border-amber-600/30 flex items-center gap-1.5 transition-colors shadow-sm">
+          <i class="fa-solid fa-hourglass-half text-[11px]"></i>
+          <span>Portal WoW Forever</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+      </div>
     </div>
 
     <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -263,11 +329,12 @@
         <a href="pro" class="hover:text-[#ee914f]">Portal Pro</a>
         <a href="mplus" class="hover:text-[#ee914f]">M+</a>
         <a href="raids" class="hover:text-[#ee914f]">Raids</a>
+        <a href="forever" class="text-amber-400 hover:text-amber-300 font-bold">WoW Forever</a>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.3.6"></script>
+  <script src="assets/js/app.js?v=3.5.0"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {

@@ -37,6 +37,11 @@
 
       <!-- User & Cart (Req 2) -->
       <div class="flex items-center gap-2.5 shrink-0">
+        <a href="forever" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600/30 to-amber-500/20 hover:from-amber-600/40 hover:to-amber-500/30 border border-amber-500/50 text-[#fcefc2] hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-amber-950/20">
+          <i class="fa-solid fa-hourglass-half text-amber-400 text-xs"></i>
+          <span class="hidden sm:inline">WoW</span> Forever
+          <span class="px-1.5 py-0.2 bg-amber-500 text-stone-950 text-[9px] font-black rounded uppercase">Nuevo</span>
+        </a>
         <button onclick="app.openCartModal()" class="relative p-2.5 rounded-xl bg-[#17110d] border border-stone-800 text-stone-300 hover:text-[#ee914f] transition-colors">
           <i class="fa-solid fa-cart-shopping text-sm"></i>
           <span class="cart-counter-badge absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full copper-gradient-bg text-stone-950 text-[10px] font-black flex items-center justify-center hidden">0</span>
@@ -197,11 +202,12 @@
         <a href="/" class="hover:text-[#ee914f]">Inicio</a>
         <a href="client-profile" class="hover:text-[#ee914f]">Mi Perfil</a>
         <a href="pro" class="hover:text-[#ee914f]">Portal Pro</a>
+        <a href="forever" class="text-amber-400 hover:text-amber-300 font-bold">WoW Forever</a>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.3.6"></script>
+  <script src="assets/js/app.js?v=3.5.0"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {

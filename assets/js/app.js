@@ -103,6 +103,8 @@ class MythicApp {
         this.initCategoryPage('Powerleveling');
       } else if (cleanPath.endsWith('/gearing') || cleanPath === 'gearing') {
         this.initCategoryPage('Equipo / ilvl');
+      } else if (cleanPath.endsWith('/forever') || cleanPath === 'forever') {
+        this.initForeverPage();
       } else {
         this.initStoreFront();
       }
@@ -198,7 +200,7 @@ class MythicApp {
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
-          if (!parsed.find(s => s.id === 'the-venomous-abyss') || !parsed.find(s => s.id === 'delves-midnight')) {
+          if (!parsed.find(s => s.id === 'the-venomous-abyss') || !parsed.find(s => s.id === 'delves-midnight') || !parsed.find(s => s.id === 'forever-dungeon-bundle')) {
             shouldReload = true;
           }
         } catch (e) {
@@ -211,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '2.7.0');
+        localStorage.setItem('mp_catalog_v', '2.8.0');
         this.saveServices();
       }
     } catch (e) {
@@ -2316,6 +2318,90 @@ class MythicApp {
           </div>
         `;
       }
+    } else if (svc.id === 'forever-dungeon-bundle') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con WoW Forever Dungeons Boost?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Completado rápido y limpio de cualquier mazmorra de nivel 15 al 60 (Clásicas o nuevas exclusivas de WoW Forever).</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Todo el botín directo (armaduras poco comunes/azules/épicas, armas y oro) va directamente a tu bolsa.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Completado de misiones de mazmorra para acumular gran cantidad de experiencia (XP) y reputación.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+              <p class="text-xs text-stone-300 leading-snug">Disponible para reinos PvE (Normal), PvP y RP bajo modalidades Self-play o Piloted 100% seguro con VPN.</p>
+            </div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'forever-shapers-terrace') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes en The Shapers Terrace (Nv 58-60)?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Full run garantizado derrotando a los constructos titánicos y jefes de la nueva mazmorra de WoW Forever.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Equipo BiS pre-raid de nivel 60 óptimo para entrar directamente a Onyxia y Barrow Deeps.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Opción de sintonización y cadenas de misiones de acceso a bandas incluidas.</p>
+            </div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'forever-legacy-challenges') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con los Desafíos de Legado?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Completado de retos contrarreloj y afijos en mazmorras de WoW Forever.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Obtención de hasta 3 Puntos de Legado para canjear por equipo exclusivo y cosméticos.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Títulos de hermandad y estatus de prestigio durante toda la temporada.</p>
+            </div>
+          </div>
+        `;
+      }
+    } else if (svc.id === 'forever-leveling-mount-bundle') {
+      if (chkTitleEl) chkTitleEl.textContent = '¿Qué incluye el Bundle 1-60 + Montura?:';
+      if (chkContainer) {
+        chkContainer.innerHTML = `
+          <div class="space-y-3 pt-1">
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+              <p class="text-xs text-stone-300 leading-snug">Subida 1 al 60 garantizada 100% a mano sin scripts ni riesgo de baneo.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+              <p class="text-xs text-stone-300 leading-snug">Habilidad de equitación al 100% (Riding Skill) y montura rápida comprada.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+              <p class="text-xs text-stone-300 leading-snug">Oro acumulado para comprar todos los rangos de tus hechizos y habilidades.</p>
+            </div>
+          </div>
+        `;
+      }
     }
 
     // Dynamic Time Estimates
@@ -2342,6 +2428,11 @@ class MythicApp {
 
     if (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling') {
       this.renderLevelingProductOptions(svc);
+      return;
+    }
+
+    if (svc.game === 'forever' || svc.id.startsWith('forever-')) {
+      this.renderForeverProductOptions(svc);
       return;
     }
 
@@ -2820,6 +2911,245 @@ class MythicApp {
     });
   }
 
+  renderForeverProductOptions(svc) {
+    const container = document.getElementById('sp-options-form');
+    if (!container) return;
+
+    const opts = svc.options || {};
+    const rulesets = opts.rulesets || [
+      { name: 'PvE (Reino Normal)', price: 0, recommended: true },
+      { name: 'PvP (Reino JcJ)', price: 0 },
+      { name: 'RP (Juego de Rol)', price: 0 }
+    ];
+
+    const speeds = opts.speeds || [
+      { label: 'Velocidad Normal (Inicio en 15-30 min)', multiplier: 1.0, price: 0 },
+      { label: 'Express (Prioridad Alta - Inicio en 10 min)', multiplier: 1.20, price: 0, tag: '+20%' },
+      { label: 'Super Express (Inicio Inmediato VIP)', multiplier: 1.40, price: 0, tag: '+40%' }
+    ];
+
+    const methods = opts.completionMethods || [
+      { label: 'Self-play (Juegas en grupo)', price: 0, tag: 'Gratis', recommended: true },
+      { label: 'Piloted (VPN de tu país)', price: 0, tag: 'Incluido' },
+      { label: 'Self-play Remote (Acceso remoto)', price: 0, priceMultiplier: 1.30, tag: '+30%' }
+    ];
+
+    const extras = opts.extras || [];
+
+    let mainSelectorHtml = '';
+
+    if (svc.id === 'forever-dungeon-bundle') {
+      const classic = opts.classicDungeons || [];
+      const exclusive = opts.foreverExclusiveDungeons || [];
+      const allDungeons = [...exclusive, ...classic];
+      
+      this.currentSpKeyPrice = Number(allDungeons[0]?.price) || 5.00;
+
+      mainSelectorHtml = `
+        <!-- Filter Category Tabs -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Seleccionar Mazmorra (${allDungeons.length} Disponibles):</span>
+            <span class="text-[10px] text-[#ee914f] font-mono-gaming font-bold">WoW Forever</span>
+          </label>
+
+          <div class="flex items-center gap-1.5 mb-2 overflow-x-auto pb-1 text-[11px]">
+            <button type="button" onclick="app.filterForeverDungeons('all')" class="forever-filter-btn active px-3 py-1 rounded-lg bg-[#ee914f]/25 text-[#fcefc2] border border-[#ee914f]/50 font-bold whitespace-nowrap">Todas (35)</button>
+            <button type="button" onclick="app.filterForeverDungeons('exclusive')" class="forever-filter-btn px-3 py-1 rounded-lg bg-[#18110b] text-amber-300 border border-stone-800 hover:border-amber-500/40 font-semibold whitespace-nowrap">✨ Nuevas Forever (9)</button>
+            <button type="button" onclick="app.filterForeverDungeons('classic-low')" class="forever-filter-btn px-3 py-1 rounded-lg bg-[#18110b] text-stone-400 border border-stone-800 hover:border-stone-700 font-semibold whitespace-nowrap">Clásicas (15-40)</button>
+            <button type="button" onclick="app.filterForeverDungeons('classic-high')" class="forever-filter-btn px-3 py-1 rounded-lg bg-[#18110b] text-stone-400 border border-stone-800 hover:border-stone-700 font-semibold whitespace-nowrap">Clásicas (41-60)</button>
+          </div>
+
+          <select id="sp-forever-dungeon-select" onchange="app.onForeverDungeonSelect(this.value)" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-4 py-3 text-xs text-[#fcefc2] font-semibold focus:border-[#ee914f] outline-none">
+            <optgroup label="✨ NUEVAS MAZMORRAS EXCLUSIVAS WOW FOREVER">
+              ${exclusive.map((d, idx) => `
+                <option value="${d.name}" data-price="${d.price}" data-category="exclusive" ${idx === 0 ? 'selected' : ''}>
+                  ★ ${d.name} (Nv ${d.level}) - $${Number(d.price).toFixed(2)} [Exclusiva]
+                </option>
+              `).join('')}
+            </optgroup>
+            <optgroup label="⚔️ MAZMORRAS CLÁSICAS (NIVEL 15 - 40)">
+              ${classic.filter(d => {
+                const low = parseInt(d.level) || 0;
+                return low < 40;
+              }).map(d => `
+                <option value="${d.name}" data-price="${d.price}" data-category="classic-low">
+                  ${d.name} (Nv ${d.level}) - $${Number(d.price).toFixed(2)}
+                </option>
+              `).join('')}
+            </optgroup>
+            <optgroup label="💀 MAZMORRAS CLÁSICAS (NIVEL 41 - 60)">
+              ${classic.filter(d => {
+                const low = parseInt(d.level) || 0;
+                return low >= 40;
+              }).map(d => `
+                <option value="${d.name}" data-price="${d.price}" data-category="classic-high">
+                  ${d.name} (Nv ${d.level}) - $${Number(d.price).toFixed(2)}
+                </option>
+              `).join('')}
+            </optgroup>
+          </select>
+        </div>
+      `;
+    } else if (svc.id === 'forever-legacy-challenges') {
+      const tiers = opts.challengeTiers || [];
+      this.currentSpKeyPrice = Number(tiers[0]?.price) || 83.99;
+
+      mainSelectorHtml = `
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
+            Dificultad de Desafío de Legado:
+          </label>
+          <select id="sp-forever-tier-select" onchange="app.onForeverTierSelect(this.value)" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-4 py-3 text-xs text-[#fcefc2] font-semibold focus:border-[#ee914f] outline-none">
+            ${tiers.map((t, idx) => `
+              <option value="${t.price}" data-name="${t.name}" ${idx === 0 ? 'selected' : ''}>
+                ${t.name} - $${Number(t.price).toFixed(2)} (${t.tag || ''})
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    } else {
+      this.currentSpKeyPrice = Number(svc.basePrice) || 57.00;
+      mainSelectorHtml = `
+        <div class="p-3.5 rounded-xl bg-[#18110b] border border-stone-800 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-white block">${svc.name}</span>
+            <span class="text-[10px] text-stone-400">Servicio Completo y Garantizado</span>
+          </div>
+          <span class="text-xs font-bold font-mono-gaming text-[#ee914f]">$${Number(svc.basePrice).toFixed(2)}</span>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="space-y-5">
+        <!-- Ruleset Selection (PvE, PvP, RP) -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Tipo de Servidor / Ruleset:</span>
+            <span class="text-[10px] text-emerald-400 font-semibold"><i class="fa-solid fa-shield-halved mr-1"></i>Soporte Total</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            ${rulesets.map((r, idx) => `
+              <label class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#18110b] border border-stone-800 hover:border-stone-700 cursor-pointer transition-all text-center">
+                <input type="radio" name="sp_forever_ruleset" value="${r.name}" ${idx === 0 ? 'checked' : ''} onchange="app.recalculateSingleProductTotal()" class="accent-[#ee914f] mb-1">
+                <span class="text-xs font-bold text-[#fcefc2]">${r.name.split('(')[0].trim()}</span>
+                <span class="text-[9px] text-stone-500">${r.name.includes('(') ? r.name.split('(')[1].replace(')', '') : 'Oficial'}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Main Product Specific Selector -->
+        ${mainSelectorHtml}
+
+        <!-- Completion Speed -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
+            Velocidad de Finalización:
+          </label>
+          <select id="sp-forever-speed" onchange="app.recalculateSingleProductTotal()" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-4 py-3 text-xs text-stone-200 font-semibold focus:border-[#ee914f] outline-none">
+            ${speeds.map(s => `
+              <option value="${s.label}" data-multiplier="${s.multiplier || 1.0}">
+                ${s.label} ${s.tag ? '(' + s.tag + ')' : ''}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <!-- Completion Method -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
+            Modalidad de Juego:
+          </label>
+          <div class="space-y-2">
+            ${methods.map((m, idx) => `
+              <label class="flex items-center justify-between p-3 rounded-xl bg-[#18110b] border border-stone-800 cursor-pointer hover:border-stone-700 transition-colors">
+                <div class="flex items-center gap-2.5 text-xs text-stone-200">
+                  <input type="radio" name="sp_mode" value="${m.label}" data-price="${m.price || 0}" data-multiplier="${m.priceMultiplier || 1.0}" ${idx === 0 ? 'checked' : ''} onchange="app.recalculateSingleProductTotal()" class="accent-[#ee914f]">
+                  <span class="font-semibold">${m.label}</span>
+                </div>
+                <span class="text-xs ${Number(m.priceMultiplier) > 1.0 ? 'text-[#ee914f] font-mono-gaming' : (m.tag === 'Gratis' ? 'text-emerald-400' : 'text-stone-400')} font-bold">
+                  ${m.tag || (Number(m.priceMultiplier) > 1.0 ? '+' + Math.round((m.priceMultiplier - 1)*100) + '%' : 'Gratis')}
+                </span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Extras -->
+        ${extras.length > 0 ? `
+          <div>
+            <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
+              Opciones Adicionales / Extras:
+            </label>
+            <div class="space-y-2">
+              ${extras.map(ex => `
+                <label class="flex items-center justify-between p-3 rounded-xl bg-[#18110b] border border-stone-800 hover:border-stone-700 cursor-pointer transition-colors">
+                  <div class="flex items-center gap-2.5 text-xs text-stone-200">
+                    <input type="checkbox" name="sp_extra_option" data-label="${ex.label}" data-price="${ex.price || 0}" onchange="app.recalculateSingleProductTotal()" class="w-4 h-4 accent-[#ee914f] rounded">
+                    <span>${ex.label}</span>
+                  </div>
+                  <span class="text-xs ${Number(ex.price) > 0 ? 'text-[#ee914f] font-mono-gaming font-bold' : 'text-emerald-400 font-bold'}">
+                    ${Number(ex.price) > 0 ? '+$' + Number(ex.price).toFixed(2) : (ex.tag || 'Gratis')}
+                  </span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    // Automatically set realm filter pill to "Forever" on product page
+    this.setRealmVersionFilter('Forever');
+  }
+
+  onForeverDungeonSelect(val) {
+    const select = document.getElementById('sp-forever-dungeon-select');
+    if (!select) return;
+    const opt = select.selectedOptions[0];
+    const price = opt ? Number(opt.dataset.price) : 5.00;
+    this.currentSpKeyPrice = price;
+    this.recalculateSingleProductTotal();
+  }
+
+  onForeverTierSelect(val) {
+    this.currentSpKeyPrice = Number(val) || 83.99;
+    this.recalculateSingleProductTotal();
+  }
+
+  filterForeverDungeons(filter) {
+    const select = document.getElementById('sp-forever-dungeon-select');
+    if (!select) return;
+    const buttons = document.querySelectorAll('.forever-filter-btn');
+    buttons.forEach(b => {
+      b.classList.remove('active', 'bg-[#ee914f]/25', 'text-[#fcefc2]', 'border-[#ee914f]/50');
+      b.classList.add('bg-[#18110b]', 'text-stone-400', 'border-stone-800');
+    });
+    if (window.event && window.event.target) {
+      window.event.target.classList.remove('bg-[#18110b]', 'text-stone-400', 'border-stone-800');
+      window.event.target.classList.add('active', 'bg-[#ee914f]/25', 'text-[#fcefc2]', 'border-[#ee914f]/50');
+    }
+
+    Array.from(select.options).forEach(opt => {
+      const cat = opt.dataset.category;
+      if (filter === 'all' || cat === filter) {
+        opt.style.display = '';
+      } else {
+        opt.style.display = 'none';
+      }
+    });
+
+    // Select first visible
+    const firstVisible = Array.from(select.options).find(o => o.style.display !== 'none');
+    if (firstVisible) {
+      select.value = firstVisible.value;
+      this.onForeverDungeonSelect(firstVisible.value);
+    }
+  }
+
   calculateLevelBasePrice(curr, des) {
     if (des <= curr) return 8.00;
     let price = 0;
@@ -2878,6 +3208,7 @@ class MythicApp {
 
   recalculateSingleProductTotal() {
     const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.category === 'Powerleveling');
+    const isForever = (this.currentProduct?.game === 'forever' || this.currentProduct?.id?.startsWith('forever-'));
     let unit = 0;
 
     if (isLeveling) {
@@ -2888,6 +3219,23 @@ class MythicApp {
       if (gearingSelect) {
         unit += Number(gearingSelect.value || 0);
       }
+
+      // Completion method extra
+      const modeInput = document.querySelector('input[name="sp_mode"]:checked');
+      if (modeInput) unit += Number(modeInput.dataset.price || 0);
+    } else if (isForever) {
+      let base = this.currentSpKeyPrice || this.currentProduct?.basePrice || 5.00;
+
+      // Speed multiplier
+      const speedSelect = document.getElementById('sp-forever-speed');
+      const speedMultiplier = speedSelect ? Number(speedSelect.selectedOptions[0]?.dataset?.multiplier || 1.0) : 1.0;
+
+      // Mode multiplier and fixed price
+      const modeInput = document.querySelector('input[name="sp_mode"]:checked');
+      const modeMultiplier = modeInput ? Number(modeInput.dataset.multiplier || 1.0) : 1.0;
+      const modePrice = modeInput ? Number(modeInput.dataset.price || 0) : 0;
+
+      unit = (base * speedMultiplier * modeMultiplier) + modePrice;
     } else {
       unit = this.currentSpKeyPrice || this.currentProduct?.basePrice || 38.00;
 
@@ -2898,13 +3246,13 @@ class MythicApp {
       // Timer extra
       const timerInput = document.getElementById('sp-opt-timer');
       if (timerInput && timerInput.checked) unit += Number(timerInput.dataset.price || 0);
+
+      // Completion method extra
+      const modeInput = document.querySelector('input[name="sp_mode"]:checked');
+      if (modeInput) unit += Number(modeInput.dataset.price || 0);
     }
 
-    // Completion method extra
-    const modeInput = document.querySelector('input[name="sp_mode"]:checked');
-    if (modeInput) unit += Number(modeInput.dataset.price || 0);
-
-    // Extras / Additional options checkboxes
+    // Extras / Additional options checkboxes (Retail and Forever)
     const extraCheckboxes = document.querySelectorAll('input[name="sp_extra_option"]:checked');
     extraCheckboxes.forEach(cb => {
       unit += Number(cb.dataset.price || 0);
@@ -2947,6 +3295,7 @@ class MythicApp {
   addCurrentSingleProductToCart() {
     const svc = this.currentProduct || this.services[0];
     const isLeveling = (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling');
+    const isForever = (svc.game === 'forever' || svc.id?.startsWith('forever-'));
     const char = document.getElementById('sp-character')?.value.trim() 
               || `${document.getElementById('sp-char-name')?.value.trim() || 'Heroe'}-${document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros'}`;
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
@@ -2991,6 +3340,54 @@ class MythicApp {
 
       this.addToCart(item, true); // Opens cart drawer
       this.showToast(`¡Powerleveling (${item.levelCurrent} - ${item.levelDesired}) añadido al carrito!`, 'success');
+      return;
+    }
+
+    if (isForever) {
+      const ruleset = document.querySelector('input[name="sp_forever_ruleset"]:checked')?.value || 'PvE';
+      const speed = document.getElementById('sp-forever-speed')?.value || 'Velocidad Normal';
+      let foreverTargetName = svc.name;
+      if (svc.id === 'forever-dungeon-bundle') {
+        const dSelect = document.getElementById('sp-forever-dungeon-select');
+        const selectedDungeon = dSelect ? dSelect.value : 'Ragefire Chasm';
+        foreverTargetName = `WoW Forever: ${selectedDungeon}`;
+      } else if (svc.id === 'forever-legacy-challenges') {
+        const tSelect = document.getElementById('sp-forever-tier-select');
+        const selectedTier = tSelect ? (tSelect.options[tSelect.selectedIndex]?.dataset?.name || tSelect.options[tSelect.selectedIndex]?.text) : 'Experienced Spelunker';
+        foreverTargetName = `WoW Forever: ${selectedTier.split('-')[0].trim()}`;
+      }
+
+      const extraLabels = Array.from(document.querySelectorAll('input[name="sp_extra_option"]:checked')).map(cb => cb.dataset.label || cb.closest('label')?.querySelector('span')?.textContent?.trim()).filter(Boolean);
+
+      let detailsParts = [
+        `Reino: ${ruleset}`,
+        `Velocidad: ${speed.split('(')[0].trim()}`,
+        `Método: ${selectedMode}`,
+        `Región: ${region}`
+      ];
+      if (extraLabels.length > 0) detailsParts.push('Extras: ' + extraLabels.join(', '));
+      detailsParts.push(`Personaje: ${char}`);
+
+      const item = {
+        cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        serviceId: svc.id,
+        serviceName: foreverTargetName,
+        category: svc.category,
+        unitPrice: calcUnit,
+        price: calcUnit,
+        quantity: runsQty,
+        totalPrice: calcTotal,
+        character: char,
+        mode: selectedMode,
+        region: region,
+        game: 'forever',
+        ruleset: ruleset,
+        details: detailsParts.join(' | '),
+        referredBooster: sessionStorage.getItem('mp_upsell_booster') || null
+      };
+
+      this.addToCart(item, true);
+      this.showToast(`¡${foreverTargetName} añadido al carrito!`, 'success');
       return;
     }
 
@@ -3039,9 +3436,74 @@ class MythicApp {
 // STOREFRONT & CATEGORY PAGES (Req 5)
   // ==========================================
   initStoreFront() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gParam = urlParams.get('game');
+    this.activeGameFilter = (gParam === 'forever') ? 'forever' : 'retail';
+
     this.renderServiceCards();
     this.updateCartCounter();
     this.checkBoosterUpsellReferral();
+    this.updateGameTabsUI();
+  }
+
+  initForeverPage() {
+    this.activeGameFilter = 'forever';
+    const container = document.getElementById('forever-services-grid') || document.getElementById('category-services-grid') || document.getElementById('services-grid');
+    if (container) {
+      const filtered = this.services.filter(s => s.game === 'forever' || s.id.startsWith('forever-'));
+      container.innerHTML = filtered.map(svc => this.buildServiceCardHtml(svc)).join('');
+    }
+    this.updateCartCounter();
+    this.checkBoosterUpsellReferral();
+  }
+
+  switchCatalogGame(game) {
+    this.activeGameFilter = game;
+    this.updateGameTabsUI();
+    this.renderServiceCards();
+  }
+
+  updateGameTabsUI() {
+    const btnRetail = document.getElementById('tab-game-retail');
+    const btnForever = document.getElementById('tab-game-forever');
+    const catRetail = document.getElementById('categories-retail');
+    const catForever = document.getElementById('categories-forever');
+    const catalogHeader = document.getElementById('catalog-section-title');
+    const catalogSub = document.getElementById('catalog-section-sub');
+    const catalogBadge = document.getElementById('catalog-section-badge');
+
+    const isForever = (this.activeGameFilter === 'forever');
+
+    if (btnRetail) {
+      if (!isForever) {
+        btnRetail.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#ee914f] text-stone-950 shadow-lg shadow-[#ee914f]/30 border border-[#ee914f]';
+      } else {
+        btnRetail.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-stone-400 hover:text-white border border-stone-800';
+      }
+    }
+
+    if (btnForever) {
+      if (isForever) {
+        btnForever.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-lg shadow-amber-500/30 border border-amber-400';
+      } else {
+        btnForever.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-amber-300/80 hover:text-amber-200 border border-amber-900/40';
+      }
+    }
+
+    if (catRetail) catRetail.style.display = isForever ? 'none' : '';
+    if (catForever) catForever.style.display = isForever ? '' : 'none';
+
+    if (catalogHeader) {
+      catalogHeader.textContent = isForever ? 'CATÁLOGO WOW FOREVER' : 'SERVICIOS DESTACADOS (RETAIL)';
+    }
+    if (catalogSub) {
+      catalogSub.textContent = isForever 
+        ? 'Mazmorras clásicas, 9 exclusivas Forever, Desafíos de Legado y Powerleveling 1-60.' 
+        : 'Selecciona cualquier servicio para ver su página individual y configurar tus opciones.';
+    }
+    if (catalogBadge) {
+      catalogBadge.textContent = isForever ? 'WoW Forever: The Evergreen Project' : 'World of Warcraft Oficial';
+    }
   }
 
   initCategoryPage(categoryName) {
@@ -3104,9 +3566,28 @@ class MythicApp {
   }
 
   renderServiceCards() {
+    const retailContainer = document.getElementById('services-grid-retail');
+    const foreverContainer = document.getElementById('services-grid-forever');
+
+    if (retailContainer && foreverContainer) {
+      const retailServices = this.services.filter(s => s.game === 'retail' || !s.game);
+      const foreverServices = this.services.filter(s => s.game === 'forever' || s.id.startsWith('forever-'));
+      retailContainer.innerHTML = retailServices.map(svc => this.buildServiceCardHtml(svc)).join('');
+      foreverContainer.innerHTML = foreverServices.map(svc => this.buildServiceCardHtml(svc)).join('');
+      return;
+    }
+
     const container = document.getElementById('services-grid');
     if (!container) return;
-    container.innerHTML = this.services.map(svc => this.buildServiceCardHtml(svc)).join('');
+
+    let list = this.services;
+    if (this.activeGameFilter === 'retail') {
+      list = this.services.filter(s => s.game === 'retail' || !s.game);
+    } else if (this.activeGameFilter === 'forever') {
+      list = this.services.filter(s => s.game === 'forever' || s.id.startsWith('forever-'));
+    }
+
+    container.innerHTML = list.map(svc => this.buildServiceCardHtml(svc)).join('');
   }
 
   renderRelatedProducts(currentSvc) {
