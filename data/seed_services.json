@@ -1,489 +1,2091 @@
-﻿[
-  {
-    "id": "mplus-keystone",
-    "game": "retail",
-    "category": "Míticas Plus",
-    "page": "mplus",
-    "name": "Mythic+ Keystone Run (+2 a +15)",
-    "description": "Completa mazmorras míticas plus de Midnight a tiempo con nuestro equipo profesional. Obtén botín hasta 311 ilvl en cofre final y 318 ilvl (Mítico) en tu Gran Cámara semanal.",
-    "basePrice": 12.00,
-    "icon": "fa-dungeon",
-    "badge": "Temporada 2 Activa",
-    "options": {
-      "keyLevels": [
-        {"level": 2, "price": 12.00, "endIlvl": 295, "vaultIlvl": 305, "track": "Campeón 2/6 �-> Héroe 1/6", "crests": "Campeón (Champion)", "recommended": false},
-        {"level": 4, "price": 16.00, "endIlvl": 298, "vaultIlvl": 308, "track": "Campeón 3/6 �-> Héroe 2/6", "crests": "Héroe (Hero)", "recommended": false},
-        {"level": 6, "price": 22.00, "endIlvl": 305, "vaultIlvl": 311, "track": "Héroe 1/6 �-> Héroe 3/6", "crests": "Héroe (Hero)", "recommended": false},
-        {"level": 8, "price": 28.00, "endIlvl": 308, "vaultIlvl": 315, "track": "Héroe 2/6 �-> Héroe 4/6", "crests": "Héroe (Hero)", "recommended": false},
-        {"level": 10, "price": 38.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 �-> Mito 1/6 (BiS)", "crests": "Mítico (Myth)", "recommended": true},
-        {"level": 12, "price": 52.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 �-> Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
-        {"level": 14, "price": 70.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 �-> Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
-        {"level": 15, "price": 85.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 �-> Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
-        {"level": 18, "price": 115.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 �-> Mito 1/6", "crests": "Mítico (Myth)", "recommended": false},
-        {"level": 20, "price": 145.00, "endIlvl": 311, "vaultIlvl": 318, "track": "Héroe 3/6 �-> Mito 1/6", "crests": "Mítico (Myth)", "recommended": false}
-      ],
-      "timer": {
-        "enabled": true,
-        "label": "Timer garantizado (In-time)",
-        "price": 0.00
-      },
-      "lootTraders": [
-        {"label": "Premium Group (x2 loot-traders)", "price": 0.00},
-        {"label": "VIP Group (+3 loot-traders)", "price": 2.27},
-        {"label": "Top Group (+4 loot-traders)", "price": 2.92}
-      ],
-      "dungeons": [
-        "Random Dungeon (Más Rápido)",
-        "Vaults of Atal'Utek (Cámaras de Atal'Utek)",
-        "Coiled Spire (Aguja Enroscada)",
-        "Underground Sanctum (Sagrario Subterráneo)",
-        "Operation: Floodgate (Operación: Compuerta)",
-        "Cinderbrew Meadery (Hidromelería de Ceniza)",
-        "Darkflame Cleft (Fisura de Flama Oscura)",
-        "Priory of the Sacred Flame (Priorato de la Llama Sagrada)"
-      ],
-      "legacyDungeons": [
-        "The Stonevault (El Sagrario de Piedra)",
-        "City of Threads (Ciudad de los Hilos)",
-        "The Dawnbreaker (El Rompealbas)",
-        "Ara-Kara, City of Echoes (Ara-Kara)",
-        "The MOTHERLODE!! (¡VETA MADRE!)"
-      ],
-      "completionMethods": [
-        {"label": "Self-play", "price": 0.00, "tag": "Gratis"},
-        {"label": "Piloted (Juega un Pro con VPN)", "price": 0.00, "tag": "Incluido"},
-        {"label": "Self-play Remote", "price": 1.95, "tag": "+$1.95"}
-      ],
-      "extras": [
-        {"label": "Rank One Team (Top 0.1% M+)", "price": 1.95},
-        {"label": "Stream Privado en Discord", "price": 2.50}
-      ],
-      "estimates": {
-        "start": "10-15 min",
-        "execution": "15-30 min"
-      },
-      "heroBadges": [
-        "Hasta 311 ilvl Botín",
-        "318 ilvl Gran Cámara (Mítico)",
-        "Blasones Míticos & Portales"
-      ],
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
+[
+    {
+        "id":  "mplus-keystone",
+        "game":  "retail",
+        "category":  "Míticas Plus",
+        "page":  "mplus",
+        "name":  "Mythic+ Keystone Run (+2 a +15)",
+        "description":  "Completa mazmorras míticas plus de Midnight a tiempo con nuestro equipo profesional. Obtén botín hasta 311 ilvl en cofre final y 318 ilvl (Mítico) en tu Gran Cámara semanal.",
+        "basePrice":  12.00,
+        "icon":  "fa-dungeon",
+        "badge":  "Temporada 2 Activa",
+        "options":  {
+                        "keyLevels":  [
+                                          {
+                                              "level":  2,
+                                              "price":  12.00,
+                                              "endIlvl":  295,
+                                              "vaultIlvl":  305,
+                                              "track":  "Campeón 2/6 �-\u003e Héroe 1/6",
+                                              "crests":  "Campeón (Champion)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  4,
+                                              "price":  16.00,
+                                              "endIlvl":  298,
+                                              "vaultIlvl":  308,
+                                              "track":  "Campeón 3/6 �-\u003e Héroe 2/6",
+                                              "crests":  "Héroe (Hero)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  6,
+                                              "price":  22.00,
+                                              "endIlvl":  305,
+                                              "vaultIlvl":  311,
+                                              "track":  "Héroe 1/6 �-\u003e Héroe 3/6",
+                                              "crests":  "Héroe (Hero)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  8,
+                                              "price":  28.00,
+                                              "endIlvl":  308,
+                                              "vaultIlvl":  315,
+                                              "track":  "Héroe 2/6 �-\u003e Héroe 4/6",
+                                              "crests":  "Héroe (Hero)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  10,
+                                              "price":  38.00,
+                                              "endIlvl":  311,
+                                              "vaultIlvl":  318,
+                                              "track":  "Héroe 3/6 �-\u003e Mito 1/6 (BiS)",
+                                              "crests":  "Mítico (Myth)",
+                                              "recommended":  true
+                                          },
+                                          {
+                                              "level":  12,
+                                              "price":  52.00,
+                                              "endIlvl":  311,
+                                              "vaultIlvl":  318,
+                                              "track":  "Héroe 3/6 �-\u003e Mito 1/6",
+                                              "crests":  "Mítico (Myth)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  14,
+                                              "price":  70.00,
+                                              "endIlvl":  311,
+                                              "vaultIlvl":  318,
+                                              "track":  "Héroe 3/6 �-\u003e Mito 1/6",
+                                              "crests":  "Mítico (Myth)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  15,
+                                              "price":  85.00,
+                                              "endIlvl":  311,
+                                              "vaultIlvl":  318,
+                                              "track":  "Héroe 3/6 �-\u003e Mito 1/6",
+                                              "crests":  "Mítico (Myth)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  18,
+                                              "price":  115.00,
+                                              "endIlvl":  311,
+                                              "vaultIlvl":  318,
+                                              "track":  "Héroe 3/6 �-\u003e Mito 1/6",
+                                              "crests":  "Mítico (Myth)",
+                                              "recommended":  false
+                                          },
+                                          {
+                                              "level":  20,
+                                              "price":  145.00,
+                                              "endIlvl":  311,
+                                              "vaultIlvl":  318,
+                                              "track":  "Héroe 3/6 �-\u003e Mito 1/6",
+                                              "crests":  "Mítico (Myth)",
+                                              "recommended":  false
+                                          }
+                                      ],
+                        "timer":  {
+                                      "enabled":  true,
+                                      "label":  "Timer garantizado (In-time)",
+                                      "price":  0.00
+                                  },
+                        "lootTraders":  [
+                                            {
+                                                "label":  "Premium Group (x2 loot-traders)",
+                                                "price":  0.00
+                                            },
+                                            {
+                                                "label":  "VIP Group (+3 loot-traders)",
+                                                "price":  2.27
+                                            },
+                                            {
+                                                "label":  "Top Group (+4 loot-traders)",
+                                                "price":  2.92
+                                            }
+                                        ],
+                        "dungeons":  [
+                                         "Random Dungeon (Más Rápido)",
+                                         "Vaults of Atal\u0027Utek (Cámaras de Atal\u0027Utek)",
+                                         "Coiled Spire (Aguja Enroscada)",
+                                         "Underground Sanctum (Sagrario Subterráneo)",
+                                         "Operation: Floodgate (Operación: Compuerta)",
+                                         "Cinderbrew Meadery (Hidromelería de Ceniza)",
+                                         "Darkflame Cleft (Fisura de Flama Oscura)",
+                                         "Priory of the Sacred Flame (Priorato de la Llama Sagrada)"
+                                     ],
+                        "legacyDungeons":  [
+                                               "The Stonevault (El Sagrario de Piedra)",
+                                               "City of Threads (Ciudad de los Hilos)",
+                                               "The Dawnbreaker (El Rompealbas)",
+                                               "Ara-Kara, City of Echoes (Ara-Kara)",
+                                               "The MOTHERLODE!! (¡VETA MADRE!)"
+                                           ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0.00,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (Juega un Pro con VPN)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote",
+                                                      "price":  1.95,
+                                                      "tag":  "+$1.95"
+                                                  }
+                                              ],
+                        "extras":  [
+                                       {
+                                           "label":  "Rank One Team (Top 0.1% M+)",
+                                           "price":  1.95
+                                       },
+                                       {
+                                           "label":  "Stream Privado en Discord",
+                                           "price":  2.50
+                                       }
+                                   ],
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "15-30 min"
+                                      },
+                        "heroBadges":  [
+                                           "Hasta 311 ilvl Botín",
+                                           "318 ilvl Gran Cámara (Mítico)",
+                                           "Blasones Míticos \u0026 Portales"
+                                       ],
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    }
+    },
+    {
+        "id":  "the-venomous-abyss",
+        "game":  "retail",
+        "category":  "Bandas / Raids",
+        "page":  "raids",
+        "name":  "El Abismo Venenoso (The Venomous Abyss)",
+        "description":  "Derrota a los 8 jefes del Abismo Venenoso en las Cámaras de Atal\u0027Utek incluyendo a Ula\u0027tek. Botín garantizado de 292 a 344 ilvl, logro Ahead of the Curve (AOTC) / Cutting Edge y recompensas BiS de temporada.",
+        "basePrice":  28.00,
+        "icon":  "fa-crown",
+        "badge":  "Nueva Raid Temporada 2",
+        "options":  {
+                        "difficulties":  [
+                                             {
+                                                 "name":  "Normal (8/8) - ilvl 292-302",
+                                                 "price":  28.00,
+                                                 "ilvl":  "292 - 302",
+                                                 "track":  "Campeón",
+                                                 "tag":  "Full Clear"
+                                             },
+                                             {
+                                                 "name":  "Heroico (8/8 - AOTC Ula\u0027tek) - ilvl 305-315",
+                                                 "price":  48.00,
+                                                 "ilvl":  "305 - 315",
+                                                 "track":  "Héroe",
+                                                 "recommended":  true,
+                                                 "tag":  "AOTC Garantizado"
+                                             },
+                                             {
+                                                 "name":  "Solo Ula\u0027tek Heroico (AOTC)",
+                                                 "price":  19.00,
+                                                 "ilvl":  "315",
+                                                 "track":  "Héroe",
+                                                 "tag":  "Jefe Final"
+                                             },
+                                             {
+                                                 "name":  "Mítico (Primeros 4 jefes) - ilvl 318-324",
+                                                 "price":  135.00,
+                                                 "ilvl":  "318 - 324",
+                                                 "track":  "Mito",
+                                                 "tag":  "Mítico Progresión"
+                                             },
+                                             {
+                                                 "name":  "Mítico Full Clear (Cutting Edge Ula\u0027tek) - ilvl 318-344",
+                                                 "price":  390.00,
+                                                 "ilvl":  "318 - 344",
+                                                 "track":  "Mito BiS",
+                                                 "tag":  "Cutting Edge"
+                                             }
+                                         ],
+                        "bosses":  [
+                                       "1. Nek\u0027zali the Soulcoiler",
+                                       "2. Entombed Sentinels",
+                                       "3. The Lost Explorers",
+                                       "4. Vashnik",
+                                       "5. Sszorak",
+                                       "6. The Twin Fangs",
+                                       "7. The Coiled Altar",
+                                       "8. Ula\u0027tek (Jefe Final)"
+                                   ],
+                        "lootTypes":  [
+                                          {
+                                              "label":  "Group Loot (Tiradas de dados normales)",
+                                              "price":  0.00
+                                          },
+                                          {
+                                              "label":  "Armor Priority (+2 Traders de tu tipo)",
+                                              "price":  18.00
+                                          },
+                                          {
+                                              "label":  "Full VIP Exclusive (Todos los drops para ti)",
+                                              "price":  45.00
+                                          }
+                                      ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas con nuestra hermandad)",
+                                                      "price":  0.00,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "extras":  [
+                                       {
+                                           "label":  "Garantía de AOTC en Primera Semana",
+                                           "price":  9.99
+                                       },
+                                       {
+                                           "label":  "Stream Privado en Discord en 1080p 60fps",
+                                           "price":  3.00
+                                       }
+                                   ],
+                        "estimates":  {
+                                          "start":  "Horarios Diarios Flexibles",
+                                          "execution":  "1.5 - 2.5 Horas"
+                                      },
+                        "heroBadges":  [
+                                           "292 a 344 ilvl",
+                                           "AOTC Ula\u0027tek Garantizado",
+                                           "Tier Set Tokens"
+                                       ],
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    }
+    },
+    {
+        "id":  "delves-midnight",
+        "game":  "retail",
+        "category":  "Míticas Plus",
+        "page":  "mplus",
+        "name":  "Profundidades Abundantes (Bountiful Delves Tier 8)",
+        "description":  "Completa Profundidades de nivel Tier 8 para desbloquear botín 298 ilvl en cofre abundante y recompensas de 311 ilvl (Héroe) en la Gran Cámara semanal. ¡El método más rápido y solitario para equiparte!",
+        "basePrice":  8.00,
+        "icon":  "fa-compass",
+        "badge":  "Mejor Relación Tiempo/Botín",
+        "options":  {
+                        "tiers":  [
+                                      {
+                                          "level":  8,
+                                          "name":  "Tier 8 (Sweet Spot de Equipo)",
+                                          "price":  8.00,
+                                          "endIlvl":  298,
+                                          "vaultIlvl":  311,
+                                          "recommended":  true
+                                      },
+                                      {
+                                          "level":  11,
+                                          "name":  "Tier 11 (Máxima Dificultad Delves)",
+                                          "price":  14.00,
+                                          "endIlvl":  298,
+                                          "vaultIlvl":  311,
+                                          "recommended":  false
+                                      }
+                                  ],
+                        "runsCount":  [
+                                          {
+                                              "runs":  1,
+                                              "priceMultiplier":  1,
+                                              "label":  "1 Run Abundante"
+                                          },
+                                          {
+                                              "runs":  4,
+                                              "priceMultiplier":  3.6,
+                                              "label":  "4 Runs (Desbloquea 2 slots de Cámara)"
+                                          },
+                                          {
+                                              "runs":  8,
+                                              "priceMultiplier":  6.8,
+                                              "label":  "8 Runs (3 slots de Cámara al Máximo)"
+                                          }
+                                      ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas con nuestro booster)",
+                                                      "price":  0.00,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (Con VPN segura)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "extras":  [
+                                       {
+                                           "label":  "Uso de Llave Restaurada (Restored Coffer Key)",
+                                           "price":  0.00
+                                       },
+                                       {
+                                           "label":  "Matar al Jefe Némesis (Logro \u0026 Montura)",
+                                           "price":  9.99
+                                       }
+                                   ],
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "10 min por Run"
+                                      },
+                        "heroBadges":  [
+                                           "298 ilvl Cofre Abundante",
+                                           "311 ilvl Gran Cámara",
+                                           "Rápido \u0026 Sin Estrés"
+                                       ],
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    }
+    },
+    {
+        "id":  "ilvl-gearing",
+        "game":  "retail",
+        "category":  "Equipo / ilvl",
+        "page":  "gearing",
+        "name":  "Paquete Completo de Equipamiento ilvl",
+        "description":  "Equipa a tu personaje con el promedio de nivel de objeto deseado. Combinamos Míticas+, Delves Tier 8 y Raid Heroica para garantizar que alcances tu meta en tiempo récord.",
+        "basePrice":  35.00,
+        "icon":  "fa-shield-halved",
+        "badge":  "Garantía de ilvl",
+        "options":  {
+                        "gearingTiers":  [
+                                             {
+                                                 "target":  "292+ ilvl Starter / M0 Ready",
+                                                 "price":  35.00,
+                                                 "recommended":  false
+                                             },
+                                             {
+                                                 "target":  "298+ ilvl Delves T8 Ready",
+                                                 "price":  65.00,
+                                                 "recommended":  false
+                                             },
+                                             {
+                                                 "target":  "305+ ilvl Heroic Raid Ready",
+                                                 "price":  115.00,
+                                                 "recommended":  true
+                                             },
+                                             {
+                                                 "target":  "311+ ilvl BiS Mythic+ Ready",
+                                                 "price":  195.00,
+                                                 "recommended":  false
+                                             },
+                                             {
+                                                 "target":  "318+ ilvl Full BiS Endgame",
+                                                 "price":  320.00,
+                                                 "recommended":  false
+                                             }
+                                         ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN de tu ciudad)",
+                                                      "price":  0.00,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play (Juegas tus runs)",
+                                                      "price":  25.00,
+                                                      "tag":  "+$25.00"
+                                                  }
+                                              ],
+                        "extras":  [
+                                       {
+                                           "label":  "Optimización de Estadísticas BiS (Crafteos)",
+                                           "price":  15.00
+                                       },
+                                       {
+                                           "label":  "2 Abalorios (Trinkets) BiS de Temporada",
+                                           "price":  24.00
+                                       },
+                                       {
+                                           "label":  "Prioridad Express (Empieza en 15 min)",
+                                           "price":  15.00
+                                       }
+                                   ],
+                        "heroBadges":  [
+                                           "292 a 344 ilvl Garantizado",
+                                           "Delves T8 + M+ + Raid",
+                                           "BiS Gear Optimizado"
+                                       ],
+                        "estimates":  {
+                                          "start":  "15-30 min",
+                                          "execution":  "1-3 días (según tier)"
+                                      },
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    }
+    },
+    {
+        "id":  "powerleveling-80",
+        "game":  "retail",
+        "category":  "Powerleveling",
+        "page":  "leveling",
+        "name":  "WoW Powerleveling Personalizado (1 - 80 / 90)",
+        "description":  "Sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. Elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.",
+        "basePrice":  25.00,
+        "icon":  "fa-bolt",
+        "badge":  "Personalizable 1-90",
+        "options":  {
+                        "minLevel":  1,
+                        "maxLevel":  90,
+                        "defaultCurrentLevel":  1,
+                        "defaultDesiredLevel":  80,
+                        "heroBadges":  [
+                                           "1-80/90 en Horas",
+                                           "Piloted VPN o Self-Play",
+                                           "Gearing 292+ Opcional"
+                                       ],
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "Flexible"
+                                      },
+                        "review":  {
+                                       "stars":  5,
+                                       "author":  "Bestworld, hace 1 día",
+                                       "quote":  "\"I\u0027m buying leveling here for the third expansion in a row. They level your character from lvl 1 to 80 insanely fast and completely safe.\"",
+                                       "rating":  "5.0",
+                                       "count":  "11,232"
+                                   },
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido",
+                                                      "recommended":  true
+                                                  },
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  9.99,
+                                                      "tag":  "+$9.99"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote",
+                                                      "price":  14.99,
+                                                      "tag":  "+$14.99"
+                                                  }
+                                              ],
+                        "gearingOptions":  [
+                                               {
+                                                   "label":  "Not Required",
+                                                   "price":  0
+                                               },
+                                               {
+                                                   "label":  "Starter Gear 292+ (+$12.00)",
+                                                   "price":  12.00
+                                               },
+                                               {
+                                                   "label":  "Honor PvP Gear (+$19.00)",
+                                                   "price":  19.00
+                                               },
+                                               {
+                                                   "label":  "Full Dungeon Gear 298+ (+$29.00)",
+                                                   "price":  29.00
+                                               },
+                                               {
+                                                   "label":  "Champion Raid Ready 302+ (+$45.00)",
+                                                   "price":  45.00
+                                               }
+                                           ],
+                        "additionalOptions":  [
+                                                  {
+                                                      "label":  "Vaults of Atal\u0027Utek Heroic run",
+                                                      "price":  32.99
+                                                  },
+                                                  {
+                                                      "label":  "8/8 M+0 Dungeons (Semanal)",
+                                                      "price":  27.99
+                                                  },
+                                                  {
+                                                      "label":  "Midnight Campaign",
+                                                      "price":  23.99
+                                                  },
+                                                  {
+                                                      "label":  "The War of Light and Shadow Campaign",
+                                                      "price":  23.99
+                                                  },
+                                                  {
+                                                      "label":  "The Curse of Ula\u0027tek Campaign",
+                                                      "price":  16.99
+                                                  },
+                                                  {
+                                                      "label":  "The Promise of Tomorrow Campaign",
+                                                      "price":  16.99
+                                                  },
+                                                  {
+                                                      "label":  "Haranir Allied Race Unlock",
+                                                      "price":  14.99
+                                                  },
+                                                  {
+                                                      "label":  "All Skyriding Glyphs",
+                                                      "price":  9.99
+                                                  }
+                                              ],
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    }
+    },
+    {
+        "id":  "forever-dungeon-bundle",
+        "game":  "forever",
+        "category":  "WoW Forever Mazmorras",
+        "page":  "forever",
+        "name":  "WoW Forever Dungeons \u0026 Bundle Boost",
+        "description":  "Completa cualquier mazmorra clásica de nivel 15 al 60 o las nuevas mazmorras inéditas exclusivas de WoW Forever con nuestro equipo profesional. Obtén botín directo, experiencia de subida rápida y misiones completadas.",
+        "basePrice":  5.00,
+        "icon":  "fa-dungeon",
+        "badge":  "WoW Forever - Nuevo Lanzamiento",
+        "options":  {
+                        "rulesets":  [
+                                         {
+                                             "name":  "PvE (Reino Normal)",
+                                             "price":  0.00,
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "name":  "PvP (Reino JcJ)",
+                                             "price":  0.00
+                                         },
+                                         {
+                                             "name":  "RP (Juego de Rol)",
+                                             "price":  0.00
+                                         }
+                                     ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas en grupo)",
+                                                      "price":  0.00,
+                                                      "tag":  "Gratis",
+                                                      "recommended":  true
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote (Acceso remoto)",
+                                                      "price":  3.99,
+                                                      "priceMultiplier":  1.30,
+                                                      "tag":  "+30%"
+                                                  }
+                                              ],
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (Inicio en 15-30 min)",
+                                           "multiplier":  1.0,
+                                           "price":  0.00
+                                       },
+                                       {
+                                           "label":  "Express (Prioridad Alta - Inicio en 10 min)",
+                                           "multiplier":  1.20,
+                                           "price":  0.00,
+                                           "tag":  "+20%"
+                                       },
+                                       {
+                                           "label":  "Super Express (Inicio Inmediato VIP)",
+                                           "multiplier":  1.40,
+                                           "price":  0.00,
+                                           "tag":  "+40%"
+                                       }
+                                   ],
+                        "classicDungeons":  [
+                                                {
+                                                    "name":  "Ragefire Chasm (Sima Ígnea)",
+                                                    "level":  "13-18",
+                                                    "price":  5.00,
+                                                    "priceEU":  3.24
+                                                },
+                                                {
+                                                    "name":  "Deadmines (Minas de la Muerte)",
+                                                    "level":  "17-26",
+                                                    "price":  12.00,
+                                                    "priceEU":  8.91
+                                                },
+                                                {
+                                                    "name":  "Wailing Caverns (Cuevas de los Lamentos)",
+                                                    "level":  "17-24",
+                                                    "price":  19.00,
+                                                    "priceEU":  13.77
+                                                },
+                                                {
+                                                    "name":  "Shadowfang Keep (Castillo de Colmillo Oscuro)",
+                                                    "level":  "22-30",
+                                                    "price":  16.00,
+                                                    "priceEU":  11.34
+                                                },
+                                                {
+                                                    "name":  "Blackfathom Deeps (Cavernas de Brazanegra)",
+                                                    "level":  "24-32",
+                                                    "price":  16.00,
+                                                    "priceEU":  11.34
+                                                },
+                                                {
+                                                    "name":  "The Stockade (Las Mazmorras)",
+                                                    "level":  "24-32",
+                                                    "price":  16.00,
+                                                    "priceEU":  11.34
+                                                },
+                                                {
+                                                    "name":  "Gnomeregan",
+                                                    "level":  "29-38",
+                                                    "price":  29.00,
+                                                    "priceEU":  21.06
+                                                },
+                                                {
+                                                    "name":  "Razorfen Kraul (Horno de Furia)",
+                                                    "level":  "30-40",
+                                                    "price":  29.00,
+                                                    "priceEU":  21.06
+                                                },
+                                                {
+                                                    "name":  "Scarlet Monastery: Graveyard (Cementerio)",
+                                                    "level":  "28-38",
+                                                    "price":  30.00,
+                                                    "priceEU":  21.87
+                                                },
+                                                {
+                                                    "name":  "Scarlet Monastery: Library (Biblioteca)",
+                                                    "level":  "29-39",
+                                                    "price":  35.00,
+                                                    "priceEU":  25.11
+                                                },
+                                                {
+                                                    "name":  "Scarlet Monastery: Armory (Armería)",
+                                                    "level":  "32-42",
+                                                    "price":  25.00,
+                                                    "priceEU":  17.82
+                                                },
+                                                {
+                                                    "name":  "Scarlet Monastery: Cathedral (Catedral)",
+                                                    "level":  "35-45",
+                                                    "price":  20.00,
+                                                    "priceEU":  14.58
+                                                },
+                                                {
+                                                    "name":  "Razorfen Downs (Zahúrda Rajacueros)",
+                                                    "level":  "37-46",
+                                                    "price":  36.00,
+                                                    "priceEU":  25.92
+                                                },
+                                                {
+                                                    "name":  "Uldaman",
+                                                    "level":  "41-51",
+                                                    "price":  40.00,
+                                                    "priceEU":  28.35
+                                                },
+                                                {
+                                                    "name":  "Zul\u0027Farrak",
+                                                    "level":  "44-54",
+                                                    "price":  40.00,
+                                                    "priceEU":  28.35
+                                                },
+                                                {
+                                                    "name":  "Maraudon",
+                                                    "level":  "46-55",
+                                                    "price":  49.00,
+                                                    "priceEU":  35.64
+                                                },
+                                                {
+                                                    "name":  "Temple of Atal\u0027Hakkar (Templo Sumergido)",
+                                                    "level":  "50-60",
+                                                    "price":  49.00,
+                                                    "priceEU":  34.02
+                                                },
+                                                {
+                                                    "name":  "Blackrock Depths: Detention Block (BRD Bloque 1)",
+                                                    "level":  "52-60",
+                                                    "price":  19.00,
+                                                    "priceEU":  13.77
+                                                },
+                                                {
+                                                    "name":  "Blackrock Depths: Upper City / Emperor (BRD Emperador)",
+                                                    "level":  "55-60",
+                                                    "price":  29.00,
+                                                    "priceEU":  21.06
+                                                },
+                                                {
+                                                    "name":  "Blackrock Spire: Lower (LBRS)",
+                                                    "level":  "55-60",
+                                                    "price":  25.00,
+                                                    "priceEU":  17.82
+                                                },
+                                                {
+                                                    "name":  "Blackrock Spire: Upper (UBRS)",
+                                                    "level":  "58-60",
+                                                    "price":  25.00,
+                                                    "priceEU":  17.82
+                                                },
+                                                {
+                                                    "name":  "Dire Maul: East (La Masacre Este)",
+                                                    "level":  "55-60",
+                                                    "price":  19.00,
+                                                    "priceEU":  13.77
+                                                },
+                                                {
+                                                    "name":  "Dire Maul: West (La Masacre Oeste)",
+                                                    "level":  "57-60",
+                                                    "price":  19.00,
+                                                    "priceEU":  13.77
+                                                },
+                                                {
+                                                    "name":  "Dire Maul: North Tribute (Tributo Norte)",
+                                                    "level":  "57-60",
+                                                    "price":  19.00,
+                                                    "priceEU":  13.77
+                                                },
+                                                {
+                                                    "name":  "Scholomance",
+                                                    "level":  "58-60",
+                                                    "price":  57.00,
+                                                    "priceEU":  39.69
+                                                },
+                                                {
+                                                    "name":  "Stratholme: Live Side (Cruzada Escarlata)",
+                                                    "level":  "58-60",
+                                                    "price":  29.00,
+                                                    "priceEU":  21.06
+                                                },
+                                                {
+                                                    "name":  "Stratholme: Dead Side (Barón Osahendido)",
+                                                    "level":  "58-60",
+                                                    "price":  29.00,
+                                                    "priceEU":  21.06
+                                                }
+                                            ],
+                        "foreverExclusiveDungeons":  [
+                                                         {
+                                                             "name":  "Hall of Thanes (Sala de los Thanes)",
+                                                             "level":  "20-28",
+                                                             "price":  11.00,
+                                                             "priceEU":  7.29,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "Ruins of Lordaeron (Ruinas de Lordaeron)",
+                                                             "level":  "25-34",
+                                                             "price":  14.00,
+                                                             "priceEU":  9.72,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "Excavation Site (Sitio de Excavación)",
+                                                             "level":  "35-44",
+                                                             "price":  22.00,
+                                                             "priceEU":  15.39,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "City of Dalaran (Ciudad de Dalaran Clásica)",
+                                                             "level":  "40-48",
+                                                             "price":  29.00,
+                                                             "priceEU":  21.06,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "The Drowned City (La Ciudad Sumergida)",
+                                                             "level":  "45-52",
+                                                             "price":  34.00,
+                                                             "priceEU":  23.49,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "Krol\u0027dok Stronghold (Fortaleza Krol\u0027dok)",
+                                                             "level":  "50-56",
+                                                             "price":  39.00,
+                                                             "priceEU":  27.54,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "Alcaz Prison (Prisión de Alcaz)",
+                                                             "level":  "54-58",
+                                                             "price":  47.00,
+                                                             "priceEU":  33.21,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "Blackmaw Hold (Bastión Faucesnegras)",
+                                                             "level":  "56-60",
+                                                             "price":  54.00,
+                                                             "priceEU":  38.07,
+                                                             "tag":  "Exclusiva Forever"
+                                                         },
+                                                         {
+                                                             "name":  "The Shapers Terrace (La Terraza de los Creadores)",
+                                                             "level":  "58-60",
+                                                             "price":  57.00,
+                                                             "priceEU":  39.69,
+                                                             "tag":  "End-Game BiS"
+                                                         }
+                                                     ],
+                        "extras":  [
+                                       {
+                                           "label":  "Completar todas las misiones de la mazmorra (+XP)",
+                                           "price":  4.99
+                                       },
+                                       {
+                                           "label":  "Prioridad de Botín / Loot Reserva (Todos los drops viables)",
+                                           "price":  6.99
+                                       },
+                                       {
+                                           "label":  "Transmisión privada en vivo en Discord (1080p)",
+                                           "price":  2.50
+                                       }
+                                   ],
+                        "heroBadges":  [
+                                           "Todas las Mazmorras Clásicas \u0026 Nuevas",
+                                           "Botín BiS \u0026 Misiones de XP",
+                                           "Reglas PvE, PvP o RP"
+                                       ],
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "20-40 min por mazmorra"
+                                      },
+                        "review":  {
+                                       "stars":  5,
+                                       "author":  "SilvaSurfer, hace 1 día",
+                                       "quote":  "\"WoW Forever dungeon runs are super smooth. The boosters know every shortcut and quest location, great loot!\"",
+                                       "rating":  "5.0",
+                                       "count":  "3,480"
+                                   },
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    },
+        "foreverCategory":  "dungeons",
+        "originalPrice":  6.99,
+        "bullets":  [
+                        "35 Mazmorras (26 Clásicas + 9 Inéditas)",
+                        "Botín directo y misiones de XP",
+                        "Reinos PvE, PvP y RP soportados"
+                    ]
+    },
+    {
+        "id":  "forever-shapers-terrace",
+        "game":  "forever",
+        "category":  "WoW Forever Mazmorras",
+        "page":  "forever",
+        "name":  "The Shapers Terrace (Nueva Mazmorra Forever Lv 58-60)",
+        "description":  "La mazmorra cúspide de 5 jugadores en WoW Forever. Derrota a los guardianes titánicos en La Terraza de los Creadores (The Shapers Terrace) y asegura el mejor equipo pre-raid de nivel 60 y llaves de acceso.",
+        "basePrice":  57.00,
+        "icon":  "fa-shield-halved",
+        "badge":  "End-Game Forever - BiS Pre-Raid",
+        "options":  {
+                        "rulesets":  [
+                                         {
+                                             "name":  "PvE (Reino Normal)",
+                                             "price":  0.00,
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "name":  "PvP (Reino JcJ)",
+                                             "price":  0.00
+                                         },
+                                         {
+                                             "name":  "RP (Juego de Rol)",
+                                             "price":  0.00
+                                         }
+                                     ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas con nuestro equipo)",
+                                                      "price":  0.00,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote (Acceso remoto seguro)",
+                                                      "price":  0.00,
+                                                      "priceMultiplier":  1.30,
+                                                      "tag":  "+30%"
+                                                  }
+                                              ],
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (Inicio 15-30 min)",
+                                           "multiplier":  1.0,
+                                           "price":  0.00
+                                       },
+                                       {
+                                           "label":  "Express (Prioridad Alta)",
+                                           "multiplier":  1.20,
+                                           "price":  0.00,
+                                           "tag":  "+20%"
+                                       },
+                                       {
+                                           "label":  "Super Express (Inicio Inmediato)",
+                                           "multiplier":  1.40,
+                                           "price":  0.00,
+                                           "tag":  "+40%"
+                                       }
+                                   ],
+                        "extras":  [
+                                       {
+                                           "label":  "Loot Priority (Todos los drops viables para tu clase)",
+                                           "price":  14.00
+                                       },
+                                       {
+                                           "label":  "Completar Questline de Sintonización de Banda",
+                                           "price":  18.00
+                                       },
+                                       {
+                                           "label":  "Transmisión privada en Discord",
+                                           "price":  2.50
+                                       }
+                                   ],
+                        "heroBadges":  [
+                                           "Nivel 58-60 End-Game",
+                                           "BiS Gear Pre-Raid",
+                                           "Secretos Titánicos"
+                                       ],
+                        "estimates":  {
+                                          "start":  "15-20 min",
+                                          "execution":  "45-60 min"
+                                      },
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    },
+        "foreverCategory":  "dungeons",
+        "originalPrice":  69,
+        "bullets":  [
+                        "Nueva Mazmorra End-Game Nv 58-60",
+                        "Equipo BiS Pre-Raid garantizado",
+                        "Llaves y sintonizaciones de banda"
+                    ]
+    },
+    {
+        "id":  "forever-legacy-challenges",
+        "game":  "forever",
+        "category":  "WoW Forever Mazmorras",
+        "page":  "forever",
+        "name":  "Dungeon Legacy Challenges (Puntos de Legado Forever)",
+        "description":  "Supera las pruebas y desafíos con afijos y límites de tiempo en las mazmorras de WoW Forever. Consigue hasta 3 Puntos de Legado, cosméticos únicos, títulos honoríficos y monturas de prestigio.",
+        "basePrice":  83.99,
+        "icon":  "fa-trophy",
+        "badge":  "Desafíos de Prestigio",
+        "options":  {
+                        "challengeTiers":  [
+                                               {
+                                                   "name":  "Experienced Spelunker (1 Punto de Legado)",
+                                                   "price":  83.99,
+                                                   "tag":  "1 Punto",
+                                                   "recommended":  true
+                                               },
+                                               {
+                                                   "name":  "Silver Challenge Bundle (2 Puntos de Legado)",
+                                                   "price":  159.99,
+                                                   "tag":  "2 Puntos"
+                                               },
+                                               {
+                                                   "name":  "Gold Master Challenge (3 Puntos de Legado + Título)",
+                                                   "price":  239.99,
+                                                   "tag":  "3 Puntos BiS"
+                                               }
+                                           ],
+                        "rulesets":  [
+                                         {
+                                             "name":  "PvE (Reino Normal)",
+                                             "price":  0.00,
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "name":  "PvP (Reino JcJ)",
+                                             "price":  0.00
+                                         },
+                                         {
+                                             "name":  "RP (Juego de Rol)",
+                                             "price":  0.00
+                                         }
+                                     ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN de tu ciudad)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido",
+                                                      "recommended":  true
+                                                  },
+                                                  {
+                                                      "label":  "Self-play (Juegas con el equipo)",
+                                                      "price":  19.99,
+                                                      "tag":  "+$19.99"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote (Acceso remoto)",
+                                                      "price":  0.00,
+                                                      "priceMultiplier":  1.30,
+                                                      "tag":  "+30%"
+                                                  }
+                                              ],
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (Inicio en 15-30 min)",
+                                           "multiplier":  1.0,
+                                           "price":  0.00
+                                       },
+                                       {
+                                           "label":  "Express (Prioridad Alta)",
+                                           "multiplier":  1.20,
+                                           "price":  0.00,
+                                           "tag":  "+20%"
+                                       },
+                                       {
+                                           "label":  "Super Express (Inicio Inmediato)",
+                                           "multiplier":  1.40,
+                                           "price":  0.00,
+                                           "tag":  "+40%"
+                                       }
+                                   ],
+                        "heroBadges":  [
+                                           "Hasta 3 Puntos de Legado",
+                                           "Títulos y Cosméticos",
+                                           "100% Sin Riesgo"
+                                       ],
+                        "estimates":  {
+                                          "start":  "15-30 min",
+                                          "execution":  "1-2 Horas"
+                                      },
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    },
+        "foreverCategory":  "legacy-challenges",
+        "originalPrice":  99,
+        "bullets":  [
+                        "Hasta 3 Puntos de Legado",
+                        "Títulos y cosméticos de prestigio",
+                        "100% Sin riesgo de baneo"
+                    ]
+    },
+    {
+        "id":  "forever-leveling-mount-bundle",
+        "game":  "forever",
+        "category":  "WoW Forever Powerleveling",
+        "page":  "forever",
+        "name":  "1-60 Leveling + Montura 100% Bundle (WoW Forever)",
+        "description":  "Pack definitivo de subida 1 a 60 para WoW Forever. Sube tu personaje al nivel máximo de forma manual con habilidad de equitación al 100%, montura rápida, oro para spells y profesiones secundarias incluidas.",
+        "basePrice":  299.99,
+        "icon":  "fa-horse",
+        "badge":  "Pack Completo - 15% OFF",
+        "options":  {
+                        "rulesets":  [
+                                         {
+                                             "name":  "PvE (Reino Normal)",
+                                             "price":  0.00,
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "name":  "PvP (Reino JcJ)",
+                                             "price":  0.00
+                                         },
+                                         {
+                                             "name":  "RP (Juego de Rol)",
+                                             "price":  0.00
+                                         }
+                                     ],
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0.00,
+                                                      "tag":  "Incluido",
+                                                      "recommended":  true
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote (Acceso remoto)",
+                                                      "price":  0.00,
+                                                      "priceMultiplier":  1.30,
+                                                      "tag":  "+30%"
+                                                  }
+                                              ],
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (4-6 días)",
+                                           "multiplier":  1.0,
+                                           "price":  0.00
+                                       },
+                                       {
+                                           "label":  "Express (3-4 días)",
+                                           "multiplier":  1.20,
+                                           "price":  0.00,
+                                           "tag":  "+20%"
+                                       },
+                                       {
+                                           "label":  "Super Express (2-3 días non-stop)",
+                                           "multiplier":  1.40,
+                                           "price":  0.00,
+                                           "tag":  "+40%"
+                                       }
+                                   ],
+                        "extras":  [
+                                       {
+                                           "label":  "Montura Rápida 100% Velocidad + Riding Skill",
+                                           "price":  0.00,
+                                           "tag":  "Incluido Gratis"
+                                       },
+                                       {
+                                           "label":  "Primeros Auxilios 300",
+                                           "price":  14.99
+                                       },
+                                       {
+                                           "label":  "Cocina y Pesca 300",
+                                           "price":  24.99
+                                       },
+                                       {
+                                           "label":  "Pack 500G de Oro de inicio para habilidades",
+                                           "price":  29.99
+                                       }
+                                   ],
+                        "heroBadges":  [
+                                           "Nivel 1 al 60 Manual",
+                                           "Montura Rápida 100%",
+                                           "Listo para Raids"
+                                       ],
+                        "estimates":  {
+                                          "start":  "10-20 min",
+                                          "execution":  "3-5 Días"
+                                      },
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    },
+        "foreverCategory":  "powerleveling",
+        "originalPrice":  362.99,
+        "bullets":  [
+                        "Nivel 1 al 60 100% a mano",
+                        "Habilidad de equitación 100% + montura",
+                        "Oro para hechizos y habilidades"
+                    ]
+    },
+    {
+        "basePrice":  160.99,
+        "id":  "forever-leveling-starter",
+        "options":  {
+                        "cashbackPercent":  5,
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (2-3 días)",
+                                           "price":  0,
+                                           "multiplier":  1
+                                       },
+                                       {
+                                           "label":  "Express (24-48 horas)",
+                                           "price":  0,
+                                           "multiplier":  1.2,
+                                           "tag":  "+20%"
+                                       },
+                                       {
+                                           "label":  "Super Express (Non-stop VIP)",
+                                           "price":  0,
+                                           "multiplier":  1.4,
+                                           "tag":  "+40%"
+                                       }
+                                   ],
+                        "estimates":  {
+                                          "start":  "15-30 min",
+                                          "execution":  "2-3 Días"
+                                      },
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Incluido"
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote (Acceso remoto)",
+                                                      "price":  0,
+                                                      "tag":  "+30%",
+                                                      "priceMultiplier":  1.3
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "powerleveling",
+        "category":  "WoW Forever Powerleveling",
+        "name":  "Beta Ultimate Starter Bundle (1-30 Leveling + BiS)",
+        "description":  "Paquete de inicio rápido para WoW Forever. Sube de 1 a 30 con equipo azul BiS de subida, bolsas de 14 casillas y oro para todas las habilidades de clase.",
+        "badge":  "Pack Popular",
+        "bullets":  [
+                        "Subida de Nivel 1 al 30 a Mano",
+                        "Equipo BiS Starter + 4 Bolsas",
+                        "Oro para Hechizos y Habilidades"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-wand-magic-sparkles",
+        "originalPrice":  189.99,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  349.99,
+        "id":  "forever-leveling-hero",
+        "options":  {
+                        "cashbackPercent":  5,
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (4-5 días)",
+                                           "price":  0,
+                                           "multiplier":  1
+                                       },
+                                       {
+                                           "label":  "Express (3 días)",
+                                           "price":  0,
+                                           "multiplier":  1.2,
+                                           "tag":  "+20%"
+                                       }
+                                   ],
+                        "estimates":  {
+                                          "start":  "15-30 min",
+                                          "execution":  "3-5 Días"
+                                      },
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "powerleveling",
+        "category":  "WoW Forever Powerleveling",
+        "name":  "Hero Bundle (1-60 + Riding 100% + Profesiones + BiS Gear)",
+        "description":  "El paquete más completo de WoW Forever. Nivel 60, equitación al 100%, 2 profesiones primarias en 300 y set pre-raid para entrar directo a bandas.",
+        "badge":  "All-In-One",
+        "bullets":  [
+                        "Nivel 1 al 60 Garantizado 100% a mano",
+                        "Habilidad Riding 100% + Montura",
+                        "2 Profesiones 300 + Set Pre-Raid"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-crown",
+        "originalPrice":  420,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  210,
+        "id":  "forever-gearing-preraid",
+        "options":  {
+                        "cashbackPercent":  5,
+                        "speeds":  [
+                                       {
+                                           "label":  "Velocidad Normal (3-5 días)",
+                                           "price":  0,
+                                           "multiplier":  1
+                                       },
+                                       {
+                                           "label":  "Express (2-3 días)",
+                                           "price":  0,
+                                           "multiplier":  1.2,
+                                           "tag":  "+20%"
+                                       }
+                                   ],
+                        "estimates":  {
+                                          "start":  "1-2 horas",
+                                          "execution":  "3-5 Días"
+                                      },
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas en grupo)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN de tu país)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "gearing",
+        "category":  "WoW Forever Gearing",
+        "name":  "Full Pre-Raid BiS Gear Lv 60 (Set Completo)",
+        "description":  "Consigue el mejor equipo pre-raid de nivel 60 ranura por ranura: armadura azul/épica, armas, abalorios y anillos optimizados para tu especialización.",
+        "badge":  "Full BiS Gear",
+        "bullets":  [
+                        "Full Gear Pre-Raid Nivel 60",
+                        "Armas y Abalorios BiS de Mazmorra",
+                        "Listo para Onyxia y Molten Core"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-shield-halved",
+        "originalPrice":  259,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  120,
+        "id":  "forever-raid-onyxia",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "Horario de Raid",
+                                          "execution":  "1-2 Horas"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas tú)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN seguro)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "raids",
+        "category":  "WoW Forever Bandas",
+        "name":  "Onyxia\u0027s Lair Clear \u0026 Head of Onyxia",
+        "description":  "Derrota a Onyxia en su guarida en WoW Forever. Llévate la Cabeza de Onyxia para entregar el buff mundial a tu facción y botín Tier 2 de casco y armas.",
+        "badge":  "Banda de 40",
+        "bullets":  [
+                        "Derrota Completa a Onyxia",
+                        "Cabeza de Onyxia (Buff Mundial)",
+                        "Botín Tier 2 y Armas Épicas"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-dragon",
+        "originalPrice":  149,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  45,
+        "id":  "forever-raid-attunements",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "30-60 min",
+                                          "execution":  "3-6 Horas"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Incluido"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "raids",
+        "category":  "WoW Forever Bandas",
+        "name":  "Raid Attunement Questlines (Onyxia + Molten Core)",
+        "description":  "Completa todas las largas y complejas cadenas de misiones de acceso a bandas de WoW Forever: Amuleto de Drakkisath (Onyxia) y Sintonización con el Núcleo.",
+        "badge":  "Sintonización",
+        "bullets":  [
+                        "Acceso Garantizado a Onyxia",
+                        "Sintonización con Molten Core",
+                        "Cadenas de Misiones Completas"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-key",
+        "originalPrice":  55,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  65,
+        "id":  "forever-prof-primary",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "1-2 horas",
+                                          "execution":  "24-48 Horas"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN seguro)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "professions",
+        "category":  "WoW Forever Profesiones",
+        "name":  "Profesión Principal 1 a 300 al Máximo",
+        "description":  "Sube cualquier profesión primaria (Herrería, Minería, Herboristería, Alquimia, Sastrería, Desuello, Peletería, Ingeniería o Encantamiento) de 1 a 300.",
+        "badge":  "1-300 Rápido",
+        "bullets":  [
+                        "Nivel 1 al 300 al Máximo",
+                        "Todos los Materiales Incluidos",
+                        "Recetas de Entrenador Aprendidas"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-hammer",
+        "originalPrice":  79,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  19.99,
+        "id":  "forever-gold-pack",
+        "options":  {
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "15-30 min"
+                                      },
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "gold",
+        "category":  "WoW Forever Oro",
+        "name":  "WoW Forever Gold Packages (Entrega Rápida)",
+        "description":  "Oro limpio y seguro para WoW Forever. Entrega en 15-30 minutos por correo en el juego o intercambio cara a cara en servidores PvE, PvP o RP.",
+        "badge":  "100% Seguro",
+        "bullets":  [
+                        "Entrega Rápida en 15-30 min",
+                        "100% Farmeado a Mano Seguro",
+                        "Reinos Oficiales PvE, PvP y RP"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-coins",
+        "originalPrice":  24.99,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  85,
+        "id":  "forever-pvp-rank",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "2-4 horas",
+                                          "execution":  "1-2 Semanas"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (En grupo premade)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "pvp",
+        "category":  "WoW Forever PvP",
+        "name":  "Honor Rank Boost (Rango 1 al 14 - PvP Forever)",
+        "description":  "Sube tu rango de honor militar en WoW Forever (desde Soldado hasta Gran Mariscal / Señor de la Guerra). Farmeo de honor semanal y desbloqueo de equipo PvP.",
+        "badge":  "Honor \u0026 Rango",
+        "bullets":  [
+                        "Farmeo de Honor Semanal",
+                        "Subida de Rango Militar 1-14",
+                        "Desbloqueo de Armas \u0026 Equipo PvP"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-hand-fist",
+        "originalPrice":  99,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  75,
+        "id":  "forever-rep-classic",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "2-4 horas",
+                                          "execution":  "2-4 Días"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Incluido"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "reputations",
+        "category":  "WoW Forever Reputaciones",
+        "name":  "Reputaciones Clásicas Exaltado (Argent Dawn, Thorium...)",
+        "description":  "Alcanza la reputación Exaltado con las facciones clave de WoW Forever: Alba Argenta, Hermandad del Torio, Fauces de Madera y facciones de Classic+.",
+        "badge":  "Exaltado",
+        "bullets":  [
+                        "Reputación Exaltado Garantizada",
+                        "Patrones y Recetas Raras",
+                        "Acceso a Encantamientos Únicos"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-scroll",
+        "originalPrice":  89,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  119,
+        "id":  "forever-mount-epic",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "30-60 min",
+                                          "execution":  "12-24 Horas"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN seguro)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "mounts",
+        "category":  "WoW Forever Monturas",
+        "name":  "Montura Épica 100% Velocidad + Riding Skill Boost",
+        "description":  "Consigue tu montura épica rápida al 100% de velocidad con habilidad de equitación de nivel 60 incluida y oro de compra cubierto.",
+        "badge":  "100% Velocidad",
+        "bullets":  [
+                        "Habilidad de Equitación al 100%",
+                        "Montura Épica de Facción",
+                        "Oro para Compra Incluido"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-horse",
+        "originalPrice":  139,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  5,
+        "id":  "forever-dungeon-rfc",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "20-30 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play (Juegas en grupo)",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "RP (Juego de Rol)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "Ragefire Chasm (Sima Ígnea)",
+        "description":  "Completado rápido de Ragefire Chasm (Nivel 13-18) con todas las misiones y botín de mazmorra garantizado.",
+        "badge":  "Nv 13-18",
+        "bullets":  [
+                        "Full Clear Garantizado",
+                        "Todas las Misiones de XP",
+                        "Todo el Botín para Ti"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-fire",
+        "originalPrice":  7,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  12,
+        "id":  "forever-dungeon-deadmines",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "25-35 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "Deadmines (Minas de la Muerte)",
+        "description":  "Completado de Deadmines (Nivel 17-26). Derrota a Edwin VanCleef, misiones completadas y equipo azul garantizado.",
+        "badge":  "Nv 17-26",
+        "bullets":  [
+                        "Full Clear + VanCleef",
+                        "Misiones de Mazmorra + XP",
+                        "Botín Azul Garantizado"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-skull-crossbones",
+        "originalPrice":  15,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  19,
+        "id":  "forever-dungeon-wc",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "30-40 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "Wailing Caverns (Cuevas de los Lamentos)",
+        "description":  "Completado completo de Wailing Caverns (Nivel 17-24). Todos los jefes del Colmillo y Mutanus el Devorador.",
+        "badge":  "Nv 17-24",
+        "bullets":  [
+                        "Todos los Jefes y Mutanus",
+                        "Misiones de Set del Colmillo",
+                        "Botín Directo a tu Bolsa"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-paw",
+        "originalPrice":  22,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  16,
+        "id":  "forever-dungeon-sfk",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "25-35 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "Shadowfang Keep (Castillo de Colmillo Oscuro)",
+        "description":  "Full run en Shadowfang Keep (Nivel 22-30). Derrota a Arugal y consigue armas y armaduras azules de alto valor.",
+        "badge":  "Nv 22-30",
+        "bullets":  [
+                        "Derrota al Archmago Arugal",
+                        "Misiones y Botín Azul",
+                        "Equipo Clásico Emblemático"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-dungeon",
+        "originalPrice":  19,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  16,
+        "id":  "forever-dungeon-bfd",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "30-40 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Gratis"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "Blackfathom Deeps (Cavernas de Brazanegra)",
+        "description":  "Completado de Blackfathom Deeps (Nivel 24-32). Derrota a Aku\u0027mai y todos los líderes del Crepúsculo.",
+        "badge":  "Nv 24-32",
+        "bullets":  [
+                        "Derrota a Aku\u0027mai",
+                        "Misiones de Facción",
+                        "Botín y Experiencia Rápida"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-water",
+        "originalPrice":  20,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  11,
+        "id":  "forever-dungeon-thanes",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "25-35 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "Hall of Thanes (Nueva Mazmorra Exclusiva)",
+        "description":  "Una de las 9 nuevas mazmorras inéditas exclusivas de WoW Forever (Nivel 20-28). Explora la Sala de los Thanes y sus secretos titánicos.",
+        "badge":  "Exclusiva Forever",
+        "bullets":  [
+                        "Nueva Mazmorra Exclusiva Forever",
+                        "Nivel 20-28 • Lore Inédito",
+                        "Botín Nuevo y Armas Raras"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-shield-halved",
+        "originalPrice":  14,
+        "page":  "forever"
+    },
+    {
+        "basePrice":  29,
+        "id":  "forever-dungeon-dalaran",
+        "options":  {
+                        "estimates":  {
+                                          "start":  "10-15 min",
+                                          "execution":  "35-45 min"
+                                      },
+                        "cashbackPercent":  5,
+                        "volumeDiscount":  5,
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Self-play",
+                                                      "price":  0,
+                                                      "recommended":  true,
+                                                      "tag":  "Recomendado"
+                                                  },
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Incluido"
+                                                  }
+                                              ],
+                        "rulesets":  [
+                                         {
+                                             "price":  0,
+                                             "name":  "PvE (Reino Normal)",
+                                             "recommended":  true
+                                         },
+                                         {
+                                             "price":  0,
+                                             "name":  "PvP (Reino JcJ)"
+                                         }
+                                     ]
+                    },
+        "foreverCategory":  "dungeons",
+        "category":  "WoW Forever Mazmorras",
+        "name":  "City of Dalaran (Nueva Mazmorra Exclusiva)",
+        "description":  "Nueva mazmorra exclusiva de WoW Forever (Nivel 40-48). Adéntrate en las ruinas mágicas de la Dalaran clásica bajo asedio arcano.",
+        "badge":  "Exclusiva Forever",
+        "bullets":  [
+                        "Nueva Mazmorra Exclusiva Forever",
+                        "Nivel 40-48 • Jefes Arcanos",
+                        "Botín Pre-Endgame de Alto Nivel"
+                    ],
+        "game":  "forever",
+        "icon":  "fa-hat-wizard",
+        "originalPrice":  35,
+        "page":  "forever"
     }
-  },
-  {
-    "id": "the-venomous-abyss",
-    "game": "retail",
-    "category": "Bandas / Raids",
-    "page": "raids",
-    "name": "El Abismo Venenoso (The Venomous Abyss)",
-    "description": "Derrota a los 8 jefes del Abismo Venenoso en las Cámaras de Atal'Utek incluyendo a Ula'tek. Botín garantizado de 292 a 344 ilvl, logro Ahead of the Curve (AOTC) / Cutting Edge y recompensas BiS de temporada.",
-    "basePrice": 28.00,
-    "icon": "fa-crown",
-    "badge": "Nueva Raid Temporada 2",
-    "options": {
-      "difficulties": [
-        {"name": "Normal (8/8) - ilvl 292-302", "price": 28.00, "ilvl": "292 - 302", "track": "Campeón", "tag": "Full Clear"},
-        {"name": "Heroico (8/8 - AOTC Ula'tek) - ilvl 305-315", "price": 48.00, "ilvl": "305 - 315", "track": "Héroe", "recommended": true, "tag": "AOTC Garantizado"},
-        {"name": "Solo Ula'tek Heroico (AOTC)", "price": 19.00, "ilvl": "315", "track": "Héroe", "tag": "Jefe Final"},
-        {"name": "Mítico (Primeros 4 jefes) - ilvl 318-324", "price": 135.00, "ilvl": "318 - 324", "track": "Mito", "tag": "Mítico Progresión"},
-        {"name": "Mítico Full Clear (Cutting Edge Ula'tek) - ilvl 318-344", "price": 390.00, "ilvl": "318 - 344", "track": "Mito BiS", "tag": "Cutting Edge"}
-      ],
-      "bosses": [
-        "1. Nek'zali the Soulcoiler",
-        "2. Entombed Sentinels",
-        "3. The Lost Explorers",
-        "4. Vashnik",
-        "5. Sszorak",
-        "6. The Twin Fangs",
-        "7. The Coiled Altar",
-        "8. Ula'tek (Jefe Final)"
-      ],
-      "lootTypes": [
-        {"label": "Group Loot (Tiradas de dados normales)", "price": 0.00},
-        {"label": "Armor Priority (+2 Traders de tu tipo)", "price": 18.00},
-        {"label": "Full VIP Exclusive (Todos los drops para ti)", "price": 45.00}
-      ],
-      "completionMethods": [
-        {"label": "Self-play (Juegas con nuestra hermandad)", "price": 0.00, "tag": "Recomendado"},
-        {"label": "Piloted (VPN de tu país)", "price": 0.00, "tag": "Incluido"}
-      ],
-      "extras": [
-        {"label": "Garantía de AOTC en Primera Semana", "price": 9.99},
-        {"label": "Stream Privado en Discord en 1080p 60fps", "price": 3.00}
-      ],
-      "estimates": {
-        "start": "Horarios Diarios Flexibles",
-        "execution": "1.5 - 2.5 Horas"
-      },
-      "heroBadges": [
-        "292 a 344 ilvl",
-        "AOTC Ula'tek Garantizado",
-        "Tier Set Tokens"
-      ],
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "delves-midnight",
-    "game": "retail",
-    "category": "Míticas Plus",
-    "page": "mplus",
-    "name": "Profundidades Abundantes (Bountiful Delves Tier 8)",
-    "description": "Completa Profundidades de nivel Tier 8 para desbloquear botín 298 ilvl en cofre abundante y recompensas de 311 ilvl (Héroe) en la Gran Cámara semanal. ¡El método más rápido y solitario para equiparte!",
-    "basePrice": 8.00,
-    "icon": "fa-compass",
-    "badge": "Mejor Relación Tiempo/Botín",
-    "options": {
-      "tiers": [
-        {"level": 8, "name": "Tier 8 (Sweet Spot de Equipo)", "price": 8.00, "endIlvl": 298, "vaultIlvl": 311, "recommended": true},
-        {"level": 11, "name": "Tier 11 (Máxima Dificultad Delves)", "price": 14.00, "endIlvl": 298, "vaultIlvl": 311, "recommended": false}
-      ],
-      "runsCount": [
-        {"runs": 1, "priceMultiplier": 1, "label": "1 Run Abundante"},
-        {"runs": 4, "priceMultiplier": 3.6, "label": "4 Runs (Desbloquea 2 slots de Cámara)"},
-        {"runs": 8, "priceMultiplier": 6.8, "label": "8 Runs (3 slots de Cámara al Máximo)"}
-      ],
-      "completionMethods": [
-        {"label": "Self-play (Juegas con nuestro booster)", "price": 0.00, "tag": "Gratis"},
-        {"label": "Piloted (Con VPN segura)", "price": 0.00, "tag": "Incluido"}
-      ],
-      "extras": [
-        {"label": "Uso de Llave Restaurada (Restored Coffer Key)", "price": 0.00},
-        {"label": "Matar al Jefe Némesis (Logro & Montura)", "price": 9.99}
-      ],
-      "estimates": {
-        "start": "10-15 min",
-        "execution": "10 min por Run"
-      },
-      "heroBadges": [
-        "298 ilvl Cofre Abundante",
-        "311 ilvl Gran Cámara",
-        "Rápido & Sin Estrés"
-      ],
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "ilvl-gearing",
-    "game": "retail",
-    "category": "Equipo / ilvl",
-    "page": "gearing",
-    "name": "Paquete Completo de Equipamiento ilvl",
-    "description": "Equipa a tu personaje con el promedio de nivel de objeto deseado. Combinamos Míticas+, Delves Tier 8 y Raid Heroica para garantizar que alcances tu meta en tiempo récord.",
-    "basePrice": 35.00,
-    "icon": "fa-shield-halved",
-    "badge": "Garantía de ilvl",
-    "options": {
-      "gearingTiers": [
-        {"target": "292+ ilvl Starter / M0 Ready", "price": 35.00, "recommended": false},
-        {"target": "298+ ilvl Delves T8 Ready", "price": 65.00, "recommended": false},
-        {"target": "305+ ilvl Heroic Raid Ready", "price": 115.00, "recommended": true},
-        {"target": "311+ ilvl BiS Mythic+ Ready", "price": 195.00, "recommended": false},
-        {"target": "318+ ilvl Full BiS Endgame", "price": 320.00, "recommended": false}
-      ],
-      "completionMethods": [
-        {"label": "Piloted (VPN de tu ciudad)", "price": 0.00, "tag": "Recomendado"},
-        {"label": "Self-play (Juegas tus runs)", "price": 25.00, "tag": "+$25.00"}
-      ],
-      "extras": [
-        {"label": "Optimización de Estadísticas BiS (Crafteos)", "price": 15.00},
-        {"label": "2 Abalorios (Trinkets) BiS de Temporada", "price": 24.00},
-        {"label": "Prioridad Express (Empieza en 15 min)", "price": 15.00}
-      ],
-      "heroBadges": [
-        "292 a 344 ilvl Garantizado",
-        "Delves T8 + M+ + Raid",
-        "BiS Gear Optimizado"
-      ],
-      "estimates": {
-        "start": "15-30 min",
-        "execution": "1-3 días (según tier)"
-      },
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "powerleveling-80",
-    "game": "retail",
-    "category": "Powerleveling",
-    "page": "leveling",
-    "name": "WoW Powerleveling Personalizado (1 - 80 / 90)",
-    "description": "Sube a tu personaje desde cualquier nivel (1 al 80/90) en tiempo récord. Elige tu nivel actual y deseado con nuestra calculadora interactiva en tiempo real, métodos 100% manuales y seguros.",
-    "basePrice": 25.00,
-    "icon": "fa-bolt",
-    "badge": "Personalizable 1-90",
-    "options": {
-      "minLevel": 1,
-      "maxLevel": 90,
-      "defaultCurrentLevel": 1,
-      "defaultDesiredLevel": 80,
-      "heroBadges": [
-        "1-80/90 en Horas",
-        "Piloted VPN o Self-Play",
-        "Gearing 292+ Opcional"
-      ],
-      "estimates": {
-        "start": "10-15 min",
-        "execution": "Flexible"
-      },
-      "review": {
-        "stars": 5,
-        "author": "Bestworld, hace 1 día",
-        "quote": "\"I'm buying leveling here for the third expansion in a row. They level your character from lvl 1 to 80 insanely fast and completely safe.\"",
-        "rating": "5.0",
-        "count": "11,232"
-      },
-      "completionMethods": [
-        {"label": "Piloted (VPN)", "price": 0, "tag": "Incluido", "recommended": true},
-        {"label": "Self-play", "price": 9.99, "tag": "+$9.99"},
-        {"label": "Self-play Remote", "price": 14.99, "tag": "+$14.99"}
-      ],
-      "gearingOptions": [
-        {"label": "Not Required", "price": 0},
-        {"label": "Starter Gear 292+ (+$12.00)", "price": 12.00},
-        {"label": "Honor PvP Gear (+$19.00)", "price": 19.00},
-        {"label": "Full Dungeon Gear 298+ (+$29.00)", "price": 29.00},
-        {"label": "Champion Raid Ready 302+ (+$45.00)", "price": 45.00}
-      ],
-      "additionalOptions": [
-        {"label": "Vaults of Atal'Utek Heroic run", "price": 32.99},
-        {"label": "8/8 M+0 Dungeons (Semanal)", "price": 27.99},
-        {"label": "Midnight Campaign", "price": 23.99},
-        {"label": "The War of Light and Shadow Campaign", "price": 23.99},
-        {"label": "The Curse of Ula'tek Campaign", "price": 16.99},
-        {"label": "The Promise of Tomorrow Campaign", "price": 16.99},
-        {"label": "Haranir Allied Race Unlock", "price": 14.99},
-        {"label": "All Skyriding Glyphs", "price": 9.99}
-      ],
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "forever-dungeon-bundle",
-    "game": "forever",
-    "category": "WoW Forever Mazmorras",
-    "page": "forever",
-    "name": "WoW Forever Dungeons & Bundle Boost",
-    "description": "Completa cualquier mazmorra clásica de nivel 15 al 60 o las nuevas mazmorras inéditas exclusivas de WoW Forever con nuestro equipo profesional. Obtén botín directo, experiencia de subida rápida y misiones completadas.",
-    "basePrice": 5.00,
-    "icon": "fa-dungeon",
-    "badge": "WoW Forever - Nuevo Lanzamiento",
-    "options": {
-      "rulesets": [
-        {"name": "PvE (Reino Normal)", "price": 0.00, "recommended": true},
-        {"name": "PvP (Reino JcJ)", "price": 0.00},
-        {"name": "RP (Juego de Rol)", "price": 0.00}
-      ],
-      "completionMethods": [
-        {"label": "Self-play (Juegas en grupo)", "price": 0.00, "tag": "Gratis", "recommended": true},
-        {"label": "Piloted (VPN de tu país)", "price": 0.00, "tag": "Incluido"},
-        {"label": "Self-play Remote (Acceso remoto)", "price": 3.99, "priceMultiplier": 1.30, "tag": "+30%"}
-      ],
-      "speeds": [
-        {"label": "Velocidad Normal (Inicio en 15-30 min)", "multiplier": 1.0, "price": 0.00},
-        {"label": "Express (Prioridad Alta - Inicio en 10 min)", "multiplier": 1.20, "price": 0.00, "tag": "+20%"},
-        {"label": "Super Express (Inicio Inmediato VIP)", "multiplier": 1.40, "price": 0.00, "tag": "+40%"}
-      ],
-      "classicDungeons": [
-        {"name": "Ragefire Chasm (Sima Ígnea)", "level": "13-18", "price": 5.00, "priceEU": 3.24},
-        {"name": "Deadmines (Minas de la Muerte)", "level": "17-26", "price": 12.00, "priceEU": 8.91},
-        {"name": "Wailing Caverns (Cuevas de los Lamentos)", "level": "17-24", "price": 19.00, "priceEU": 13.77},
-        {"name": "Shadowfang Keep (Castillo de Colmillo Oscuro)", "level": "22-30", "price": 16.00, "priceEU": 11.34},
-        {"name": "Blackfathom Deeps (Cavernas de Brazanegra)", "level": "24-32", "price": 16.00, "priceEU": 11.34},
-        {"name": "The Stockade (Las Mazmorras)", "level": "24-32", "price": 16.00, "priceEU": 11.34},
-        {"name": "Gnomeregan", "level": "29-38", "price": 29.00, "priceEU": 21.06},
-        {"name": "Razorfen Kraul (Horno de Furia)", "level": "30-40", "price": 29.00, "priceEU": 21.06},
-        {"name": "Scarlet Monastery: Graveyard (Cementerio)", "level": "28-38", "price": 30.00, "priceEU": 21.87},
-        {"name": "Scarlet Monastery: Library (Biblioteca)", "level": "29-39", "price": 35.00, "priceEU": 25.11},
-        {"name": "Scarlet Monastery: Armory (Armería)", "level": "32-42", "price": 25.00, "priceEU": 17.82},
-        {"name": "Scarlet Monastery: Cathedral (Catedral)", "level": "35-45", "price": 20.00, "priceEU": 14.58},
-        {"name": "Razorfen Downs (Zahúrda Rajacueros)", "level": "37-46", "price": 36.00, "priceEU": 25.92},
-        {"name": "Uldaman", "level": "41-51", "price": 40.00, "priceEU": 28.35},
-        {"name": "Zul'Farrak", "level": "44-54", "price": 40.00, "priceEU": 28.35},
-        {"name": "Maraudon", "level": "46-55", "price": 49.00, "priceEU": 35.64},
-        {"name": "Temple of Atal'Hakkar (Templo Sumergido)", "level": "50-60", "price": 49.00, "priceEU": 34.02},
-        {"name": "Blackrock Depths: Detention Block (BRD Bloque 1)", "level": "52-60", "price": 19.00, "priceEU": 13.77},
-        {"name": "Blackrock Depths: Upper City / Emperor (BRD Emperador)", "level": "55-60", "price": 29.00, "priceEU": 21.06},
-        {"name": "Blackrock Spire: Lower (LBRS)", "level": "55-60", "price": 25.00, "priceEU": 17.82},
-        {"name": "Blackrock Spire: Upper (UBRS)", "level": "58-60", "price": 25.00, "priceEU": 17.82},
-        {"name": "Dire Maul: East (La Masacre Este)", "level": "55-60", "price": 19.00, "priceEU": 13.77},
-        {"name": "Dire Maul: West (La Masacre Oeste)", "level": "57-60", "price": 19.00, "priceEU": 13.77},
-        {"name": "Dire Maul: North Tribute (Tributo Norte)", "level": "57-60", "price": 19.00, "priceEU": 13.77},
-        {"name": "Scholomance", "level": "58-60", "price": 57.00, "priceEU": 39.69},
-        {"name": "Stratholme: Live Side (Cruzada Escarlata)", "level": "58-60", "price": 29.00, "priceEU": 21.06},
-        {"name": "Stratholme: Dead Side (Barón Osahendido)", "level": "58-60", "price": 29.00, "priceEU": 21.06}
-      ],
-      "foreverExclusiveDungeons": [
-        {"name": "Hall of Thanes (Sala de los Thanes)", "level": "20-28", "price": 11.00, "priceEU": 7.29, "tag": "Exclusiva Forever"},
-        {"name": "Ruins of Lordaeron (Ruinas de Lordaeron)", "level": "25-34", "price": 14.00, "priceEU": 9.72, "tag": "Exclusiva Forever"},
-        {"name": "Excavation Site (Sitio de Excavación)", "level": "35-44", "price": 22.00, "priceEU": 15.39, "tag": "Exclusiva Forever"},
-        {"name": "City of Dalaran (Ciudad de Dalaran Clásica)", "level": "40-48", "price": 29.00, "priceEU": 21.06, "tag": "Exclusiva Forever"},
-        {"name": "The Drowned City (La Ciudad Sumergida)", "level": "45-52", "price": 34.00, "priceEU": 23.49, "tag": "Exclusiva Forever"},
-        {"name": "Krol'dok Stronghold (Fortaleza Krol'dok)", "level": "50-56", "price": 39.00, "priceEU": 27.54, "tag": "Exclusiva Forever"},
-        {"name": "Alcaz Prison (Prisión de Alcaz)", "level": "54-58", "price": 47.00, "priceEU": 33.21, "tag": "Exclusiva Forever"},
-        {"name": "Blackmaw Hold (Bastión Faucesnegras)", "level": "56-60", "price": 54.00, "priceEU": 38.07, "tag": "Exclusiva Forever"},
-        {"name": "The Shapers Terrace (La Terraza de los Creadores)", "level": "58-60", "price": 57.00, "priceEU": 39.69, "tag": "End-Game BiS"}
-      ],
-      "extras": [
-        {"label": "Completar todas las misiones de la mazmorra (+XP)", "price": 4.99},
-        {"label": "Prioridad de Botín / Loot Reserva (Todos los drops viables)", "price": 6.99},
-        {"label": "Transmisión privada en vivo en Discord (1080p)", "price": 2.50}
-      ],
-      "heroBadges": [
-        "Todas las Mazmorras Clásicas & Nuevas",
-        "Botín BiS & Misiones de XP",
-        "Reglas PvE, PvP o RP"
-      ],
-      "estimates": {
-        "start": "10-15 min",
-        "execution": "20-40 min por mazmorra"
-      },
-      "review": {
-        "stars": 5,
-        "author": "SilvaSurfer, hace 1 día",
-        "quote": "\"WoW Forever dungeon runs are super smooth. The boosters know every shortcut and quest location, great loot!\"",
-        "rating": "5.0",
-        "count": "3,480"
-      },
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "forever-shapers-terrace",
-    "game": "forever",
-    "category": "WoW Forever Mazmorras",
-    "page": "forever",
-    "name": "The Shapers Terrace (Nueva Mazmorra Forever Lv 58-60)",
-    "description": "La mazmorra cúspide de 5 jugadores en WoW Forever. Derrota a los guardianes titánicos en La Terraza de los Creadores (The Shapers Terrace) y asegura el mejor equipo pre-raid de nivel 60 y llaves de acceso.",
-    "basePrice": 57.00,
-    "icon": "fa-shield-halved",
-    "badge": "End-Game Forever - BiS Pre-Raid",
-    "options": {
-      "rulesets": [
-        {"name": "PvE (Reino Normal)", "price": 0.00, "recommended": true},
-        {"name": "PvP (Reino JcJ)", "price": 0.00},
-        {"name": "RP (Juego de Rol)", "price": 0.00}
-      ],
-      "completionMethods": [
-        {"label": "Self-play (Juegas con nuestro equipo)", "price": 0.00, "tag": "Recomendado"},
-        {"label": "Piloted (VPN de tu país)", "price": 0.00, "tag": "Incluido"},
-        {"label": "Self-play Remote (Acceso remoto seguro)", "price": 0.00, "priceMultiplier": 1.30, "tag": "+30%"}
-      ],
-      "speeds": [
-        {"label": "Velocidad Normal (Inicio 15-30 min)", "multiplier": 1.0, "price": 0.00},
-        {"label": "Express (Prioridad Alta)", "multiplier": 1.20, "price": 0.00, "tag": "+20%"},
-        {"label": "Super Express (Inicio Inmediato)", "multiplier": 1.40, "price": 0.00, "tag": "+40%"}
-      ],
-      "extras": [
-        {"label": "Loot Priority (Todos los drops viables para tu clase)", "price": 14.00},
-        {"label": "Completar Questline de Sintonización de Banda", "price": 18.00},
-        {"label": "Transmisión privada en Discord", "price": 2.50}
-      ],
-      "heroBadges": [
-        "Nivel 58-60 End-Game",
-        "BiS Gear Pre-Raid",
-        "Secretos Titánicos"
-      ],
-      "estimates": {
-        "start": "15-20 min",
-        "execution": "45-60 min"
-      },
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "forever-legacy-challenges",
-    "game": "forever",
-    "category": "WoW Forever Mazmorras",
-    "page": "forever",
-    "name": "Dungeon Legacy Challenges (Puntos de Legado Forever)",
-    "description": "Supera las pruebas y desafíos con afijos y límites de tiempo en las mazmorras de WoW Forever. Consigue hasta 3 Puntos de Legado, cosméticos únicos, títulos honoríficos y monturas de prestigio.",
-    "basePrice": 83.99,
-    "icon": "fa-trophy",
-    "badge": "Desafíos de Prestigio",
-    "options": {
-      "challengeTiers": [
-        {"name": "Experienced Spelunker (1 Punto de Legado)", "price": 83.99, "tag": "1 Punto", "recommended": true},
-        {"name": "Silver Challenge Bundle (2 Puntos de Legado)", "price": 159.99, "tag": "2 Puntos"},
-        {"name": "Gold Master Challenge (3 Puntos de Legado + Título)", "price": 239.99, "tag": "3 Puntos BiS"}
-      ],
-      "rulesets": [
-        {"name": "PvE (Reino Normal)", "price": 0.00, "recommended": true},
-        {"name": "PvP (Reino JcJ)", "price": 0.00},
-        {"name": "RP (Juego de Rol)", "price": 0.00}
-      ],
-      "completionMethods": [
-        {"label": "Piloted (VPN de tu ciudad)", "price": 0.00, "tag": "Incluido", "recommended": true},
-        {"label": "Self-play (Juegas con el equipo)", "price": 19.99, "tag": "+$19.99"},
-        {"label": "Self-play Remote (Acceso remoto)", "price": 0.00, "priceMultiplier": 1.30, "tag": "+30%"}
-      ],
-      "speeds": [
-        {"label": "Velocidad Normal (Inicio en 15-30 min)", "multiplier": 1.0, "price": 0.00},
-        {"label": "Express (Prioridad Alta)", "multiplier": 1.20, "price": 0.00, "tag": "+20%"},
-        {"label": "Super Express (Inicio Inmediato)", "multiplier": 1.40, "price": 0.00, "tag": "+40%"}
-      ],
-      "heroBadges": [
-        "Hasta 3 Puntos de Legado",
-        "Títulos y Cosméticos",
-        "100% Sin Riesgo"
-      ],
-      "estimates": {
-        "start": "15-30 min",
-        "execution": "1-2 Horas"
-      },
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  },
-  {
-    "id": "forever-leveling-mount-bundle",
-    "game": "forever",
-    "category": "WoW Forever Powerleveling",
-    "page": "forever",
-    "name": "1-60 Leveling + Montura 100% Bundle (WoW Forever)",
-    "description": "Pack definitivo de subida 1 a 60 para WoW Forever. Sube tu personaje al nivel máximo de forma manual con habilidad de equitación al 100%, montura rápida, oro para spells y profesiones secundarias incluidas.",
-    "basePrice": 299.99,
-    "icon": "fa-horse",
-    "badge": "Pack Completo - 15% OFF",
-    "options": {
-      "rulesets": [
-        {"name": "PvE (Reino Normal)", "price": 0.00, "recommended": true},
-        {"name": "PvP (Reino JcJ)", "price": 0.00},
-        {"name": "RP (Juego de Rol)", "price": 0.00}
-      ],
-      "completionMethods": [
-        {"label": "Piloted (VPN de tu país)", "price": 0.00, "tag": "Incluido", "recommended": true},
-        {"label": "Self-play Remote (Acceso remoto)", "price": 0.00, "priceMultiplier": 1.30, "tag": "+30%"}
-      ],
-      "speeds": [
-        {"label": "Velocidad Normal (4-6 días)", "multiplier": 1.0, "price": 0.00},
-        {"label": "Express (3-4 días)", "multiplier": 1.20, "price": 0.00, "tag": "+20%"},
-        {"label": "Super Express (2-3 días non-stop)", "multiplier": 1.40, "price": 0.00, "tag": "+40%"}
-      ],
-      "extras": [
-        {"label": "Montura Rápida 100% Velocidad + Riding Skill", "price": 0.00, "tag": "Incluido Gratis"},
-        {"label": "Primeros Auxilios 300", "price": 14.99},
-        {"label": "Cocina y Pesca 300", "price": 24.99},
-        {"label": "Pack 500G de Oro de inicio para habilidades", "price": 29.99}
-      ],
-      "heroBadges": [
-        "Nivel 1 al 60 Manual",
-        "Montura Rápida 100%",
-        "Listo para Raids"
-      ],
-      "estimates": {
-        "start": "10-20 min",
-        "execution": "3-5 Días"
-      },
-      "volumeDiscount": 5,
-      "cashbackPercent": 5
-    }
-  }
 ]

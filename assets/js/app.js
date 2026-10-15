@@ -196,11 +196,11 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '2.9.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.0.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
-          if (!parsed.find(s => s.id === 'the-venomous-abyss') || !parsed.find(s => s.id === 'delves-midnight') || !parsed.find(s => s.id === 'forever-dungeon-bundle')) {
+          if (!parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
             shouldReload = true;
           }
         } catch (e) {
@@ -213,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '2.9.0');
+        localStorage.setItem('mp_catalog_v', '3.0.0');
         this.saveServices();
       }
     } catch (e) {
@@ -361,6 +361,187 @@ class MythicApp {
   static get OWNER_DISCORD_ID() { return '443948776562884620'; }
   static get SESSION_VERSION() { return '3'; }
   static get ORDERS_VERSION() { return '3.0.0'; }
+
+  static get FOREVER_CATEGORIES() {
+    return {
+      all: {
+        name: 'Todos los Productos',
+        title: 'Catálogo Completo WoW Forever',
+        titleEn: 'WoW Forever Complete Catalog',
+        titlePt: 'Catálogo Completo WoW Forever',
+        crumb: 'Todos los Productos',
+        crumbEn: 'All Products',
+        crumbPt: 'Todos os Produtos',
+        badge: 'Catálogo Completo Evergreen',
+        badgeEn: 'Full Evergreen Catalog',
+        badgePt: 'Catálogo Completo Evergreen',
+        desc: 'Explora todos los boosts, mazmorras exclusivas, servicios de oro, nivel y bandas disponibles para WoW Forever.',
+        descEn: 'Explore all boosts, exclusive dungeons, gold, leveling and raid services available for WoW Forever.',
+        descPt: 'Explore todos os boosts, masmorras exclusivas, serviços de ouro, nível e raides disponíveis para o WoW Forever.',
+        icon: 'fa-layer-group'
+      },
+      gold: {
+        name: 'Gold (Oro)',
+        title: 'Oro WoW Forever (Farmed 100% a Mano)',
+        titleEn: 'WoW Forever Gold (100% Hand-Farmed)',
+        titlePt: 'Ouro WoW Forever (100% Manual)',
+        crumb: 'Gold',
+        crumbEn: 'Gold',
+        crumbPt: 'Ouro',
+        badge: 'Entrega Inmediata • F2F / Correo / AH',
+        badgeEn: 'Instant Delivery • F2F / Mail / AH',
+        badgePt: 'Entrega Imediata • F2F / Correio / AH',
+        desc: 'Oro farmado legítimamente sin bots para comprar monturas épicas, consumibles de raid, equipo crafteado y profesiones.',
+        descEn: 'Legitimately hand-farmed gold with zero bots to buy epic mounts, raid consumables, crafted gear, and professions.',
+        descPt: 'Ouro farmado legitimamente sem bots para comprar montarias épicas, consumíveis de raide, equipamentos e profissões.',
+        icon: 'fa-coins'
+      },
+      powerleveling: {
+        name: 'Powerleveling 1-60',
+        title: 'WoW Forever Powerleveling 1-60',
+        titleEn: 'WoW Forever 1-60 Powerleveling',
+        titlePt: 'WoW Forever Powerleveling 1-60',
+        crumb: 'Powerleveling',
+        crumbEn: 'Powerleveling',
+        crumbPt: 'Powerleveling',
+        badge: '100% Hecho a Mano • Self-play / Piloted',
+        badgeEn: '100% Hand-played • Self-play / Piloted',
+        badgePt: '100% Manual • Self-play / Piloted',
+        desc: 'Llega al nivel 60 a velocidad récord con boosters profesionales. Incluye paquetes con montura rápida 100%, oro y profesiones.',
+        descEn: 'Reach level 60 at record speed with professional boosters. Bundles include 100% epic mount, gold, and secondary professions.',
+        descPt: 'Chegue ao nível 60 com velocidade recorde. Pacotes incluem montaria 100%, ouro e profissões secundárias.',
+        icon: 'fa-bolt'
+      },
+      professions: {
+        name: 'Professions (Profesiones)',
+        title: 'Profesiones 1-300 WoW Forever',
+        titleEn: 'WoW Forever Professions 1-300',
+        titlePt: 'Profissões 1-300 WoW Forever',
+        crumb: 'Professions',
+        crumbEn: 'Professions',
+        crumbPt: 'Profissões',
+        badge: 'Primarias & Secundarias al Máximo',
+        badgeEn: 'Primary & Secondary Maxed Out',
+        badgePt: 'Primárias & Secundárias no Máximo',
+        desc: 'Sube Herrería, Ingeniería, Alquimia, Sastrería, Desuello o Primeros Auxilios de 1 a 300 con todos los materiales incluidos.',
+        descEn: 'Level Blacksmithing, Engineering, Alchemy, Tailoring, Skinning or First Aid 1-300 with all materials included.',
+        descPt: 'Suba Ferraria, Engenharia, Alquimia, Alfaiataria ou Primeiros Socorros de 1 a 300 com todos os materiais inclusos.',
+        icon: 'fa-hammer'
+      },
+      dungeons: {
+        name: 'Dungeons (Mazmorras)',
+        title: 'WoW Forever Dungeons Boost',
+        titleEn: 'WoW Forever Dungeons Boost',
+        titlePt: 'WoW Forever Boost de Masmorras',
+        crumb: 'Dungeons',
+        crumbEn: 'Dungeons',
+        crumbPt: 'Masmorras',
+        badge: '35 Mazmorras (9 Inéditas Forever)',
+        badgeEn: '35 Dungeons (9 Forever Exclusives)',
+        badgePt: '35 Masmorras (9 Inéditas Forever)',
+        desc: 'Completa cualquier mazmorra clásica de nivel 15 al 60 o las 9 nuevas mazmorras inéditas exclusivas de WoW Forever con nuestro equipo profesional. Obtén botín directo, experiencia de subida rápida y misiones completadas.',
+        descEn: 'Clear any classic 15-60 dungeon or the 9 brand new exclusive Forever dungeons with our pro team. Guaranteed direct loot, fast XP, and completed dungeon quests.',
+        descPt: 'Complete qualquer masmorra clássica de nível 15 ao 60 ou as 9 novas masmorras exclusivas do WoW Forever com nossa equipe profissional.',
+        icon: 'fa-dungeon'
+      },
+      raids: {
+        name: 'Raids (Bandas & Sintonizaciones)',
+        title: 'WoW Forever Raids & Sintonizaciones',
+        titleEn: 'WoW Forever Raids & Attunements',
+        titlePt: 'WoW Forever Raides & Harmonizações',
+        crumb: 'Raids',
+        crumbEn: 'Raids',
+        crumbPt: 'Raides',
+        badge: 'Onyxia, Molten Core & Attunements',
+        badgeEn: 'Onyxia, Molten Core & Attunements',
+        badgePt: 'Onyxia, Molten Core & Harmonizações',
+        desc: 'Derrota jefes legendarios como Onyxia y Ragnaros, y completa las cadenas de misiones de sintonización necesarias para acceder a las bandas.',
+        descEn: 'Defeat iconic raid bosses like Onyxia and Ragnaros, and complete all required attunement quest chains to access raid instances.',
+        descPt: 'Derrote chefes lendários como Onyxia e Ragnaros, e complete as cadeias de missões de harmonização para entrar nas raides.',
+        icon: 'fa-dragon'
+      },
+      gearing: {
+        name: 'Gearing (Equipo BiS)',
+        title: 'Equipamiento & Pre-Raid BiS',
+        titleEn: 'Pre-Raid BiS Gearing Boost',
+        titlePt: 'Equipamento & Pre-Raid BiS',
+        crumb: 'Gearing',
+        crumbEn: 'Gearing',
+        crumbPt: 'Equipamento',
+        badge: 'Full Pre-Raid BiS Blue & Epic Gear',
+        badgeEn: 'Full Pre-Raid BiS Blue & Epic Gear',
+        badgePt: 'Equipamento Completo Pre-Raid BiS',
+        desc: 'Equipa a tu personaje con el mejor equipo Pre-Raid de mazmorras (incluyendo The Shapers Terrace) para entrar preparado a Molten Core.',
+        descEn: 'Equip your character with full Pre-Raid dungeon gear (including The Shapers Terrace) to dominate Molten Core from day one.',
+        descPt: 'Equipe seu personagem com os melhores itens Pre-Raid de masmorras para entrar preparado no Núcleo Derretido.',
+        icon: 'fa-shield-halved'
+      },
+      legacy: {
+        name: 'Legacy Challenges',
+        title: 'Desafíos de Legado WoW Forever',
+        titleEn: 'WoW Forever Legacy Challenges',
+        titlePt: 'Desafios de Legado WoW Forever',
+        crumb: 'Legacy Challenges',
+        crumbEn: 'Legacy Challenges',
+        crumbPt: 'Desafios de Legado',
+        badge: 'Retos Míticos & Puntos de Legado',
+        badgeEn: 'Mythic Challenges & Legacy Points',
+        badgePt: 'Desafios Míticos & Pontos de Legado',
+        desc: 'Completa desafíos de mazmorra contrarreloj con afijos semanales exclusivos, escala en el ranking y obtén hasta 3 Puntos de Legado y títulos de prestigio.',
+        descEn: 'Conquer timed dungeon challenges with exclusive weekly affixes, climb seasonal leaderboards, and earn up to 3 Legacy Points and prestige titles.',
+        descPt: 'Complete desafios contra o tempo com afixos semanais exclusivos, suba no placar e ganhe até 3 Pontos de Legado e títulos exclusivos.',
+        icon: 'fa-trophy'
+      },
+      pvp: {
+        name: 'PvP & Rangos de Honor',
+        title: 'PvP Boost & Rangos de Honor 1-14',
+        titleEn: 'PvP Boost & Honor Ranks 1-14',
+        titlePt: 'PvP Boost & Patentes de Honra 1-14',
+        crumb: 'PvP',
+        crumbEn: 'PvP',
+        crumbPt: 'PvP',
+        badge: 'Rango 1 a 14 • Sets de Honor y Gran Mariscal',
+        badgeEn: 'Rank 1 to 14 • Honor & High Warlord Sets',
+        badgePt: 'Patente 1 a 14 • Sets de Honra e Grão-Marechal',
+        desc: 'Consigue puntos de honor masivos y asciende en el sistema de rangos militares clásicos para desbloquear armaduras y armas PvP de élite.',
+        descEn: 'Farm massive honor points and climb classic military ranks to unlock high-tier PvP weapons and armor sets.',
+        descPt: 'Consiga pontos de honra e suba nas patentes militares clássicas para desbloquear armas e armaduras de PvP.',
+        icon: 'fa-hand-fist'
+      },
+      reputations: {
+        name: 'Reputaciones Clásicas',
+        title: 'Reputaciones Clásicas Vanilla',
+        titleEn: 'Classic Vanilla Reputations',
+        titlePt: 'Reputações Clássicas Vanilla',
+        crumb: 'Reputations',
+        crumbEn: 'Reputations',
+        crumbPt: 'Reputações',
+        badge: 'Exaltado con Facciones Vanilla',
+        badgeEn: 'Exalted with Vanilla Factions',
+        badgePt: 'Exaltado com Facções Vanilla',
+        desc: 'Alcanza Exaltado con Hidraxianos, Alba Argenta, Hermandad del Torio o las capitales de facción para recetas y monturas.',
+        descEn: 'Reach Exalted with Hydraxian Waterlords, Argent Dawn, Thorium Brotherhood, or faction capitals for rare recipes and mounts.',
+        descPt: 'Atinja Exaltado com Hidraxianos, Aurora Argêntea, Irmandade do Tório ou capitais de facção para receitas e montarias.',
+        icon: 'fa-scroll'
+      },
+      mounts: {
+        name: 'Mounts (Monturas)',
+        title: 'Monturas Épicas 100% de Velocidad',
+        titleEn: '100% Speed Epic Mounts',
+        titlePt: 'Montarias Épicas 100% de Velocidade',
+        crumb: 'Mounts',
+        crumbEn: 'Mounts',
+        crumbPt: 'Montarias',
+        badge: 'Riding Skill 100% + Montura Épica',
+        badgeEn: '100% Riding Skill + Epic Mount',
+        badgePt: 'Habilidade de Montaria 100% + Montaria',
+        desc: 'Consigue la velocidad máxima en tierra con el entrenamiento de equitación al 100% y tu montura racial comprada y lista para montar.',
+        descEn: 'Unlock maximum ground mobility across Azeroth with 100% riding training and your racial epic mount delivered into your bags.',
+        descPt: 'Consiga velocidade máxima em terra com treinamento de equitação 100% e sua montaria racial pronta para cavalgar.',
+        icon: 'fa-horse'
+      }
+    };
+  }
 
   isVerifiedOwner(user = this.currentUser) {
     if (!user) return false;
@@ -3107,6 +3288,26 @@ class MythicApp {
 
     // Automatically set realm filter pill to "Forever" on product page
     this.setRealmVersionFilter('Forever');
+
+    // Pre-select dungeon if specified in URL query
+    try {
+      const urlDungeon = new URLSearchParams(window.location.search).get('dungeon');
+      if (urlDungeon) {
+        const dSelect = document.getElementById('sp-forever-dungeon-select');
+        if (dSelect) {
+          for (let i = 0; i < dSelect.options.length; i++) {
+            const opt = dSelect.options[i];
+            if (opt.value.toLowerCase() === urlDungeon.toLowerCase() || opt.text.toLowerCase().includes(urlDungeon.toLowerCase())) {
+              dSelect.selectedIndex = i;
+              this.onForeverDungeonSelect(opt.value);
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error pre-selecting dungeon:', e);
+    }
   }
 
   onForeverDungeonSelect(val) {
@@ -3454,13 +3655,115 @@ class MythicApp {
 
   initForeverPage() {
     this.activeGameFilter = 'forever';
-    const container = document.getElementById('forever-services-grid') || document.getElementById('category-services-grid') || document.getElementById('services-grid');
-    if (container) {
-      const filtered = this.services.filter(s => s.game === 'forever' || s.id.startsWith('forever-'));
-      container.innerHTML = filtered.map(svc => this.buildServiceCardHtml(svc)).join('');
-    }
+    const params = new URLSearchParams(window.location.search);
+    const initialCat = params.get('cat') || 'dungeons';
+    this.filterForeverCategory(initialCat);
     this.updateCartCounter();
     this.checkBoosterUpsellReferral();
+  }
+
+  filterForeverCategory(rawCatKey = 'dungeons') {
+    let catKey = (rawCatKey || 'dungeons').toLowerCase();
+    if (catKey === 'legacy-challenges') catKey = 'legacy';
+
+    const validCats = [
+      'all', 'gold', 'powerleveling', 'professions', 'dungeons',
+      'raids', 'gearing', 'legacy', 'pvp', 'reputations', 'mounts'
+    ];
+    if (!validCats.includes(catKey)) catKey = 'all';
+
+    // Update URL query parameter without page reload
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('cat', catKey);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+
+    // Update active visual state on sidebar buttons and quick-access pills
+    const allButtons = document.querySelectorAll('.forever-sidebar-cat-btn, [data-forever-cat]');
+    allButtons.forEach(btn => {
+      const targetCat = (btn.getAttribute('data-cat') || btn.getAttribute('data-forever-cat') || '').toLowerCase();
+      const isTarget = (targetCat === catKey) || (catKey === 'legacy' && (targetCat === 'legacy-challenges' || targetCat === 'legacy'));
+
+      if (isTarget) {
+        btn.classList.add('active', 'bg-gradient-to-r', 'from-amber-500/20', 'to-transparent', 'text-amber-300', 'border-amber-500/40', 'shadow-sm', 'font-bold');
+        btn.classList.remove('text-stone-300', 'text-stone-400', 'border-transparent', 'hover:text-white', 'hover:bg-[#20160f]');
+        const iconChevron = btn.querySelector('.fa-chevron-right');
+        if (iconChevron) {
+          iconChevron.classList.remove('text-stone-600');
+          iconChevron.classList.add('text-amber-400');
+        }
+      } else {
+        btn.classList.remove('active', 'bg-gradient-to-r', 'from-amber-500/20', 'to-transparent', 'text-amber-300', 'border-amber-500/40', 'shadow-sm', 'font-bold');
+        btn.classList.add('text-stone-300', 'border-transparent', 'hover:text-white', 'hover:bg-[#20160f]');
+        const iconChevron = btn.querySelector('.fa-chevron-right');
+        if (iconChevron) {
+          iconChevron.classList.remove('text-amber-400');
+          iconChevron.classList.add('text-stone-600');
+        }
+      }
+    });
+
+    // Update Banner and Breadcrumb metadata
+    const catData = MythicApp.FOREVER_CATEGORIES[catKey] || MythicApp.FOREVER_CATEGORIES.all;
+    const isEn = this.currentLang === 'en';
+    const isPt = this.currentLang === 'pt';
+
+    const crumbEl = document.getElementById('forever-crumb-current');
+    const badgeEl = document.getElementById('forever-cat-badge');
+    const titleEl = document.getElementById('forever-cat-title');
+    const descEl = document.getElementById('forever-cat-desc');
+
+    if (crumbEl) {
+      crumbEl.removeAttribute('data-i18n-orig');
+      crumbEl.textContent = (isEn && catData.crumbEn) || (isPt && catData.crumbPt) || catData.crumb || catData.name;
+    }
+    if (badgeEl) {
+      badgeEl.removeAttribute('data-i18n-orig');
+      badgeEl.textContent = (isEn && catData.badgeEn) || (isPt && catData.badgePt) || catData.badge;
+    }
+    if (titleEl) {
+      titleEl.removeAttribute('data-i18n-orig');
+      titleEl.textContent = (isEn && catData.titleEn) || (isPt && catData.titlePt) || catData.title || catData.name;
+    }
+    if (descEl) {
+      descEl.removeAttribute('data-i18n-orig');
+      descEl.textContent = (isEn && catData.descEn) || (isPt && catData.descPt) || catData.desc;
+    }
+
+    // Toggle 35 Dungeons Showcase Wrapper (visible for dungeons or all)
+    const tableWrapper = document.getElementById('forever-dungeons-table-wrapper');
+    if (tableWrapper) {
+      tableWrapper.style.display = (catKey === 'dungeons' || catKey === 'all') ? 'block' : 'none';
+    }
+
+    // Filter services and render to grid
+    const container = document.getElementById('forever-services-grid') || document.getElementById('services-grid');
+    if (container) {
+      const foreverServices = (this.services || []).filter(s => s.game === 'forever' || s.id.startsWith('forever-'));
+      let filtered = [];
+
+      if (catKey === 'all') {
+        filtered = foreverServices;
+      } else if (catKey === 'legacy') {
+        filtered = foreverServices.filter(s => s.foreverCategory === 'legacy' || s.id.includes('legacy') || (s.category && s.category.toLowerCase().includes('legado')));
+      } else {
+        filtered = foreverServices.filter(s => s.foreverCategory === catKey || (s.category && s.category.toLowerCase().includes(catKey)));
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-16 text-center text-stone-400 glass-panel rounded-2xl border border-stone-800">
+            <i class="fa-solid ${catData.icon || 'fa-box-open'} text-4xl text-amber-500/40 mb-3 block"></i>
+            <h4 class="text-white font-bold text-base mb-1 font-cinzel">Próximamente más servicios de ${catData.name}</h4>
+            <p class="text-xs text-stone-400 max-w-md mx-auto">Estamos preparando boosts personalizados para esta categoría. ¡Contáctanos por Discord o el chat para un pedido a medida!</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = filtered.map(svc => this.buildServiceCardHtml(svc)).join('');
+      }
+    }
+
     if (this.currentLang && this.currentLang !== 'es') {
       this.applyTranslations();
     }
@@ -3537,6 +3840,101 @@ class MythicApp {
 
   buildServiceCardHtml(svc) {
     const isBoosterSession = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
+    const isForever = svc.game === 'forever' || svc.id.startsWith('forever-');
+
+    if (isForever) {
+      // SkyCoach-style card layout
+      const bullets = (svc.bullets && Array.isArray(svc.bullets) && svc.bullets.length > 0)
+        ? svc.bullets
+        : [
+            '100% Hecho a mano garantizado y seguro con VPN',
+            'Opciones Self-play o Piloted disponibles',
+            'Todo el botín directo y oro para tu personaje'
+          ];
+
+      const discountPercent = (svc.originalPrice && svc.originalPrice > svc.basePrice)
+        ? Math.round((1 - (svc.basePrice / svc.originalPrice)) * 100)
+        : null;
+
+      const productUrl = svc.targetDungeon
+        ? `product?id=${svc.targetProduct || 'forever-dungeon-bundle'}&dungeon=${encodeURIComponent(svc.targetDungeon)}`
+        : `product?id=${svc.id}`;
+
+      return `
+        <div class="glass-panel rounded-2xl p-5 border border-stone-800/90 hover:border-amber-500/60 hover:shadow-[0_10px_30px_rgba(245,158,11,0.14)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden bg-gradient-to-b from-[#1a120c] to-[#110c08]">
+          <!-- Top Row: Badge & Discount/Category -->
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-fire text-amber-400 text-[9px]"></i>
+                <span class="line-clamp-1">${svc.badge || 'POPULAR'}</span>
+              </span>
+              ${discountPercent ? `
+                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono-gaming shadow-sm">
+                  -${discountPercent}% OFF
+                </span>
+              ` : `
+                <span class="text-[10px] font-semibold text-stone-400 bg-stone-900/80 px-2 py-0.5 rounded border border-stone-800/80">
+                  ${svc.category || 'WoW Forever'}
+                </span>
+              `}
+            </div>
+
+            <!-- Glowing Icon (SkyCoach style) -->
+            <div class="my-3 flex items-center justify-center">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-500/20 via-[#26170d] to-[#180f08] border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:scale-105 group-hover:border-amber-400/60 group-hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] transition-all duration-300">
+                <i class="fa-solid ${svc.icon || 'fa-dungeon'}"></i>
+              </div>
+            </div>
+
+            <!-- Title -->
+            <div class="text-center my-2 min-h-[2.8rem] flex items-center justify-center">
+              <h3 class="text-base font-bold text-white group-hover:text-[#fcefc2] transition-colors font-cinzel leading-snug line-clamp-2 product-card-title">
+                ${svc.name}
+              </h3>
+            </div>
+
+            <!-- 3 Bullet points / Features (SkyCoach format) -->
+            <ul class="space-y-1.5 my-3 text-[11px] text-stone-300/90 border-t border-b border-stone-800/80 py-2.5">
+              ${bullets.slice(0, 3).map(b => `
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-circle-check text-amber-400 text-[10px] shrink-0"></i>
+                  <span class="line-clamp-1">${b}</span>
+                </li>
+              `).join('')}
+            </ul>
+
+            ${isBoosterSession ? `
+              <div class="mb-3 p-2 rounded-xl bg-[#251b14] border border-amber-500/30 text-[11px] text-[#fcefc2] flex items-center justify-between">
+                <span><i class="fa-solid fa-gem text-amber-400 mr-1"></i>Booster (50%):</span>
+                <button onclick="app.copyBoosterUpsellLink('${svc.id}')" class="px-2 py-0.5 rounded bg-[#17120e] text-[10px] font-bold text-amber-400 hover:text-white border border-amber-500/30">
+                  Copiar Enlace
+                </button>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Bottom: Price & Config Button -->
+          <div class="pt-3 border-t border-stone-800/70 flex items-center justify-between mt-auto">
+            <div>
+              <span class="text-[9px] text-stone-400 uppercase font-bold tracking-wider block">Desde</span>
+              <div class="flex items-baseline gap-1.5">
+                ${(svc.originalPrice && svc.originalPrice > svc.basePrice) ? `
+                  <span class="text-xs text-stone-400 line-through font-mono-gaming">$${svc.originalPrice.toFixed(2)}</span>
+                ` : ''}
+                <span class="text-xl sm:text-2xl font-bold font-mono-gaming text-amber-400">$${svc.basePrice.toFixed(2)}</span>
+              </div>
+            </div>
+            <a href="${productUrl}" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all font-cinzel">
+              <span>Configurar</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Default Retail card layout
     return `
       <div class="glass-panel rounded-2xl p-6 transition-all duration-300 hover:border-[#ee914f]/60 hover:-translate-y-1 group flex flex-col justify-between">
         <div>
@@ -11216,7 +11614,31 @@ class MythicApp {
       '© 2026 mythic progression. todos los derechos reservados.': {
         en: '© 2026 Mythic Progression. All rights reserved.',
         pt: '© 2026 Mythic Progression. Todos os direitos reservados.'
-      }
+      },
+
+      // Forever Sidebar & Categories
+      'todos los productos': { en: 'All Products', pt: 'Todos os Produtos' },
+      'gold (oro)': { en: 'Gold', pt: 'Ouro' },
+      'oro wow forever': { en: 'WoW Forever Gold', pt: 'Ouro WoW Forever' },
+      'professions': { en: 'Professions', pt: 'Profissões' },
+      'professions (profesiones)': { en: 'Professions', pt: 'Profissões' },
+      'dungeons (mazmorras)': { en: 'Dungeons', pt: 'Masmorras' },
+      'raids (bandas)': { en: 'Raids', pt: 'Raides' },
+      'raids (bandas & sintonizaciones)': { en: 'Raids & Attunements', pt: 'Raides & Harmonizações' },
+      'gearing (equipo bis)': { en: 'Gearing (BiS Gear)', pt: 'Equipamento (Gear BiS)' },
+      'legacy challenges': { en: 'Legacy Challenges', pt: 'Desafios de Legado' },
+      'pvp & rangos': { en: 'PvP & Ranks', pt: 'PvP & Patentes' },
+      'pvp & rangos de honor': { en: 'PvP & Honor Ranks', pt: 'PvP & Patentes de Honra' },
+      'reputations': { en: 'Reputations', pt: 'Reputações' },
+      'mounts (monturas)': { en: 'Mounts', pt: 'Montarias' },
+      'catálogo oficial': { en: 'Official Catalog', pt: 'Catálogo Oficial' },
+      'catalogo oficial': { en: 'Official Catalog', pt: 'Catálogo Oficial' },
+      '35 mazmorras disponibles en wow forever': { en: '35 Dungeons Available in WoW Forever', pt: '35 Masmorras Disponíveis no WoW Forever' },
+      'configurar en el bundle': { en: 'Configure in Bundle', pt: 'Configurar no Pacote' },
+      '9 mazmorras exclusivas e inéditas': { en: '9 Exclusive & Brand New Dungeons', pt: '9 Masmorras Exclusivas e Inéditas' },
+      '9 mazmorras exclusivas e ineditas': { en: '9 Exclusive & Brand New Dungeons', pt: '9 Masmorras Exclusivas e Inéditas' },
+      '26 mazmorras clásicas adaptadas': { en: '26 Classic Adapted Dungeons', pt: '26 Masmorras Clássicas Adaptadas' },
+      '26 mazmorras clasicas adaptadas': { en: '26 Classic Adapted Dungeons', pt: '26 Masmorras Clássicas Adaptadas' }
     };
 
     const isProtected = (el) => {

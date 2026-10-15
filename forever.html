@@ -100,184 +100,318 @@
   <section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-6 relative z-20">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       
-      <a href="product?id=forever-dungeon-bundle" class="glass-panel p-5 rounded-2xl border border-amber-500/40 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+      <div onclick="app.filterForeverCategory('dungeons'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-amber-500/40 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-dungeon"></i>
         </div>
         <div class="text-sm font-bold text-[#fcefc2] font-cinzel">35 Mazmorras</div>
         <div class="text-xs text-amber-300/80 mt-1">Desde $5.00 • Clásicas & Nuevas</div>
-      </a>
+      </div>
 
-      <a href="product?id=forever-shapers-terrace" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+      <div onclick="app.filterForeverCategory('gearing'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-300 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div class="text-sm font-bold text-[#fcefc2] font-cinzel">The Shapers Terrace</div>
         <div class="text-xs text-stone-400 mt-1">Nv 58-60 BiS Pre-Raid ($57)</div>
-      </a>
+      </div>
 
-      <a href="product?id=forever-legacy-challenges" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+      <div onclick="app.filterForeverCategory('legacy-challenges'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-trophy"></i>
         </div>
         <div class="text-sm font-bold text-[#fcefc2] font-cinzel">Desafíos de Legado</div>
         <div class="text-xs text-stone-400 mt-1">Puntos de Legado & Títulos ($83.99)</div>
-      </a>
+      </div>
 
-      <a href="product?id=forever-leveling-mount-bundle" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40">
+      <div onclick="app.filterForeverCategory('powerleveling'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-300 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-horse"></i>
         </div>
         <div class="text-sm font-bold text-[#fcefc2] font-cinzel">Leveling 1-60</div>
         <div class="text-xs text-stone-400 mt-1">Montura 100% Incluida ($299.99)</div>
-      </a>
+      </div>
 
     </div>
   </section>
 
-  <!-- FOREVER CATALOG SECTION -->
-  <main class="max-w-7xl w-full mx-auto p-4 lg:p-8 flex-1 mt-6">
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-      <div>
-        <h2 class="font-cinzel text-2xl font-black text-[#fcefc2]">PRODUCTOS DE WOW FOREVER</h2>
-        <p class="text-xs text-stone-400">Selecciona el paquete que deseas configurar según tu servidor, modo de juego y velocidad.</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-amber-400 font-semibold bg-[#261d15] px-3.5 py-1.5 rounded-full border border-amber-500/30">
-          Servidores Oficiales Forever
-        </span>
-      </div>
+  <!-- FOREVER CATALOG SECTION WITH SKYCOACH-STYLE SIDEBAR -->
+  <main id="forever-catalog-section" class="max-w-7xl w-full mx-auto px-4 lg:px-8 py-8 flex-1 mt-4">
+    <div class="flex flex-col lg:flex-row gap-8 items-start">
+      
+      <!-- LEFT SIDEBAR: CATEGORIES (SKYCOACH STYLE) -->
+      <aside class="w-full lg:w-64 shrink-0 glass-panel p-4 rounded-3xl border border-stone-800/90 lg:sticky lg:top-20 z-30 shadow-2xl bg-[#140e0a]/95 backdrop-blur-xl">
+        <div class="flex items-center gap-2.5 pb-3.5 mb-3 border-b border-stone-800">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-sm">
+            <i class="fa-solid fa-hourglass-half"></i>
+          </div>
+          <div>
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest block leading-none mb-1">Catálogo Oficial</span>
+            <h3 class="font-cinzel font-black text-xs text-white tracking-wider">WOW FOREVER</h3>
+          </div>
+        </div>
+
+        <!-- Sidebar Category Navigation -->
+        <nav id="forever-sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none text-xs">
+          <button type="button" onclick="app.filterForeverCategory('all')" data-cat="all" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-layer-group text-amber-400 w-4 text-center"></i>
+              <span>Todos los Productos</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('gold')" data-cat="gold" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-coins text-amber-400 w-4 text-center"></i>
+              <span>Gold (Oro)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('powerleveling')" data-cat="powerleveling" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-bolt text-[#fccc8f] w-4 text-center"></i>
+              <span>Powerleveling</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('professions')" data-cat="professions" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-hammer text-amber-400 w-4 text-center"></i>
+              <span>Professions</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('dungeons')" data-cat="dungeons" class="forever-sidebar-cat-btn active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap lg:whitespace-normal bg-gradient-to-r from-amber-500/20 to-transparent text-amber-300 border border-amber-500/40 shadow-sm">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-dungeon text-amber-400 w-4 text-center"></i>
+              <span>Dungeons (Mazmorras)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-amber-400 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('raids')" data-cat="raids" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-dragon text-amber-400 w-4 text-center"></i>
+              <span>Raids (Bandas)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('gearing')" data-cat="gearing" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-shield-halved text-amber-400 w-4 text-center"></i>
+              <span>Gearing (Equipo BiS)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('legacy-challenges')" data-cat="legacy-challenges" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-trophy text-amber-400 w-4 text-center"></i>
+              <span>Legacy Challenges</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('pvp')" data-cat="pvp" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-hand-fist text-amber-400 w-4 text-center"></i>
+              <span>PvP & Rangos</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('reputations')" data-cat="reputations" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-scroll text-amber-400 w-4 text-center"></i>
+              <span>Reputations</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+
+          <button type="button" onclick="app.filterForeverCategory('mounts')" data-cat="mounts" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-horse text-amber-400 w-4 text-center"></i>
+              <span>Mounts (Monturas)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- RIGHT MAIN CONTENT: BREADCRUMB, BANNER & PRODUCT CARDS GRID -->
+      <section class="flex-1 w-full min-w-0">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-xs text-stone-400 mb-4 font-medium">
+          <a href="/" class="hover:text-[#ee914f] transition-colors">Inicio</a>
+          <span>/</span>
+          <a href="forever" class="hover:text-amber-400 transition-colors">WoW Forever</a>
+          <span>/</span>
+          <span id="forever-crumb-current" class="text-amber-400 font-bold">Dungeons (Mazmorras)</span>
+        </div>
+
+        <!-- Category Banner Header (SkyCoach style) -->
+        <div class="glass-panel p-6 sm:p-7 rounded-3xl border border-stone-800/90 mb-6 bg-gradient-to-r from-[#1c120b] via-[#140e0a] to-[#1a120c] relative overflow-hidden shadow-xl">
+          <div class="relative z-10 max-w-3xl">
+            <div class="flex items-center gap-2 mb-2.5">
+              <span id="forever-cat-badge" class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold uppercase tracking-wider">
+                Mazmorras & Bundles
+              </span>
+              <span class="text-xs text-stone-400 flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-[10px]"></i>
+                Reinos PvE, PvP & RP
+              </span>
+            </div>
+            <h1 id="forever-cat-title" class="font-cinzel text-2xl sm:text-3xl font-black text-[#fcefc2] mb-2 tracking-wide">
+              WoW Forever Dungeons Boost
+            </h1>
+            <p id="forever-cat-desc" class="text-xs sm:text-sm text-stone-300 leading-relaxed">
+              Completa cualquier mazmorra clásica de nivel 15 al 60 o las 9 nuevas mazmorras inéditas exclusivas de WoW Forever con nuestro equipo profesional. Obtén botín directo, experiencia de subida rápida y misiones completadas.
+            </p>
+          </div>
+        </div>
+
+        <!-- Products Grid (SkyCoach card format - 3 cols on xl) -->
+        <div id="forever-services-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+
+        <!-- Detailed 35 Dungeons Showcase Wrapper -->
+        <div id="forever-dungeons-table-wrapper" class="mt-12">
+          <section class="glass-panel p-6 sm:p-8 rounded-3xl border border-stone-800">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-stone-800">
+              <div>
+                <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest block">Catálogo Completo</span>
+                <h3 class="font-cinzel text-xl sm:text-2xl font-black text-white">35 Mazmorras Disponibles en WoW Forever</h3>
+              </div>
+              <a href="product?id=forever-dungeon-bundle" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-all shadow-md">
+                <span>Configurar en el Bundle</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </a>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- 9 Ineditas Forever -->
+              <div class="bg-[#140e0a] p-5 rounded-2xl border border-amber-600/30">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  <h4 class="font-cinzel font-bold text-sm text-[#fcefc2]">9 NUEVAS MAZMORRAS EXCLUSIVAS DE FOREVER</h4>
+                </div>
+                <div class="space-y-2 text-xs">
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>Hall of Thanes (Sala de los Thanes) <strong class="text-stone-400 font-normal">Nv 20-28</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$11.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>Ruins of Lordaeron (Ruinas de Lordaeron) <strong class="text-stone-400 font-normal">Nv 25-34</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$14.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>Excavation Site (Sitio de Excavación) <strong class="text-stone-400 font-normal">Nv 35-44</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$22.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>City of Dalaran (Ciudad de Dalaran Clásica) <strong class="text-stone-400 font-normal">Nv 40-48</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$29.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>The Drowned City (La Ciudad Sumergida) <strong class="text-stone-400 font-normal">Nv 45-52</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$34.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>Krol'dok Stronghold (Fortaleza Krol'dok) <strong class="text-stone-400 font-normal">Nv 50-56</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$39.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>Alcaz Prison (Prisión de Alcaz) <strong class="text-stone-400 font-normal">Nv 54-58</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$47.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
+                    <span>Blackmaw Hold (Bastión Faucesnegras) <strong class="text-stone-400 font-normal">Nv 56-60</strong></span>
+                    <span class="font-mono-gaming font-bold text-amber-400">$54.00</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#27170c] border border-amber-500/40 text-[#fcefc2] font-semibold">
+                    <span>The Shapers Terrace (Terraza de los Creadores) <strong class="text-amber-300 font-normal">Nv 58-60 BiS</strong></span>
+                    <span class="font-mono-gaming font-bold text-[#ee914f]">$57.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 26 Clásicas Destacadas -->
+              <div class="bg-[#140e0a] p-5 rounded-2xl border border-stone-800">
+                <div class="flex items-center gap-2 mb-3">
+                  <i class="fa-solid fa-dungeon text-[#ee914f]"></i>
+                  <h4 class="font-cinzel font-bold text-sm text-[#fcefc2]">26 MAZMORRAS CLÁSICAS ADAPTADAS</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Ragefire Chasm</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$5.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Deadmines</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$12.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Wailing Caverns</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$19.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Shadowfang Keep</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$16.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Gnomeregan</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$29.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Scarlet Mon. (Full)</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$20-$35</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Zul'Farrak</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$40.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Maraudon</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$49.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">BRD Emperor</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$29.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">LBRS / UBRS</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$25.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Dire Maul (E/W/N)</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$19.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Scholomance</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$57.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Stratholme Live/Dead</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$29.00</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
+                    <span class="truncate">Sunken Temple</span>
+                    <span class="font-mono-gaming font-bold text-stone-300">$49.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </section>
+
     </div>
-
-    <div id="forever-services-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-
-    <!-- 35 DUNGEONS EXPLORER SHOWCASE -->
-    <section class="mt-16 glass-panel p-6 sm:p-8 rounded-3xl border border-stone-800">
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-stone-800">
-        <div>
-          <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest block">Catálogo Completo</span>
-          <h3 class="font-cinzel text-xl sm:text-2xl font-black text-white">35 Mazmorras Disponibles en WoW Forever</h3>
-        </div>
-        <a href="product?id=forever-dungeon-bundle" class="px-5 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-all shadow-md">
-          <span>Configurar en el Bundle</span>
-          <i class="fa-solid fa-arrow-right text-[10px]"></i>
-        </a>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- 9 Ineditas Forever -->
-        <div class="bg-[#140e0a] p-5 rounded-2xl border border-amber-600/30">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-            <h4 class="font-cinzel font-bold text-sm text-[#fcefc2]">9 NUEVAS MAZMORRAS EXCLUSIVAS DE FOREVER</h4>
-          </div>
-          <div class="space-y-2 text-xs">
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>Hall of Thanes (Sala de los Thanes) <strong class="text-stone-400 font-normal">Nv 20-28</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$11.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>Ruins of Lordaeron (Ruinas de Lordaeron) <strong class="text-stone-400 font-normal">Nv 25-34</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$14.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>Excavation Site (Sitio de Excavación) <strong class="text-stone-400 font-normal">Nv 35-44</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$22.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>City of Dalaran (Ciudad de Dalaran Clásica) <strong class="text-stone-400 font-normal">Nv 40-48</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$29.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>The Drowned City (La Ciudad Sumergida) <strong class="text-stone-400 font-normal">Nv 45-52</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$34.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>Krol'dok Stronghold (Fortaleza Krol'dok) <strong class="text-stone-400 font-normal">Nv 50-56</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$39.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>Alcaz Prison (Prisión de Alcaz) <strong class="text-stone-400 font-normal">Nv 54-58</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$47.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#1b120c] text-stone-200">
-              <span>Blackmaw Hold (Bastión Faucesnegras) <strong class="text-stone-400 font-normal">Nv 56-60</strong></span>
-              <span class="font-mono-gaming font-bold text-amber-400">$54.00</span>
-            </div>
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#27170c] border border-amber-500/40 text-[#fcefc2] font-semibold">
-              <span>The Shapers Terrace (Terraza de los Creadores) <strong class="text-amber-300 font-normal">Nv 58-60 BiS</strong></span>
-              <span class="font-mono-gaming font-bold text-[#ee914f]">$57.00</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 26 Clásicas Destacadas -->
-        <div class="bg-[#140e0a] p-5 rounded-2xl border border-stone-800">
-          <div class="flex items-center gap-2 mb-3">
-            <i class="fa-solid fa-dungeon text-[#ee914f]"></i>
-            <h4 class="font-cinzel font-bold text-sm text-[#fcefc2]">26 MAZMORRAS CLÁSICAS ADAPTADAS</h4>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Ragefire Chasm</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$5.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Deadmines</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$12.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Wailing Caverns</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$19.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Shadowfang Keep</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$16.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Gnomeregan</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$29.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Scarlet Mon. (Full)</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$20-$35</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Zul'Farrak</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$40.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Maraudon</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$49.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">BRD Emperor</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$29.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">LBRS / UBRS</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$25.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Dire Maul (E/W/N)</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$19.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Scholomance</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$57.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Stratholme Live/Dead</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$29.00</span>
-            </div>
-            <div class="p-2 rounded-lg bg-[#1b120c] flex items-center justify-between">
-              <span class="truncate">Sunken Temple</span>
-              <span class="font-mono-gaming font-bold text-stone-300">$49.00</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <!-- CART DRAWER / MODAL -->
@@ -379,7 +513,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.5.1"></script>
+  <script src="assets/js/app.js?v=3.5.2"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {
