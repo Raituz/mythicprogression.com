@@ -272,7 +272,7 @@
     "description": "Completa cualquier mazmorra clásica de nivel 15 al 60 o las nuevas mazmorras inéditas exclusivas de WoW Forever con nuestro equipo profesional. Obtén botín directo, experiencia de subida rápida y misiones completadas.",
     "basePrice": 5.00,
     "icon": "fa-dungeon",
-    "badge": "WoW Forever �?� Nuevo Lanzamiento",
+    "badge": "WoW Forever - Nuevo Lanzamiento",
     "options": {
       "rulesets": [
         {"name": "PvE (Reino Normal)", "price": 0.00, "recommended": true},

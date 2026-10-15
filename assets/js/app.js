@@ -196,7 +196,7 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '2.7.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '2.9.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
@@ -213,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '2.8.0');
+        localStorage.setItem('mp_catalog_v', '2.9.0');
         this.saveServices();
       }
     } catch (e) {
@@ -2420,6 +2420,9 @@ class MythicApp {
     this.recalculateSingleProductTotal();
     this.renderRelatedProducts(svc);
     this.initRealmSelector();
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   renderSingleProductOptions(svc) {
@@ -3444,6 +3447,9 @@ class MythicApp {
     this.updateCartCounter();
     this.checkBoosterUpsellReferral();
     this.updateGameTabsUI();
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   initForeverPage() {
@@ -3455,12 +3461,18 @@ class MythicApp {
     }
     this.updateCartCounter();
     this.checkBoosterUpsellReferral();
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   switchCatalogGame(game) {
     this.activeGameFilter = game;
     this.updateGameTabsUI();
     this.renderServiceCards();
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   updateGameTabsUI() {
@@ -3494,14 +3506,17 @@ class MythicApp {
     if (catForever) catForever.style.display = isForever ? '' : 'none';
 
     if (catalogHeader) {
+      catalogHeader.removeAttribute('data-i18n-orig');
       catalogHeader.textContent = isForever ? 'CATÁLOGO WOW FOREVER' : 'SERVICIOS DESTACADOS (RETAIL)';
     }
     if (catalogSub) {
+      catalogSub.removeAttribute('data-i18n-orig');
       catalogSub.textContent = isForever 
         ? 'Mazmorras clásicas, 9 exclusivas Forever, Desafíos de Legado y Powerleveling 1-60.' 
         : 'Selecciona cualquier servicio para ver su página individual y configurar tus opciones.';
     }
     if (catalogBadge) {
+      catalogBadge.removeAttribute('data-i18n-orig');
       catalogBadge.textContent = isForever ? 'WoW Forever: The Evergreen Project' : 'World of Warcraft Oficial';
     }
   }
@@ -3515,6 +3530,9 @@ class MythicApp {
     container.innerHTML = filtered.map(svc => this.buildServiceCardHtml(svc)).join('');
     this.updateCartCounter();
     this.checkBoosterUpsellReferral();
+    if (this.currentLang && this.currentLang !== 'es') {
+      this.applyTranslations();
+    }
   }
 
   buildServiceCardHtml(svc) {
@@ -3536,7 +3554,7 @@ class MythicApp {
               <i class="fa-solid ${svc.icon}"></i>
             </div>
             <div>
-              <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors notranslate product-card-title" translate="no">${svc.name}</h3>
+              <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors product-card-title">${svc.name}</h3>
               <p class="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">${svc.description}</p>
             </div>
           </div>
@@ -10892,6 +10910,309 @@ class MythicApp {
         pt: 'Você pode entrar diretamente com seu e-mail do Google.'
       },
       'vincular mi google': { en: 'Link my Google', pt: 'Vincular meu Google' },
+      // WoW Forever Specifics & UI
+      'nuevo': { en: 'New', pt: 'Novo' },
+      'catálogo wow forever': { en: 'WoW Forever Catalog', pt: 'Catálogo WoW Forever' },
+      'catalogo wow forever': { en: 'WoW Forever Catalog', pt: 'Catálogo WoW Forever' },
+      'servicios destacados (retail)': { en: 'Featured Services (Retail)', pt: 'Serviços em Destaque (Retail)' },
+      'mazmorras clásicas, 9 exclusivas forever, desafíos de legado y powerleveling 1-60.': {
+        en: 'Classic dungeons, 9 Forever exclusives, Legacy Challenges, and 1-60 Powerleveling.',
+        pt: 'Masmorras clássicas, 9 exclusivas Forever, Desafios de Legado e Powerleveling 1-60.'
+      },
+      'mazmorras clasicas, 9 exclusivas forever, desafios de legado y powerleveling 1-60.': {
+        en: 'Classic dungeons, 9 Forever exclusives, Legacy Challenges, and 1-60 Powerleveling.',
+        pt: 'Masmorras clássicas, 9 exclusivas Forever, Desafios de Legado e Powerleveling 1-60.'
+      },
+      'portal wow forever': { en: 'WoW Forever Portal', pt: 'Portal WoW Forever' },
+      'ver portal wow forever': { en: 'View WoW Forever Portal', pt: 'Ver Portal WoW Forever' },
+      'wow forever: the evergreen project': { en: 'WoW Forever: The Evergreen Project', pt: 'WoW Forever: The Evergreen Project' },
+      'the evergreen classic+ project': { en: 'The Evergreen Classic+ Project', pt: 'The Evergreen Classic+ Project' },
+      'productos de wow forever': { en: 'WoW Forever Products', pt: 'Produtos WoW Forever' },
+      'servidores oficiales forever': { en: 'Official Forever Servers', pt: 'Servidores Oficiais Forever' },
+      'reinos pve, pvp & rp': { en: 'PvE, PvP & RP Realms', pt: 'Reinos PvE, PvP & RP' },
+      'self-play & piloted con vpn': { en: 'Self-play & Piloted with VPN', pt: 'Self-play & Piloted com VPN' },
+      'inicio retail': { en: 'Retail Home', pt: 'Início Retail' },
+      'servicios & mazmorras': { en: 'Services & Dungeons', pt: 'Serviços & Masmorras' },
+      'servicios & mazmorras wow forever': { en: 'WoW Forever Services & Dungeons', pt: 'Serviços & Masmorras WoW Forever' },
+      'domina el nuevo mundo de wow forever. supera las 26 mazmorras clásicas, desbloquea las 9 mazmorras inéditas con botín bis pre-raid (nv 58–60), consigue puntos de legado contrarreloj y asegura tu subida 1–60 con montura 100% garantizada.': {
+        en: 'Dominate the new world of WoW Forever. Conquer 26 classic dungeons, unlock 9 new dungeons with pre-raid BiS loot (Lv 58–60), earn timed Legacy Points, and secure your 1–60 boost with 100% mount included.',
+        pt: 'Domine o novo mundo de WoW Forever. Supere as 26 masmorras clássicas, desbloqueie as 9 masmorras inéditas com saque BiS pré-raide (Nv 58–60), conquiste Pontos de Legado contra o relógio e garanta seu boost 1–60 com montaria 100% incluída.'
+      },
+      'selecciona el paquete que deseas configurar según tu servidor, modo de juego y velocidad.': {
+        en: 'Select the package you want to configure according to your server, game mode, and speed.',
+        pt: 'Selecione o pacote que deseja configurar de acordo com seu servidor, modo de jogo e velocidade.'
+      },
+      'buscar mazmorras de wow forever, desafíos, leveling...': {
+        en: 'Search WoW Forever dungeons, challenges, leveling...',
+        pt: 'Buscar masmorras de WoW Forever, desafios, leveling...'
+      },
+      'buscar mazmorras de wow forever, desafios, leveling...': {
+        en: 'Search WoW Forever dungeons, challenges, leveling...',
+        pt: 'Buscar masmorras de WoW Forever, desafios, leveling...'
+      },
+
+      // Forever Categories & Cards
+      '35 mazmorras': { en: '35 Dungeons', pt: '35 Masmorras' },
+      '26 clásicas + 9 inéditas': { en: '26 Classic + 9 New', pt: '26 Clássicas + 9 Inéditas' },
+      '26 clasicas + 9 ineditas': { en: '26 Classic + 9 New', pt: '26 Clássicas + 9 Inéditas' },
+      'the shapers terrace': { en: 'The Shapers Terrace', pt: 'The Shapers Terrace' },
+      'nv 58-60 bis pre-raid': { en: 'Lv 58-60 BiS Pre-Raid', pt: 'Nv 58-60 BiS Pré-Raide' },
+      'desafíos de legado': { en: 'Legacy Challenges', pt: 'Desafios de Legado' },
+      'desafios de legado': { en: 'Legacy Challenges', pt: 'Desafios de Legado' },
+      '1 a 3 puntos + títulos': { en: '1 to 3 Points + Titles', pt: '1 a 3 Pontos + Títulos' },
+      '1 a 3 puntos + titulos': { en: '1 to 3 Points + Titles', pt: '1 a 3 Pontos + Títulos' },
+      'leveling 1-60': { en: 'Leveling 1-60', pt: 'Leveling 1-60' },
+      '100% montura incluida': { en: '100% Mount Included', pt: '100% Montaria Incluída' },
+      'desde $5.00 • clásicas & nuevas': { en: 'From $5.00 • Classic & New', pt: 'A partir de $5.00 • Clássicas & Novas' },
+      'desde $5.00 • clasicas & nuevas': { en: 'From $5.00 • Classic & New', pt: 'A partir de $5.00 • Clássicas & Novas' },
+      'nv 58-60 bis pre-raid ($57)': { en: 'Lv 58-60 BiS Pre-Raid ($57)', pt: 'Nv 58-60 BiS Pré-Raide ($57)' },
+      'puntos de legado & títulos ($83.99)': { en: 'Legacy Points & Titles ($83.99)', pt: 'Pontos de Legado & Títulos ($83.99)' },
+      'puntos de legado & titulos ($83.99)': { en: 'Legacy Points & Titles ($83.99)', pt: 'Pontos de Legado & Títulos ($83.99)' },
+      'montura 100% incluida ($299.99)': { en: '100% Mount Included ($299.99)', pt: 'Montaria 100% Incluída ($299.99)' },
+      '+2 a +15 timed': { en: '+2 to +15 Timed', pt: '+2 a +15 No Tempo' },
+      '1 a 80 / 90 personalizado': { en: '1 to 80 / 90 Custom', pt: '1 a 80 / 90 Personalizado' },
+      'bis gear 619+': { en: 'BiS Gear 619+', pt: 'Equipamento BiS 619+' },
+
+      // Forever Badges & Categories
+      'wow forever mazmorras': { en: 'WoW Forever Dungeons', pt: 'WoW Forever Masmorras' },
+      'wow forever powerleveling': { en: 'WoW Forever Powerleveling', pt: 'WoW Forever Powerleveling' },
+      'wow forever - nuevo lanzamiento': { en: 'WoW Forever - New Release', pt: 'WoW Forever - Novo Lançamento' },
+      'wow forever • nuevo lanzamiento': { en: 'WoW Forever • New Release', pt: 'WoW Forever • Novo Lançamento' },
+      'end-game forever - bis pre-raid': { en: 'End-Game Forever - BiS Pre-Raid', pt: 'End-Game Forever - BiS Pré-Raide' },
+      'desafíos de prestigio': { en: 'Prestige Challenges', pt: 'Desafios de Prestígio' },
+      'desafios de prestigio': { en: 'Prestige Challenges', pt: 'Desafios de Prestígio' },
+      'pack completo - 15% off': { en: 'Full Pack - 15% OFF', pt: 'Pacote Completo - 15% OFF' },
+
+      // Product Titles
+      'wow forever dungeons & bundle boost': { en: 'WoW Forever Dungeons & Bundle Boost', pt: 'WoW Forever Dungeons & Bundle Boost' },
+      'the shapers terrace (nueva mazmorra forever lv 58-60)': { en: 'The Shapers Terrace (New Forever Dungeon Lv 58-60)', pt: 'The Shapers Terrace (Nova Masmorra Forever Nv 58-60)' },
+      'dungeon legacy challenges (puntos de legado forever)': { en: 'Dungeon Legacy Challenges (Forever Legacy Points)', pt: 'Dungeon Legacy Challenges (Pontos de Legado Forever)' },
+      '1-60 leveling + montura 100% bundle (wow forever)': { en: '1-60 Leveling + 100% Mount Bundle (WoW Forever)', pt: '1-60 Leveling + Montaria 100% Pacote (WoW Forever)' },
+
+      // Product Descriptions
+      'completa cualquier mazmorra clásica de nivel 15 al 60 o las nuevas mazmorras inéditas exclusivas de wow forever con nuestro equipo profesional. obtén botín directo, experiencia de subida rápida y misiones completadas.': {
+        en: 'Complete any classic level 15-60 dungeon or brand new WoW Forever exclusive dungeons with our pro team. Get direct loot, fast leveling XP, and completed quests.',
+        pt: 'Complete qualquer masmorra clássica de nível 15 a 60 ou as novas masmorras inéditas exclusivas de WoW Forever com nossa equipe profissional. Obtenha saque direto, XP rápida e missões completadas.'
+      },
+      'completa cualquier mazmorra clasica de nivel 15 al 60 o las nuevas mazmorras ineditas exclusivas de wow forever con nuestro equipo profesional. obten botin directo, experiencia de subida rapida y misiones completadas.': {
+        en: 'Complete any classic level 15-60 dungeon or brand new WoW Forever exclusive dungeons with our pro team. Get direct loot, fast leveling XP, and completed quests.',
+        pt: 'Complete qualquer masmorra clássica de nível 15 a 60 ou as novas masmorras inéditas exclusivas de WoW Forever com nossa equipe profissional. Obtenha saque direto, XP rápida e missões completadas.'
+      },
+      'la mazmorra cúspide de 5 jugadores en wow forever. derrota a los guardianes titánicos en la terraza de los creadores (the shapers terrace) y asegura el mejor equipo pre-raid de nivel 60 y llaves de acceso.': {
+        en: 'The pinnacle 5-player dungeon in WoW Forever. Defeat titanic guardians at The Shapers Terrace and secure the best pre-raid level 60 gear and attunement keys.',
+        pt: 'A masmorra de 5 jogadores de elite em WoW Forever. Derrote os guardiões titânicos no The Shapers Terrace e garanta os melhores equipamentos pré-raide nível 60 e chaves de acesso.'
+      },
+      'la mazmorra cuspide de 5 jugadores en wow forever. derrota a los guardianes titanicos en la terraza de los creadores (the shapers terrace) y asegura el mejor equipo pre-raid de nivel 60 y llaves de acceso.': {
+        en: 'The pinnacle 5-player dungeon in WoW Forever. Defeat titanic guardians at The Shapers Terrace and secure the best pre-raid level 60 gear and attunement keys.',
+        pt: 'A masmorra de 5 jogadores de elite em WoW Forever. Derrote os guardiões titânicos no The Shapers Terrace e garanta os melhores equipamentos pré-raide nível 60 e chaves de acesso.'
+      },
+      'supera las pruebas y desafíos con afijos y límites de tiempo en las mazmorras de wow forever. consigue hasta 3 puntos de legado, cosméticos únicos, títulos honoríficos y monturas de prestigio.': {
+        en: 'Conquer trials and challenges with affixes and time limits in WoW Forever dungeons. Earn up to 3 Legacy Points, unique cosmetics, honorary titles, and prestige mounts.',
+        pt: 'Supere provas e desafios com afixos e limites de tempo nas masmorras de WoW Forever. Conquiste até 3 Pontos de Legado, cosméticos exclusivos, títulos honoríficos e montarias de prestígio.'
+      },
+      'supera las pruebas y desafios con afijos y limites de tiempo en las mazmorras de wow forever. consigue hasta 3 puntos de legado, cosmeticos unicos, titulos honorificos y monturas de prestigio.': {
+        en: 'Conquer trials and challenges with affixes and time limits in WoW Forever dungeons. Earn up to 3 Legacy Points, unique cosmetics, honorary titles, and prestige mounts.',
+        pt: 'Supere provas e desafios com afixos e limites de tempo nas masmorras de WoW Forever. Conquiste até 3 Pontos de Legado, cosméticos exclusivos, títulos honoríficos e montarias de prestígio.'
+      },
+      'pack definitivo de subida 1 a 60 para wow forever. sube tu personaje al nivel máximo de forma manual con habilidad de equitación al 100%, montura rápida, oro para spells y profesiones secundarias incluidas.': {
+        en: 'Ultimate 1-60 leveling pack for WoW Forever. Boost your character to max level 100% hand-played with 100% riding skill, fast mount, spell gold, and secondary professions included.',
+        pt: 'Pacote definitivo de subida 1 a 60 para WoW Forever. Upe seu personagem até o nível máximo 100% manual com perícia de montaria 100%, montaria rápida, ouro para feitiços e profissões secundárias incluídas.'
+      },
+      'pack definitivo de subida 1 a 60 para wow forever. sube tu personaje al nivel maximo de forma manual con habilidad de equitacion al 100%, montura rapida, oro para spells y profesiones secundarias incluidas.': {
+        en: 'Ultimate 1-60 leveling pack for WoW Forever. Boost your character to max level 100% hand-played with 100% riding skill, fast mount, spell gold, and secondary professions included.',
+        pt: 'Pacote definitivo de subida 1 a 60 para WoW Forever. Upe seu personagem até o nível máximo 100% manual com perícia de montaria 100%, montaria rápida, ouro para feitiços e profissões secundárias incluídas.'
+      },
+
+      // Configuration Form & Selectors
+      'tipo de servidor / ruleset:': { en: 'Server Type / Ruleset:', pt: 'Tipo de Servidor / Ruleset:' },
+      'soporte total': { en: 'Full Support', pt: 'Suporte Total' },
+      'pve (reino normal)': { en: 'PvE (Normal Realm)', pt: 'PvE (Reino Normal)' },
+      'pvp (reino jcj)': { en: 'PvP (PvP Realm)', pt: 'PvP (Reino JcJ)' },
+      'rp (juego de rol)': { en: 'RP (Roleplay)', pt: 'RP (Jogo de Interpretação)' },
+      'reino normal': { en: 'Normal Realm', pt: 'Reino Normal' },
+      'reino jcj': { en: 'PvP Realm', pt: 'Reino JcJ' },
+      'juego de rol': { en: 'Roleplay', pt: 'Jogo de Interpretação' },
+      'todas (35)': { en: 'All (35)', pt: 'Todas (35)' },
+      '✨ nuevas forever (9)': { en: '✨ New Forever (9)', pt: '✨ Novas Forever (9)' },
+      'clásicas (15-40)': { en: 'Classic (15-40)', pt: 'Clássicas (15-40)' },
+      'clasicas (15-40)': { en: 'Classic (15-40)', pt: 'Clássicas (15-40)' },
+      'clásicas (41-60)': { en: 'Classic (41-60)', pt: 'Clássicas (41-60)' },
+      'clasicas (41-60)': { en: 'Classic (41-60)', pt: 'Clássicas (41-60)' },
+      'dificultad de desafío de legado:': { en: 'Legacy Challenge Difficulty:', pt: 'Dificuldade do Desafio de Legado:' },
+      'dificultad de desafio de legado:': { en: 'Legacy Challenge Difficulty:', pt: 'Dificuldade do Desafio de Legado:' },
+      'velocidad de finalización:': { en: 'Completion Speed:', pt: 'Velocidade de Conclusão:' },
+      'velocidad de finalizacion:': { en: 'Completion Speed:', pt: 'Velocidade de Conclusão:' },
+      'modalidad de juego:': { en: 'Game Mode:', pt: 'Modalidade de Jogo:' },
+      'opciones adicionales / extras:': { en: 'Additional Options / Extras:', pt: 'Opções Adicionais / Extras:' },
+      'servicio completo y garantizado': { en: 'Complete & Guaranteed Service', pt: 'Serviço Completo e Garantido' },
+      'self-play (juegas con nuestro equipo)': { en: 'Self-play (Play with our team)', pt: 'Self-play (Jogue com nossa equipe)' },
+      'piloted (vpn de tu país)': { en: 'Piloted (VPN from your country)', pt: 'Piloted (VPN do seu país)' },
+      'piloted (vpn de tu pais)': { en: 'Piloted (VPN from your country)', pt: 'Piloted (VPN do seu país)' },
+      'piloted (vpn de tu ciudad)': { en: 'Piloted (VPN from your city)', pt: 'Piloted (VPN da sua cidade)' },
+      'self-play remote (acceso remoto seguro)': { en: 'Self-play Remote (Secure remote access)', pt: 'Self-play Remoto (Acesso remoto seguro)' },
+      'self-play remote (acceso remoto)': { en: 'Self-play Remote (Remote access)', pt: 'Self-play Remoto (Acesso remoto)' },
+      'self-play (juegas en grupo)': { en: 'Self-play (Play in group)', pt: 'Self-play (Jogue em grupo)' },
+      'self-play (juegas con el equipo)': { en: 'Self-play (Play with team)', pt: 'Self-play (Jogue com a equipe)' },
+      'velocidad normal (inicio en 15-30 min)': { en: 'Normal Speed (Start in 15-30 min)', pt: 'Velocidade Normal (Início em 15-30 min)' },
+      'express (prioridad alta - inicio en 10 min)': { en: 'Express (High Priority - Start in 10 min)', pt: 'Express (Prioridade Alta - Início em 10 min)' },
+      'super express (inicio inmediato vip)': { en: 'Super Express (Instant Start VIP)', pt: 'Super Express (Início Imediato VIP)' },
+      'velocidad normal (inicio 15-30 min)': { en: 'Normal Speed (Start 15-30 min)', pt: 'Velocidade Normal (Início 15-30 min)' },
+      'express (prioridad alta)': { en: 'Express (High Priority)', pt: 'Express (Prioridade Alta)' },
+      'super express (inicio inmediato)': { en: 'Super Express (Instant Start)', pt: 'Super Express (Início Imediato)' },
+      'velocidad normal (4-6 días)': { en: 'Normal Speed (4-6 days)', pt: 'Velocidade Normal (4-6 dias)' },
+      'velocidad normal (4-6 dias)': { en: 'Normal Speed (4-6 days)', pt: 'Velocidade Normal (4-6 dias)' },
+      'express (3-4 días)': { en: 'Express (3-4 days)', pt: 'Express (3-4 dias)' },
+      'express (3-4 dias)': { en: 'Express (3-4 days)', pt: 'Express (3-4 dias)' },
+      'super express (2-3 días non-stop)': { en: 'Super Express (2-3 days non-stop)', pt: 'Super Express (2-3 dias non-stop)' },
+      'super express (2-3 dias non-stop)': { en: 'Super Express (2-3 days non-stop)', pt: 'Super Express (2-3 dias non-stop)' },
+      'completar todas las misiones de la mazmorra (+xp)': { en: 'Complete all dungeon quests (+XP)', pt: 'Completar todas as missões da masmorra (+XP)' },
+      'prioridad de botín / loot reserva (todos los drops viables)': { en: 'Loot Priority / Reserve (All viable drops)', pt: 'Prioridade de Saque / Reserva (Todos os drops viáveis)' },
+      'prioridad de botin / loot reserva (todos los drops viables)': { en: 'Loot Priority / Reserve (All viable drops)', pt: 'Prioridade de Saque / Reserva (Todos os drops viáveis)' },
+      'loot priority (todos los drops viables para tu clase)': { en: 'Loot Priority (All viable drops for your class)', pt: 'Prioridade de Saque (Todos os drops viáveis para sua classe)' },
+      'completar questline de sintonización de banda': { en: 'Complete Raid Attunement Questline', pt: 'Completar Linha de Missões de Harmonização da Raide' },
+      'completar questline de sintonizacion de banda': { en: 'Complete Raid Attunement Questline', pt: 'Completar Linha de Missões de Harmonização da Raide' },
+      'transmisión privada en vivo en discord (1080p)': { en: 'Private Live Stream on Discord (1080p)', pt: 'Transmissão Privada ao Vivo no Discord (1080p)' },
+      'transmision privada en vivo en discord (1080p)': { en: 'Private Live Stream on Discord (1080p)', pt: 'Transmissão Privada ao Vivo no Discord (1080p)' },
+      'transmisión privada en discord': { en: 'Private Discord Stream', pt: 'Transmissão Privada no Discord' },
+      'transmision privada en discord': { en: 'Private Discord Stream', pt: 'Transmissão Privada no Discord' },
+      'montura rápida 100% velocidad + riding skill': { en: '100% Fast Mount + Riding Skill', pt: 'Montaria Rápida 100% Velocidade + Perícia' },
+      'montura rapida 100% velocidad + riding skill': { en: '100% Fast Mount + Riding Skill', pt: 'Montaria Rápida 100% Velocidade + Perícia' },
+      'primeros auxilios 300': { en: 'First Aid 300', pt: 'Primeiros Socorros 300' },
+      'cocina y pesca 300': { en: 'Cooking & Fishing 300', pt: 'Culinária e Pesca 300' },
+      'pack 500g de oro de inicio para habilidades': { en: '500G Starter Gold Pack for Spells', pt: 'Pacote 500G de Ouro Inicial para Feitiços' },
+      'incluido gratis': { en: 'Included Free', pt: 'Incluído Grátis' },
+      'recomendado': { en: 'Recommended', pt: 'Recomendado' },
+      'incluido': { en: 'Included', pt: 'Incluído' },
+      'gratis': { en: 'Free', pt: 'Grátis' },
+      'experienced spelunker (1 punto de legado)': { en: 'Experienced Spelunker (1 Legacy Point)', pt: 'Experienced Spelunker (1 Ponto de Legado)' },
+      'silver challenge bundle (2 puntos de legado)': { en: 'Silver Challenge Bundle (2 Legacy Points)', pt: 'Silver Challenge Bundle (2 Pontos de Legado)' },
+      'gold master challenge (3 puntos de legado + título)': { en: 'Gold Master Challenge (3 Legacy Points + Title)', pt: 'Gold Master Challenge (3 Pontos de Legado + Título)' },
+      'gold master challenge (3 puntos de legado + titulo)': { en: 'Gold Master Challenge (3 Legacy Points + Title)', pt: 'Gold Master Challenge (3 Pontos de Legado + Título)' },
+      '1 punto': { en: '1 Point', pt: '1 Ponto' },
+      '2 puntos': { en: '2 Points', pt: '2 Pontos' },
+      '3 puntos bis': { en: '3 Points BiS', pt: '3 Pontos BiS' },
+
+      // Checklists
+      '¿qué obtienes con wow forever dungeons boost?:': { en: 'What do you get with WoW Forever Dungeons Boost?:', pt: 'O que você recebe com o WoW Forever Dungeons Boost?:' },
+      '¿que obtienes con wow forever dungeons boost?:': { en: 'What do you get with WoW Forever Dungeons Boost?:', pt: 'O que você recebe com o WoW Forever Dungeons Boost?:' },
+      'completado rápido y limpio de cualquier mazmorra de nivel 15 al 60 (clásicas o nuevas exclusivas de wow forever).': {
+        en: 'Fast, clean run of any level 15-60 dungeon (Classic or new WoW Forever exclusives).',
+        pt: 'Conclusão rápida e limpa de qualquer masmorra de nível 15 a 60 (Clássicas ou novas exclusivas do WoW Forever).'
+      },
+      'completado rapido y limpio de cualquier mazmorra de nivel 15 al 60 (clasicas o nuevas exclusivas de wow forever).': {
+        en: 'Fast, clean run of any level 15-60 dungeon (Classic or new WoW Forever exclusives).',
+        pt: 'Conclusão rápida e limpa de qualquer masmorra de nível 15 a 60 (Clássicas ou novas exclusivas do WoW Forever).'
+      },
+      'todo el botín directo (armaduras poco comunes/azules/épicas, armas y oro) va directamente a tu bolsa.': {
+        en: 'All direct loot (uncommon/rare/epic armor, weapons, and gold) goes straight to your bags.',
+        pt: 'Todo o saque direto (armaduras incomuns/raras/épicas, armas e ouro) vai direto para sua bolsa.'
+      },
+      'todo el botin directo (armaduras poco comunes/azules/epicas, armas y oro) va directamente a tu bolsa.': {
+        en: 'All direct loot (uncommon/rare/epic armor, weapons, and gold) goes straight to your bags.',
+        pt: 'Todo o saque direto (armaduras incomuns/raras/épicas, armas e ouro) vai direto para sua bolsa.'
+      },
+      'completado de misiones de mazmorra para acumular gran cantidad de experiencia (xp) y reputación.': {
+        en: 'Completion of dungeon quests to gain massive experience (XP) and reputation.',
+        pt: 'Conclusão de missões da masmorra para acumular grande quantidade de experiência (XP) e reputação.'
+      },
+      'completado de misiones de mazmorra para acumular gran cantidad de experiencia (xp) y reputacion.': {
+        en: 'Completion of dungeon quests to gain massive experience (XP) and reputation.',
+        pt: 'Conclusão de missões da masmorra para acumular grande quantidade de experiência (XP) e reputação.'
+      },
+      'disponible para reinos pve (normal), pvp y rp bajo modalidades self-play o piloted 100% seguro con vpn.': {
+        en: 'Available for PvE (Normal), PvP, and RP realms under Self-play or 100% secure Piloted with VPN.',
+        pt: 'Disponível para reinos PvE (Normal), PvP e RP nas modalidades Self-play ou Piloted 100% seguro com VPN.'
+      },
+      '¿qué obtienes en the shapers terrace (nv 58-60)?:': { en: 'What do you get in The Shapers Terrace (Lv 58-60)?:', pt: 'O que você recebe no The Shapers Terrace (Nv 58-60)?:' },
+      '¿que obtienes en the shapers terrace (nv 58-60)?:': { en: 'What do you get in The Shapers Terrace (Lv 58-60)?:', pt: 'O que você recebe no The Shapers Terrace (Nv 58-60)?:' },
+      'full run garantizado derrotando a los constructos titánicos y jefes de la nueva mazmorra de wow forever.': {
+        en: 'Guaranteed full run defeating titanic constructs and bosses in WoW Forever’s new dungeon.',
+        pt: 'Full run garantido derrotando os construtos titânicos e chefes da nova masmorra do WoW Forever.'
+      },
+      'full run garantizado derrotando a los constructos titanicos y jefes de la nueva mazmorra de wow forever.': {
+        en: 'Guaranteed full run defeating titanic constructs and bosses in WoW Forever’s new dungeon.',
+        pt: 'Full run garantido derrotando os construtos titânicos e chefes da nova masmorra do WoW Forever.'
+      },
+      'equipo bis pre-raid de nivel 60 óptimo para entrar directamente a onyxia y barrow deeps.': {
+        en: 'Level 60 pre-raid BiS gear optimal for jumping straight into Onyxia and Barrow Deeps.',
+        pt: 'Equipamento BiS pré-raide de nível 60 ideal para entrar direto em Onyxia e Barrow Deeps.'
+      },
+      'equipo bis pre-raid de nivel 60 optimo para entrar directamente a onyxia y barrow deeps.': {
+        en: 'Level 60 pre-raid BiS gear optimal for jumping straight into Onyxia and Barrow Deeps.',
+        pt: 'Equipamento BiS pré-raide de nível 60 ideal para entrar direto em Onyxia e Barrow Deeps.'
+      },
+      'opción de sintonización y cadenas de misiones de acceso a bandas incluidas.': {
+        en: 'Attunement and raid access questlines included as an option.',
+        pt: 'Opção de harmonização e cadeias de missões de acesso a raides incluídas.'
+      },
+      'opcion de sintonizacion y cadenas de misiones de acceso a bandas incluidas.': {
+        en: 'Attunement and raid access questlines included as an option.',
+        pt: 'Opção de harmonização e cadeias de missões de acesso a raides incluídas.'
+      },
+      '¿qué obtienes con los desafíos de legado?:': { en: 'What do you get with Legacy Challenges?:', pt: 'O que você recebe com os Desafios de Legado?:' },
+      '¿que obtienes con los desafios de legado?:': { en: 'What do you get with Legacy Challenges?:', pt: 'O que você recebe com os Desafios de Legado?:' },
+      'completado de retos contrarreloj y afijos en mazmorras de wow forever.': {
+        en: 'Completion of timed trials and affixes in WoW Forever dungeons.',
+        pt: 'Conclusão de desafios contra o relógio e afixos em masmorras do WoW Forever.'
+      },
+      'obtención de hasta 3 puntos de legado para canjear por equipo exclusivo y cosméticos.': {
+        en: 'Obtain up to 3 Legacy Points to redeem for exclusive gear and cosmetics.',
+        pt: 'Obtenção de até 3 Pontos de Legado para trocar por equipamentos exclusivos e cosméticos.'
+      },
+      'obtencion de hasta 3 puntos de legado para canjear por equipo exclusivo y cosmeticos.': {
+        en: 'Obtain up to 3 Legacy Points to redeem for exclusive gear and cosmetics.',
+        pt: 'Obtenção de até 3 Pontos de Legado para trocar por equipamentos exclusivos e cosméticos.'
+      },
+      'títulos de hermandad y estatus de prestigio durante toda la temporada.': {
+        en: 'Guild titles and prestige status throughout the season.',
+        pt: 'Títulos de guilda e status de prestígio durante toda a temporada.'
+      },
+      'titulos de hermandad y estatus de prestigio durante toda la temporada.': {
+        en: 'Guild titles and prestige status throughout the season.',
+        pt: 'Títulos de guilda e status de prestígio durante toda a temporada.'
+      },
+      '¿qué incluye el bundle 1-60 + montura?:': { en: 'What is included in the 1-60 + Mount Bundle?:', pt: 'O que está incluído no Pacote 1-60 + Montaria?:' },
+      '¿que incluye el bundle 1-60 + montura?:': { en: 'What is included in the 1-60 + Mount Bundle?:', pt: 'O que está incluído no Pacote 1-60 + Montaria?:' },
+      'subida 1 al 60 garantizada 100% a mano sin scripts ni riesgo de baneo.': {
+        en: 'Guaranteed 1-60 leveling 100% manual without scripts or ban risk.',
+        pt: 'Subida 1 ao 60 garantida 100% manual sem scripts ou risco de ban.'
+      },
+      'habilidad de equitación al 100% (riding skill) y montura rápida comprada.': {
+        en: '100% Riding Skill and fast mount purchased.',
+        pt: 'Perícia de montaria 100% (Riding Skill) e montaria rápida comprada.'
+      },
+      'habilidad de equitacion al 100% (riding skill) y montura rapida comprada.': {
+        en: '100% Riding Skill and fast mount purchased.',
+        pt: 'Perícia de montaria 100% (Riding Skill) e montaria rápida comprada.'
+      },
+      'oro acumulado para comprar todos los rangos de tus hechizos y habilidades.': {
+        en: 'Accumulated gold to purchase all spell and ability ranks.',
+        pt: 'Ouro acumulado para comprar todos os ranques de feitiços e habilidades.'
+      },
+
+      // Badges
+      'todas las mazmorras clásicas & nuevas': { en: 'All Classic & New Dungeons', pt: 'Todas as Masmorras Clássicas & Novas' },
+      'todas las mazmorras clasicas & nuevas': { en: 'All Classic & New Dungeons', pt: 'Todas as Masmorras Clássicas & Novas' },
+      'botín bis & misiones de xp': { en: 'BiS Loot & XP Quests', pt: 'Saque BiS & Missões de XP' },
+      'botin bis & misiones de xp': { en: 'BiS Loot & XP Quests', pt: 'Saque BiS & Missões de XP' },
+      'reglas pve, pvp o rp': { en: 'PvE, PvP or RP Rulesets', pt: 'Regras PvE, PvP ou RP' },
+      'nivel 58-60 end-game': { en: 'Level 58-60 End-Game', pt: 'Nível 58-60 End-Game' },
+      'bis gear pre-raid': { en: 'BiS Gear Pre-Raid', pt: 'Equipamento BiS Pré-Raide' },
+      'secretos titánicos': { en: 'Titanic Secrets', pt: 'Segredos Titânicos' },
+      'secretos titanicos': { en: 'Titanic Secrets', pt: 'Segredos Titânicos' },
+      'hasta 3 puntos de legado': { en: 'Up to 3 Legacy Points', pt: 'Até 3 Pontos de Legado' },
+      'títulos y cosméticos': { en: 'Titles & Cosmetics', pt: 'Títulos & Cosméticos' },
+      'titulos y cosmeticos': { en: 'Titles & Cosmetics', pt: 'Títulos & Cosméticos' },
+      '100% sin riesgo': { en: '100% Risk Free', pt: '100% Sem Risco' },
+      'nivel 1 al 60 manual': { en: '1-60 Manual Leveling', pt: 'Nível 1 ao 60 Manual' },
+      'montura rápida 100%': { en: '100% Fast Mount', pt: 'Montaria Rápida 100%' },
+      'montura rapida 100%': { en: '100% Fast Mount', pt: 'Montaria Rápida 100%' },
+      'listo para raids': { en: 'Raid Ready', pt: 'Pronto para Raides' },
+      '20-40 min por mazmorra': { en: '20-40 min per dungeon', pt: '20-40 min por masmorra' },
+      '45-60 min': { en: '45-60 min', pt: '45-60 min' },
+      '1-2 horas': { en: '1-2 Hours', pt: '1-2 Horas' },
+      '3-5 días': { en: '3-5 Days', pt: '3-5 Dias' },
+      '3-5 dias': { en: '3-5 Days', pt: '3-5 Dias' },
       '© 2026 mythic progression. todos los derechos reservados.': {
         en: '© 2026 Mythic Progression. All rights reserved.',
         pt: '© 2026 Mythic Progression. Todos os direitos reservados.'
@@ -10903,7 +11224,6 @@ class MythicApp {
       if (el.closest('#mp-live-chat-root')) return true;
       if (el.closest('#header-lang-selector')) return true;
       if (el.closest('#user-session-badge')) return true;
-      if (el.closest('.product-card-title') || el.classList.contains('product-card-title')) return true;
       if (el.closest('.player-role') || el.classList.contains('player-role')) return true;
       if (el.closest('.notranslate') || el.classList.contains('notranslate') || el.getAttribute('translate') === 'no') return true;
       return false;
