@@ -456,6 +456,24 @@ class MythicApp {
     return o;
   }
 
+  syncOrdersToAlwaysdataBot(deletedOrderId = null) {
+    try {
+      const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
+      const payload = {
+        orders: availableOrders,
+        deletedOrderIds: deletedOrderId ? [deletedOrderId] : [],
+        timestamp: new Date().toISOString()
+      };
+      fetch('https://mythicprogression.alwaysdata.net/api/orders_sync.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(err => console.warn('Alwaysdata bot sync notice:', err));
+    } catch (e) {
+      console.warn('syncOrdersToAlwaysdataBot err:', e);
+    }
+  }
+
   saveOrders() {
     if (Array.isArray(this.orders)) {
       this.orders = this.orders.map(o => this.sanitizeOrder(o));
@@ -467,7 +485,18 @@ class MythicApp {
           this.db.collection('orders').doc(o.id).set(o, { merge: true }).catch(e => console.warn('Firestore order save err:', e));
         }
       });
+
+      // Save single summary feed document (costs only 1 read for the bot, avoids 429 quota exhaustion)
+      const availableOrders = this.orders.filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
+      this.db.collection('system').doc('orders_feed').set({
+        orders: availableOrders,
+        activeCount: availableOrders.length,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('Firestore orders_feed save error:', e));
     }
+
+    // Direct instant sync to Discord Bot on Alwaysdata (0 quota, 0ms delay, never blocked)
+    this.syncOrdersToAlwaysdataBot();
   }
 
   async initFirebase() {
@@ -7048,6 +7077,7 @@ class MythicApp {
       if (this.db) {
         this.db.collection('orders').doc(orderId).delete().catch(e => console.warn('Firestore delete order error:', e));
       }
+      this.syncOrdersToAlwaysdataBot(orderId);
       this.renderAdminOverview();
       this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
       this.showToast(`Orden #${orderId} eliminada correctamente.`, 'info');
