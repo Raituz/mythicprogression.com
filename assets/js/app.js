@@ -4553,9 +4553,39 @@ class MythicApp {
     }
   }
 
+  updateProSidebarBadges() {
+    const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
+    const sidebarAvailBadge = document.getElementById('badge-avail-sidebar');
+    if (sidebarAvailBadge) sidebarAvailBadge.textContent = availableOrders.length;
+
+    const myOrders = (this.orders || []).filter(o => {
+      if (!o || !o.assignedBooster) return false;
+      const u = this.currentUser;
+      if (!u) return false;
+      if (u.discordId && o.assignedBooster.discordId && String(u.discordId) === String(o.assignedBooster.discordId)) return true;
+      if (u.username && o.assignedBooster.username && u.username.trim().toLowerCase() === o.assignedBooster.username.trim().toLowerCase()) return true;
+      if (u.id && o.assignedBooster.id && String(u.id) === String(o.assignedBooster.id)) return true;
+      return false;
+    });
+
+    // Count ONLY contracts in progress or in review (strictly exclude COMPLETED, CANCELLED, REFUNDED)
+    const inProgressOrReviewCount = myOrders.filter(o => o && o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && o.status !== 'REFUNDED').length;
+    const sidebarMyCount = document.getElementById('badge-my-count');
+    if (sidebarMyCount) {
+      sidebarMyCount.textContent = inProgressOrReviewCount;
+      if (inProgressOrReviewCount > 0) {
+        sidebarMyCount.className = 'hidden md:inline ml-auto text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-700/80 px-2 py-0.5 rounded-full font-bold shadow-sm';
+      } else {
+        sidebarMyCount.className = 'hidden md:inline ml-auto text-[10px] bg-stone-900 text-stone-400 px-2 py-0.5 rounded-full';
+      }
+    }
+  }
+
   renderProOrderFeed() {
     const container = document.getElementById('pro-orders-feed');
     if (!container) return;
+
+    this.updateProSidebarBadges();
 
     const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
     
@@ -5038,6 +5068,8 @@ class MythicApp {
     const container = document.getElementById('pro-my-orders');
     if (!container) return;
 
+    this.updateProSidebarBadges();
+
     const myOrders = (this.orders || []).filter(o => {
       if (!o || !o.assignedBooster) return false;
       const u = this.currentUser;
@@ -5048,9 +5080,27 @@ class MythicApp {
       return false;
     });
 
-    const activeCount = myOrders.filter(o => o.status !== 'COMPLETED').length;
-    const sidebarMyCount = document.getElementById('badge-my-count');
-    if (sidebarMyCount) sidebarMyCount.textContent = activeCount > 0 ? activeCount : myOrders.length;
+    const statsContainer = document.getElementById('pro-my-orders-stats');
+    if (statsContainer) {
+      const activeCount = myOrders.filter(o => o.status !== 'COMPLETED' && o.status !== 'PENDING_APPROVAL' && o.status !== 'CANCELLED' && o.status !== 'REFUNDED').length;
+      const pendingReviewCount = myOrders.filter(o => o.status === 'PENDING_APPROVAL').length;
+      const completedCount = myOrders.filter(o => o.status === 'COMPLETED').length;
+
+      statsContainer.innerHTML = `
+        <span class="text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 ${activeCount > 0 ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-600/80 shadow-sm' : 'bg-stone-900/80 text-stone-500 border border-stone-800'}">
+          <span class="w-1.5 h-1.5 rounded-full ${activeCount > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-stone-600'}"></span>
+          ${activeCount} Activo${activeCount === 1 ? '' : 's'}
+        </span>
+        <span class="text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 ${pendingReviewCount > 0 ? 'bg-amber-950/90 text-amber-300 border border-amber-600/80 shadow-sm animate-pulse' : 'bg-stone-900/80 text-stone-500 border border-stone-800'}">
+          <i class="fa-solid fa-clock text-[9px] ${pendingReviewCount > 0 ? 'text-amber-400' : 'text-stone-600'}"></i>
+          ${pendingReviewCount} En Revisión
+        </span>
+        <span class="text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 bg-stone-900/80 text-stone-400 border border-stone-800">
+          <i class="fa-solid fa-check text-[9px] text-stone-500"></i>
+          ${completedCount} Finalizado${completedCount === 1 ? '' : 's'}
+        </span>
+      `;
+    }
 
     if (myOrders.length === 0) {
       container.innerHTML = `

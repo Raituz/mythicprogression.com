@@ -151,9 +151,12 @@
 
       <!-- TAB 2: MY ORDERS (MIS PEDIDOS ASIGNADOS) -->
       <section id="tab-myorders" class="hidden space-y-4">
-        <div class="glass-panel p-4 rounded-2xl border border-stone-800 mb-4">
-          <h2 class="text-base font-bold text-[#fcefc2] mb-1 font-cinzel">Tus Contratos</h2>
-          <p class="text-xs text-stone-400">Contratos <span class="text-emerald-400 font-semibold">activos</span> (verde), <span class="text-amber-400 font-semibold">en revisión</span> (amarillo) y <span class="text-stone-400 font-semibold">finalizados</span> (gris).</p>
+        <div class="glass-panel p-4 rounded-2xl border border-stone-800 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-[#fcefc2] mb-1 font-cinzel">Tus Contratos</h2>
+            <p class="text-xs text-stone-400">Contratos <span class="text-emerald-400 font-semibold">activos</span> (verde), <span class="text-amber-400 font-semibold">en revisión</span> (amarillo) y <span class="text-stone-400 font-semibold">finalizados</span> (gris).</p>
+          </div>
+          <div id="pro-my-orders-stats" class="flex items-center gap-2 flex-wrap"></div>
         </div>
         <div id="pro-my-orders"></div>
       </section>
@@ -531,7 +534,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=3.4.3"></script>
+  <script src="assets/js/app.js?v=3.4.4"></script>
   <script>
     function switchProTab(tabId) {
       document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));
