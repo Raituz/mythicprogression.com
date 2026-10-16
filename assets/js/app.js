@@ -248,7 +248,9 @@ class MythicApp {
       }
       this.orders = loadedOrders;
       if (ordersVersion !== MythicApp.ORDERS_VERSION) {
-        this.saveOrders();
+        if (this.orders && this.orders.length > 0) {
+          this.saveOrders();
+        }
         localStorage.setItem('mp_orders_v', MythicApp.ORDERS_VERSION);
       }
 
@@ -644,6 +646,14 @@ class MythicApp {
     try {
       const DEMO_ORDER_IDS = ['MP-91024', 'MP-76512', 'MP-88931'];
       const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING') && !DEMO_ORDER_IDS.includes(o.id));
+      
+      // CRITICAL GUARD: If availableOrders is empty and this is not an explicit single order deletion,
+      // DO NOT sync an empty list to Alwaysdata, because this is an uninitialized local cache or cold start!
+      if (availableOrders.length === 0 && !deletedOrderId) {
+        console.log('[Alwaysdata Sync] Skipping sync: orders list is empty and no specific order was deleted.');
+        return;
+      }
+
       const deletedIds = deletedOrderId ? [deletedOrderId] : [];
       const allDeletedIds = Array.from(new Set([...deletedIds, ...DEMO_ORDER_IDS]));
       const payload = {
@@ -678,11 +688,13 @@ class MythicApp {
 
       // Save single summary feed document (costs only 1 read for the bot, avoids 429 quota exhaustion)
       const availableOrders = this.orders.filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
-      this.db.collection('system').doc('orders_feed').set({
-        orders: availableOrders,
-        activeCount: availableOrders.length,
-        updatedAt: new Date().toISOString()
-      }, { merge: true }).catch(e => console.warn('Firestore orders_feed save error:', e));
+      if (availableOrders.length > 0 || (this.orders && this.orders.length > 0)) {
+        this.db.collection('system').doc('orders_feed').set({
+          orders: availableOrders,
+          activeCount: availableOrders.length,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(e => console.warn('Firestore orders_feed save error:', e));
+      }
     }
 
     // Direct instant sync to Discord Bot on Alwaysdata (0 quota, 0ms delay, never blocked)
