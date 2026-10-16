@@ -3694,17 +3694,17 @@ class MythicApp {
 
     if (btnRetail) {
       if (!isForever) {
-        btnRetail.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#ee914f] text-stone-950 shadow-lg shadow-[#ee914f]/30 border border-[#ee914f]';
+        btnRetail.className = 'flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#ee914f] text-stone-950 shadow-lg shadow-[#ee914f]/30 border border-[#ee914f] flex items-center justify-center gap-2 whitespace-nowrap';
       } else {
-        btnRetail.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-stone-400 hover:text-white border border-stone-800';
+        btnRetail.className = 'flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-stone-400 hover:text-white border border-stone-800 flex items-center justify-center gap-2 whitespace-nowrap';
       }
     }
 
     if (btnForever) {
       if (isForever) {
-        btnForever.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-lg shadow-amber-500/30 border border-amber-400';
+        btnForever.className = 'flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-lg shadow-amber-500/30 border border-amber-400 flex items-center justify-center gap-2 whitespace-nowrap';
       } else {
-        btnForever.className = 'px-6 py-2.5 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-amber-300/80 hover:text-amber-200 border border-amber-900/40';
+        btnForever.className = 'flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-amber-300/90 hover:text-white border border-amber-900/40 hover:border-amber-500/50 flex items-center justify-center gap-2 whitespace-nowrap';
       }
     }
 

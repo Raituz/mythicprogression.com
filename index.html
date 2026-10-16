@@ -88,15 +88,15 @@
 
   <!-- GAME MODE SELECTOR TABS (RETAIL VS FOREVER) -->
   <section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-6 relative z-30">
-    <div class="glass-panel p-2 rounded-2xl border border-stone-800/90 flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto shadow-2xl backdrop-blur-xl">
-      <button type="button" id="tab-game-retail" onclick="app.switchCatalogGame('retail')" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#ee914f] text-stone-950 shadow-lg shadow-[#ee914f]/30 border border-[#ee914f] flex items-center justify-center gap-2">
-        <i class="fa-solid fa-dragon text-sm"></i>
-        <span>WoW Retail</span>
+    <div class="glass-panel p-2 rounded-2xl border border-stone-800/90 flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 max-w-xl mx-auto shadow-2xl backdrop-blur-xl">
+      <button type="button" id="tab-game-retail" onclick="app.switchCatalogGame('retail')" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#ee914f] text-stone-950 shadow-lg shadow-[#ee914f]/30 border border-[#ee914f] flex items-center justify-center gap-2 whitespace-nowrap">
+        <i class="fa-solid fa-dragon text-sm shrink-0"></i>
+        <span class="whitespace-nowrap">WoW Retail</span>
       </button>
-      <a href="forever" id="tab-game-forever" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-amber-300/90 hover:text-white border border-amber-900/40 hover:border-amber-500/50 flex items-center justify-center gap-2">
-        <i class="fa-solid fa-hourglass-half text-amber-400 text-sm"></i>
-        <span>WoW Forever</span>
-        <span class="px-1.5 py-0.5 rounded bg-amber-500 text-stone-950 text-[9px] font-black uppercase tracking-normal">Nuevo</span>
+      <a href="forever" id="tab-game-forever" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-amber-300/90 hover:text-white border border-amber-900/40 hover:border-amber-500/50 flex items-center justify-center gap-2 whitespace-nowrap">
+        <i class="fa-solid fa-hourglass-half text-amber-400 text-sm shrink-0"></i>
+        <span class="whitespace-nowrap">WoW Forever</span>
+        <span class="px-1.5 py-0.5 rounded bg-amber-500 text-stone-950 text-[9px] font-black uppercase tracking-normal whitespace-nowrap shrink-0">Nuevo</span>
       </a>
     </div>
   </section>
@@ -329,7 +329,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.5.9"></script>
+  <script src="assets/js/app.js?v=3.6.0"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {
