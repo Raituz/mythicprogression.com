@@ -196,7 +196,7 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.1.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.2.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
@@ -213,8 +213,17 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.1.0');
+        localStorage.setItem('mp_catalog_v', '3.2.0');
         this.saveServices();
+      }
+
+      // Sanitize "Random Dungeon (Más Rápido)" to "Random Dungeon" across all services
+      if (Array.isArray(this.services)) {
+        this.services.forEach(s => {
+          if (s && s.options && Array.isArray(s.options.dungeons)) {
+            s.options.dungeons = s.options.dungeons.map(d => typeof d === 'string' ? d.replace(/\s*\(M[áa]s\s+R[áa]pido\)/gi, '') : d);
+          }
+        });
       }
     } catch (e) {
       console.warn('Fallback loading services:', e);
@@ -633,8 +642,15 @@ class MythicApp {
       if (isNaN(bPay) || bPay <= 0) o.assignedBooster.payout = o.boosterPayout;
     }
 
-    if (o.details && typeof o.details === 'string' && /sin muertes/i.test(o.details)) {
-      o.details = o.details.replace(/sin muertes,\s*/gi, '').replace(/sin muertes\s*/gi, '').trim();
+    if (o.details && typeof o.details === 'string') {
+      if (/sin muertes/i.test(o.details)) {
+        o.details = o.details.replace(/sin muertes,\s*/gi, '').replace(/sin muertes\s*/gi, '').trim();
+      }
+      o.details = o.details.replace(/\(M[áa]s\s+R[áa]pido\)/gi, '').replace(/\s{2,}/g, ' ').trim();
+    }
+
+    if (o.serviceName && typeof o.serviceName === 'string') {
+      o.serviceName = o.serviceName.replace(/\(M[áa]s\s+R[áa]pido\)/gi, '').replace(/\s{2,}/g, ' ').trim();
     }
 
     return o;
@@ -2657,8 +2673,8 @@ class MythicApp {
         { label: 'Top Group (+4 loot-traders)', price: 2.92 }
       ];
 
-      const dungeons = (opts.dungeons && opts.dungeons.length > 0) ? opts.dungeons : [
-        'Random Dungeon (Más Rápido)',
+      const rawDungeons = (opts.dungeons && opts.dungeons.length > 0) ? opts.dungeons : [
+        'Random Dungeon',
         'The Stonevault',
         'City of Threads',
         'The Dawnbreaker',
@@ -2668,6 +2684,7 @@ class MythicApp {
         'Mists of Tirna Scithe',
         'Siege of Boralus'
       ];
+      const dungeons = rawDungeons.map(d => typeof d === 'string' ? d.replace(/\s*\(M[áa]s\s+R[áa]pido\)/gi, '') : d);
 
       const modes = (opts.completionMethods && opts.completionMethods.length > 0) ? opts.completionMethods : [
         { label: 'Self-play', price: 0, tag: 'Gratis' },
@@ -7456,7 +7473,7 @@ class MythicApp {
     const dungeonsArea = document.getElementById('adm-dungeons-textarea');
     if (dungeonsArea) {
       dungeonsArea.value = [
-        'Random Dungeon (Más Rápido)',
+        'Random Dungeon',
         'The Stonevault',
         'City of Threads',
         'The Dawnbreaker',
@@ -7549,8 +7566,8 @@ class MythicApp {
     this.renderModalExtras(opts.extras || []);
     const dungeonsArea = document.getElementById('adm-dungeons-textarea');
     if (dungeonsArea) {
-      const dList = opts.dungeons && opts.dungeons.length > 0 ? opts.dungeons : [
-        'Random Dungeon (Más Rápido)',
+      const dList = opts.dungeons && opts.dungeons.length > 0 ? opts.dungeons.map(d => typeof d === 'string' ? d.replace(/\s*\(M[áa]s\s+R[áa]pido\)/gi, '') : d) : [
+        'Random Dungeon',
         'The Stonevault',
         'City of Threads',
         'The Dawnbreaker',
