@@ -7104,37 +7104,39 @@ class MythicApp {
 
     container.innerHTML = list.map(svc => `
       <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
-        <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap">${svc.id}</td>
-        <td class="py-4 px-5 font-bold text-white flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-[#230f3f] border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7] shrink-0">
-            <i class="fa-solid ${svc.icon || 'fa-dungeon'} text-xs"></i>
-          </div>
-          <div>
-            <div class="text-white text-sm leading-snug">${svc.name}</div>
-            <div class="text-[11px] text-stone-400 mt-0.5 truncate max-w-sm">${svc.description ? svc.description.slice(0, 75) + '...' : ''}</div>
+        <td class="py-3 px-3.5 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap text-[11px]">${svc.id}</td>
+        <td class="py-3 px-3.5">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#230f3f] border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7] shrink-0">
+              <i class="fa-solid ${svc.icon || 'fa-dungeon'} text-xs"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-white text-xs font-bold leading-snug truncate max-w-[220px] lg:max-w-sm">${svc.name}</div>
+              <div class="text-[10px] text-stone-400 mt-0.5 truncate max-w-[220px] lg:max-w-sm">${svc.description ? svc.description.slice(0, 65) + '...' : ''}</div>
+            </div>
           </div>
         </td>
-        <td class="py-4 px-5 whitespace-nowrap">
-          <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#241042] text-[#f3e8ff] border border-[#a855f7]/30 text-[11px] font-semibold">
+        <td class="py-3 px-3 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#241042] text-[#f3e8ff] border border-[#a855f7]/30 text-[10px] font-semibold">
             ${svc.category}
           </span>
         </td>
-        <td class="py-4 px-5 font-mono-gaming font-bold text-[#f3e8ff] text-sm whitespace-nowrap">
+        <td class="py-3 px-3 font-mono-gaming font-bold text-[#f3e8ff] text-xs whitespace-nowrap">
           $${Number(svc.basePrice).toFixed(2)}
         </td>
-        <td class="py-4 px-5 whitespace-nowrap">
-          <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-stone-900 border border-stone-800 text-[10px] text-stone-300 font-semibold">
+        <td class="py-3 px-3 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-stone-900 border border-stone-800 text-[10px] text-stone-300 font-semibold">
             ${svc.badge || 'Popular'}
           </span>
         </td>
-        <td class="py-4 px-5 text-right whitespace-nowrap min-w-[220px]">
-          <div class="flex items-center justify-end gap-2">
-            <button onclick="app.editProductModal('${svc.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
-              <i class="fa-solid fa-pen-to-square text-[#a855f7]"></i>
+        <td class="py-3 px-3.5 text-right whitespace-nowrap min-w-[170px]">
+          <div class="flex items-center justify-end gap-1.5">
+            <button onclick="app.editProductModal('${svc.id}')" class="px-2.5 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all shrink-0">
+              <i class="fa-solid fa-pen-to-square text-[#a855f7] text-xs"></i>
               <span>Editar</span>
             </button>
-            <button onclick="app.deleteProduct('${svc.id}')" class="px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
-              <i class="fa-solid fa-trash"></i>
+            <button onclick="app.deleteProduct('${svc.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all shrink-0">
+              <i class="fa-solid fa-trash text-xs"></i>
               <span>Eliminar</span>
             </button>
           </div>
