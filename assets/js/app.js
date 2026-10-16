@@ -196,11 +196,11 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.3.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.4.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
-          if (!parsed.find(s => s.id === 'forever-gold-pack') || !parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
+          if (!parsed.find(s => s.id === 'forever-powerleveling-custom') || !parsed.find(s => s.id === 'forever-gold-pack') || !parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
             shouldReload = true;
           }
         } catch (e) {
@@ -213,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.3.0');
+        localStorage.setItem('mp_catalog_v', '3.4.0');
         this.saveServices();
       }
 
@@ -2357,7 +2357,7 @@ class MythicApp {
     this.currentPromoDiscount = 0;
     this.currentSpKeyPrice = svc.basePrice;
 
-    const isLeveling = (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling');
+    const isLeveling = (svc.id === 'powerleveling-80' || svc.id === 'forever-powerleveling-custom' || (svc.category === 'Powerleveling' && svc.game !== 'forever'));
     if (isLeveling) {
       this.initLevelingState(svc);
     }
@@ -2464,7 +2464,7 @@ class MythicApp {
     const container = document.getElementById('sp-options-form');
     if (!container) return;
 
-    if (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling') {
+    if (svc.id === 'powerleveling-80' || svc.id === 'forever-powerleveling-custom' || (svc.category === 'Powerleveling' && svc.game !== 'forever')) {
       this.renderLevelingProductOptions(svc);
       return;
     }
@@ -2673,15 +2673,20 @@ class MythicApp {
 
   initLevelingState(svc) {
     const opts = svc?.options || {};
+    const isForever = (svc?.id === 'forever-powerleveling-custom' || svc?.game === 'forever');
     this.levelMin = Number(opts.minLevel) || 1;
-    this.levelMax = Number(opts.maxLevel) || 90;
+    this.levelMax = Number(opts.maxLevel) || (isForever ? 60 : 90);
     this.levelCurrent = Number(opts.defaultCurrentLevel) || 1;
-    this.levelDesired = Number(opts.defaultDesiredLevel) || 80;
+    this.levelDesired = Number(opts.defaultDesiredLevel) || (isForever ? 60 : 80);
   }
 
   renderLevelingProductOptions(svc) {
     const container = document.getElementById('sp-options-form');
     if (!container) return;
+
+    const isForever = (svc.id === 'forever-powerleveling-custom' || svc.game === 'forever');
+    const minLvl = this.levelMin || 1;
+    const maxLvl = this.levelMax || (isForever ? 60 : 90);
 
     const opts = svc.options || {};
     const completionMethods = (opts.completionMethods && opts.completionMethods.length > 0) ? opts.completionMethods : [
@@ -2690,15 +2695,27 @@ class MythicApp {
       { label: 'Self-play Remote', price: 14.99, tag: '+$14.99' }
     ];
 
-    const gearingOptions = (opts.gearingOptions && opts.gearingOptions.length > 0) ? opts.gearingOptions : [
+    const gearingOptions = (opts.gearingOptions && opts.gearingOptions.length > 0) ? opts.gearingOptions : (isForever ? [
+      { label: 'Not Required', price: 0 },
+      { label: 'Level 30 Starter Gear Set (+$12.00)', price: 12.00 },
+      { label: 'Level 50 Dungeon Blue Gear Set (+$28.00)', price: 28.00 },
+      { label: 'Full Pre-Raid BiS Starter Set (+$59.00)', price: 59.00 }
+    ] : [
       { label: 'Not Required', price: 0 },
       { label: 'Starter Gear 554+ (+$12.00)', price: 12.00 },
       { label: 'Honor PvP Gear (+$19.00)', price: 19.00 },
       { label: 'Full Dungeon Gear 580+ (+$29.00)', price: 29.00 },
       { label: 'Champion Raid Ready 593+ (+$45.00)', price: 45.00 }
-    ];
+    ]);
 
-    const additionalOptions = (opts.additionalOptions && opts.additionalOptions.length > 0) ? opts.additionalOptions : [
+    const additionalOptions = (opts.additionalOptions && opts.additionalOptions.length > 0) ? opts.additionalOptions : (isForever ? [
+      { label: 'Riding Skill 60% + Fast Mount', price: 19.99 },
+      { label: 'Epic Riding Skill 100% + Epic Mount', price: 59.99 },
+      { label: '500G Starter Gold Pack for Class Spells', price: 24.99 },
+      { label: 'First Aid 300 Max Skill', price: 14.99 },
+      { label: 'Cooking & Fishing 300 Max Skill', price: 19.99 },
+      { label: 'Private Discord Live Stream', price: 4.99 }
+    ] : [
       { label: 'The Venomous Abyss Heroic run', price: 32.99 },
       { label: '8/8 M+0 Dungeons', price: 27.99 },
       { label: 'Midnight Campaign', price: 23.99 },
@@ -2707,7 +2724,43 @@ class MythicApp {
       { label: 'The Promise of Tomorrow Campaign', price: 16.99 },
       { label: 'Haranir Allied Race Unlock', price: 14.99 },
       { label: 'All Skyriding Glyphs', price: 9.99 }
-    ];
+    ]);
+
+    const tickMarks = isForever ? [1, 10, 20, 30, 40, 50, 60] : [1, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+
+    const presetsHtml = isForever ? `
+      <button type="button" onclick="app.setLevelRange(1, 60)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>1 - 60</span> <span class="text-[9px] text-[#ee914f] font-bold">(Completo)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(1, 30)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>1 - 30</span> <span class="text-[9px] text-emerald-400 font-bold">(Inicial)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(30, 60)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>30 - 60</span> <span class="text-[9px] text-amber-400 font-bold">(Endgame)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(50, 60)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>50 - 60</span> <span class="text-[9px] text-purple-400 font-bold">(Pre-Raid)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(58, 60)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>58 - 60</span> <span class="text-[9px] text-blue-400 font-bold">(Rápido)</span>
+      </button>
+    ` : `
+      <button type="button" onclick="app.setLevelRange(1, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>1 - 80</span> <span class="text-[9px] text-[#ee914f] font-bold">(Completo)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(70, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>70 - 80</span> <span class="text-[9px] text-emerald-400 font-bold">(TWW)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(1, 70)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>1 - 70</span> <span class="text-[9px] text-stone-400 font-bold">(Previo)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(60, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>60 - 80</span> <span class="text-[9px] text-amber-400 font-bold">(Rápido)</span>
+      </button>
+      <button type="button" onclick="app.setLevelRange(80, 90)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
+        <span>80 - 90</span> <span class="text-[9px] text-purple-400 font-bold">(Midnight)</span>
+      </button>
+    `;
 
     container.innerHTML = `
       <div class="space-y-6">
@@ -2717,10 +2770,10 @@ class MythicApp {
             <div class="col-span-5">
               <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                 <span>Nivel Actual</span>
-                <span class="text-[10px] text-stone-500 font-mono-gaming">Min 1</span>
+                <span class="text-[10px] text-stone-500 font-mono-gaming">Min ${minLvl}</span>
               </label>
               <div class="relative">
-                <input type="number" id="sp-level-current" min="1" max="89" value="${this.levelCurrent}" oninput="app.onLevelNumberInput('current', this.value)" class="w-full bg-[#18110b] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3 py-2.5 text-center font-mono-gaming font-black text-lg text-white outline-none">
+                <input type="number" id="sp-level-current" min="${minLvl}" max="${maxLvl - 1}" value="${this.levelCurrent}" oninput="app.onLevelNumberInput('current', this.value)" class="w-full bg-[#18110b] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3 py-2.5 text-center font-mono-gaming font-black text-lg text-white outline-none">
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-stone-500 font-bold uppercase pointer-events-none">Lvl</span>
               </div>
             </div>
@@ -2732,10 +2785,10 @@ class MythicApp {
             <div class="col-span-5">
               <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                 <span>Nivel Deseado</span>
-                <span class="text-[10px] text-[#ee914f] font-mono-gaming font-bold">Max 90</span>
+                <span class="text-[10px] text-[#ee914f] font-mono-gaming font-bold">Max ${maxLvl}</span>
               </label>
               <div class="relative">
-                <input type="number" id="sp-level-desired" min="2" max="90" value="${this.levelDesired}" oninput="app.onLevelNumberInput('desired', this.value)" class="w-full bg-[#18110b] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3 py-2.5 text-center font-mono-gaming font-black text-lg text-[#fcefc2] outline-none">
+                <input type="number" id="sp-level-desired" min="${minLvl + 1}" max="${maxLvl}" value="${this.levelDesired}" oninput="app.onLevelNumberInput('desired', this.value)" class="w-full bg-[#18110b] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3 py-2.5 text-center font-mono-gaming font-black text-lg text-[#fcefc2] outline-none">
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#ee914f] font-bold uppercase pointer-events-none">Lvl</span>
               </div>
             </div>
@@ -2746,13 +2799,13 @@ class MythicApp {
             <div class="dual-slider-wrap">
               <div class="dual-slider-track"></div>
               <div id="sp-dual-slider-highlight" class="dual-slider-highlight"></div>
-              <input type="range" id="sp-slider-min" min="1" max="90" value="${this.levelCurrent}" oninput="app.onLevelSliderInput('current', this.value)" class="dual-slider-input">
-              <input type="range" id="sp-slider-max" min="1" max="90" value="${this.levelDesired}" oninput="app.onLevelSliderInput('desired', this.value)" class="dual-slider-input">
+              <input type="range" id="sp-slider-min" min="${minLvl}" max="${maxLvl}" value="${this.levelCurrent}" oninput="app.onLevelSliderInput('current', this.value)" class="dual-slider-input">
+              <input type="range" id="sp-slider-max" min="${minLvl}" max="${maxLvl}" value="${this.levelDesired}" oninput="app.onLevelSliderInput('desired', this.value)" class="dual-slider-input">
             </div>
 
-            <!-- Tick Marks (1 to 90) -->
+            <!-- Tick Marks -->
             <div class="flex items-center justify-between text-[11px] font-mono-gaming text-stone-400 mt-1 px-1">
-              ${[1, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(tk => `
+              ${tickMarks.map(tk => `
                 <button type="button" onclick="app.onTickClick(${tk})" id="level-tick-${tk}" class="level-tick-mark text-stone-400 hover:text-[#ee914f] transition-colors cursor-pointer">
                   ${tk}
                 </button>
@@ -2764,21 +2817,7 @@ class MythicApp {
           <div class="mt-4 pt-3 border-t border-stone-800/80">
             <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-2">Rutas Rápidas Populares:</span>
             <div class="flex flex-wrap gap-1.5" id="level-preset-buttons">
-              <button type="button" onclick="app.setLevelRange(1, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
-                <span>1 - 80</span> <span class="text-[9px] text-[#ee914f] font-bold">(Completo)</span>
-              </button>
-              <button type="button" onclick="app.setLevelRange(70, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
-                <span>70 - 80</span> <span class="text-[9px] text-emerald-400 font-bold">(TWW)</span>
-              </button>
-              <button type="button" onclick="app.setLevelRange(1, 70)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
-                <span>1 - 70</span> <span class="text-[9px] text-stone-400 font-bold">(Previo)</span>
-              </button>
-              <button type="button" onclick="app.setLevelRange(60, 80)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
-                <span>60 - 80</span> <span class="text-[9px] text-amber-400 font-bold">(Rápido)</span>
-              </button>
-              <button type="button" onclick="app.setLevelRange(80, 90)" class="level-preset-chip px-2.5 py-1 rounded-lg bg-[#1a120b] border border-stone-800 text-[11px] text-stone-300 font-semibold flex items-center gap-1 cursor-pointer">
-                <span>80 - 90</span> <span class="text-[9px] text-purple-400 font-bold">(Midnight)</span>
-              </button>
+              ${presetsHtml}
             </div>
           </div>
         </div>
@@ -2926,7 +2965,8 @@ class MythicApp {
     }
 
     // Highlight active ticks
-    const ticks = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+    const isForever = (this.currentProduct?.game === 'forever' || this.currentProduct?.id === 'forever-powerleveling-custom');
+    const ticks = isForever ? [1, 10, 20, 30, 40, 50, 60] : [1, 10, 20, 30, 40, 50, 60, 70, 80, 90];
     ticks.forEach(t => {
       const el = document.getElementById(`level-tick-${t}`);
       if (el) {
@@ -3210,8 +3250,21 @@ class MythicApp {
   }
 
   calculateLevelBasePrice(curr, des) {
-    if (des <= curr) return 8.00;
+    const isForever = (this.currentProduct?.game === 'forever' || this.currentProduct?.id === 'forever-powerleveling-custom');
+    if (des <= curr) return isForever ? 12.00 : 8.00;
     let price = 0;
+    if (isForever) {
+      for (let lvl = curr; lvl < des; lvl++) {
+        if (lvl < 30) {
+          price += 2.50; // 1 to 30: $2.50/lvl
+        } else if (lvl < 50) {
+          price += 3.50; // 30 to 50: $3.50/lvl
+        } else {
+          price += 5.50; // 50 to 60: $5.50/lvl
+        }
+      }
+      return Math.max(12.00, Math.round(price * 100) / 100);
+    }
     for (let lvl = curr; lvl < des; lvl++) {
       if (lvl < 70) {
         price += 0.35; // 1 to 70: $0.35/lvl
@@ -3229,7 +3282,7 @@ class MythicApp {
     const qtyEl = document.getElementById('sp-runs-qty');
     if (qtyEl) qtyEl.textContent = this.currentRunsQuantity;
     
-    const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.category === 'Powerleveling');
+    const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.id === 'forever-powerleveling-custom' || (this.currentProduct?.category === 'Powerleveling' && this.currentProduct?.game !== 'forever'));
     const unitNoun = isLeveling ? 'personaje' : 'run';
     const unitNounPlural = isLeveling ? 'personajes' : 'runs';
 
@@ -3266,12 +3319,12 @@ class MythicApp {
   }
 
   recalculateSingleProductTotal() {
-    const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.category === 'Powerleveling');
+    const isLeveling = (this.currentProduct?.id === 'powerleveling-80' || this.currentProduct?.id === 'forever-powerleveling-custom' || (this.currentProduct?.category === 'Powerleveling' && this.currentProduct?.game !== 'forever'));
     const isForever = (this.currentProduct?.game === 'forever' || this.currentProduct?.id?.startsWith('forever-'));
     let unit = 0;
 
     if (isLeveling) {
-      unit = this.calculateLevelBasePrice(this.levelCurrent || 1, this.levelDesired || 80);
+      unit = this.calculateLevelBasePrice(this.levelCurrent || 1, this.levelDesired || (isForever ? 60 : 80));
 
       // Gearing options dropdown
       const gearingSelect = document.getElementById('sp-gearing-select');
@@ -3353,7 +3406,7 @@ class MythicApp {
 
   addCurrentSingleProductToCart() {
     const svc = this.currentProduct || this.services[0];
-    const isLeveling = (svc.id === 'powerleveling-80' || svc.category === 'Powerleveling');
+    const isLeveling = (svc.id === 'powerleveling-80' || svc.id === 'forever-powerleveling-custom' || (svc.category === 'Powerleveling' && svc.game !== 'forever'));
     const isForever = (svc.game === 'forever' || svc.id?.startsWith('forever-'));
     const char = document.getElementById('sp-character')?.value.trim() 
               || `${document.getElementById('sp-char-name')?.value.trim() || 'Heroe'}-${document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros'}`;
@@ -3370,7 +3423,7 @@ class MythicApp {
       const extraLabels = Array.from(document.querySelectorAll('input[name="sp_extra_option"]:checked')).map(cb => cb.dataset.label || cb.closest('label')?.querySelector('span')?.textContent?.trim()).filter(Boolean);
 
       let detailsParts = [
-        `Nivel: ${this.levelCurrent || 1} - ${this.levelDesired || 80}`,
+        `Nivel: ${this.levelCurrent || 1} - ${this.levelDesired || (isForever ? 60 : 80)}`,
         `Método: ${selectedMode}`,
         `Región: ${region}`,
         `Equipo: ${gearLabel}`
@@ -3381,17 +3434,20 @@ class MythicApp {
       const item = {
         cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
         serviceId: svc.id,
-        serviceName: `WoW Powerleveling (${this.levelCurrent || 1} - ${this.levelDesired || 80})`,
+        serviceName: (svc.game === 'forever' || svc.id === 'forever-powerleveling-custom') 
+          ? `WoW Forever Powerleveling (${this.levelCurrent || 1} - ${this.levelDesired || 60})` 
+          : `WoW Powerleveling (${this.levelCurrent || 1} - ${this.levelDesired || 80})`,
         category: svc.category,
         unitPrice: calcUnit,
         price: calcUnit,
         quantity: runsQty,
         totalPrice: calcTotal,
         character: char,
+        game: svc.game || ((svc.id === 'forever-powerleveling-custom' || svc.category?.toLowerCase().includes('forever')) ? 'forever' : 'retail'),
         mode: selectedMode,
         region: region,
         levelCurrent: this.levelCurrent || 1,
-        levelDesired: this.levelDesired || 80,
+        levelDesired: this.levelDesired || (isForever ? 60 : 80),
         gearing: gearLabel,
         details: detailsParts.join(' | '),
         referredBooster: sessionStorage.getItem('mp_upsell_booster') || null

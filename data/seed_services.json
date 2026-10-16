@@ -1,4 +1,4 @@
-﻿[
+[
     {
         "id":  "mplus-keystone",
         "game":  "retail",
@@ -1110,6 +1110,105 @@
                         "Prestige titles \u0026 cosmetics",
                         "100% Ban-free guarantee"
                     ]
+    },
+    {
+        "id":  "forever-powerleveling-custom",
+        "game":  "forever",
+        "category":  "WoW Forever Powerleveling",
+        "foreverCategory":  "powerleveling",
+        "page":  "forever",
+        "name":  "Custom WoW Forever Powerleveling (1 - 60)",
+        "description":  "Level your character from any level to 60 in WoW Forever with our real-time interactive level slider. Choose your exact starting and desired levels. 100% manual, fast, and safe with VPN protection.",
+        "basePrice":  12.00,
+        "originalPrice":  18.00,
+        "icon":  "fa-bolt",
+        "badge":  "Customizable 1-60",
+        "bullets":  [
+                        "Custom Level Range from 1 to 60 with dual interactive slider",
+                        "100% Handcrafted boost, completely safe with VPN protection",
+                        "All quest rewards, gold, and gear kept on your character"
+                    ],
+        "options":  {
+                        "minLevel":  1,
+                        "maxLevel":  60,
+                        "defaultCurrentLevel":  1,
+                        "defaultDesiredLevel":  60,
+                        "heroBadges":  [
+                                           "1-60 Custom Range",
+                                           "Piloted VPN or Remote",
+                                           "Optional Riding & Gear"
+                                       ],
+                        "estimates":  {
+                                          "start":  "10-20 min",
+                                          "execution":  "Flexible (1-5 Days)"
+                                      },
+                        "review":  {
+                                       "stars":  5,
+                                       "author":  "ClassicRaider, hace 2 días",
+                                       "quote":  "\"Ordered 30 to 60 for my Warrior in WoW Forever. Super fast, all gold saved, and finished in 48 hours!\"",
+                                       "rating":  "5.0",
+                                       "count":  "3,420"
+                                   },
+                        "completionMethods":  [
+                                                  {
+                                                      "label":  "Piloted (VPN)",
+                                                      "price":  0,
+                                                      "tag":  "Included",
+                                                      "recommended":  true
+                                                  },
+                                                  {
+                                                      "label":  "Self-play Remote",
+                                                      "price":  14.99,
+                                                      "tag":  "+$14.99"
+                                                  }
+                                              ],
+                        "gearingOptions":  [
+                                               {
+                                                   "label":  "Not Required",
+                                                   "price":  0
+                                               },
+                                               {
+                                                   "label":  "Level 30 Starter Gear Set (+$12.00)",
+                                                   "price":  12.00
+                                               },
+                                               {
+                                                   "label":  "Level 50 Dungeon Blue Gear Set (+$28.00)",
+                                                   "price":  28.00
+                                               },
+                                               {
+                                                   "label":  "Full Pre-Raid BiS Starter Set (+$59.00)",
+                                                   "price":  59.00
+                                               }
+                                           ],
+                        "additionalOptions":  [
+                                                  {
+                                                      "label":  "Riding Skill 60% + Fast Mount",
+                                                      "price":  19.99
+                                                  },
+                                                  {
+                                                      "label":  "Epic Riding Skill 100% + Epic Mount",
+                                                      "price":  59.99
+                                                  },
+                                                  {
+                                                      "label":  "500G Starter Gold Pack for Class Spells",
+                                                      "price":  24.99
+                                                  },
+                                                  {
+                                                      "label":  "First Aid 300 Max Skill",
+                                                      "price":  14.99
+                                                  },
+                                                  {
+                                                      "label":  "Cooking & Fishing 300 Max Skill",
+                                                      "price":  19.99
+                                                  },
+                                                  {
+                                                      "label":  "Private Discord Live Stream",
+                                                      "price":  4.99
+                                                  }
+                                              ],
+                        "volumeDiscount":  5,
+                        "cashbackPercent":  5
+                    }
     },
     {
         "id":  "forever-leveling-mount-bundle",
