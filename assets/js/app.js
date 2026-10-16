@@ -196,7 +196,7 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.2.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.3.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
@@ -213,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.2.0');
+        localStorage.setItem('mp_catalog_v', '3.3.0');
         this.saveServices();
       }
 
@@ -2366,19 +2366,20 @@ class MythicApp {
     const titleEl = document.getElementById('sp-title');
     if (titleEl) { titleEl.textContent = svc.name; titleEl.classList.add('notranslate'); titleEl.setAttribute('translate', 'no'); }
     const catEl = document.getElementById('sp-breadcrumb-cat');
-    if (catEl) catEl.textContent = svc.category;
+    if (catEl) { catEl.textContent = svc.category; catEl.classList.add('notranslate'); catEl.setAttribute('translate', 'no'); }
     const backEl = document.getElementById('sp-breadcrumb-back');
-    if (backEl) backEl.textContent = svc.category;
+    if (backEl) { backEl.textContent = svc.category; backEl.classList.add('notranslate'); backEl.setAttribute('translate', 'no'); }
     const nameEl = document.getElementById('sp-breadcrumb-name');
-    if (nameEl) nameEl.textContent = svc.name;
+    if (nameEl) { nameEl.textContent = svc.name; nameEl.classList.add('notranslate'); nameEl.setAttribute('translate', 'no'); }
     const descEl = document.getElementById('sp-description');
-    if (descEl) descEl.textContent = svc.description;
+    if (descEl) { descEl.textContent = svc.description; descEl.classList.add('notranslate'); descEl.setAttribute('translate', 'no'); }
 
     // Dynamic Hero Badges (Top Left)
     const badgesContainer = document.getElementById('sp-badges-container');
+    if (badgesContainer) { badgesContainer.classList.add('notranslate'); badgesContainer.setAttribute('translate', 'no'); }
     if (badgesContainer && svc.options?.heroBadges && Array.isArray(svc.options.heroBadges)) {
       badgesContainer.innerHTML = svc.options.heroBadges.map((bText, idx) => `
-        <span class="px-3 py-1 rounded-md ${idx === 2 ? 'bg-indigo-950/80 text-indigo-200 border-indigo-600/50' : 'bg-purple-950/80 text-purple-200 border-purple-600/50'} border text-[11px] font-bold shadow-md">
+        <span class="px-3 py-1 rounded-md ${idx === 2 ? 'bg-indigo-950/80 text-indigo-200 border-indigo-600/50' : 'bg-purple-950/80 text-purple-200 border-purple-600/50'} border text-[11px] font-bold shadow-md notranslate" translate="no">
           ${bText}
         </span>
       `).join('');
@@ -2393,223 +2394,46 @@ class MythicApp {
       if (textEl && rev.quote) textEl.textContent = rev.quote;
       const ratingEl = document.getElementById('sp-review-rating');
       if (ratingEl && rev.rating && rev.count) {
-        ratingEl.innerHTML = `<strong class="text-white">${rev.rating}</strong> Basado en ${rev.count} opiniones`;
+        ratingEl.innerHTML = `<strong class="text-white">${rev.rating}</strong> Based on ${rev.count} reviews`;
       }
     }
 
     // Dynamic Checklist and Description Extra
     const chkTitleEl = document.getElementById('sp-checklist-title');
     const chkContainer = document.getElementById('sp-checklist-container');
-    if (isLeveling) {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con nuestro servicio de Powerleveling?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
+    if (chkTitleEl) {
+      chkTitleEl.textContent = 'What you will get:';
+      chkTitleEl.classList.add('notranslate');
+      chkTitleEl.setAttribute('translate', 'no');
+    }
+    if (chkContainer) {
+      chkContainer.classList.add('notranslate');
+      chkContainer.setAttribute('translate', 'no');
+      const bulletsList = (svc.bullets && Array.isArray(svc.bullets) && svc.bullets.length > 0)
+        ? svc.bullets
+        : [
+            '100% Handcrafted boost, completely safe with VPN protection',
+            'Self-play or Piloted options available',
+            'All direct loot, gold, and rewards kept on your character'
+          ];
+
+      chkContainer.innerHTML = `
+        <div class="space-y-3 pt-1">
+          ${bulletsList.map((bullet, idx) => `
             <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Subida de nivel garantizada para tu personaje hasta el nivel objetivo seleccionado (desde nivel 1 hasta 80/90).</p>
+              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</div>
+              <p class="text-xs text-stone-300 leading-snug notranslate" translate="no">${bullet}</p>
             </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Método 100% manual y AFK con opción Self-play o Piloted seguro con VPN y streaming opcional en Discord.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Progreso en campaña de la expansión, puntos de talento y desbloqueo de contenido de nivel máximo.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-              <p class="text-xs text-stone-300 leading-snug">Todo el oro, piezas de equipo, monturas o materiales recolectados durante la subida quedan en tu personaje.</p>
-            </div>
-          </div>
-          <div class="mt-4 pt-3 border-t border-stone-800 text-[11px] text-stone-400 space-y-1.5">
-            <strong class="text-[#eedaa2] block uppercase tracking-wider text-[10px]">Opciones de Equipamiento (Gearing):</strong>
-            <div>• <strong class="text-stone-300">Honor PvP Gear:</strong> Conjunto completo JcJ con versatilidad para saltar directo a campos de batalla y arenas.</div>
-            <div>• <strong class="text-stone-300">Full Dungeon Gear 642+:</strong> Equipo de mazmorras de temporada preparado para Míticas+ y bandas.</div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'mplus-keystone') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con nuestro servicio de Míticas+?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Runs de mazmorras Míticas+ (+2 a +15) con equipo profesional de élite en tiempo garantizado.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Botín directo de hasta <strong class="text-[#fcefc2]">311 ilvl (Track Héroe)</strong> en el cofre al finalizar la mazmorra con tus traders de armadura.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Recompensa semanal de hasta <strong class="text-[#5eead4]">318 ilvl (Track Mito BiS)</strong> en la Gran Cámara para tu personaje.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-              <p class="text-xs text-stone-300 leading-snug">Blasones de mejora: Campeón, Héroe y <strong class="text-amber-400">Míticos (Myth Crests)</strong> para subir tu equipo al máximo.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">5</div>
-              <p class="text-xs text-stone-300 leading-snug">Telepuertos a mazmorras (+10 en tiempo) y progreso hacia los títulos y monturas de Keystone Master / Keystone Hero.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'the-venomous-abyss' || svc.id === 'liberation-of-undermine') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes en la nueva banda El Abismo Venenoso?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Derrota garantizada de los 8 jefes del Abismo Venenoso incluyendo a <strong class="text-[#fcefc2]">Ula'tek (Jefe Final)</strong>.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Botín oficial de <strong class="text-[#eedaa2]">292 a 324+ ilvl</strong> (hasta 344 ilvl Very Rare en dificultad Mítica).</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Logro oficial de hermandad <strong class="text-amber-400">Ahead of the Curve (AOTC): Ula'tek</strong> en dificultad Heroica.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-              <p class="text-xs text-stone-300 leading-snug">Tokens de conjunto de clase (Tier Set), monturas y progreso en la ranura de banda de la Gran Cámara.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'delves-midnight' || svc.id === 'delves-tww') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes en las Profundidades (Delves)?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Runs rápidos en <strong class="text-[#fcefc2]">Tier 8 (Sweet Spot)</strong>: el nivel óptimo para equipar personajes en la temporada actual.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Botín directo de <strong class="text-[#eedaa2]">298 ilvl (Track Campeón)</strong> abriendo el cofre abundante con Llave Restaurada.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Desbloquea hasta 3 ranuras de la Gran Cámara (Mundo) de <strong class="text-[#5eead4]">311 ilvl (Track Héroe)</strong> con 8 runs.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-              <p class="text-xs text-stone-300 leading-snug">Opción de derrotar al <strong class="text-purple-400">Némesis de Temporada</strong> para conseguir la montura exclusiva y el título.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'ilvl-gearing') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué incluye tu Paquete de Equipamiento?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Conjunto de equipo completo para cada ranura de tu personaje optimizado según tu especialización (BiS).</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Combinación estratégica de Delves Tier 8, Míticas+ (+2 a +10) y Raid El Abismo Venenoso.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Rangos de equipamiento garantizados desde <strong class="text-stone-300">292 ilvl (Starter)</strong> hasta <strong class="text-[#5eead4]">344 ilvl (BiS Mítico)</strong>.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-              <p class="text-xs text-stone-300 leading-snug">Blasones y monedas de mejora suficientes para llevar tus piezas al nivel máximo de cada rango.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'forever-dungeon-bundle') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con WoW Forever Dungeons Boost?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Completado rápido y limpio de cualquier mazmorra de nivel 15 al 60 (Clásicas o nuevas exclusivas de WoW Forever).</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Todo el botín directo (armaduras poco comunes/azules/épicas, armas y oro) va directamente a tu bolsa.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Completado de misiones de mazmorra para acumular gran cantidad de experiencia (XP) y reputación.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-              <p class="text-xs text-stone-300 leading-snug">Disponible para reinos PvE (Normal), PvP y RP bajo modalidades Self-play o Piloted 100% seguro con VPN.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'forever-shapers-terrace') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes en The Shapers Terrace (Nv 58-60)?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Full run garantizado derrotando a los constructos titánicos y jefes de la nueva mazmorra de WoW Forever.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Equipo BiS pre-raid de nivel 60 óptimo para entrar directamente a Onyxia y Barrow Deeps.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Opción de sintonización y cadenas de misiones de acceso a bandas incluidas.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'forever-legacy-challenges') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué obtienes con los Desafíos de Legado?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Completado de retos contrarreloj y afijos en mazmorras de WoW Forever.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Obtención de hasta 3 Puntos de Legado para canjear por equipo exclusivo y cosméticos.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Títulos de hermandad y estatus de prestigio durante toda la temporada.</p>
-            </div>
-          </div>
-        `;
-      }
-    } else if (svc.id === 'forever-leveling-mount-bundle') {
-      if (chkTitleEl) chkTitleEl.textContent = '¿Qué incluye el Bundle 1-60 + Montura?:';
-      if (chkContainer) {
-        chkContainer.innerHTML = `
-          <div class="space-y-3 pt-1">
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-              <p class="text-xs text-stone-300 leading-snug">Subida 1 al 60 garantizada 100% a mano sin scripts ni riesgo de baneo.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-              <p class="text-xs text-stone-300 leading-snug">Habilidad de equitación al 100% (Riding Skill) y montura rápida comprada.</p>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-[#ee914f] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-              <p class="text-xs text-stone-300 leading-snug">Oro acumulado para comprar todos los rangos de tus hechizos y habilidades.</p>
-            </div>
+          `).join('')}
+        </div>
+      `;
+
+      if (isLeveling) {
+        chkContainer.innerHTML += `
+          <div class="mt-4 pt-3 border-t border-stone-800 text-[11px] text-stone-400 space-y-1.5 notranslate" translate="no">
+            <strong class="text-[#eedaa2] block uppercase tracking-wider text-[10px]">Gearing Options:</strong>
+            <div>• <strong class="text-stone-300">Honor PvP Gear:</strong> Full PvP gear set with versatility to jump straight into Battlegrounds and Arenas.</div>
+            <div>• <strong class="text-stone-300">Full Dungeon Gear 642+:</strong> Seasonal dungeon set prepared for Mythic+ and Raids.</div>
           </div>
         `;
       }
@@ -2623,9 +2447,9 @@ class MythicApp {
 
     // Stepper Title & Initial Hint
     const stepperTitle = document.getElementById('sp-stepper-title');
-    if (stepperTitle) stepperTitle.textContent = isLeveling ? 'Número de Personajes' : 'Runs';
+    if (stepperTitle) stepperTitle.textContent = isLeveling ? 'Characters' : 'Runs';
     const hintEl = document.getElementById('sp-discount-hint');
-    if (hintEl) hintEl.textContent = isLeveling ? 'Añade 1 personaje más para 5% de descuento' : 'Añade 1 run más para 5% de descuento';
+    if (hintEl) hintEl.textContent = isLeveling ? 'Add 1 more character for 5% discount' : 'Add 1 more run for 5% discount';
 
     this.renderSingleProductOptions(svc);
     this.recalculateSingleProductTotal();
@@ -3886,9 +3710,9 @@ class MythicApp {
       const bullets = (svc.bullets && Array.isArray(svc.bullets) && svc.bullets.length > 0)
         ? svc.bullets
         : [
-            '100% Hecho a mano garantizado y seguro con VPN',
-            'Opciones Self-play o Piloted disponibles',
-            'Todo el botín directo y oro para tu personaje'
+            '100% Handcrafted boost, safe with VPN protection',
+            'Self-play or Piloted options available',
+            'All direct loot and gold kept on your character'
           ];
 
       const discountPercent = (svc.originalPrice && svc.originalPrice > svc.basePrice)
@@ -3904,16 +3728,16 @@ class MythicApp {
           <!-- Top Row: Badge & Discount/Category -->
           <div>
             <div class="flex items-center justify-between gap-2 mb-3">
-              <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+              <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm product-badge-text notranslate" translate="no">
                 <i class="fa-solid fa-fire text-amber-400 text-[9px]"></i>
                 <span class="line-clamp-1">${svc.badge || 'POPULAR'}</span>
               </span>
               ${discountPercent ? `
-                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono-gaming shadow-sm">
+                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono-gaming shadow-sm notranslate" translate="no">
                   -${discountPercent}% OFF
                 </span>
               ` : `
-                <span class="text-[10px] font-semibold text-stone-400 bg-stone-900/80 px-2 py-0.5 rounded border border-stone-800/80">
+                <span class="text-[10px] font-semibold text-stone-400 bg-stone-900/80 px-2 py-0.5 rounded border border-stone-800/80 notranslate" translate="no">
                   ${svc.category || 'WoW Forever'}
                 </span>
               `}
@@ -3928,7 +3752,7 @@ class MythicApp {
 
             <!-- Title -->
             <div class="text-center my-2 min-h-[2.8rem] flex items-center justify-center">
-              <h3 class="text-base font-bold text-white group-hover:text-[#fcefc2] transition-colors font-cinzel leading-snug line-clamp-2 product-card-title">
+              <h3 class="text-base font-bold text-white group-hover:text-[#fcefc2] transition-colors font-cinzel leading-snug line-clamp-2 product-card-title notranslate" translate="no">
                 ${svc.name}
               </h3>
             </div>
@@ -3938,7 +3762,7 @@ class MythicApp {
               ${bullets.slice(0, 3).map(b => `
                 <li class="flex items-center gap-2">
                   <i class="fa-solid fa-circle-check text-amber-400 text-[10px] shrink-0"></i>
-                  <span class="line-clamp-1">${b}</span>
+                  <span class="line-clamp-1 product-bullet-text notranslate" translate="no">${b}</span>
                 </li>
               `).join('')}
             </ul>
@@ -3974,14 +3798,18 @@ class MythicApp {
     }
 
     // Default Retail card layout
+    const retailBullets = (svc.bullets && Array.isArray(svc.bullets) && svc.bullets.length > 0)
+      ? svc.bullets
+      : [];
+
     return `
       <div class="glass-panel rounded-2xl p-6 transition-all duration-300 hover:border-[#ee914f]/60 hover:-translate-y-1 group flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-4">
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-[#271d15] text-[#ee914f] border border-[#ee914f]/30">
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-[#271d15] text-[#ee914f] border border-[#ee914f]/30 notranslate" translate="no">
               ${svc.category}
             </span>
-            <span class="text-xs text-[#fcefc2] bg-[#1d1611] px-2.5 py-0.5 rounded-full border border-stone-800">
+            <span class="text-xs text-[#fcefc2] bg-[#1d1611] px-2.5 py-0.5 rounded-full border border-stone-800 product-badge-text notranslate" translate="no">
               ${svc.badge}
             </span>
           </div>
@@ -3990,11 +3818,22 @@ class MythicApp {
             <div class="w-12 h-12 rounded-xl bg-[#221a14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] text-xl group-hover:scale-110 transition-transform">
               <i class="fa-solid ${svc.icon}"></i>
             </div>
-            <div>
-              <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors product-card-title">${svc.name}</h3>
-              <p class="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">${svc.description}</p>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors product-card-title notranslate" translate="no">${svc.name}</h3>
+              <p class="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed product-desc notranslate" translate="no">${svc.description}</p>
             </div>
           </div>
+
+          ${retailBullets.length > 0 ? `
+            <ul class="space-y-1.5 my-3 text-[11px] text-stone-300/90 border-t border-b border-stone-800/80 py-2.5">
+              ${retailBullets.slice(0, 3).map(b => `
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-circle-check text-[#ee914f] text-[10px] shrink-0"></i>
+                  <span class="line-clamp-1 product-bullet-text notranslate" translate="no">${b}</span>
+                </li>
+              `).join('')}
+            </ul>
+          ` : ''}
 
           ${isBoosterSession ? `
             <div class="mb-3 p-2.5 rounded-xl bg-[#251b14] border border-[#ee914f]/40 text-xs text-[#fcefc2] flex items-center justify-between">
@@ -11677,7 +11516,134 @@ class MythicApp {
       '9 mazmorras exclusivas e inéditas': { en: '9 Exclusive & Brand New Dungeons', pt: '9 Masmorras Exclusivas e Inéditas' },
       '9 mazmorras exclusivas e ineditas': { en: '9 Exclusive & Brand New Dungeons', pt: '9 Masmorras Exclusivas e Inéditas' },
       '26 mazmorras clásicas adaptadas': { en: '26 Classic Adapted Dungeons', pt: '26 Masmorras Clássicas Adaptadas' },
-      '26 mazmorras clasicas adaptadas': { en: '26 Classic Adapted Dungeons', pt: '26 Masmorras Clássicas Adaptadas' }
+      '26 mazmorras clasicas adaptadas': { en: '26 Classic Adapted Dungeons', pt: '26 Masmorras Clássicas Adaptadas' },
+
+      // BOOSTER PRO PORTAL COMPLETE TRANSLATIONS
+      'tablón de contratos': { en: 'Contract Board', pt: 'Quadro de Contratos' },
+      'tablon de contratos': { en: 'Contract Board', pt: 'Quadro de Contratos' },
+      'bolsa de pedidos': { en: 'Order Board', pt: 'Bolsa de Pedidos' },
+      'bolsa de pedidos (find orders)': { en: 'Order Board (Find Orders)', pt: 'Mural de Pedidos (Find Orders)' },
+      'mis contratos': { en: 'My Contracts', pt: 'Meus Contratos' },
+      'mis contratos (my orders)': { en: 'My Contracts (My Orders)', pt: 'Meus Contratos (My Orders)' },
+      'multi chat': { en: 'Multi Chat', pt: 'Multi Chat' },
+      'centro de mensajería (multi chat)': { en: 'Messaging Center (Multi Chat)', pt: 'Central de Mensagens (Multi Chat)' },
+      'centro de mensajeria (multi chat)': { en: 'Messaging Center (Multi Chat)', pt: 'Central de Mensagens (Multi Chat)' },
+      'venta extra (50%)': { en: 'Extra Sale (50%)', pt: 'Venda Extra (50%)' },
+      'venta de servicios adicionales (50% ganancia)': { en: 'Upsell Additional Services (50% Profit)', pt: 'Venda de Serviços Adicionais (50% Lucro)' },
+      'billetera / pagos': { en: 'Wallet / Payouts', pt: 'Carteira / Pagamentos' },
+      'billetera y cobros': { en: 'Wallet & Payouts', pt: 'Carteira e Pagamentos' },
+      'mi perfil pro': { en: 'My Pro Profile', pt: 'Meu Perfil Pro' },
+      'mi perfil pro (configuración & datos de pago)': { en: 'My Pro Profile (Settings & Payout Details)', pt: 'Meu Perfil Pro (Configurações e Pagamentos)' },
+      'mi perfil pro (configuracion & datos de pago)': { en: 'My Pro Profile (Settings & Payout Details)', pt: 'Meu Perfil Pro (Configurações e Pagamentos)' },
+      'ver tienda con pro': { en: 'View Store with Pro', pt: 'Ver Loja com Pro' },
+      'toma órdenes al 30% base o puja en subasta hasta el límite del 50%.': { en: 'Take orders at 30% base or bid up to 50% max.', pt: 'Pegue pedidos a 30% base ou dê lances até o limite de 50%.' },
+      'toma ordenes al 30% base o puja en subasta hasta el limite del 50%.': { en: 'Take orders at 30% base or bid up to 50% max.', pt: 'Pegue pedidos a 30% base ou dê lances até o limite de 50%.' },
+      'todas las regiones': { en: 'All Regions', pt: 'Todas as Regiões' },
+      'cualquiera': { en: 'Any', pt: 'Qualquer' },
+      'tus contratos': { en: 'Your Contracts', pt: 'Seus Contratos' },
+      'contratos': { en: 'Contracts', pt: 'Contratos' },
+      'activos': { en: 'Active', pt: 'Ativos' },
+      'en revisión': { en: 'In Review', pt: 'Em Revisão' },
+      'en revision': { en: 'In Review', pt: 'Em Revisão' },
+      'finalizados': { en: 'Completed', pt: 'Concluídos' },
+      'mis chats activos': { en: 'My Active Chats', pt: 'Meus Chats Ativos' },
+      'selecciona una orden para abrir la sala de chat': { en: 'Select an order to open the chat room', pt: 'Selecione um pedido para abrir a sala de chat' },
+      'solo tú y el cliente que pagó la orden pueden ver esta conversación.': { en: 'Only you and the paying customer can view this conversation.', pt: 'Apenas você e o cliente pagante podem ver esta conversa.' },
+      'solo tu y el cliente que pago la orden pueden ver esta conversacion.': { en: 'Only you and the paying customer can view this conversation.', pt: 'Apenas você e o cliente pagante podem ver esta conversa.' },
+      'saldo disponible para retiro': { en: 'Available Balance for Payout', pt: 'Saldo Disponível para Saque' },
+      'aprobado para pago': { en: 'Approved for payout', pt: 'Aprovado para pagamento' },
+      'comisiones': { en: 'Commissions', pt: 'Comissões' },
+      '30% base | 50% venta adicional': { en: '30% base | 50% upsell', pt: '30% base | 50% venda adicional' },
+      '70% empresa / 50% empresa en upsell': { en: '70% company / 50% company on upsell', pt: '70% empresa / 50% empresa em upsell' },
+      'rango y reputación': { en: 'Rank & Reputation', pt: 'Patente & Reputação' },
+      'rango y reputacion': { en: 'Rank & Reputation', pt: 'Patente & Reputação' },
+      'master booster (acceso prioritario)': { en: 'Master Booster (Priority Access)', pt: 'Master Booster (Acesso Prioritário)' },
+      'solicitud de cobro de ganancias': { en: 'Earnings Payout Request', pt: 'Solicitação de Saque de Ganhos' },
+      'datos vinculados a tu': { en: 'Data linked to your', pt: 'Dados vinculados ao seu' },
+      'monto a retirar ($ usd):': { en: 'Amount to withdraw ($ USD):', pt: 'Valor para sacar ($ USD):' },
+      'método de pago:': { en: 'Payment Method:', pt: 'Método de Pagamento:' },
+      'metodo de pago:': { en: 'Payment Method:', pt: 'Método de Pagamento:' },
+      'método de pago preferido:': { en: 'Preferred Payment Method:', pt: 'Método de Pagamento Preferido:' },
+      'metodo de pago preferido:': { en: 'Preferred Payment Method:', pt: 'Método de Pagamento Preferido:' },
+      'id de billetera o cuenta de destino:': { en: 'Wallet ID or Destination Account:', pt: 'ID da Carteira ou Conta de Destino:' },
+      'solicitar retiro': { en: 'Request Payout', pt: 'Solicitar Saque' },
+      'perfil pro & configuración de cobros': { en: 'Pro Profile & Payout Settings', pt: 'Perfil Pro & Configurações de Saque' },
+      'perfil pro & configuracion de cobros': { en: 'Pro Profile & Payout Settings', pt: 'Perfil Pro & Configurações de Saque' },
+      'configura tu nombre de juego, foto de perfil, datos de cobro de ganancias y contacto con el staff.': { en: 'Configure your in-game name, avatar, payout details, and staff contact.', pt: 'Configure seu nome de jogo, avatar, dados de saque e contato com a equipe.' },
+      'booster activo & verificado': { en: 'Active & Verified Booster', pt: 'Booster Ativo & Verificado' },
+      'garantía de pagos mythic': { en: 'Mythic Payout Guarantee', pt: 'Garantia de Pagamentos Mythic' },
+      '1. identidad de booster & foto de perfil': { en: '1. Booster Identity & Profile Photo', pt: '1. Identidade de Booster & Foto de Perfil' },
+      'cuentas vinculadas (acceso unificado)': { en: 'Linked Accounts (Unified Access)', pt: 'Contas Vinculadas (Acesso Unificado)' },
+      'mismo perfil y cobros': { en: 'Same Profile & Payouts', pt: 'Mesmo Perfil e Pagamentos' },
+      'vincula tu cuenta de discord y google para iniciar sesión indistintamente con cualquiera de las dos a tu mismo rango, historial y cobros.': {
+        en: 'Link your Discord and Google accounts to sign in with either to your same rank, history, and payouts.',
+        pt: 'Vincule suas contas do Discord e Google para entrar com qualquer uma delas no mesmo perfil, histórico e saques.'
+      },
+      'vincula tu cuenta de discord y google para iniciar sesion indistintamente con cualquiera de las dos a tu mismo rango, historial y cobros.': {
+        en: 'Link your Discord and Google accounts to sign in with either to your same rank, history, and payouts.',
+        pt: 'Vincule suas contas do Discord e Google para entrar com qualquer uma delas no mesmo perfil, histórico e saques.'
+      },
+      'nombre o apodo de booster:': { en: 'Booster Name or Nickname:', pt: 'Nome ou Apelido do Booster:' },
+      'nombre visible para clientes en el chat y asignaciones.': { en: 'Name visible to clients in chat and assignments.', pt: 'Nome visível para clientes no chat e atribuições.' },
+      'rango / título:': { en: 'Rank / Title:', pt: 'Patente / Título:' },
+      'rango / titulo:': { en: 'Rank / Title:', pt: 'Patente / Título:' },
+      'asignado por el staff según tus puntos y antigüedad.': { en: 'Assigned by staff based on your points and tenure.', pt: 'Atribuído pela equipe de acordo com seus pontos e tempo.' },
+      'asignado por el staff segun tus puntos y antiguedad.': { en: 'Assigned by staff based on your points and tenure.', pt: 'Atribuído pela equipe de acordo com seus pontos e tempo.' },
+      'url de imagen de perfil (avatar):': { en: 'Profile Image URL (Avatar):', pt: 'URL da Imagem de Perfil (Avatar):' },
+      'traer de discord': { en: 'Fetch from Discord', pt: 'Buscar do Discord' },
+      'reset': { en: 'Reset', pt: 'Redefinir' },
+      'pega el link de cualquier foto tuya o pulsa "traer de discord" para vincular tu avatar oficial.': {
+        en: 'Paste the link of any photo or click "Fetch from Discord" to link your official avatar.',
+        pt: 'Cole o link de qualquer foto sua ou clique em "Buscar do Discord" para vincular seu avatar oficial.'
+      },
+      'o elige un avatar épico rápido:': { en: 'Or choose a quick epic avatar:', pt: 'Ou escolha um avatar épico rápido:' },
+      'o elige un avatar epico rapido:': { en: 'Or choose a quick epic avatar:', pt: 'Ou escolha um avatar épico rápido:' },
+      'biografía / presentación pro:': { en: 'Bio / Pro Presentation:', pt: 'Biografia / Apresentação Pro:' },
+      'biografia / presentacion pro:': { en: 'Bio / Pro Presentation:', pt: 'Biografia / Apresentação Pro:' },
+      '2. datos de pago & liquidación de retiros (70/30 & 50%)': { en: '2. Payout Details & Settlement (70/30 & 50%)', pt: '2. Dados de Pagamento & Liquidação de Saques (70/30 & 50%)' },
+      '2. datos de pago & liquidacion de retiros (70/30 & 50%)': { en: '2. Payout Details & Settlement (70/30 & 50%)', pt: '2. Dados de Pagamento & Liquidação de Saques (70/30 & 50%)' },
+      'pagos express': { en: 'Express Payouts', pt: 'Pagamentos Express' },
+      'correo de pago / cobro:': { en: 'Payout / Payment Email:', pt: 'E-mail para Pagamento / Saque:' },
+      'email para recibir comprobantes y pagos vía paypal o binance.': { en: 'Email to receive receipts and payouts via PayPal or Binance.', pt: 'E-mail para receber comprovantes e saques via PayPal ou Binance.' },
+      'email para recibir comprobantes y pagos via paypal o binance.': { en: 'Email to receive receipts and payouts via PayPal or Binance.', pt: 'E-mail para receber comprovantes e saques via PayPal ou Binance.' },
+      'cuenta donde el staff enviará tus fondos al solicitar retiro.': { en: 'Account where staff will transfer your funds upon withdrawal.', pt: 'Conta onde a equipe enviará seus fundos ao solicitar o saque.' },
+      'cuenta donde el staff enviara tus fondos al solicitar retiro.': { en: 'Account where staff will transfer your funds upon withdrawal.', pt: 'Conta onde a equipe enviará seus fundos ao solicitar o saque.' },
+      'moneda preferida:': { en: 'Preferred Currency:', pt: 'Moeda Preferida:' },
+      '3. datos de juego wow & contacto directo': { en: '3. WoW Game Details & Direct Contact', pt: '3. Dados de Jogo WoW & Contato Direto' },
+      'usuario de discord (tag):': { en: 'Discord Username (Tag):', pt: 'Usuário do Discord (Tag):' },
+      'región principal:': { en: 'Main Region:', pt: 'Região Principal:' },
+      'region principal:': { en: 'Main Region:', pt: 'Região Principal:' },
+      'américa (us) & europa (eu)': { en: 'Americas (US) & Europe (EU)', pt: 'Américas (US) & Europa (EU)' },
+      'america (us) & europa (eu)': { en: 'Americas (US) & Europe (EU)', pt: 'Américas (US) & Europa (EU)' },
+      'solo américa (us)': { en: 'Americas (US) Only', pt: 'Apenas Américas (US)' },
+      'solo america (us)': { en: 'Americas (US) Only', pt: 'Apenas Américas (US)' },
+      'solo europa (eu)': { en: 'Europe (EU) Only', pt: 'Apenas Europa (EU)' },
+      'reino / servidor principal:': { en: 'Main Realm / Server:', pt: 'Reino / Servidor Principal:' },
+      'facción:': { en: 'Faction:', pt: 'Facção:' },
+      'faccion:': { en: 'Faction:', pt: 'Facção:' },
+      'ambas (cross-faction)': { en: 'Both (Cross-Faction)', pt: 'Ambas (Cross-Faction)' },
+      'horda': { en: 'Horde', pt: 'Horda' },
+      'alianza': { en: 'Alliance', pt: 'Aliança' },
+      'roles / especialidades:': { en: 'Roles / Specialties:', pt: 'Funções / Especialidades:' },
+      'correo de contacto alternativo:': { en: 'Alternative Contact Email:', pt: 'E-mail de Contato Alternativo:' },
+      'descartar cambios': { en: 'Discard Changes', pt: 'Descartar Alterações' },
+      'guardar perfil pro': { en: 'Save Pro Profile', pt: 'Salvar Perfil Pro' },
+      'saldo retirable': { en: 'Withdrawable Balance', pt: 'Saldo para Saque' },
+      'pago preferido:': { en: 'Preferred Payout:', pt: 'Pagamento Preferido:' },
+      'pago preferido': { en: 'Preferred Payout', pt: 'Pagamento Preferido' },
+      'reputación': { en: 'Reputation', pt: 'Reputação' },
+      'reputacion': { en: 'Reputation', pt: 'Reputação' },
+      'tomar orden': { en: 'Claim Order', pt: 'Pegar Pedido' },
+      'pujar': { en: 'Bid', pt: 'Dar Lance' },
+      'pujar subasta': { en: 'Auction Bid', pt: 'Dar Lance no Leilão' },
+      'detalles': { en: 'Details', pt: 'Detalhes' },
+      'ver detalles': { en: 'View Details', pt: 'Ver Detalhes' },
+      'subir captura': { en: 'Upload Screenshot', pt: 'Enviar Captura de Tela' },
+      'marcar completada': { en: 'Mark Completed', pt: 'Marcar como Concluído' },
+      'liberar orden': { en: 'Release Order', pt: 'Liberar Pedido' },
+      'liberar contrato': { en: 'Release Contract', pt: 'Liberar Contrato' },
+      'enviar mensaje': { en: 'Send Message', pt: 'Enviar Mensagem' },
+      'chat de la orden': { en: 'Order Chat', pt: 'Chat do Pedido' }
     };
 
     const isProtected = (el) => {
@@ -11686,7 +11652,9 @@ class MythicApp {
       if (el.closest('#header-lang-selector')) return true;
       if (el.closest('#user-session-badge')) return true;
       if (el.closest('.player-role') || el.classList.contains('player-role')) return true;
-      if (el.closest('.notranslate') || el.classList.contains('notranslate') || el.getAttribute('translate') === 'no') return true;
+      if (el.closest('.notranslate, [translate="no"], .product-card-title, .product-bullet-text, .product-badge-text, .product-item-title, .product-desc, #sp-title, #sp-description, #sp-checklist-container, #sp-options-container, #sp-options-form, #sp-badges-container, #sp-breadcrumb-name, #sp-breadcrumb-cat, #sp-checklist-title') ||
+          el.classList.contains('notranslate') ||
+          el.getAttribute('translate') === 'no') return true;
       return false;
     };
 
