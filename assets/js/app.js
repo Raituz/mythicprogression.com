@@ -196,11 +196,11 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.4.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.5.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
-          if (!parsed.find(s => s.id === 'forever-powerleveling-custom') || !parsed.find(s => s.id === 'forever-gold-pack') || !parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
+          if (!parsed.find(s => s.id === 'forever-powerleveling-custom') || parsed.find(s => s.id === 'forever-gold-pack') || !parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
             shouldReload = true;
           }
         } catch (e) {
@@ -213,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.4.0');
+        localStorage.setItem('mp_catalog_v', '3.5.0');
         this.saveServices();
       }
 
@@ -389,22 +389,6 @@ class MythicApp {
         descEn: 'Explore all boosts, exclusive dungeons, gold, leveling and raid services available for WoW Forever.',
         descPt: 'Explore todos os boosts, masmorras exclusivas, serviços de ouro, nível e raides disponíveis para o WoW Forever.',
         icon: 'fa-layer-group'
-      },
-      gold: {
-        name: 'Gold (Oro)',
-        title: 'Oro WoW Forever (Farmed 100% a Mano)',
-        titleEn: 'WoW Forever Gold (100% Hand-Farmed)',
-        titlePt: 'Ouro WoW Forever (100% Manual)',
-        crumb: 'Gold',
-        crumbEn: 'Gold',
-        crumbPt: 'Ouro',
-        badge: 'Entrega Inmediata • F2F / Correo / AH',
-        badgeEn: 'Instant Delivery • F2F / Mail / AH',
-        badgePt: 'Entrega Imediata • F2F / Correio / AH',
-        desc: 'Oro farmado legítimamente sin bots para comprar monturas épicas, consumibles de raid, equipo crafteado y profesiones.',
-        descEn: 'Legitimately hand-farmed gold with zero bots to buy epic mounts, raid consumables, crafted gear, and professions.',
-        descPt: 'Ouro farmado legitimamente sem bots para comprar montarias épicas, consumíveis de raide, equipamentos e profissões.',
-        icon: 'fa-coins'
       },
       powerleveling: {
         name: 'Powerleveling 1-60',
@@ -3582,7 +3566,7 @@ class MythicApp {
     if (catKey === 'legacy-challenges') catKey = 'legacy';
 
     const validCats = [
-      'all', 'gold', 'powerleveling', 'professions', 'dungeons',
+      'all', 'powerleveling', 'professions', 'dungeons',
       'raids', 'gearing', 'legacy', 'pvp', 'reputations', 'mounts'
     ];
     if (!validCats.includes(catKey)) catKey = 'all';
@@ -7143,7 +7127,7 @@ class MythicApp {
             ${svc.badge || 'Popular'}
           </span>
         </td>
-        <td class="py-4 px-5 text-right whitespace-nowrap">
+        <td class="py-4 px-5 text-right whitespace-nowrap min-w-[220px]">
           <div class="flex items-center justify-end gap-2">
             <button onclick="app.editProductModal('${svc.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
               <i class="fa-solid fa-pen-to-square text-[#a855f7]"></i>
@@ -7415,6 +7399,8 @@ class MythicApp {
     document.getElementById('adm-prod-icon').value = 'fa-dungeon';
     document.getElementById('adm-prod-badge').value = 'Nuevo';
     document.getElementById('adm-prod-desc').value = '';
+    const bulletsEl = document.getElementById('adm-prod-bullets');
+    if (bulletsEl) bulletsEl.value = '';
 
     this.resetModalMplusDefaults();
 
@@ -7440,6 +7426,8 @@ class MythicApp {
     document.getElementById('adm-prod-icon').value = svc.icon || 'fa-dungeon';
     document.getElementById('adm-prod-badge').value = svc.badge || 'Popular';
     document.getElementById('adm-prod-desc').value = svc.description || '';
+    const bEl = document.getElementById('adm-prod-bullets');
+    if (bEl) bEl.value = (Array.isArray(svc.bullets) && svc.bullets.length > 0) ? svc.bullets.join('\n') : '';
 
     // Populate Tab 2: Key Levels
     const opts = svc.options || {};
@@ -7551,6 +7539,9 @@ class MythicApp {
     const dungeonsRaw = document.getElementById('adm-dungeons-textarea')?.value || '';
     const compiledDungeons = dungeonsRaw.split('\n').map(d => d.trim()).filter(Boolean);
 
+    const bulletsRaw = document.getElementById('adm-prod-bullets')?.value || '';
+    const compiledBullets = bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean);
+
     const compiledEstimates = {
       start: document.getElementById('adm-est-start')?.value.trim() || '10-15 min',
       execution: document.getElementById('adm-est-exec')?.value.trim() || '15-30 min'
@@ -7588,6 +7579,7 @@ class MythicApp {
         existing.icon = icon;
         existing.badge = badge;
         existing.description = desc;
+        existing.bullets = compiledBullets;
         existing.options = Object.assign({}, existing.options || {}, compiledOptions);
       }
     } else {
@@ -7601,6 +7593,7 @@ class MythicApp {
         icon: icon,
         badge: badge,
         description: desc,
+        bullets: compiledBullets,
         page: 'product?id=' + cleanSlug,
         options: compiledOptions
       };
@@ -11598,6 +11591,7 @@ class MythicApp {
       'cualquiera': { en: 'Any', pt: 'Qualquer' },
       'tus contratos': { en: 'Your Contracts', pt: 'Seus Contratos' },
       'contratos': { en: 'Contracts', pt: 'Contratos' },
+      'activo': { en: 'Active', pt: 'Ativo' },
       'activos': { en: 'Active', pt: 'Ativos' },
       'en revisión': { en: 'In Review', pt: 'Em Revisão' },
       'en revision': { en: 'In Review', pt: 'Em Revisão' },

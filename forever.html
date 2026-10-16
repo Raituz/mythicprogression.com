@@ -105,7 +105,7 @@
       <div id="tab-game-forever" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-lg shadow-amber-500/30 border border-amber-400 flex items-center justify-center gap-2 cursor-default">
         <i class="fa-solid fa-hourglass-half text-stone-950 text-sm"></i>
         <span>WoW Forever</span>
-        <span class="px-1.5 py-0.5 rounded bg-stone-950 text-amber-400 text-[9px] font-black uppercase tracking-normal">Activo</span>
+        <span class="px-1.5 py-0.5 rounded bg-stone-950 text-amber-400 text-[9px] font-black uppercase tracking-normal" data-i18n="activo">Activo</span>
       </div>
     </div>
   </section>
@@ -171,14 +171,6 @@
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-layer-group text-amber-400 w-4 text-center"></i>
               <span>Todos los Productos</span>
-            </div>
-            <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
-          </button>
-
-          <button type="button" onclick="app.filterForeverCategory('gold')" data-cat="gold" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
-            <div class="flex items-center gap-2.5">
-              <i class="fa-solid fa-coins text-amber-400 w-4 text-center"></i>
-              <span>Gold (Oro)</span>
             </div>
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
@@ -527,7 +519,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.5.7"></script>
+  <script src="assets/js/app.js?v=3.5.8"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {

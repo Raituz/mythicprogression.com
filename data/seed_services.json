@@ -1669,47 +1669,6 @@
         "page":  "forever"
     },
     {
-        "basePrice":  19.99,
-        "id":  "forever-gold-pack",
-        "options":  {
-                        "cashbackPercent":  5,
-                        "volumeDiscount":  5,
-                        "estimates":  {
-                                          "start":  "10-15 min",
-                                          "execution":  "15-30 min"
-                                      },
-                        "rulesets":  [
-                                         {
-                                             "price":  0,
-                                             "name":  "PvE (Normal Realm)",
-                                             "recommended":  true
-                                         },
-                                         {
-                                             "price":  0,
-                                             "name":  "PvP (PvP Realm)"
-                                         },
-                                         {
-                                             "price":  0,
-                                             "name":  "RP (Roleplay Realm)"
-                                         }
-                                     ]
-                    },
-        "foreverCategory":  "gold",
-        "category":  "WoW Forever Gold",
-        "name":  "WoW Forever Gold Packages (Fast Delivery)",
-        "description":  "Clean, safe gold for WoW Forever. Delivered in 15-30 minutes via in-game mail or face-to-face trade on PvE, PvP, or RP realms.",
-        "badge":  "100% Safe",
-        "bullets":  [
-                        "Fast Delivery in 15-30 min",
-                        "100% Hand-farmed \u0026 Safe",
-                        "Official PvE, PvP and RP Realms"
-                    ],
-        "game":  "forever",
-        "icon":  "fa-coins",
-        "originalPrice":  24.99,
-        "page":  "forever"
-    },
-    {
         "basePrice":  85,
         "id":  "forever-pvp-rank",
         "options":  {

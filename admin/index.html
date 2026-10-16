@@ -344,7 +344,7 @@
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left min-w-[1050px] border-collapse">
               <thead>
                 <tr class="border-b border-stone-800 text-[11px] text-stone-400 uppercase tracking-wider bg-[#120726]">
                   <th class="py-4 px-5 whitespace-nowrap min-w-[120px]">ID Servicio</th>
@@ -352,7 +352,7 @@
                   <th class="py-4 px-5 whitespace-nowrap min-w-[130px]">Categoría</th>
                   <th class="py-4 px-5 whitespace-nowrap min-w-[120px]">Precio Base</th>
                   <th class="py-4 px-5 whitespace-nowrap min-w-[140px]">Etiqueta (Badge)</th>
-                  <th class="py-4 px-5 whitespace-nowrap min-w-[130px] text-right">Acciones</th>
+                  <th class="py-4 px-5 whitespace-nowrap min-w-[220px] text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody id="admin-products-table" class="divide-y divide-stone-800/60"></tbody>
@@ -907,6 +907,17 @@
             <label class="block text-xs font-semibold text-stone-300 mb-1">Descripción Completa del Producto:</label>
             <textarea id="adm-prod-desc" rows="4" placeholder="Describe qué incluye el servicio, beneficios, recompensas de la Gran Cámara, etc." class="w-full bg-[#14092b] border border-stone-700 rounded-xl p-3 text-xs text-white focus:border-[#a855f7] outline-none"></textarea>
           </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1 flex items-center justify-between">
+              <span>Qué Obtendrás (Bullets / What You Will Get):</span>
+              <span class="text-[10px] text-stone-500">Un beneficio por línea (aparece en la tarjeta y en "What you will get")</span>
+            </label>
+            <textarea id="adm-prod-bullets" rows="3" placeholder="Ej:
+100% Handcrafted boost, safe with VPN protection
+Level 1 to 30 Hand-leveling
+Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-stone-700 rounded-xl p-3 text-xs text-white focus:border-[#a855f7] outline-none"></textarea>
+          </div>
         </div>
 
         <!-- TAB 2: PIEDRAS & PRECIOS M+ -->
@@ -1127,7 +1138,7 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=3.5.7"></script>
+  <script src="assets/js/app.js?v=3.5.8"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
