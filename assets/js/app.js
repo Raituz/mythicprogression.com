@@ -225,19 +225,20 @@ class MythicApp {
     try {
       const storedOrders = localStorage.getItem('mp_orders');
       const ordersVersion = localStorage.getItem('mp_orders_v');
-      if (storedOrders && JSON.parse(storedOrders).length > 0 && ordersVersion === MythicApp.ORDERS_VERSION) {
-        this.orders = JSON.parse(storedOrders);
-      } else {
-        const res = await fetch('data/seed_orders.json');
-        const seedOrders = await res.json();
-        let customOrders = [];
-        if (storedOrders) {
-          try {
-            const parsed = JSON.parse(storedOrders);
-            customOrders = parsed.filter(o => o && o.id && !seedOrders.some(so => so.id === o.id));
-          } catch (e) {}
+      const DEMO_ORDER_IDS = ['MP-91024', 'MP-76512', 'MP-88931'];
+      let loadedOrders = [];
+      if (storedOrders) {
+        try {
+          const parsed = JSON.parse(storedOrders);
+          if (Array.isArray(parsed)) {
+            loadedOrders = parsed.filter(o => o && o.id && !DEMO_ORDER_IDS.includes(o.id));
+          }
+        } catch (e) {
+          loadedOrders = [];
         }
-        this.orders = [...customOrders, ...seedOrders];
+      }
+      this.orders = loadedOrders;
+      if (ordersVersion !== MythicApp.ORDERS_VERSION) {
         this.saveOrders();
         localStorage.setItem('mp_orders_v', MythicApp.ORDERS_VERSION);
       }
@@ -360,7 +361,7 @@ class MythicApp {
   // Owner identity. Only granted when the Discord ID comes from a real OAuth handshake.
   static get OWNER_DISCORD_ID() { return '443948776562884620'; }
   static get SESSION_VERSION() { return '3'; }
-  static get ORDERS_VERSION() { return '3.0.0'; }
+  static get ORDERS_VERSION() { return '3.1.0'; }
 
   static get FOREVER_CATEGORIES() {
     return {
@@ -641,10 +642,13 @@ class MythicApp {
 
   syncOrdersToAlwaysdataBot(deletedOrderId = null) {
     try {
-      const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
+      const DEMO_ORDER_IDS = ['MP-91024', 'MP-76512', 'MP-88931'];
+      const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING') && !DEMO_ORDER_IDS.includes(o.id));
+      const deletedIds = deletedOrderId ? [deletedOrderId] : [];
+      const allDeletedIds = Array.from(new Set([...deletedIds, ...DEMO_ORDER_IDS]));
       const payload = {
         orders: availableOrders,
-        deletedOrderIds: deletedOrderId ? [deletedOrderId] : [],
+        deletedOrderIds: allDeletedIds,
         timestamp: new Date().toISOString()
       };
       fetch('https://mythicprogression.alwaysdata.net/api/orders_sync.php', {
@@ -658,8 +662,11 @@ class MythicApp {
   }
 
   saveOrders() {
+    const DEMO_ORDER_IDS = ['MP-91024', 'MP-76512', 'MP-88931'];
     if (Array.isArray(this.orders)) {
-      this.orders = this.orders.map(o => this.sanitizeOrder(o));
+      this.orders = this.orders
+        .filter(o => o && o.id && !DEMO_ORDER_IDS.includes(o.id))
+        .map(o => this.sanitizeOrder(o));
     }
     localStorage.setItem('mp_orders', JSON.stringify(this.orders));
     if (this.db && Array.isArray(this.orders)) {
@@ -731,14 +738,27 @@ class MythicApp {
     // 1. Escuchar cambios de Órdenes en tiempo real (Colección 'orders')
     this.db.collection('orders').onSnapshot((snapshot) => {
       if (snapshot.empty) {
-        this.seedFirestoreInitialOrders();
+        this.orders = [];
+        localStorage.setItem('mp_orders', JSON.stringify([]));
+        if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+        if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
+        if (typeof this.renderAdminOverview === 'function') this.renderAdminOverview();
+        if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+        if (typeof this.renderChatList === 'function') this.renderChatList();
+        if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
         return;
       }
 
+      const DEMO_ORDER_IDS = ['MP-91024', 'MP-76512', 'MP-88931'];
       const remoteOrders = [];
       snapshot.forEach(doc => {
         let data = doc.data();
         if (data && data.id) {
+          if (DEMO_ORDER_IDS.includes(data.id)) {
+            // Delete legacy demo order from Firestore permanently
+            this.db.collection('orders').doc(data.id).delete().catch(() => {});
+            return;
+          }
           const rawPrice = data.totalPrice;
           const rawShare = data.companyShare;
           data = this.sanitizeOrder(data);
@@ -756,21 +776,19 @@ class MythicApp {
         }
       });
 
-      if (remoteOrders.length > 0) {
-        remoteOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        this.orders = remoteOrders;
-        localStorage.setItem('mp_orders', JSON.stringify(remoteOrders));
+      remoteOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      this.orders = remoteOrders;
+      localStorage.setItem('mp_orders', JSON.stringify(remoteOrders));
 
-        if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
-        if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
-        if (typeof this.renderAdminOverview === 'function') this.renderAdminOverview();
-        if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
-        if (typeof this.renderChatList === 'function') this.renderChatList();
-        if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+      if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+      if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
+      if (typeof this.renderAdminOverview === 'function') this.renderAdminOverview();
+      if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+      if (typeof this.renderChatList === 'function') this.renderChatList();
+      if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
 
-        if (this.activeChatOrderId && this.activeChatOrderId !== 'live_support') {
-          this.openChat(this.activeChatOrderId);
-        }
+      if (this.activeChatOrderId && this.activeChatOrderId !== 'live_support') {
+        this.openChat(this.activeChatOrderId);
       }
     }, (error) => {
       console.warn('Firestore orders sync notice:', error);
@@ -861,12 +879,8 @@ class MythicApp {
   }
 
   seedFirestoreInitialOrders() {
-    if (!this.db || !Array.isArray(this.orders) || this.orders.length === 0) return;
-    this.orders.forEach(o => {
-      if (o && o.id) {
-        this.db.collection('orders').doc(o.id).set(o).catch(e => console.warn('Seed order error:', e));
-      }
-    });
+    // Deprecated: No more fake seed orders in production.
+    return;
   }
 
   syncLiveSupportToCloud() {
