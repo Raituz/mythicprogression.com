@@ -788,7 +788,7 @@ class MythicApp {
       if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
 
       if (this.activeChatOrderId && this.activeChatOrderId !== 'live_support') {
-        this.openChat(this.activeChatOrderId);
+        this.openChat(this.activeChatOrderId, false);
       }
     }, (error) => {
       console.warn('Firestore orders sync notice:', error);
@@ -6682,11 +6682,11 @@ class MythicApp {
     `).join('');
 
     if (!this.activeChatOrderId && myChatOrders.length > 0) {
-      this.openChat(myChatOrders[0].id);
+      this.openChat(myChatOrders[0].id, false);
     }
   }
 
-  openChat(orderId) {
+  openChat(orderId, shouldSwitchTab = true) {
     this.activeChatOrderId = orderId;
     const order = this.orders.find(o => o.id === orderId);
     if (!order) return;
@@ -6697,11 +6697,13 @@ class MythicApp {
       return;
     }
 
-    if (typeof window.switchProTab === 'function') {
-      window.switchProTab('chat');
-    }
-    if (typeof window.switchAdminTab === 'function') {
-      window.switchAdminTab('chat');
+    if (shouldSwitchTab) {
+      if (typeof window.switchProTab === 'function') {
+        window.switchProTab('chat');
+      }
+      if (typeof window.switchAdminTab === 'function') {
+        window.switchAdminTab('chat');
+      }
     }
 
     this.renderChatList();
