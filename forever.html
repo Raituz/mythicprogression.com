@@ -54,7 +54,6 @@
 
   <!-- FOREVER HERO BANNER -->
   <header class="py-14 px-4 border-b border-stone-900 ember-glow text-center relative overflow-hidden">
-    <base href="/">
     <div class="max-w-4xl mx-auto relative z-10">
       
       <div class="flex items-center justify-center gap-2 mb-4 text-xs font-semibold text-stone-400">
@@ -96,8 +95,23 @@
     </div>
   </header>
 
+  <!-- GAME MODE SELECTOR TABS (RETAIL VS FOREVER) -->
+  <section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-6 relative z-30">
+    <div class="glass-panel p-2 rounded-2xl border border-stone-800/90 flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto shadow-2xl backdrop-blur-xl">
+      <a href="/" id="tab-game-retail" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-[#18110b] text-stone-400 hover:text-white border border-stone-800 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-dragon text-sm text-[#ee914f]"></i>
+        <span>WoW Retail</span>
+      </a>
+      <div id="tab-game-forever" class="flex-1 py-3 px-4 rounded-xl font-cinzel font-bold text-xs uppercase tracking-wider transition-all bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-lg shadow-amber-500/30 border border-amber-400 flex items-center justify-center gap-2 cursor-default">
+        <i class="fa-solid fa-hourglass-half text-stone-950 text-sm"></i>
+        <span>WoW Forever</span>
+        <span class="px-1.5 py-0.5 rounded bg-stone-950 text-amber-400 text-[9px] font-black uppercase tracking-normal">Activo</span>
+      </div>
+    </div>
+  </section>
+
   <!-- QUICK ACCESS CATEGORIES -->
-  <section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-6 relative z-20">
+  <section class="max-w-6xl mx-auto px-4 lg:px-8 mt-6 relative z-20">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       
       <div onclick="app.filterForeverCategory('dungeons'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-amber-500/40 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
@@ -513,7 +527,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.5.2"></script>
+  <script src="assets/js/app.js?v=3.5.3"></script>
   <script>
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {

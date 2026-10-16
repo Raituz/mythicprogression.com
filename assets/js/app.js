@@ -196,11 +196,11 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.0.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.1.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
-          if (!parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
+          if (!parsed.find(s => s.id === 'forever-gold-pack') || !parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
             shouldReload = true;
           }
         } catch (e) {
@@ -213,7 +213,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.0.0');
+        localStorage.setItem('mp_catalog_v', '3.1.0');
         this.saveServices();
       }
     } catch (e) {
@@ -3642,7 +3642,11 @@ class MythicApp {
   initStoreFront() {
     const urlParams = new URLSearchParams(window.location.search);
     const gParam = urlParams.get('game');
-    this.activeGameFilter = (gParam === 'forever') ? 'forever' : 'retail';
+    if (gParam === 'forever') {
+      window.location.replace('forever');
+      return;
+    }
+    this.activeGameFilter = 'retail';
 
     this.renderServiceCards();
     this.updateCartCounter();
@@ -3770,7 +3774,11 @@ class MythicApp {
   }
 
   switchCatalogGame(game) {
-    this.activeGameFilter = game;
+    if (game === 'forever') {
+      window.location.href = 'forever';
+      return;
+    }
+    this.activeGameFilter = 'retail';
     this.updateGameTabsUI();
     this.renderServiceCards();
     if (this.currentLang && this.currentLang !== 'es') {
