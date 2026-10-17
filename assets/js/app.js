@@ -285,6 +285,13 @@ class MythicApp {
             ordersNeedSave = true;
           }
 
+          // Protect unverified orders: If order was paid via Binance/Crypto/Card/Support and has no assigned booster, require admin approval before releasing to boosters
+          if (o && (o.paymentMethod || o.id === 'MP-42011') && !o.assignedBooster && o.status === 'AVAILABLE' && o.paymentStatus !== 'PAID_APPROVED') {
+            o.paymentStatus = 'PENDING_VERIFICATION';
+            o.status = 'PAYMENT_PENDING';
+            ordersNeedSave = true;
+          }
+
           // Ensure valid economics
           let cShare = Number(o.companyShare);
           if (isNaN(cShare) || cShare <= 0) {
@@ -4755,13 +4762,19 @@ class MythicApp {
         maxBidAllowed: econ.maxBid,
         paymentMethod: paymentMethodLabel,
         paymentReference: paymentRef,
-        paymentStatus: 'PAID',
-        status: 'AVAILABLE',
+        paymentStatus: 'PENDING_VERIFICATION',
+        status: 'PAYMENT_PENDING',
         bids: [],
         assignedBooster: null,
         isOnAccount: false,
         createdAt: new Date().toISOString(),
-        chat: []
+        chat: [
+          {
+            sender: 'system',
+            message: `🕒 Pedido registrado con ${paymentMethodLabel}. Comprobante / Ref: "${paymentRef}". Verificando pago con administración antes de liberar la orden a los boosters.`,
+            timestamp: new Date().toISOString()
+          }
+        ]
       };
 
       if (item.referredBooster) newOrder.referredByBooster = item.referredBooster;
@@ -4783,7 +4796,7 @@ class MythicApp {
     this.closePaymentModal();
     this.closeCartModal();
 
-    this.showToast(`¡Pago registrado (${paymentMethodLabel})! Orden #${createdOrderIds.join(', ')} activada con éxito.`, 'success');
+    this.showToast(`¡Comprobante enviado (${paymentMethodLabel})! Tu orden #${createdOrderIds.join(', ')} está en verificación de pago.`, 'info');
 
     setTimeout(() => {
       window.location.href = 'client-profile';
@@ -4874,8 +4887,9 @@ class MythicApp {
 
     // Metrics
     const totalCount = allMyOrders.length;
+    const pendingPaymentCount = allMyOrders.filter(o => o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION').length;
     const inProgressCount = allMyOrders.filter(o => o.assignedBooster && o.status !== 'COMPLETED').length;
-    const pendingBoosterCount = allMyOrders.filter(o => !o.assignedBooster && o.status !== 'COMPLETED').length;
+    const pendingBoosterCount = allMyOrders.filter(o => !o.assignedBooster && o.status === 'AVAILABLE').length;
     const completedCount = allMyOrders.filter(o => o.status === 'COMPLETED').length;
     const totalSpent = allMyOrders.reduce((sum, o) => {
       const p = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
@@ -4886,10 +4900,12 @@ class MythicApp {
 
     // Apply active tab filter
     let filteredOrders = allMyOrders;
-    if (currentFilter === 'IN_PROGRESS') {
+    if (currentFilter === 'PAYMENT_PENDING') {
+      filteredOrders = allMyOrders.filter(o => o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION');
+    } else if (currentFilter === 'IN_PROGRESS') {
       filteredOrders = allMyOrders.filter(o => o.assignedBooster && o.status !== 'COMPLETED');
     } else if (currentFilter === 'PENDING_BOOSTER') {
-      filteredOrders = allMyOrders.filter(o => !o.assignedBooster && o.status !== 'COMPLETED');
+      filteredOrders = allMyOrders.filter(o => !o.assignedBooster && o.status === 'AVAILABLE');
     } else if (currentFilter === 'COMPLETED') {
       filteredOrders = allMyOrders.filter(o => o.status === 'COMPLETED');
     }
@@ -4948,6 +4964,12 @@ class MythicApp {
           <span>Todos</span>
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-stone-900 border border-stone-700 font-mono-gaming">${totalCount}</span>
         </button>
+        ${pendingPaymentCount > 0 ? `
+          <button onclick="app.setClientOrdersFilter('PAYMENT_PENDING')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'PAYMENT_PENDING' ? 'bg-amber-950/80 text-amber-300 border border-amber-500' : 'bg-[#1a120b] text-amber-400 hover:text-amber-200 border border-amber-900/60'}">
+            <span>Verificando Pago</span>
+            <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-900/90 border border-amber-600 font-mono-gaming text-amber-200">${pendingPaymentCount}</span>
+          </button>
+        ` : ''}
         <button onclick="app.setClientOrdersFilter('IN_PROGRESS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'IN_PROGRESS' ? 'bg-[#2b1f15] text-sky-300 border border-sky-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
           <span>En Proceso</span>
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-sky-950/80 border border-sky-800 font-mono-gaming text-sky-300">${inProgressCount}</span>
@@ -4973,10 +4995,11 @@ class MythicApp {
     }
 
     const cardsHtml = filteredOrders.map(order => {
+      const isPendingPayment = order.status === 'PAYMENT_PENDING' || order.paymentStatus === 'PENDING_VERIFICATION';
       const isAssigned = !!order.assignedBooster;
-      let statusText = isAssigned ? 'EN PROCESO' : 'BUSCANDO BOOSTER';
-      let statusClass = isAssigned ? 'bg-[#1a2332] text-sky-300 border border-sky-700/50' : 'bg-amber-950/50 text-amber-300 border border-amber-700/50';
-      let statusIcon = isAssigned ? 'fa-gamepad' : 'fa-hourglass-half';
+      let statusText = isPendingPayment ? 'VERIFICANDO PAGO' : (isAssigned ? 'EN PROCESO' : 'BUSCANDO BOOSTER');
+      let statusClass = isPendingPayment ? 'bg-amber-950/80 text-amber-300 border border-amber-500/80 shadow-md animate-pulse' : (isAssigned ? 'bg-[#1a2332] text-sky-300 border border-sky-700/50' : 'bg-amber-950/50 text-amber-300 border border-amber-700/50');
+      let statusIcon = isPendingPayment ? 'fa-receipt' : (isAssigned ? 'fa-gamepad' : 'fa-hourglass-half');
 
       if (order.status === 'COMPLETED') {
         statusText = 'COMPLETADO';
@@ -4986,6 +5009,10 @@ class MythicApp {
         statusText = 'REPORTE RECIBIDO (EN REVISIÓN)';
         statusClass = 'bg-amber-950/90 text-amber-300 border border-amber-500/70 animate-pulse';
         statusIcon = 'fa-bell';
+      } else if (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED') {
+        statusText = 'PAGO NO VERIFICADO';
+        statusClass = 'bg-rose-950 text-rose-300 border border-rose-600/70';
+        statusIcon = 'fa-circle-xmark';
       }
 
       // Safe price calculation that will NEVER result in NaN or throw
@@ -5036,8 +5063,18 @@ class MythicApp {
                 </div>
               </div>
 
-              <!-- Booster Status Box -->
-              ${isAssigned ? `
+              <!-- Booster Status Box / Payment Verification Box -->
+              ${isPendingPayment ? `
+                <div class="inline-flex items-center gap-2.5 bg-[#1b120c] px-3.5 py-2 rounded-xl border border-amber-500/40 text-xs text-amber-200 mt-1 shadow-sm">
+                  <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+                  <span>Pago con <strong>${order.paymentMethod || 'Pasarela'}</strong> (Ref: <strong class="text-white font-mono">${order.paymentReference || 'N/A'}</strong>) en revisión por Administración. Una vez validado en la app/wallet, pasará a la bolsa de boosters.</span>
+                </div>
+              ` : (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED' ? `
+                <div class="inline-flex items-center gap-2.5 bg-rose-950/60 px-3.5 py-2 rounded-xl border border-rose-600/50 text-xs text-rose-200 mt-1 shadow-sm">
+                  <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                  <span>El pago no pudo ser comprobado con la referencia suministrada. Por favor contáctanos por el chat en vivo para ayudarte.</span>
+                </div>
+              ` : (isAssigned ? `
                 <div class="inline-flex items-center gap-2.5 bg-[#1b140f] px-3.5 py-1.5 rounded-xl border border-[#ee914f]/30 text-xs mt-1">
                   <div class="w-6 h-6 rounded-full bg-[#2a1d13] border border-[#ee914f]/40 flex items-center justify-center text-[10px] text-[#fcefc2] font-black">
                     ${order.assignedBooster.avatar ? `<img src="${order.assignedBooster.avatar}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-gamepad text-[#ee914f]"></i>`}
@@ -5058,7 +5095,7 @@ class MythicApp {
                   <i class="fa-solid fa-hourglass-half text-amber-400/80"></i>
                   <span>Tu orden está en el tablón pro. Un booster calificado la tomará en breve.</span>
                 </div>
-              `}
+              `))}
 
               <!-- Completion Report Alert -->
               ${order.status === 'PENDING_APPROVAL' ? `
@@ -8405,6 +8442,8 @@ class MythicApp {
     let list = this.orders || [];
     if (statusFilter === 'AVAILABLE') {
       list = list.filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
+    } else if (statusFilter === 'PAYMENT_PENDING') {
+      list = list.filter(o => o && (o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION'));
     } else if (statusFilter !== 'ALL') {
       list = list.filter(o => o && o.status === statusFilter);
     }
@@ -8428,9 +8467,27 @@ class MythicApp {
       const safeCompany = Math.max(0, Number(o.companyShare !== undefined && !isNaN(Number(o.companyShare)) ? o.companyShare : (safeTotal * 0.70)) || (safeTotal * 0.70));
       const safeBoosterPayout = Math.max(0, Number(o.assignedBooster?.payout !== undefined && !isNaN(Number(o.assignedBooster?.payout)) ? o.assignedBooster.payout : (o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (safeTotal * 0.30))) || (safeTotal * 0.30));
 
+      const isPaymentPending = (o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION');
+      const isPaymentRejected = (o.status === 'PAYMENT_REJECTED' || o.paymentStatus === 'PAYMENT_FAILED');
+
       const bidsList = (o.bids && Array.isArray(o.bids)) ? o.bids : [];
       const bidsCount = bidsList.length;
       const bestBid = bidsCount > 0 ? [...bidsList].sort((a,b) => Number(a.bidAmount) - Number(b.bidAmount))[0] : null;
+
+      const statusBadgeClass = isPaymentPending ? 'bg-amber-950/90 text-amber-300 border border-amber-500/80 shadow-sm animate-pulse' :
+        isPaymentRejected ? 'bg-rose-950/90 text-rose-300 border border-rose-600/80 shadow-sm' :
+        o.status === 'COMPLETED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-sm' :
+        o.status === 'PENDING_APPROVAL' ? 'bg-amber-950/90 text-amber-300 border border-amber-600/70 shadow-sm animate-pulse' :
+        o.status === 'IN_PROGRESS' ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60 shadow-sm' :
+        o.status === 'BIDDING' ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm animate-pulse' :
+        'bg-[#281b13] text-[#a855f7] border border-[#a855f7]/40 shadow-sm';
+
+      const statusBadgeText = isPaymentPending ? 'POR VERIFICAR' :
+        isPaymentRejected ? 'PAGO RECHAZADO' :
+        o.status === 'COMPLETED' ? 'COMPLETADA' :
+        o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' :
+        o.status === 'IN_PROGRESS' ? 'EN PROCESO' :
+        o.status === 'BIDDING' ? 'SUBASTA' : 'DISPONIBLE';
 
       return `
       <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
@@ -8457,7 +8514,29 @@ class MythicApp {
           $${safeCompany.toFixed(2)}
         </td>
         <td class="py-3 px-3 min-w-[175px]">
-          ${o.status === 'COMPLETED' ? `
+          ${isPaymentPending ? `
+            <div class="flex flex-col gap-1 bg-amber-950/40 border border-amber-500/40 rounded-xl p-2 shadow-sm">
+              <span class="inline-flex items-center gap-1.5 text-amber-300 font-bold text-[11px]">
+                <i class="fa-solid fa-clock-rotate-left text-amber-400 animate-spin"></i> Validando Pago
+              </span>
+              <div class="text-[10px] text-stone-300">
+                Vía: <strong class="text-white">${o.paymentMethod || 'Manual'}</strong>
+              </div>
+              <div class="text-[10px] text-amber-200/90 font-mono">
+                Ref: <strong class="text-white bg-black/60 px-1.5 py-0.5 rounded border border-amber-500/40 select-all">${o.paymentReference || 'N/A'}</strong>
+              </div>
+              <span class="text-[9px] text-amber-400/80 italic mt-0.5">Oculto a boosters hasta aprobar</span>
+            </div>
+          ` : (isPaymentRejected ? `
+            <div class="flex flex-col gap-1 bg-rose-950/40 border border-rose-600/40 rounded-xl p-2 shadow-sm">
+              <span class="inline-flex items-center gap-1.5 text-rose-300 font-bold text-[11px]">
+                <i class="fa-solid fa-ban text-rose-400"></i> Pago Rechazado
+              </span>
+              <div class="text-[10px] text-rose-200/90 line-clamp-2">
+                ${o.paymentRejectReason || 'Comprobante inválido'}
+              </div>
+            </div>
+          ` : (o.status === 'COMPLETED' ? `
             <div class="font-semibold text-emerald-300 flex items-center gap-1.5 text-xs">
               <i class="fa-solid fa-bolt text-[11px] text-[#a855f7]"></i>
               <span>${o.assignedBooster ? o.assignedBooster.username : 'Sin asignar'}</span>
@@ -8500,17 +8579,11 @@ class MythicApp {
                 ` : ''}
               `}
             </div>
-          `}
+          `))}
         </td>
         <td class="py-3 px-3 text-center whitespace-nowrap min-w-[110px]">
-          <span class="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${
-            o.status === 'COMPLETED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-sm' :
-            o.status === 'PENDING_APPROVAL' ? 'bg-amber-950/90 text-amber-300 border border-amber-600/70 shadow-sm animate-pulse' :
-            o.status === 'IN_PROGRESS' ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60 shadow-sm' :
-            o.status === 'BIDDING' ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm animate-pulse' :
-            'bg-[#281b13] text-[#a855f7] border border-[#a855f7]/40 shadow-sm'
-          }">
-            ${o.status === 'COMPLETED' ? 'COMPLETADA' : o.status === 'PENDING_APPROVAL' ? 'EN REVISIÓN' : o.status === 'IN_PROGRESS' ? 'EN PROCESO' : o.status === 'BIDDING' ? 'SUBASTA' : 'DISPONIBLE'}
+          <span class="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${statusBadgeClass}">
+            ${statusBadgeText}
           </span>
         </td>
         <td class="py-3 px-3 text-right whitespace-nowrap min-w-[170px]">
@@ -8519,7 +8592,17 @@ class MythicApp {
               <i class="fa-solid fa-eye text-[#a855f7] text-xs"></i>
               <span>Auditar</span>
             </button>
-            ${bidsCount > 0 && !o.assignedBooster && o.status !== 'COMPLETED' && o.status !== 'IN_PROGRESS' ? `
+            ${isPaymentPending ? `
+              <button onclick="app.adminApprovePayment('${o.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Validar pago y liberar orden a los boosters">
+                <i class="fa-solid fa-circle-check text-xs"></i>
+                <span>Aprobar Pago</span>
+              </button>
+              <button onclick="app.adminRejectPayment('${o.id}')" class="px-2 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-700/60 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Rechazar pago inválido">
+                <i class="fa-solid fa-ban text-xs"></i>
+                <span>Rechazar</span>
+              </button>
+            ` : ''}
+            ${bidsCount > 0 && !o.assignedBooster && !isPaymentPending && !isPaymentRejected && o.status !== 'COMPLETED' && o.status !== 'IN_PROGRESS' ? `
               <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Ver y aceptar ofertas de boosters">
                 <i class="fa-solid fa-gavel text-amber-400 text-xs"></i>
                 <span>Pujas (${bidsCount})</span>
@@ -8551,7 +8634,7 @@ class MythicApp {
                 <span>Quitar</span>
               </button>
             ` : ''}
-            ${o.status !== 'COMPLETED' && o.status !== 'PENDING_APPROVAL' ? `
+            ${!isPaymentPending && !isPaymentRejected && o.status !== 'COMPLETED' && o.status !== 'PENDING_APPROVAL' ? `
               <button onclick="app.adminCompleteOrder('${o.id}')" class="w-7 h-7 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 flex items-center justify-center font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0" title="Completar Orden">
                 <i class="fa-solid fa-check"></i>
               </button>
@@ -8739,6 +8822,101 @@ class MythicApp {
         this.liveChatChannel.postMessage({ type: 'ORDER_COMPLETED', orderId: o.id, approver: approverName, payout: payout, companyShare: companyShare });
       } catch (e) {}
     }
+  }
+
+  adminApprovePayment(orderId) {
+    const o = (this.orders || []).find(x => x && x.id === orderId);
+    if (!o) return;
+    const ref = o.paymentReference || 'N/A';
+    const method = o.paymentMethod || 'Manual';
+    if (!confirm(`¿Confirmar recepción de fondos de la orden #${orderId} (${method} - Ref: ${ref})?\n\nAl aprobar, la orden pasará a estado DISPONIBLE y los boosters podrán verla y tomarla en el panel Pro.`)) {
+      return;
+    }
+
+    o.paymentStatus = 'PAID';
+    o.status = 'AVAILABLE';
+    o.paymentApprovedAt = new Date().toISOString();
+    o.paymentApprovedBy = 'Administración';
+    o.chat = o.chat || [];
+    o.chat.push({
+      sender: 'system',
+      author: 'Administración Mythic',
+      message: `✅ Pago con ${method} (Ref: "${ref}") VERIFICADO y APROBADO por Administración. La orden ahora está disponible para que un booster la reclame.`,
+      timestamp: new Date().toISOString()
+    });
+
+    if (this.db) {
+      this.db.collection('orders').doc(orderId).set({
+        paymentStatus: 'PAID',
+        status: 'AVAILABLE',
+        paymentApprovedAt: o.paymentApprovedAt,
+        paymentApprovedBy: o.paymentApprovedBy,
+        chat: o.chat
+      }, { merge: true }).catch(err => console.warn('Firestore payment approval write notice:', err));
+    }
+
+    this.saveOrders();
+    this.renderAdminOverview();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+    if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+    if (typeof this.renderChatList === 'function') this.renderChatList();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'PAYMENT_APPROVED', orderId: o.id });
+      } catch (e) {}
+    }
+
+    this.showToast(`¡Pago de orden #${orderId} verificado! La orden ya está en la bolsa pro.`, 'success');
+  }
+
+  adminRejectPayment(orderId) {
+    const o = (this.orders || []).find(x => x && x.id === orderId);
+    if (!o) return;
+    const ref = o.paymentReference || 'N/A';
+    const method = o.paymentMethod || 'Manual';
+    const reason = prompt(`Indica el motivo del rechazo del pago para la orden #${orderId} (Ref: ${ref}):`, 'Fondos no recibidos o referencia no encontrada en la app/wallet');
+    if (reason === null) return;
+
+    o.paymentStatus = 'PAYMENT_FAILED';
+    o.status = 'PAYMENT_REJECTED';
+    o.paymentRejectedAt = new Date().toISOString();
+    o.paymentRejectedBy = 'Administración';
+    o.paymentRejectReason = reason;
+    o.chat = o.chat || [];
+    o.chat.push({
+      sender: 'system',
+      author: 'Administración Mythic',
+      message: `❌ Comprobante de pago (${method} - Ref: "${ref}") NO PUDO SER VALIDADO por Administración.\nMotivo: ${reason}\nPor favor ponte en contacto con Soporte en Vivo adjuntando la captura correspondiente.`,
+      timestamp: new Date().toISOString()
+    });
+
+    if (this.db) {
+      this.db.collection('orders').doc(orderId).set({
+        paymentStatus: 'PAYMENT_FAILED',
+        status: 'PAYMENT_REJECTED',
+        paymentRejectedAt: o.paymentRejectedAt,
+        paymentRejectedBy: o.paymentRejectedBy,
+        paymentRejectReason: reason,
+        chat: o.chat
+      }, { merge: true }).catch(err => console.warn('Firestore payment rejection write notice:', err));
+    }
+
+    this.saveOrders();
+    this.renderAdminOverview();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+    if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
+    if (typeof this.renderChatList === 'function') this.renderChatList();
+
+    if (this.liveChatChannel) {
+      try {
+        this.liveChatChannel.postMessage({ type: 'PAYMENT_REJECTED', orderId: o.id, reason });
+      } catch (e) {}
+    }
+
+    this.showToast(`Pago de orden #${orderId} marcado como rechazado.`, 'info');
   }
 
   adminCompleteOrder(orderId) {
@@ -9105,6 +9283,9 @@ class MythicApp {
     const safeCompany = Math.max(0, Number(o.companyShare !== undefined && !isNaN(Number(o.companyShare)) ? o.companyShare : (safeTotal * 0.70)) || (safeTotal * 0.70));
     const safeBooster = Math.max(0, Number(o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (safeTotal * 0.30)) || (safeTotal * 0.30));
 
+    const isPaymentPending = (o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION');
+    const isPaymentRejected = (o.status === 'PAYMENT_REJECTED' || o.paymentStatus === 'PAYMENT_FAILED');
+
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div>
@@ -9122,9 +9303,51 @@ class MythicApp {
           <div><span class="text-stone-500">Booster:</span> <strong class="text-[#a855f7]">${o.assignedBooster ? o.assignedBooster.username : 'Sin Asignar'}</strong></div>
           <div><span class="text-stone-500">Personaje:</span> <strong class="text-stone-200">${o.characterName || 'N/A'} (${o.realm || 'US'})</strong></div>
           <div><span class="text-stone-500">Modalidad:</span> <strong class="text-stone-200">${o.completionMethod || 'Self-play'}</strong></div>
+          <div><span class="text-stone-500">Método de Pago:</span> <strong class="text-stone-200">${o.paymentMethod || 'Manual'}</strong></div>
+          <div><span class="text-stone-500">Comprobante / Ref:</span> <strong class="text-amber-300 font-mono select-all bg-black/40 px-1 py-0.5 rounded border border-amber-900/50">${o.paymentReference || 'N/A'}</strong></div>
           <div><span class="text-stone-500">Total Pagado:</span> <strong class="text-white font-mono-gaming text-sm">$${safeTotal.toFixed(2)}</strong></div>
           <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#f3e8ff] font-mono-gaming">$${safeCompany.toFixed(2)} / $${safeBooster.toFixed(2)}</strong></div>
         </div>
+
+        ${isPaymentPending ? `
+          <div class="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/60 space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-receipt"></i>
+                </span>
+                <div>
+                  <h4 class="font-bold text-white text-xs flex items-center gap-2">
+                    <span>Comprobante de Pago Pendiente de Auditoría</span>
+                    <span class="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-600/50 text-[10px] uppercase font-bold animate-pulse">Por Verificar</span>
+                  </h4>
+                  <div class="text-[11px] text-stone-300">
+                    Método: <strong class="text-white">${o.paymentMethod || 'Manual'}</strong> • Referencia: <strong class="text-amber-300 font-mono">${o.paymentReference || 'N/A'}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="app.adminApprovePayment('${o.id}'); app.closeAdminOrderModal();" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>Aprobar Pago y Liberar</span>
+                </button>
+                <button onclick="app.adminRejectPayment('${o.id}'); app.closeAdminOrderModal();" class="px-3 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-700/60 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all">
+                  <i class="fa-solid fa-ban"></i>
+                  <span>Rechazar Pago</span>
+                </button>
+              </div>
+            </div>
+            <div class="text-[11px] text-amber-200/80 bg-amber-950/30 p-2.5 rounded-xl border border-amber-900/40">
+              <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i>
+              Comprueba en tu Binance Pay / Wallet la acreditación de los $${safeTotal.toFixed(2)} USD. Al aprobar, pasará a estado DISPONIBLE en la bolsa pro.
+            </div>
+          </div>
+        ` : (isPaymentRejected ? `
+          <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-600/50 text-xs text-rose-200 flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+            <span>Este comprobante fue <strong>RECHAZADO</strong> por Administración (${o.paymentRejectReason || 'No verificado'}). La orden permanece bloqueada.</span>
+          </div>
+        ` : '')}
 
         ${o.completionReport ? `
           <div class="p-4 rounded-2xl bg-[#190a2c] border ${o.status === 'PENDING_APPROVAL' ? 'border-amber-500/60 shadow-lg shadow-amber-950/20' : 'border-emerald-500/40'} space-y-3">
