@@ -307,6 +307,14 @@ class MythicApp {
           }
 
           if (Array.isArray(o.chat)) {
+            const originalLength = o.chat.length;
+            o.chat = o.chat.filter(msg => {
+              if (!msg || !msg.message) return false;
+              const text = String(msg.message).toLowerCase();
+              return !(text.includes('nueva puja') || text.includes('ofertado') || text.includes('oferta de puja'));
+            });
+            if (o.chat.length !== originalLength) ordersNeedSave = true;
+
             o.chat.forEach(msg => {
               if (msg && msg.author && /soporte\s*\/\s*gerencia/i.test(msg.author)) {
                 if (/miguelb/i.test(msg.author) || msg.sender === 'admin') {
@@ -317,6 +325,21 @@ class MythicApp {
                   msg.sender = 'staff';
                 }
                 ordersNeedSave = true;
+              }
+              if (msg && msg.sender === 'system' && msg.message) {
+                if (/oferta\s+aceptada/i.test(msg.message) || /monto\s+acordado/i.test(msg.message)) {
+                  const bName = o.assignedBooster?.username || o.acceptedBid?.boosterName || 'un booster';
+                  msg.message = `🎉 ¡Booster Asignado! El booster ${bName} ha sido asignado a tu pedido. La orden está EN PROCESO.`;
+                  ordersNeedSave = true;
+                }
+                if (/ha\s+tomado\s+la\s+orden.*por\s+\$/i.test(msg.message)) {
+                  msg.message = msg.message.replace(/\s*por\s+\$[0-9.]+\s*(usd)?\.?/gi, '.');
+                  ordersNeedSave = true;
+                }
+                if (/se\s+acreditaron\s+\$[0-9.]+/i.test(msg.message)) {
+                  msg.message = msg.message.replace(/\s*se\s+acreditaron\s+\$[0-9.]+\s*usd\s*al\s*saldo\s*del\s*booster\s*y\s*\$[0-9.]+\s*usd\s*al\s*balance\s*de\s*la\s*empresa\.?/gi, ' ¡Gracias por confiar en Mythic Progression!');
+                  ordersNeedSave = true;
+                }
               }
             });
           }
@@ -4754,6 +4777,47 @@ class MythicApp {
     return false;
   }
 
+  getClientVisibleChat(order) {
+    if (!order || !Array.isArray(order.chat)) return [];
+    
+    return order.chat
+      .filter(msg => {
+        if (!msg || !msg.message) return false;
+        const text = String(msg.message).toLowerCase();
+        // NEVER show booster bids or auction bidding details to customers
+        if (text.includes('nueva puja') || text.includes('ofertado') || text.includes('oferta de puja')) {
+          return false;
+        }
+        return true;
+      })
+      .map(msg => {
+        if (msg.sender !== 'system') return msg;
+        
+        let sanitizedText = String(msg.message);
+        
+        // Sanitize legacy "OFERTA ACEPTADA: ... por un monto acordado de $XX.XX"
+        if (/oferta\s+aceptada/i.test(sanitizedText) || /monto\s+acordado/i.test(sanitizedText)) {
+          const boosterName = order.assignedBooster?.username || (order.acceptedBid?.boosterName) || 'un booster';
+          sanitizedText = `🎉 ¡Booster Asignado! El booster ${boosterName} ha sido asignado a tu pedido. La orden está EN PROCESO.`;
+        }
+        
+        // Sanitize legacy "⚡ El booster X ha tomado la orden desde Discord por $XX.XX USD"
+        if (/ha\s+tomado\s+la\s+orden.*por\s+\$/i.test(sanitizedText)) {
+          sanitizedText = sanitizedText.replace(/\s*por\s+\$[0-9.]+\s*(usd)?\.?/gi, '.');
+        }
+
+        // Sanitize legacy completion message financial split
+        if (/se\s+acreditaron\s+\$[0-9.]+/i.test(sanitizedText)) {
+          sanitizedText = sanitizedText.replace(/\s*se\s+acreditaron\s+\$[0-9.]+\s*usd\s*al\s*saldo\s*del\s*booster\s*y\s*\$[0-9.]+\s*usd\s*al\s*balance\s*de\s*la\s*empresa\.?/gi, ' ¡Gracias por confiar en Mythic Progression!');
+        }
+
+        return {
+          ...msg,
+          message: sanitizedText
+        };
+      });
+  }
+
   renderClientChatMessages(order) {
     const titleElem = document.getElementById('client-chat-order-title');
     if (titleElem) titleElem.textContent = `Orden #${order.id} - ${order.serviceName}`;
@@ -4766,7 +4830,8 @@ class MythicApp {
     const stream = document.getElementById('client-chat-stream');
     if (!stream) return;
 
-    stream.innerHTML = (order.chat || []).map(msg => {
+    const visibleChat = this.getClientVisibleChat(order);
+    stream.innerHTML = visibleChat.map(msg => {
       if (msg.sender === 'system') {
         return `
           <div class="flex flex-col items-center mb-3">
@@ -4843,7 +4908,7 @@ class MythicApp {
       res = res.replace(/El booster (.+?) ha salido de la cuenta/i, 'Booster $1 has logged out of the account');
       res = res.replace(/Chat iniciado\. Coordina con tu booster\./i, 'Chat started. Coordinate with your booster.');
       res = res.replace(/¡Servicio verificado y aprobado por Administrador! La orden (.+?) ha sido marcada como completada con éxito\./i, 'Service verified and approved by Administrator! Order $1 has been marked as successfully completed.');
-      res = res.replace(/Nueva Puja: El booster (.+?) ha ofertado (\$[0-9.]+) por tu orden\./i, 'New Bid: Booster $1 placed a bid of $2 on your order.');
+      res = res.replace(/🎉 ¡Booster Asignado! El booster (.+?) ha sido asignado a tu pedido\. La orden está EN PROCESO\./i, '🎉 Booster Assigned! Booster $1 has been assigned to your order. The order is IN PROGRESS.');
     } else if (lang === 'pt') {
       res = res.replace(/El booster (.+?) ha tomado tu orden/i, 'O booster $1 pegou seu pedido');
       res = res.replace(/Aviso del Sistema: Se ha desasignado al booster actual \((.+?)\) de este pedido\. La orden ha vuelto a la Bolsa de Pedidos y está a la espera de que otro booster tome la orden\./i, 'Aviso do Sistema: O booster ($1) foi desvinculado deste pedido. O pedido voltou ao Mural aguardando outro booster.');
@@ -4852,7 +4917,7 @@ class MythicApp {
       res = res.replace(/El booster (.+?) ha salido de la cuenta/i, 'O booster $1 saiu da conta');
       res = res.replace(/Chat iniciado\. Coordina con tu booster\./i, 'Chat iniciado. Combine os detalhes com seu booster.');
       res = res.replace(/¡Servicio verificado y aprobado por Administrador! La orden (.+?) ha sido marcada como completada con éxito\./i, 'Serviço verificado e aprovado pelo Administrador! O pedido $1 foi marcado como concluído com sucesso.');
-      res = res.replace(/Nueva Puja: El booster (.+?) ha ofertado (\$[0-9.]+) por tu orden\./i, 'Novo Lance: O booster $1 fez uma oferta de $2 no seu pedido.');
+      res = res.replace(/🎉 ¡Booster Asignado! El booster (.+?) ha sido asignado a tu pedido\. La orden está EN PROCESO\./i, '🎉 Booster Atribuído! O booster $1 foi atribuído ao seu pedido. O pedido está EM ANDAMENTO.');
     }
 
     return res;
@@ -4893,7 +4958,8 @@ class MythicApp {
 
     container.innerHTML = myOrders.map(order => {
       const isSelected = this.activeClientChatOrderId === order.id;
-      const rawLastMsg = (order.chat && order.chat.length > 0) ? order.chat[order.chat.length - 1].message : 'Chat iniciado. Coordina con tu booster.';
+      const visibleChat = this.getClientVisibleChat(order);
+      const rawLastMsg = (visibleChat && visibleChat.length > 0) ? visibleChat[visibleChat.length - 1].message : 'Chat iniciado. Coordina con tu booster.';
       const lastMsg = this.translateSystemChatMessage(rawLastMsg);
       const boosterName = order.assignedBooster ? order.assignedBooster.username : pendingText;
 
@@ -4967,7 +5033,7 @@ class MythicApp {
 
           <!-- Messages Stream -->
           <div id="client-full-chat-stream" class="flex-1 overflow-y-auto py-4 space-y-3">
-            ${(order.chat || []).map(msg => {
+            ${this.getClientVisibleChat(order).map(msg => {
               if (msg.sender === 'system') {
                 const isWarning = msg.message.includes('Aviso del Sistema') || msg.message.includes('desasignado') || msg.message.includes('ha ingresado');
                 const isSuccess = msg.message.includes('ha salido') || msg.message.includes('tomado tu orden');
@@ -5994,13 +6060,6 @@ class MythicApp {
     } else {
       order.bids.push(bidData);
     }
-
-    if (!order.chat) order.chat = [];
-    order.chat.push({
-      sender: 'system',
-      message: `🔨 Nueva Puja: El booster ${boosterName} (${highestRole}) ha ofertado $${amount.toFixed(2)} por este pedido.`,
-      timestamp: new Date().toISOString()
-    });
 
     this.saveOrders();
 
@@ -8288,7 +8347,7 @@ class MythicApp {
     o.chat.push({
       sender: 'system',
       author: 'Notificación del Sistema',
-      message: `🎉 ¡Servicio verificado y aprobado por ${approverName}! La orden #${o.id} ha sido completada con éxito. Se acreditaron $${payout.toFixed(2)} USD al saldo del booster y $${companyShare.toFixed(2)} USD al balance de la empresa.`,
+      message: `🎉 ¡Servicio verificado y aprobado por ${approverName}! La orden #${o.id} ha sido completada con éxito. ¡Gracias por confiar en Mythic Progression!`,
       timestamp: new Date().toISOString()
     });
 
@@ -8520,7 +8579,7 @@ class MythicApp {
     order.chat.push({
       sender: 'system',
       author: 'Administración Mythic',
-      message: `🔨 OFERTA ACEPTADA: La administración ha aceptado la oferta de puja del booster ${bName} por un monto acordado de $${payout.toFixed(2)}. La orden pasa a estar EN PROCESO.`,
+      message: `🎉 ¡Booster Asignado! El booster ${bName} ha sido asignado a tu pedido. La orden pasa a estar EN PROCESO. ¡Puedes coordinar aquí directamente con tu booster!`,
       timestamp: new Date().toISOString()
     });
 
