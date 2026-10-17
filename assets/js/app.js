@@ -4241,11 +4241,11 @@ class MythicApp {
   openCheckoutModal(orderItem) {
     if (!orderItem) return;
     this.openPaymentModal({ source: 'single', item: orderItem });
-  },
+  }
 
   closeCheckoutModal() {
     this.closePaymentModal();
-  },
+  }
 
   openPaymentModal(checkoutContext = { source: 'cart' }) {
     let items = [];
@@ -4295,7 +4295,7 @@ class MythicApp {
     modal.classList.add('flex');
 
     this.closeCartModal();
-  },
+  }
 
   closePaymentModal() {
     const modal = document.getElementById('mp-payment-modal');
@@ -4303,13 +4303,13 @@ class MythicApp {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
-  },
+  }
 
   setPaymentMethodTab(methodKey) {
     if (!this.activePaymentContext) return;
     this.activePaymentContext.selectedMethod = methodKey;
     this.renderPaymentModalContent();
-  },
+  }
 
   copyPaymentText(text, btnElement, successMsg = '¡Copiado!') {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -4330,7 +4330,7 @@ class MythicApp {
     } else {
       this.fallbackCopyText(text);
     }
-  },
+  }
 
   fallbackCopyText(text) {
     const textArea = document.createElement("textarea");
@@ -4347,7 +4347,7 @@ class MythicApp {
       prompt("Copia este dato manualmente:", text);
     }
     document.body.removeChild(textArea);
-  },
+  }
 
   openSupportChatFromPayment(serviceInfo) {
     this.closePaymentModal();
@@ -4355,7 +4355,7 @@ class MythicApp {
     this.openLiveChat({
       prefill: `Hola! Deseo completar mi pago de ${total} para Mythic Progression mediante PayPal / Zinli / Zelle. ¿Me pueden brindar las instrucciones de pago?`
     });
-  },
+  }
 
   renderPaymentModalContent() {
     const modal = document.getElementById('mp-payment-modal');
@@ -4648,7 +4648,7 @@ class MythicApp {
     if (typeof this.applyTranslations === 'function') {
       this.applyTranslations(modal);
     }
-  },
+  }
 
   confirmPaymentAndCompleteOrder() {
     if (!this.activePaymentContext || !this.activePaymentContext.items || this.activePaymentContext.items.length === 0) {
@@ -4757,11 +4757,11 @@ class MythicApp {
     setTimeout(() => {
       window.location.href = 'client-profile';
     }, 1200);
-  },
+  }
 
   processCheckoutPayment() {
     this.confirmPaymentAndCompleteOrder();
-  },
+  }
 
   // ==========================================
   
