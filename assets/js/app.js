@@ -645,11 +645,11 @@ class MythicApp {
   syncOrdersToAlwaysdataBot(deletedOrderId = null) {
     try {
       const DEMO_ORDER_IDS = ['MP-91024', 'MP-76512', 'MP-88931'];
-      const availableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING') && !DEMO_ORDER_IDS.includes(o.id));
+      const syncableOrders = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING' || o.status === 'IN_PROGRESS' || o.status === 'ASSIGNED') && !DEMO_ORDER_IDS.includes(o.id));
       
-      // CRITICAL GUARD: If availableOrders is empty and this is not an explicit single order deletion,
+      // CRITICAL GUARD: If syncableOrders is empty and this is not an explicit single order deletion,
       // DO NOT sync an empty list to Alwaysdata, because this is an uninitialized local cache or cold start!
-      if (availableOrders.length === 0 && !deletedOrderId) {
+      if (syncableOrders.length === 0 && !deletedOrderId) {
         console.log('[Alwaysdata Sync] Skipping sync: orders list is empty and no specific order was deleted.');
         return;
       }
@@ -657,7 +657,7 @@ class MythicApp {
       const deletedIds = deletedOrderId ? [deletedOrderId] : [];
       const allDeletedIds = Array.from(new Set([...deletedIds, ...DEMO_ORDER_IDS]));
       const payload = {
-        orders: availableOrders,
+        orders: syncableOrders,
         deletedOrderIds: allDeletedIds,
         timestamp: new Date().toISOString()
       };
@@ -687,11 +687,11 @@ class MythicApp {
       });
 
       // Save single summary feed document (costs only 1 read for the bot, avoids 429 quota exhaustion)
-      const availableOrders = this.orders.filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING'));
-      if (availableOrders.length > 0 || (this.orders && this.orders.length > 0)) {
+      const syncableOrders = this.orders.filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING' || o.status === 'IN_PROGRESS' || o.status === 'ASSIGNED'));
+      if (syncableOrders.length > 0 || (this.orders && this.orders.length > 0)) {
         this.db.collection('system').doc('orders_feed').set({
-          orders: availableOrders,
-          activeCount: availableOrders.length,
+          orders: syncableOrders,
+          activeCount: syncableOrders.filter(o => o.status === 'AVAILABLE' || o.status === 'BIDDING').length,
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('Firestore orders_feed save error:', e));
       }
@@ -2237,17 +2237,21 @@ class MythicApp {
       ) || 45.00);
 
       const econ = this.calculateEconomics(finalPrice, isUpsell);
-      const charStr = item.character || 'Heroe-Area 52';
-      const realmName = (charStr.includes('-')) ? charStr.split('-')[1].trim() : 'Area 52';
+      const charClass = item.characterClass || 'Guerrero (Warrior)';
+      const faction = item.faction || 'Horda';
+      const charStr = item.characterName || (item.character ? item.character.split('-')[0].trim() : 'Heroe');
+      const realmName = item.realm || (item.character && item.character.includes('-') ? item.character.split('-')[1].trim() : (this.selectedRealm?.name || 'Ragnaros'));
 
       const newOrder = {
         id: 'MP-' + Math.floor(10000 + Math.random() * 90000),
         serviceName: `${item.serviceName}${item.quantity > 1 ? ` (x${item.quantity})` : ''}`,
         category: item.category || 'Servicios',
         region: item.region || 'US',
-        faction: 'Horda',
+        faction: faction,
+        characterClass: charClass,
         realm: realmName,
         characterName: charStr,
+        character: `${charStr}-${realmName}`,
         completionMethod: item.mode || 'Piloted',
         vpnLocation: (item.mode && String(item.mode).toLowerCase().includes('piloted')) ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
         details: item.details || '',
@@ -3404,8 +3408,12 @@ class MythicApp {
     const svc = this.currentProduct || this.services[0];
     const isLeveling = (svc.id === 'powerleveling-80' || svc.id === 'forever-powerleveling-custom' || (svc.category === 'Powerleveling' && svc.game !== 'forever'));
     const isForever = (svc.game === 'forever' || svc.id?.startsWith('forever-'));
-    const char = document.getElementById('sp-character')?.value.trim() 
-              || `${document.getElementById('sp-char-name')?.value.trim() || 'Heroe'}-${document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros'}`;
+    
+    const charClass = document.getElementById('sp-character-class')?.value || 'Guerrero (Warrior)';
+    const faction = document.getElementById('sp-faction')?.value || 'Horda';
+    const charName = document.getElementById('sp-char-name')?.value.trim() || 'Heroe';
+    const realmName = this.selectedRealm?.name || document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros';
+    const char = `${charName}-${realmName}`;
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
     const selectedMode = document.querySelector('input[name="sp_mode"]:checked')?.value || 'Piloted (VPN)';
 
@@ -3422,10 +3430,12 @@ class MythicApp {
         `Nivel: ${this.levelCurrent || 1} - ${this.levelDesired || (isForever ? 60 : 80)}`,
         `Método: ${selectedMode}`,
         `Región: ${region}`,
+        `Clase: ${charClass}`,
+        `Facción: ${faction}`,
         `Equipo: ${gearLabel}`
       ];
       if (extraLabels.length > 0) detailsParts.push('Extras: ' + extraLabels.join(', '));
-      detailsParts.push(`Personaje: ${char}`);
+      detailsParts.push(`Personaje: ${charName} (${realmName})`);
 
       const item = {
         cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -3439,6 +3449,10 @@ class MythicApp {
         quantity: runsQty,
         totalPrice: calcTotal,
         character: char,
+        characterName: charName,
+        characterClass: charClass,
+        faction: faction,
+        realm: realmName,
         game: svc.game || ((svc.id === 'forever-powerleveling-custom' || svc.category?.toLowerCase().includes('forever')) ? 'forever' : 'retail'),
         mode: selectedMode,
         region: region,
@@ -3474,10 +3488,12 @@ class MythicApp {
         `Reino: ${ruleset}`,
         `Velocidad: ${speed.split('(')[0].trim()}`,
         `Método: ${selectedMode}`,
-        `Región: ${region}`
+        `Región: ${region}`,
+        `Clase: ${charClass}`,
+        `Facción: ${faction}`
       ];
       if (extraLabels.length > 0) detailsParts.push('Extras: ' + extraLabels.join(', '));
-      detailsParts.push(`Personaje: ${char}`);
+      detailsParts.push(`Personaje: ${charName} (${realmName})`);
 
       const item = {
         cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -3489,6 +3505,10 @@ class MythicApp {
         quantity: runsQty,
         totalPrice: calcTotal,
         character: char,
+        characterName: charName,
+        characterClass: charClass,
+        faction: faction,
+        realm: realmName,
         mode: selectedMode,
         region: region,
         game: 'forever',
@@ -3512,9 +3532,11 @@ class MythicApp {
 
     let detailsParts = [selectedMode, region, dungeon];
     if (selectedKeyText) detailsParts.unshift(selectedKeyText.split('(')[0].trim());
+    detailsParts.push(`Clase: ${charClass}`);
+    detailsParts.push(`Facción: ${faction}`);
     if (traderLabel) detailsParts.push(traderLabel);
     if (extraLabels.length > 0) detailsParts.push('Extras: ' + extraLabels.join(', '));
-    detailsParts.push(`Personaje: ${char}`);
+    detailsParts.push(`Personaje: ${charName} (${realmName})`);
 
     const item = {
       cartId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -3526,6 +3548,10 @@ class MythicApp {
       quantity: runsQty,
       totalPrice: calcTotal,
       character: char,
+      characterName: charName,
+      characterClass: charClass,
+      faction: faction,
+      realm: realmName,
       mode: selectedMode,
       region: region,
       details: detailsParts.join(' | '),
@@ -5474,6 +5500,16 @@ class MythicApp {
             <span class="text-[11px] px-2 py-0.5 rounded ${method === 'Piloted' ? 'bg-[#301c10] text-[#fccc8f] border border-[#b85d1d]/40' : 'bg-[#18231a] text-emerald-400 border border-emerald-900/40'}">
               ${method}
             </span>
+            ${order.characterClass ? `
+              <span class="text-[11px] px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-shield-halved text-[10px] text-purple-400"></i> ${order.characterClass}
+              </span>
+            ` : ''}
+            ${order.faction ? `
+              <span class="text-[11px] px-2 py-0.5 rounded ${order.faction.toLowerCase().includes('alianza') ? 'bg-blue-950/80 text-blue-300 border border-blue-500/40' : 'bg-red-950/80 text-red-300 border border-red-500/40'} font-semibold flex items-center gap-1 shadow-sm">
+                ${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction}
+              </span>
+            ` : ''}
             ${bestBid ? `
               <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-amber-950 text-amber-300 border border-amber-500/60 font-bold flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-crown text-amber-400"></i>
@@ -5615,6 +5651,8 @@ class MythicApp {
           <div class="grid grid-cols-2 gap-2 text-[11px] text-stone-300 pt-1 border-t border-stone-800/60">
             <div><span class="text-stone-500">Región/Modalidad:</span> <strong class="text-white">${order.region || 'US'} | ${order.completionMethod || 'Piloted'}</strong></div>
             <div><span class="text-stone-500">VPN Requerida:</span> <strong class="text-stone-200">${order.vpnLocation || 'No requerida'}</strong></div>
+            ${order.characterClass ? `<div><span class="text-stone-500">Clase (Traders):</span> <strong class="text-purple-300">🛡️ ${order.characterClass}</strong></div>` : ''}
+            ${order.faction ? `<div><span class="text-stone-500">Facción / Reino:</span> <strong class="text-white">${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction} ${order.realm ? `(${order.realm})` : ''}</strong></div>` : ''}
           </div>
         </div>
 
@@ -5994,7 +6032,12 @@ class MythicApp {
               </div>
 
               <h4 class="text-sm font-bold ${isCompleted ? 'text-stone-300' : 'text-white'} truncate">${order.serviceName || 'Servicio'}</h4>
-              <p class="text-xs ${isCompleted ? 'text-stone-500' : 'text-stone-400'}">Cliente: ${order.clientName || 'Cliente'} (${order.characterName || 'Personaje'})</p>
+              <p class="text-xs ${isCompleted ? 'text-stone-500' : 'text-stone-400'} mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span>Cliente: <strong class="text-stone-300">${order.clientName || 'Cliente'}</strong></span>
+                <span>• Personaje: <strong class="text-white">${order.characterName || 'No especificado'}</strong></span>
+                ${order.characterClass ? `<span class="px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold">🛡️ ${order.characterClass}</span>` : ''}
+                ${order.faction ? `<span class="text-[10px] text-stone-400 font-medium">(${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction}${order.realm ? ` - ${order.realm}` : ''})</span>` : ''}
+              </p>
             </div>
 
             <div class="flex items-center gap-3 sm:gap-4 flex-wrap justify-between md:justify-end">
@@ -7683,10 +7726,17 @@ class MythicApp {
         <td class="py-3 px-3 font-mono-gaming text-[#a855f7] font-bold whitespace-nowrap text-xs">#${o.id}</td>
         <td class="py-3 px-3 min-w-[220px]">
           <div class="font-bold text-white text-xs leading-snug">${o.serviceName}</div>
-          <div class="text-[10px] text-stone-400 mt-0.5 line-clamp-2">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
+          <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-stone-900 text-stone-300 border border-stone-800">${o.region || 'US'}</span>
+            ${o.characterClass ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold flex items-center gap-1">🛡️ ${o.characterClass}</span>` : ''}
+            ${o.faction ? `<span class="text-[9px] px-1.5 py-0.2 rounded ${o.faction.toLowerCase().includes('alianza') ? 'bg-blue-950/80 text-blue-300 border border-blue-500/40' : 'bg-red-950/80 text-red-300 border border-red-500/40'} font-semibold">${o.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${o.faction}</span>` : ''}
+            ${o.realm ? `<span class="text-[9px] text-stone-400 font-mono">🏰 ${o.realm}</span>` : ''}
+          </div>
+          <div class="text-[10px] text-stone-400 mt-1 line-clamp-2">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
         </td>
         <td class="py-3 px-3 min-w-[120px]">
           <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
+          ${o.characterName ? `<div class="text-[10px] text-stone-300 font-mono mt-0.5">Char: <strong class="text-white">${o.characterName}</strong></div>` : ''}
           <div class="text-[10px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
         </td>
         <td class="py-3 px-3 font-mono-gaming font-bold text-white text-xs whitespace-nowrap">
@@ -10036,17 +10086,18 @@ class MythicApp {
     const charName = document.getElementById('sp-char-name')?.value.trim() || 'Heroe';
     const realmName = this.selectedRealm?.name || document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros';
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
+    const charClass = document.getElementById('sp-character-class')?.value || 'Guerrero (Warrior)';
+    const faction = document.getElementById('sp-faction')?.value || 'Horda';
     const hiddenCharInput = document.getElementById('sp-character');
     const summaryText = document.getElementById('sp-char-summary-text');
     const summaryExtra = document.getElementById('sp-char-summary-extra');
 
     const combined = `${charName}-${realmName}`;
     if (hiddenCharInput) hiddenCharInput.value = combined;
-    if (summaryText) summaryText.textContent = combined;
+    if (summaryText) summaryText.textContent = `${charName} (${charClass})`;
     if (summaryExtra) {
       const ver = this.selectedRealm?.version || 'Retail';
-      const cat = this.selectedRealm?.category || '';
-      summaryExtra.textContent = `${region === 'US' ? 'América (US)' : 'Europa (EU)'} • ${ver}${cat ? ' • ' + cat : ''}`;
+      summaryExtra.textContent = `${realmName} • ${faction === 'Alianza' ? '🛡️ Alianza' : '🚩 Horda'} • ${region === 'US' ? 'América (US)' : 'Europa (EU)'} • ${ver}`;
     }
   }
 

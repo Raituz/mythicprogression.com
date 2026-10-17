@@ -268,7 +268,7 @@
               </div>
             </div>
 
-            <!-- Inputs Grid: Symmetrical Row 1 (Region & Character) + Row 2 (Realm Search Full Width) -->
+            <!-- Inputs Grid: Symmetrical Row 1 (Region & Faction) + Row 2 (Class & Character Name) + Row 3 (Realm Search Full Width) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <!-- Region (50% on sm+) -->
               <div>
@@ -285,13 +285,65 @@
                 </div>
               </div>
 
+              <!-- Faction (50% on sm+) -->
+              <div>
+                <div class="h-6 flex items-center gap-1.5 mb-1.5">
+                  <i class="fa-solid fa-shield text-[#ee914f] text-[10px]"></i>
+                  <label for="sp-faction" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Facción:</label>
+                </div>
+                <div class="relative">
+                  <select id="sp-faction" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer font-semibold">
+                    <option value="Horda">🚩 Horda (Horde)</option>
+                    <option value="Alianza">🛡️ Alianza (Alliance)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Character Class (50% on sm+) -->
+              <div>
+                <div class="h-6 flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[#ee914f] text-[10px]"></i>
+                    <label for="sp-character-class" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Clase del Personaje:</label>
+                  </div>
+                  <span class="text-[9px] text-[#ee914f]/80 font-bold">Loot Traders</span>
+                </div>
+                <div class="relative">
+                  <select id="sp-character-class" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
+                    <optgroup label="Placas (Plate)">
+                      <option value="Guerrero (Warrior)" selected>⚔️ Guerrero (Warrior) - Placas</option>
+                      <option value="Paladín (Paladin)">✨ Paladín (Paladin) - Placas</option>
+                      <option value="Caballero de la Muerte (Death Knight)">💀 Caballero de la Muerte (Death Knight) - Placas</option>
+                    </optgroup>
+                    <optgroup label="Malla (Mail)">
+                      <option value="Cazador (Hunter)">🏹 Cazador (Hunter) - Malla</option>
+                      <option value="Chamán (Shaman)">⚡ Chamán (Shaman) - Malla</option>
+                      <option value="Evocador (Evoker)">🐉 Evocador (Evoker) - Malla</option>
+                    </optgroup>
+                    <optgroup label="Cuero (Leather)">
+                      <option value="Pícaro (Rogue)">🗡️ Pícaro (Rogue) - Cuero</option>
+                      <option value="Druida (Druid)">🐾 Druida (Druid) - Cuero</option>
+                      <option value="Monje (Monk)">🥋 Monje (Monk) - Cuero</option>
+                      <option value="Cazador de Demonios (Demon Hunter)">🔥 Cazador de Demonios (Demon Hunter) - Cuero</option>
+                    </optgroup>
+                    <optgroup label="Tela (Cloth)">
+                      <option value="Sacerdote (Priest)">🕊️ Sacerdote (Priest) - Tela</option>
+                      <option value="Mago (Mage)">❄️ Mago (Mage) - Tela</option>
+                      <option value="Brujo (Warlock)">😈 Brujo (Warlock) - Tela</option>
+                    </optgroup>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+                </div>
+              </div>
+
               <!-- Character Name (50% on sm+) -->
               <div>
                 <div class="h-6 flex items-center gap-1.5 mb-1.5">
                   <i class="fa-solid fa-user-shield text-[#ee914f] text-[10px]"></i>
-                  <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Personaje:</label>
+                  <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Nombre de Personaje:</label>
                 </div>
-                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors font-medium">
               </div>
 
               <!-- Realm Searchable Dropdown (Full Width - Stacking Context z-50) -->
@@ -521,6 +573,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.6.1"></script>
+  <script src="assets/js/app.js?v=3.6.4"></script>
 </body>
 </html>
