@@ -37,6 +37,16 @@ class MythicApp {
     this.realms = [];
     this.currentRealmVersionFilter = 'ALL';
     this.selectedRealm = null;
+    this.paymentConfig = {
+      usdtAddress: '0xc80b128f269f6dd0f230eee8d0a7f883d54bd793',
+      usdtNetwork: 'BNB Smart Chain (BEP20)',
+      binanceUid: '130948415',
+      binanceNickname: 'Mythic-Progression',
+      binanceEmail: 'charquin50@gmail.com',
+      binanceQrImg: 'assets/img/payments/binance_pay_qr.png',
+      discordUrl: 'https://discord.gg/V7nZqX2Z'
+    };
+    this.activePaymentContext = null;
     this.init();
   }
 
@@ -4228,18 +4238,6 @@ class MythicApp {
   // ==========================================
   // MULTI-METHOD PAYMENT GATEWAY SYSTEM
   // ==========================================
-  paymentConfig: {
-    usdtAddress: '0xc80b128f269f6dd0f230eee8d0a7f883d54bd793',
-    usdtNetwork: 'BNB Smart Chain (BEP20)',
-    binanceUid: '130948415',
-    binanceNickname: 'Mythic-Progression',
-    binanceEmail: 'charquin50@gmail.com',
-    binanceQrImg: 'assets/img/payments/binance_pay_qr.png',
-    discordUrl: 'https://discord.gg/V7nZqX2Z'
-  },
-
-  activePaymentContext: null,
-
   openCheckoutModal(orderItem) {
     if (!orderItem) return;
     this.openPaymentModal({ source: 'single', item: orderItem });
