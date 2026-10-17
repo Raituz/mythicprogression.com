@@ -3639,112 +3639,141 @@ class MythicApp {
     this.filterForeverCategory(initialCat);
     this.updateCartCounter();
     this.checkBoosterUpsellReferral();
+
+    // Attach direct click listeners to all sidebar category buttons for bulletproof navigation
+    try {
+      const attachListeners = () => {
+        document.querySelectorAll('.forever-sidebar-cat-btn, [data-forever-cat]').forEach(btn => {
+          btn.style.cursor = 'pointer';
+          if (!btn.dataset.filterBound) {
+            btn.dataset.filterBound = 'true';
+            btn.addEventListener('click', (e) => {
+              const cat = btn.getAttribute('data-cat') || btn.getAttribute('data-forever-cat');
+              if (cat) {
+                e.preventDefault();
+                this.filterForeverCategory(cat);
+              }
+            });
+          }
+        });
+      };
+      attachListeners();
+      setTimeout(attachListeners, 200);
+    } catch (e) {
+      console.warn('Sidebar click listener attach notice:', e);
+    }
   }
 
   filterForeverCategory(rawCatKey = 'dungeons') {
-    let catKey = (rawCatKey || 'dungeons').toLowerCase();
-    if (catKey === 'legacy-challenges') catKey = 'legacy';
-
-    const validCats = [
-      'all', 'powerleveling', 'professions', 'dungeons',
-      'raids', 'gearing', 'legacy', 'pvp', 'reputations', 'mounts'
-    ];
-    if (!validCats.includes(catKey)) catKey = 'all';
-
-    // Update URL query parameter without page reload
     try {
-      const url = new URL(window.location.href);
-      url.searchParams.set('cat', catKey);
-      window.history.replaceState({}, '', url.toString());
-    } catch (e) {}
+      let catKey = (rawCatKey || 'dungeons').toLowerCase();
+      if (catKey === 'legacy-challenges') catKey = 'legacy';
 
-    // Update active visual state on sidebar buttons and quick-access pills
-    const allButtons = document.querySelectorAll('.forever-sidebar-cat-btn, [data-forever-cat]');
-    allButtons.forEach(btn => {
-      const targetCat = (btn.getAttribute('data-cat') || btn.getAttribute('data-forever-cat') || '').toLowerCase();
-      const isTarget = (targetCat === catKey) || (catKey === 'legacy' && (targetCat === 'legacy-challenges' || targetCat === 'legacy'));
+      const validCats = [
+        'all', 'powerleveling', 'professions', 'dungeons',
+        'raids', 'gearing', 'legacy', 'pvp', 'reputations', 'mounts'
+      ];
+      if (!validCats.includes(catKey)) catKey = 'all';
 
-      if (isTarget) {
-        btn.classList.add('active', 'bg-gradient-to-r', 'from-amber-500/20', 'to-transparent', 'text-amber-300', 'border-amber-500/40', 'shadow-sm', 'font-bold');
-        btn.classList.remove('text-stone-300', 'text-stone-400', 'border-transparent', 'hover:text-white', 'hover:bg-[#20160f]');
-        const iconChevron = btn.querySelector('.fa-chevron-right');
-        if (iconChevron) {
-          iconChevron.classList.remove('text-stone-600');
-          iconChevron.classList.add('text-amber-400');
+      // Update URL query parameter without page reload
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('cat', catKey);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
+
+      // Update active visual state on sidebar buttons and quick-access pills
+      const allButtons = document.querySelectorAll('.forever-sidebar-cat-btn, [data-forever-cat]');
+      allButtons.forEach(btn => {
+        const targetCat = (btn.getAttribute('data-cat') || btn.getAttribute('data-forever-cat') || '').toLowerCase();
+        const isTarget = (targetCat === catKey) || (catKey === 'legacy' && (targetCat === 'legacy-challenges' || targetCat === 'legacy'));
+
+        if (isTarget) {
+          btn.classList.add('active', 'bg-gradient-to-r', 'from-amber-500/20', 'to-transparent', 'text-amber-300', 'border-amber-500/40', 'shadow-sm', 'font-bold');
+          btn.classList.remove('text-stone-300', 'text-stone-400', 'border-transparent', 'hover:text-white', 'hover:bg-[#20160f]');
+          const iconChevron = btn.querySelector('.fa-chevron-right');
+          if (iconChevron) {
+            iconChevron.classList.remove('text-stone-600');
+            iconChevron.classList.add('text-amber-400');
+          }
+        } else {
+          btn.classList.remove('active', 'bg-gradient-to-r', 'from-amber-500/20', 'to-transparent', 'text-amber-300', 'border-amber-500/40', 'shadow-sm', 'font-bold');
+          btn.classList.add('text-stone-300', 'border-transparent', 'hover:text-white', 'hover:bg-[#20160f]');
+          const iconChevron = btn.querySelector('.fa-chevron-right');
+          if (iconChevron) {
+            iconChevron.classList.remove('text-amber-400');
+            iconChevron.classList.add('text-stone-600');
+          }
         }
-      } else {
-        btn.classList.remove('active', 'bg-gradient-to-r', 'from-amber-500/20', 'to-transparent', 'text-amber-300', 'border-amber-500/40', 'shadow-sm', 'font-bold');
-        btn.classList.add('text-stone-300', 'border-transparent', 'hover:text-white', 'hover:bg-[#20160f]');
-        const iconChevron = btn.querySelector('.fa-chevron-right');
-        if (iconChevron) {
-          iconChevron.classList.remove('text-amber-400');
-          iconChevron.classList.add('text-stone-600');
+      });
+
+      // Update Banner and Breadcrumb metadata
+      const catData = MythicApp.FOREVER_CATEGORIES[catKey] || MythicApp.FOREVER_CATEGORIES.all;
+      const isEn = this.currentLang === 'en';
+      const isPt = this.currentLang === 'pt';
+
+      const crumbEl = document.getElementById('forever-crumb-current');
+      const badgeEl = document.getElementById('forever-cat-badge');
+      const titleEl = document.getElementById('forever-cat-title');
+      const descEl = document.getElementById('forever-cat-desc');
+
+      if (crumbEl) {
+        crumbEl.removeAttribute('data-i18n-orig');
+        crumbEl.textContent = (isEn && catData.crumbEn) || (isPt && catData.crumbPt) || catData.crumb || catData.name;
+      }
+      if (badgeEl) {
+        badgeEl.removeAttribute('data-i18n-orig');
+        badgeEl.textContent = (isEn && catData.badgeEn) || (isPt && catData.badgePt) || catData.badge;
+      }
+      if (titleEl) {
+        titleEl.removeAttribute('data-i18n-orig');
+        titleEl.textContent = (isEn && catData.titleEn) || (isPt && catData.titlePt) || catData.title || catData.name;
+      }
+      if (descEl) {
+        descEl.removeAttribute('data-i18n-orig');
+        descEl.textContent = (isEn && catData.descEn) || (isPt && catData.descPt) || catData.desc;
+      }
+
+      // Toggle 35 Dungeons Showcase Wrapper (visible for dungeons or all)
+      const tableWrapper = document.getElementById('forever-dungeons-table-wrapper');
+      if (tableWrapper) {
+        tableWrapper.style.display = (catKey === 'dungeons' || catKey === 'all') ? 'block' : 'none';
+      }
+
+      // Filter services and render to grid
+      const container = document.getElementById('forever-services-grid') || document.getElementById('services-grid');
+      if (container) {
+        const foreverServices = (this.services || []).filter(s => s && (s.game === 'forever' || (s.id && s.id.startsWith('forever-'))));
+        let filtered = [];
+
+        if (catKey === 'all') {
+          filtered = foreverServices;
+        } else if (catKey === 'legacy') {
+          filtered = foreverServices.filter(s => s.foreverCategory === 'legacy' || s.foreverCategory === 'legacy-challenges' || (s.id && s.id.includes('legacy')) || (s.category && s.category.toLowerCase().includes('legado')));
+        } else if (catKey === 'powerleveling') {
+          filtered = foreverServices.filter(s => s.foreverCategory === 'powerleveling' || (s.id && s.id.includes('leveling')) || (s.category && s.category.toLowerCase().includes('powerleveling')));
+        } else {
+          filtered = foreverServices.filter(s => s.foreverCategory === catKey || (s.category && s.category.toLowerCase().includes(catKey)));
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="col-span-full py-16 text-center text-stone-400 glass-panel rounded-2xl border border-stone-800">
+              <i class="fa-solid ${catData.icon || 'fa-box-open'} text-4xl text-amber-500/40 mb-3 block"></i>
+              <h4 class="text-white font-bold text-base mb-1 font-cinzel">Próximamente más servicios de ${catData.name}</h4>
+              <p class="text-xs text-stone-400 max-w-md mx-auto">Estamos preparando boosts personalizados para esta categoría. ¡Contáctanos por Discord o el chat para un pedido a medida!</p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = filtered.map(svc => this.buildServiceCardHtml(svc)).join('');
         }
       }
-    });
 
-    // Update Banner and Breadcrumb metadata
-    const catData = MythicApp.FOREVER_CATEGORIES[catKey] || MythicApp.FOREVER_CATEGORIES.all;
-    const isEn = this.currentLang === 'en';
-    const isPt = this.currentLang === 'pt';
-
-    const crumbEl = document.getElementById('forever-crumb-current');
-    const badgeEl = document.getElementById('forever-cat-badge');
-    const titleEl = document.getElementById('forever-cat-title');
-    const descEl = document.getElementById('forever-cat-desc');
-
-    if (crumbEl) {
-      crumbEl.removeAttribute('data-i18n-orig');
-      crumbEl.textContent = (isEn && catData.crumbEn) || (isPt && catData.crumbPt) || catData.crumb || catData.name;
-    }
-    if (badgeEl) {
-      badgeEl.removeAttribute('data-i18n-orig');
-      badgeEl.textContent = (isEn && catData.badgeEn) || (isPt && catData.badgePt) || catData.badge;
-    }
-    if (titleEl) {
-      titleEl.removeAttribute('data-i18n-orig');
-      titleEl.textContent = (isEn && catData.titleEn) || (isPt && catData.titlePt) || catData.title || catData.name;
-    }
-    if (descEl) {
-      descEl.removeAttribute('data-i18n-orig');
-      descEl.textContent = (isEn && catData.descEn) || (isPt && catData.descPt) || catData.desc;
-    }
-
-    // Toggle 35 Dungeons Showcase Wrapper (visible for dungeons or all)
-    const tableWrapper = document.getElementById('forever-dungeons-table-wrapper');
-    if (tableWrapper) {
-      tableWrapper.style.display = (catKey === 'dungeons' || catKey === 'all') ? 'block' : 'none';
-    }
-
-    // Filter services and render to grid
-    const container = document.getElementById('forever-services-grid') || document.getElementById('services-grid');
-    if (container) {
-      const foreverServices = (this.services || []).filter(s => s.game === 'forever' || s.id.startsWith('forever-'));
-      let filtered = [];
-
-      if (catKey === 'all') {
-        filtered = foreverServices;
-      } else if (catKey === 'legacy') {
-        filtered = foreverServices.filter(s => s.foreverCategory === 'legacy' || s.id.includes('legacy') || (s.category && s.category.toLowerCase().includes('legado')));
-      } else {
-        filtered = foreverServices.filter(s => s.foreverCategory === catKey || (s.category && s.category.toLowerCase().includes(catKey)));
+      if (this.currentLang && this.currentLang !== 'es') {
+        this.applyTranslations();
       }
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full py-16 text-center text-stone-400 glass-panel rounded-2xl border border-stone-800">
-            <i class="fa-solid ${catData.icon || 'fa-box-open'} text-4xl text-amber-500/40 mb-3 block"></i>
-            <h4 class="text-white font-bold text-base mb-1 font-cinzel">Próximamente más servicios de ${catData.name}</h4>
-            <p class="text-xs text-stone-400 max-w-md mx-auto">Estamos preparando boosts personalizados para esta categoría. ¡Contáctanos por Discord o el chat para un pedido a medida!</p>
-          </div>
-        `;
-      } else {
-        container.innerHTML = filtered.map(svc => this.buildServiceCardHtml(svc)).join('');
-      }
-    }
-
-    if (this.currentLang && this.currentLang !== 'es') {
-      this.applyTranslations();
+    } catch (err) {
+      console.error('filterForeverCategory error:', err);
     }
   }
 
@@ -3835,8 +3864,10 @@ class MythicApp {
             'All direct loot and gold kept on your character'
           ];
 
-      const discountPercent = (svc.originalPrice && svc.originalPrice > svc.basePrice)
-        ? Math.round((1 - (svc.basePrice / svc.originalPrice)) * 100)
+      const bPrice = Math.max(0, Number(svc.basePrice) || 0);
+      const origPrice = Math.max(0, Number(svc.originalPrice) || 0);
+      const discountPercent = (origPrice > bPrice)
+        ? Math.round((1 - (bPrice / origPrice)) * 100)
         : null;
 
       const productUrl = svc.targetDungeon
@@ -3902,10 +3933,10 @@ class MythicApp {
             <div>
               <span class="text-[9px] text-stone-400 uppercase font-bold tracking-wider block">Desde</span>
               <div class="flex items-baseline gap-1.5">
-                ${(svc.originalPrice && svc.originalPrice > svc.basePrice) ? `
-                  <span class="text-xs text-stone-400 line-through font-mono-gaming">$${svc.originalPrice.toFixed(2)}</span>
+                ${(origPrice > bPrice) ? `
+                  <span class="text-xs text-stone-400 line-through font-mono-gaming">$${origPrice.toFixed(2)}</span>
                 ` : ''}
-                <span class="text-xl sm:text-2xl font-bold font-mono-gaming text-amber-400">$${svc.basePrice.toFixed(2)}</span>
+                <span class="text-xl sm:text-2xl font-bold font-mono-gaming text-amber-400">$${bPrice.toFixed(2)}</span>
               </div>
             </div>
             <a href="${productUrl}" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all font-cinzel">
@@ -12798,5 +12829,11 @@ window.setLanguage = (lang) => app.setLanguage(lang);
 window.toggleLangDropdown = (e) => app.toggleLangDropdown(e);
 window.openImageLightbox = (src) => app.openImageLightbox(src);
 window.closeImageLightbox = () => app.closeImageLightbox();
+window.filterForeverCategory = (cat) => {
+  if (window.app && typeof window.app.filterForeverCategory === 'function') {
+    window.app.filterForeverCategory(cat);
+  }
+};
+
 
 

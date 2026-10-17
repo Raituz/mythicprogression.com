@@ -114,7 +114,7 @@
   <section class="max-w-6xl mx-auto px-4 lg:px-8 mt-6 relative z-20">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       
-      <div onclick="app.filterForeverCategory('dungeons'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-amber-500/40 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
+      <div onclick="(window.filterForeverCategory ? window.filterForeverCategory('dungeons') : (window.app && window.app.filterForeverCategory('dungeons'))); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-amber-500/40 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-dungeon"></i>
         </div>
@@ -122,7 +122,7 @@
         <div class="text-xs text-amber-300/80 mt-1">Desde $5.00 • Clásicas & Nuevas</div>
       </div>
 
-      <div onclick="app.filterForeverCategory('gearing'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
+      <div onclick="(window.filterForeverCategory ? window.filterForeverCategory('gearing') : (window.app && window.app.filterForeverCategory('gearing'))); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-300 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
@@ -130,7 +130,7 @@
         <div class="text-xs text-stone-400 mt-1">Nv 58-60 BiS Pre-Raid ($57)</div>
       </div>
 
-      <div onclick="app.filterForeverCategory('legacy-challenges'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
+      <div onclick="(window.filterForeverCategory ? window.filterForeverCategory('legacy-challenges') : (window.app && window.app.filterForeverCategory('legacy-challenges'))); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-trophy"></i>
         </div>
@@ -138,7 +138,7 @@
         <div class="text-xs text-stone-400 mt-1">Puntos de Legado & Títulos ($83.99)</div>
       </div>
 
-      <div onclick="app.filterForeverCategory('powerleveling'); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
+      <div onclick="(window.filterForeverCategory ? window.filterForeverCategory('powerleveling') : (window.app && window.app.filterForeverCategory('powerleveling'))); document.getElementById('forever-catalog-section')?.scrollIntoView({behavior:'smooth'});" class="glass-panel p-5 rounded-2xl border border-stone-800 text-center hover:border-amber-400 transition-all group block shadow-lg shadow-black/40 cursor-pointer">
         <div class="w-12 h-12 mx-auto rounded-xl bg-[#291b10] flex items-center justify-center text-amber-300 text-2xl mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-horse"></i>
         </div>
@@ -167,7 +167,7 @@
 
         <!-- Sidebar Category Navigation -->
         <nav id="forever-sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none text-xs">
-          <button type="button" onclick="app.filterForeverCategory('all')" data-cat="all" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('all') : (window.app && window.app.filterForeverCategory('all'))" data-cat="all" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-layer-group text-amber-400 w-4 text-center"></i>
               <span>Todos los Productos</span>
@@ -175,7 +175,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('powerleveling')" data-cat="powerleveling" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('powerleveling') : (window.app && window.app.filterForeverCategory('powerleveling'))" data-cat="powerleveling" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-bolt text-[#fccc8f] w-4 text-center"></i>
               <span>Powerleveling</span>
@@ -183,7 +183,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('professions')" data-cat="professions" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('professions') : (window.app && window.app.filterForeverCategory('professions'))" data-cat="professions" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-hammer text-amber-400 w-4 text-center"></i>
               <span>Professions</span>
@@ -191,7 +191,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('dungeons')" data-cat="dungeons" class="forever-sidebar-cat-btn active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap lg:whitespace-normal bg-gradient-to-r from-amber-500/20 to-transparent text-amber-300 border border-amber-500/40 shadow-sm">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('dungeons') : (window.app && window.app.filterForeverCategory('dungeons'))" data-cat="dungeons" class="forever-sidebar-cat-btn active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap lg:whitespace-normal bg-gradient-to-r from-amber-500/20 to-transparent text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-dungeon text-amber-400 w-4 text-center"></i>
               <span>Dungeons (Mazmorras)</span>
@@ -199,7 +199,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-amber-400 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('raids')" data-cat="raids" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('raids') : (window.app && window.app.filterForeverCategory('raids'))" data-cat="raids" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-dragon text-amber-400 w-4 text-center"></i>
               <span>Raids (Bandas)</span>
@@ -207,7 +207,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('gearing')" data-cat="gearing" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('gearing') : (window.app && window.app.filterForeverCategory('gearing'))" data-cat="gearing" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-shield-halved text-amber-400 w-4 text-center"></i>
               <span>Gearing (Equipo BiS)</span>
@@ -215,7 +215,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('legacy-challenges')" data-cat="legacy-challenges" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('legacy-challenges') : (window.app && window.app.filterForeverCategory('legacy-challenges'))" data-cat="legacy-challenges" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-trophy text-amber-400 w-4 text-center"></i>
               <span>Legacy Challenges</span>
@@ -223,7 +223,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('pvp')" data-cat="pvp" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('pvp') : (window.app && window.app.filterForeverCategory('pvp'))" data-cat="pvp" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-hand-fist text-amber-400 w-4 text-center"></i>
               <span>PvP & Rangos</span>
@@ -231,7 +231,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('reputations')" data-cat="reputations" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('reputations') : (window.app && window.app.filterForeverCategory('reputations'))" data-cat="reputations" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-scroll text-amber-400 w-4 text-center"></i>
               <span>Reputations</span>
@@ -239,7 +239,7 @@
             <i class="fa-solid fa-chevron-right text-[9px] text-stone-600 hidden lg:inline"></i>
           </button>
 
-          <button type="button" onclick="app.filterForeverCategory('mounts')" data-cat="mounts" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent">
+          <button type="button" onclick="window.filterForeverCategory ? window.filterForeverCategory('mounts') : (window.app && window.app.filterForeverCategory('mounts'))" data-cat="mounts" class="forever-sidebar-cat-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap lg:whitespace-normal text-stone-300 hover:text-white hover:bg-[#20160f] border border-transparent cursor-pointer">
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-horse text-amber-400 w-4 text-center"></i>
               <span>Mounts (Monturas)</span>
@@ -519,8 +519,15 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.6.9"></script>
+  <script src="assets/js/app.js?v=3.7.0"></script>
   <script>
+    function filterForeverCategory(cat) {
+      if (window.app && typeof window.app.filterForeverCategory === 'function') {
+        window.app.filterForeverCategory(cat);
+      }
+    }
+    window.filterForeverCategory = filterForeverCategory;
+
     function openAuthModal() {
       if (window.app && window.app.openAuthModal) {
         window.app.openAuthModal();
