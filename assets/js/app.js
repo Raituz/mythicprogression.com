@@ -2276,7 +2276,10 @@ class MythicApp {
     }
 
     const btn = document.getElementById('btn-checkout-cart');
-    if (btn) btn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-lock text-xs mr-1 text-emerald-400"></i><span>Proceder al Pago Seguro</span>`;
+    }
 
     container.innerHTML = this.cart.map(item => {
       const itemPrice = Number(item.totalPrice || item.price || 0) || 0;
@@ -2311,84 +2314,11 @@ class MythicApp {
   }
 
   processFullCartCheckout() {
-    if (this.cart.length === 0) return;
-
-    if (!this.currentUser) {
-      this.currentUser = {
-        id: 'client_carlos',
-        username: 'Carlos M.',
-        email: 'carlos.wow@gmail.com',
-        discordId: 'CarlosWoW#4819',
-        type: 'client',
-        country: 'Estados Unidos',
-        battletag: 'CarlosWoW#1234'
-      };
-      this.saveUser();
-      this.renderHeader();
+    if (!this.cart || this.cart.length === 0) {
+      this.showToast('Tu carrito está vacío.', 'warning');
+      return;
     }
-
-    const createdOrderIds = [];
-    this.cart.forEach(item => {
-      const isUpsell = !!item.referredBooster;
-      const finalPrice = Math.max(0, Number(
-        item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
-          ? item.totalPrice
-          : (item.price !== undefined && !isNaN(Number(item.price))
-              ? item.price
-              : ((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1)))
-      ) || 45.00);
-
-      const econ = this.calculateEconomics(finalPrice, isUpsell);
-      const charClass = item.characterClass || 'Guerrero (Warrior)';
-      const faction = item.faction || 'Horda';
-      const charStr = item.characterName || (item.character ? item.character.split('-')[0].trim() : 'Heroe');
-      const realmName = item.realm || (item.character && item.character.includes('-') ? item.character.split('-')[1].trim() : (this.selectedRealm?.name || 'Ragnaros'));
-
-      const newOrder = {
-        id: 'MP-' + Math.floor(10000 + Math.random() * 90000),
-        serviceName: `${item.serviceName}${item.quantity > 1 ? ` (x${item.quantity})` : ''}`,
-        category: item.category || 'Servicios',
-        region: item.region || 'US',
-        faction: faction,
-        characterClass: charClass,
-        realm: realmName,
-        characterName: charStr,
-        character: `${charStr}-${realmName}`,
-        completionMethod: item.mode || 'Piloted',
-        vpnLocation: (item.mode && String(item.mode).toLowerCase().includes('piloted')) ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
-        details: item.details || '',
-        clientId: this.currentUser.id,
-        clientEmail: this.currentUser.email,
-        clientDiscord: this.currentUser.discordId,
-        clientName: this.currentUser.username,
-        totalPrice: finalPrice,
-        price: finalPrice,
-        companyShare: econ.company,
-        boosterPayout: econ.booster,
-        boosterPayoutRate: econ.boosterRate,
-        maxBidAllowed: econ.maxBid,
-        status: 'AVAILABLE',
-        bids: [],
-        assignedBooster: null,
-        isOnAccount: false,
-        createdAt: new Date().toISOString(),
-        chat: []
-      };
-
-      if (item.referredBooster) newOrder.referredByBooster = item.referredBooster;
-      this.orders.unshift(newOrder);
-      createdOrderIds.push(newOrder.id);
-    });
-
-    this.saveOrders();
-    this.cart = [];
-    this.saveCart();
-    this.closeCartModal();
-
-    this.showToast(`¡Pago completado! Se crearon ${createdOrderIds.length} orden(es). Redirigiendo a tu perfil...`, 'success');
-    setTimeout(() => {
-      window.location.href = 'client-profile';
-    }, 1200);
+    this.openPaymentModal({ source: 'cart' });
   }
 
   // ==========================================
@@ -4295,57 +4225,439 @@ class MythicApp {
     if (badge) badge.textContent = this.cart.length;
   }
 
+  // ==========================================
+  // MULTI-METHOD PAYMENT GATEWAY SYSTEM
+  // ==========================================
+  paymentConfig: {
+    usdtAddress: '0xc80b128f269f6dd0f230eee8d0a7f883d54bd793',
+    usdtNetwork: 'BNB Smart Chain (BEP20)',
+    binanceUid: '130948415',
+    binanceNickname: 'Mythic-Progression',
+    binanceEmail: 'charquin50@gmail.com',
+    binanceQrImg: 'assets/img/payments/binance_pay_qr.png',
+    discordUrl: 'https://discord.gg/V7nZqX2Z'
+  },
+
+  activePaymentContext: null,
+
   openCheckoutModal(orderItem) {
-    const modal = document.getElementById('checkout-modal');
-    if (!modal) return;
+    if (!orderItem) return;
+    this.openPaymentModal({ source: 'single', item: orderItem });
+  },
 
-    const finalPrice = Math.max(0, Number(
-      orderItem.totalPrice !== undefined && !isNaN(Number(orderItem.totalPrice))
-        ? orderItem.totalPrice
-        : (orderItem.price !== undefined && !isNaN(Number(orderItem.price)) ? orderItem.price : 0)
-    ) || 0);
+  closeCheckoutModal() {
+    this.closePaymentModal();
+  },
 
-    const summary = document.getElementById('checkout-summary');
-    if (summary) {
-      summary.innerHTML = `
-        <div class="bg-[#150f0c] p-4 rounded-xl border border-stone-800 space-y-2 mb-4">
-          <div class="flex justify-between text-sm">
-            <span class="text-stone-400">Servicio:</span>
-            <span class="font-bold text-[#fcefc2]">${orderItem.serviceName}</span>
+  openPaymentModal(checkoutContext = { source: 'cart' }) {
+    let items = [];
+    if (checkoutContext?.source === 'single' && checkoutContext?.item) {
+      items = [checkoutContext.item];
+    } else {
+      items = Array.isArray(this.cart) ? [...this.cart] : [];
+    }
+
+    if (items.length === 0) {
+      this.showToast('Tu carrito está vacío. Agrega un servicio antes de pagar.', 'warning');
+      return;
+    }
+
+    const totalPrice = items.reduce((sum, item) => {
+      const p = Math.max(0, Number(
+        item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
+          ? item.totalPrice
+          : (item.price !== undefined && !isNaN(Number(item.price))
+              ? item.price
+              : ((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1)))
+      ) || 0);
+      return sum + p;
+    }, 0);
+
+    this.activePaymentContext = {
+      source: checkoutContext?.source || 'cart',
+      items: items,
+      totalPrice: totalPrice,
+      selectedMethod: this.activePaymentContext?.selectedMethod || 'card'
+    };
+
+    let modal = document.getElementById('mp-payment-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mp-payment-modal';
+      modal.className = 'fixed inset-0 z-[3000] bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 overflow-y-auto';
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closePaymentModal();
+      });
+    }
+
+    this.renderPaymentModalContent();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    this.closeCartModal();
+  },
+
+  closePaymentModal() {
+    const modal = document.getElementById('mp-payment-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  },
+
+  setPaymentMethodTab(methodKey) {
+    if (!this.activePaymentContext) return;
+    this.activePaymentContext.selectedMethod = methodKey;
+    this.renderPaymentModalContent();
+  },
+
+  copyPaymentText(text, btnElement, successMsg = '¡Copiado!') {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        if (btnElement) {
+          const original = btnElement.innerHTML;
+          btnElement.innerHTML = `<i class="fa-solid fa-check text-emerald-400 mr-1"></i>${successMsg}`;
+          btnElement.classList.add('text-emerald-400');
+          setTimeout(() => {
+            btnElement.innerHTML = original;
+            btnElement.classList.remove('text-emerald-400');
+          }, 2000);
+        }
+        this.showToast(`${successMsg}: ${text}`, 'success');
+      }).catch(() => {
+        this.fallbackCopyText(text);
+      });
+    } else {
+      this.fallbackCopyText(text);
+    }
+  },
+
+  fallbackCopyText(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      this.showToast(`¡Copiado!: ${text}`, 'success');
+    } catch (err) {
+      prompt("Copia este dato manualmente:", text);
+    }
+    document.body.removeChild(textArea);
+  },
+
+  openSupportChatFromPayment(serviceInfo) {
+    this.closePaymentModal();
+    const total = this.activePaymentContext?.totalPrice ? `$${this.activePaymentContext.totalPrice.toFixed(2)} USD` : '';
+    this.openLiveChat({
+      prefill: `Hola! Deseo completar mi pago de ${total} para Mythic Progression mediante PayPal / Zinli / Zelle. ¿Me pueden brindar las instrucciones de pago?`
+    });
+  },
+
+  renderPaymentModalContent() {
+    const modal = document.getElementById('mp-payment-modal');
+    if (!modal || !this.activePaymentContext) return;
+
+    const ctx = this.activePaymentContext;
+    const total = ctx.totalPrice || 0;
+    const currentTab = ctx.selectedMethod || 'card';
+
+    const itemsSummaryHtml = ctx.items.map(it => {
+      const price = Math.max(0, Number(
+        it.totalPrice !== undefined && !isNaN(Number(it.totalPrice))
+          ? it.totalPrice
+          : (it.price !== undefined && !isNaN(Number(it.price))
+              ? it.price
+              : ((Number(it.unitPrice) || 0) * (Number(it.quantity) || 1)))
+      ) || 0);
+      return `
+        <div class="flex items-center justify-between text-xs py-1.5 border-b border-stone-800/60 last:border-0">
+          <div class="flex items-center gap-2 truncate pr-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] flex-shrink-0"></span>
+            <span class="text-stone-300 font-medium truncate">${it.serviceName}</span>
+            <span class="text-[10px] text-stone-500 hidden sm:inline">(${it.character || 'Personaje'})</span>
           </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-stone-400">Personaje:</span>
-            <span class="text-stone-200">${orderItem.character}</span>
+          <span class="font-mono-gaming font-bold text-[#fcefc2] flex-shrink-0">$${price.toFixed(2)}</span>
+        </div>
+      `;
+    }).join('');
+
+    const paybisAmount = Math.max(10, Math.round(total));
+    const paybisUrl = `https://paybis.com/?cryptoCurrency=USDT&cryptoNetwork=BSC&cryptoAmount=${paybisAmount}&walletAddress=${this.paymentConfig.usdtAddress}`;
+    const changellyUrl = `https://changelly.com/buy-crypto?from=usd&to=usdtbsc&amount=${total.toFixed(2)}&address=${this.paymentConfig.usdtAddress}`;
+
+    const tabBtn = (key, icon, label, badge = '') => {
+      const isActive = currentTab === key;
+      return `
+        <button type="button" onclick="app.setPaymentMethodTab('${key}')" class="flex-1 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
+          isActive
+            ? 'bg-[#251b14] border-[#ee914f] text-[#fcefc2] shadow-lg shadow-[#ee914f]/20 ring-1 ring-[#ee914f]/50'
+            : 'bg-[#120d09] border-stone-800 text-stone-400 hover:text-stone-200 hover:border-stone-700'
+        }">
+          <i class="${icon} text-sm ${isActive ? 'text-[#ee914f]' : 'text-stone-500'}"></i>
+          <span class="text-center">${label}</span>
+          ${badge ? `<span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-normal bg-emerald-950 text-emerald-400 border border-emerald-800/60 hidden md:inline">${badge}</span>` : ''}
+        </button>
+      `;
+    };
+
+    let tabBodyHtml = '';
+
+    if (currentTab === 'card') {
+      tabBodyHtml = `
+        <div class="space-y-4 animate-fade-in">
+          <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-[#fcefc2] flex items-center gap-2">
+                <i class="fa-solid fa-credit-card text-[#ee914f]"></i> Pagar con Tarjeta Internacional
+              </span>
+              <div class="flex items-center gap-2 text-stone-400 text-sm">
+                <i class="fa-brands fa-cc-visa text-blue-400" title="Visa"></i>
+                <i class="fa-brands fa-cc-mastercard text-amber-500" title="Mastercard"></i>
+                <i class="fa-brands fa-apple-pay text-white text-base" title="Apple Pay"></i>
+                <i class="fa-brands fa-google-pay text-white text-base" title="Google Pay"></i>
+              </div>
+            </div>
+            <p class="text-[11px] text-stone-400 leading-relaxed">
+              Paga en dólares de forma 100% segura mediante pasarela On-Ramp oficial. Tu orden se acreditará automáticamente en el sistema sin retenciones ni comisiones imprevistas.
+            </p>
           </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-stone-400">Modalidad:</span>
-            <span class="text-[#ee914f]">${orderItem.mode} (${orderItem.region})</span>
+
+          <div class="space-y-2">
+            <a href="${paybisUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
+              <i class="fa-solid fa-lock text-stone-950 text-base"></i>
+              <span>Pagar $${total.toFixed(2)} USD con Tarjeta (Paybis)</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
+            </a>
+
+            <div class="text-center pt-1">
+              <a href="${changellyUrl}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-stone-400 hover:text-[#ee914f] transition-colors underline">
+                <i class="fa-solid fa-bolt text-amber-400 mr-1"></i>¿Prefieres Changelly (Apple Pay / Tarjeta)? Haz clic aquí
+              </a>
+            </div>
           </div>
-          <div class="pt-2 border-t border-stone-800 flex justify-between items-center">
-            <span class="text-xs text-stone-400">Total a Pagar:</span>
-            <span class="text-2xl font-bold font-mono-gaming text-[#fcefc2]">$${finalPrice.toFixed(2)}</span>
+
+          <div class="pt-2 border-t border-stone-800/80">
+            <label class="block text-[11px] font-bold text-stone-300 mb-1">
+              <i class="fa-solid fa-receipt text-[#ee914f] mr-1"></i>Número de Orden o Correo de tu Tarjeta:
+            </label>
+            <input id="mp-pay-ref" type="text" placeholder="Ej: TX-98421 o el correo con el que pagaste" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+            <span class="text-[10px] text-stone-500 mt-1 block">Una vez completado el pago en la pasarela, pega aquí tu referencia para asociarla a tu orden.</span>
           </div>
         </div>
-        <div class="text-[11px] text-stone-300 bg-[#251b14] border border-[#ee914f]/30 p-3 rounded-lg flex items-center gap-2">
-          <i class="fa-solid fa-shield-halved text-[#ee914f] text-sm"></i>
-          <span>Garantía de satisfacción y protección VPN. Tu orden pasará a tu perfil al completar el pago.</span>
+      `;
+    } else if (currentTab === 'binance') {
+      tabBodyHtml = `
+        <div class="space-y-4 animate-fade-in text-center sm:text-left">
+          <div class="bg-[#18110b] p-3 rounded-xl border border-[#F0B90B]/30 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-[#F0B90B] flex items-center justify-center text-stone-950 font-black text-xs">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <span class="text-xs font-bold text-[#F0B90B]">Binance Pay (Recomendado Gamers)</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50 font-bold">0% Comisiones • Inmediato</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-4 bg-[#120d09] p-3.5 rounded-xl border border-stone-800">
+            <div class="flex-shrink-0">
+              <img src="${this.paymentConfig.binanceQrImg}" alt="Binance Pay QR" class="w-36 h-auto rounded-xl border border-[#F0B90B]/40 shadow-xl mx-auto" />
+              <span class="text-[9px] text-stone-500 block text-center mt-1">Escanea con App de Binance</span>
+            </div>
+
+            <div class="flex-1 w-full space-y-2 text-left">
+              <div class="bg-[#18110b] p-2.5 rounded-lg border border-stone-800">
+                <span class="text-[10px] text-stone-400 block">Binance UID (ID de Usuario):</span>
+                <div class="flex items-center justify-between gap-2 mt-0.5">
+                  <span class="font-mono-gaming font-bold text-[#fcefc2] text-sm">${this.paymentConfig.binanceUid}</span>
+                  <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.binanceUid}', this)" class="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[#ee914f] text-[10px] font-bold rounded cursor-pointer transition-colors">
+                    <i class="fa-regular fa-copy mr-1"></i>Copiar
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-[#18110b] p-2.5 rounded-lg border border-stone-800">
+                <span class="text-[10px] text-stone-400 block">Apodo / Cuenta:</span>
+                <span class="font-bold text-white text-xs block mt-0.5">${this.paymentConfig.binanceNickname}</span>
+              </div>
+
+              <div class="bg-[#18110b] p-2.5 rounded-lg border border-stone-800">
+                <span class="text-[10px] text-stone-400 block">Correo Binance:</span>
+                <div class="flex items-center justify-between gap-2 mt-0.5">
+                  <span class="font-mono text-stone-300 text-[11px] truncate">${this.paymentConfig.binanceEmail}</span>
+                  <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.binanceEmail}', this)" class="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[#ee914f] text-[10px] font-bold rounded cursor-pointer transition-colors">
+                    <i class="fa-regular fa-copy mr-1"></i>Copiar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <label class="block text-[11px] font-bold text-stone-300 mb-1">
+              <i class="fa-solid fa-receipt text-[#F0B90B] mr-1"></i>Tu ID de Pago de Binance o Usuario (Opcional):
+            </label>
+            <input id="mp-pay-ref" type="text" placeholder="Ej: UID 130948415 o tu apodo de Binance" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+          </div>
+        </div>
+      `;
+    } else if (currentTab === 'crypto') {
+      tabBodyHtml = `
+        <div class="space-y-4 animate-fade-in">
+          <div class="bg-amber-950/30 p-3 rounded-xl border border-amber-600/40 text-[11px] text-amber-200 flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm flex-shrink-0"></i>
+            <span><strong>Red obligatoria:</strong> Envía únicamente a través de la red <strong>BNB Smart Chain (BEP20)</strong>. Depósito mínimo >0.01 USDT.</span>
+          </div>
+
+          <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 space-y-3">
+            <div>
+              <span class="text-[10px] text-stone-400 block">Moneda y Red:</span>
+              <span class="text-xs font-bold text-emerald-400">USDT (Tether) • Red BEP20 (BSC)</span>
+            </div>
+
+            <div>
+              <span class="text-[10px] text-stone-400 block">Dirección de Depósito:</span>
+              <div class="flex items-center gap-2 mt-1 bg-[#120d09] p-2 rounded-lg border border-stone-700">
+                <span class="font-mono text-xs text-[#fcefc2] break-all select-all flex-1">${this.paymentConfig.usdtAddress}</span>
+                <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this)" class="px-2.5 py-1.5 bg-[#ee914f] hover:bg-[#d87a38] text-stone-950 text-xs font-bold rounded cursor-pointer transition-colors flex-shrink-0">
+                  <i class="fa-regular fa-copy mr-1"></i>Copiar
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-1">
+              <span class="text-stone-400">Monto exacto a transferir:</span>
+              <span class="font-mono-gaming font-bold text-lg text-[#fcefc2]">$${total.toFixed(2)} USDT</span>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <label class="block text-[11px] font-bold text-stone-300 mb-1">
+              <i class="fa-solid fa-hashtag text-[#ee914f] mr-1"></i>Hash de la Transacción (TXID):
+            </label>
+            <input id="mp-pay-ref" type="text" placeholder="Ej: 0x8f2c... (Hash de la transferencia)" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+          </div>
+        </div>
+      `;
+    } else if (currentTab === 'support') {
+      tabBodyHtml = `
+        <div class="space-y-4 animate-fade-in">
+          <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#fcefc2]">Métodos Asistidos en Vivo</span>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="px-2 py-0.5 bg-blue-950 text-blue-400 rounded border border-blue-800/40 font-bold">PayPal</span>
+                <span class="px-2 py-0.5 bg-purple-950 text-purple-400 rounded border border-purple-800/40 font-bold">Zinli</span>
+                <span class="px-2 py-0.5 bg-teal-950 text-teal-400 rounded border border-teal-800/40 font-bold">Zelle</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-stone-400 leading-relaxed">
+              ¿Prefieres pagar con <strong>Zinli</strong>, <strong>PayPal (Amigos y Familia)</strong> o <strong>Zelle</strong>? Para evitar las retenciones bancarias de 21 días y asignarte tu booster sin esperas, nuestro staff te atiende en vivo y te suministra los datos actualizados al instante.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button type="button" onclick="app.openSupportChatFromPayment()" class="py-3 px-4 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all cursor-pointer">
+              <i class="fa-solid fa-comments text-stone-950"></i>
+              <span class="text-stone-950 font-black">Chat en Vivo Web</span>
+            </button>
+
+            <a href="${this.paymentConfig.discordUrl}" target="_blank" rel="noopener noreferrer" class="py-3 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#5865F2]/25 transition-all cursor-pointer">
+              <i class="fa-brands fa-discord text-base"></i>
+              <span>Discord Oficial</span>
+            </a>
+          </div>
+
+          <div class="pt-2 border-t border-stone-800/80">
+            <label class="block text-[11px] font-bold text-stone-300 mb-1">
+              <i class="fa-solid fa-user-check text-[#ee914f] mr-1"></i>Nombre de usuario con el que hablaste en soporte:
+            </label>
+            <input id="mp-pay-ref" type="text" placeholder="Ej: MiUsuario#1234 en Discord o chat" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+          </div>
         </div>
       `;
     }
 
-    this.currentPendingOrder = orderItem;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-  }
+    modal.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-xl p-5 sm:p-7 border border-[#ee914f]/40 shadow-2xl relative overflow-hidden my-auto max-h-[92vh] flex flex-col">
+        <!-- Top accent glow -->
+        <div class="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[#ee914f]/15 blur-3xl pointer-events-none"></div>
 
-  closeCheckoutModal() {
-    const modal = document.getElementById('checkout-modal');
-    if (modal) modal.classList.add('hidden');
-  }
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-stone-800 flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#251b14] border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f] shadow-md shadow-[#ee914f]/20">
+              <i class="fa-solid fa-shield-halved text-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-white font-cinzel leading-tight">Pasarela de Pago Segura</h3>
+              <span class="text-[10px] text-stone-400">Elige tu método de pago para activar tu orden</span>
+            </div>
+          </div>
+          <button type="button" onclick="app.closePaymentModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
 
-  processCheckoutPayment() {
-    const item = this.currentPendingOrder;
-    if (!item) return;
+        <!-- Modal Body (Scrollable) -->
+        <div class="overflow-y-auto flex-1 py-4 space-y-4 pr-1">
+          <!-- Order Summary Card -->
+          <div class="bg-[#120d09] p-3.5 rounded-2xl border border-stone-800 space-y-2">
+            <div class="flex items-center justify-between text-xs text-stone-400 font-bold uppercase tracking-wider">
+              <span>Resumen de Compra (${ctx.items.length} ${ctx.items.length === 1 ? 'servicio' : 'servicios'})</span>
+              <span class="text-[#ee914f]">Garantía Mythic</span>
+            </div>
+            <div class="space-y-1">
+              ${itemsSummaryHtml}
+            </div>
+            <div class="pt-2 border-t border-stone-800 flex items-center justify-between">
+              <span class="text-xs font-bold text-stone-300">Total a Pagar:</span>
+              <span class="font-mono-gaming text-2xl font-black text-[#fcefc2]">$${total.toFixed(2)} <span class="text-xs font-normal text-stone-400">USD</span></span>
+            </div>
+          </div>
+
+          <!-- Method Selector Tabs -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            ${tabBtn('card', 'fa-solid fa-credit-card', 'Tarjeta', 'USA/EU')}
+            ${tabBtn('binance', 'fa-solid fa-bolt', 'Binance Pay', '0%')}
+            ${tabBtn('crypto', 'fa-brands fa-ethereum', 'USDT BEP20', 'BSC')}
+            ${tabBtn('support', 'fa-solid fa-headset', 'Soporte', 'Zinli')}
+          </div>
+
+          <!-- Active Tab Content -->
+          ${tabBodyHtml}
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="pt-4 border-t border-stone-800 flex-shrink-0 space-y-2">
+          <button type="button" onclick="app.confirmPaymentAndCompleteOrder()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#ee914f] to-[#e4762b] hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#ee914f]/30 transition-all cursor-pointer">
+            <i class="fa-solid fa-circle-check text-stone-950 text-base"></i>
+            <span>Confirmar Pago y Activar Mi Orden</span>
+          </button>
+          <div class="flex items-center justify-center gap-2 text-[10px] text-stone-500 text-center">
+            <i class="fa-solid fa-shield text-emerald-500"></i>
+            <span>Protección VPN incluida • Soporte 24/7 disponible</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (typeof this.applyTranslations === 'function') {
+      this.applyTranslations(modal);
+    }
+  },
+
+  confirmPaymentAndCompleteOrder() {
+    if (!this.activePaymentContext || !this.activePaymentContext.items || this.activePaymentContext.items.length === 0) {
+      this.showToast('No hay items para procesar.', 'error');
+      this.closePaymentModal();
+      return;
+    }
 
     if (!this.currentUser) {
       this.currentUser = {
@@ -4361,65 +4673,97 @@ class MythicApp {
       this.renderHeader();
     }
 
-    const isUpsell = !!item.referredBooster;
-    const finalPrice = Math.max(0, Number(
-      item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
-        ? item.totalPrice
-        : (item.price !== undefined && !isNaN(Number(item.price)) ? item.price : 0)
-    ) || 45.00);
+    const refInput = document.getElementById('mp-pay-ref');
+    const paymentRef = (refInput ? refInput.value.trim() : '') || 'Confirmación directa web';
 
-    const econ = this.calculateEconomics(finalPrice, isUpsell);
-    const charStr = item.character || 'Heroe-Area 52';
-    const realmName = (charStr.includes('-')) ? charStr.split('-')[1].trim() : 'Area 52';
-
-    const newOrder = {
-      id: item.orderId || ('MP-' + Math.floor(10000 + Math.random() * 90000)),
-      serviceName: item.serviceName,
-      category: item.category || 'Servicios',
-      region: item.region || 'US',
-      faction: 'Horda',
-      realm: realmName,
-      characterName: charStr,
-      completionMethod: item.mode || 'Piloted',
-      vpnLocation: (item.mode && String(item.mode).toLowerCase().includes('piloted')) ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
-      details: item.details || '',
-      clientId: this.currentUser.id,
-      clientEmail: this.currentUser.email,
-      clientDiscord: this.currentUser.discordId,
-      clientName: this.currentUser.username,
-      totalPrice: finalPrice,
-      price: finalPrice,
-      companyShare: econ.company,
-      boosterPayout: econ.booster,
-      boosterPayoutRate: econ.boosterRate, // 30% base o 50% upsell
-      maxBidAllowed: econ.maxBid,
-      status: 'AVAILABLE',
-      bids: [],
-      assignedBooster: null,
-      isOnAccount: false,
-      createdAt: new Date().toISOString(),
-      chat: []
+    const methodNames = {
+      card: 'Tarjeta Internacional (On-Ramp)',
+      binance: 'Binance Pay (UID 130948415)',
+      crypto: 'USDT BEP-20 Directo',
+      support: 'Soporte Asistido (PayPal/Zinli/Zelle)'
     };
+    const paymentMethodLabel = methodNames[this.activePaymentContext.selectedMethod] || 'Pasarela Web';
 
-    // If it was referred by a specific booster, assign or credit them
-    if (item.referredBooster) {
-      newOrder.referredByBooster = item.referredBooster;
+    const createdOrderIds = [];
+    this.activePaymentContext.items.forEach(item => {
+      const isUpsell = !!item.referredBooster;
+      const finalPrice = Math.max(0, Number(
+        item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
+          ? item.totalPrice
+          : (item.price !== undefined && !isNaN(Number(item.price))
+              ? item.price
+              : ((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1)))
+      ) || 45.00);
+
+      const econ = this.calculateEconomics(finalPrice, isUpsell);
+      const charClass = item.characterClass || 'Guerrero (Warrior)';
+      const faction = item.faction || 'Horda';
+      const charStr = item.characterName || (item.character ? item.character.split('-')[0].trim() : 'Heroe');
+      const realmName = item.realm || (item.character && item.character.includes('-') ? item.character.split('-')[1].trim() : (this.selectedRealm?.name || 'Ragnaros'));
+
+      const newOrder = {
+        id: item.orderId || ('MP-' + Math.floor(10000 + Math.random() * 90000)),
+        serviceName: `${item.serviceName}${item.quantity > 1 ? ` (x${item.quantity})` : ''}`,
+        category: item.category || 'Servicios',
+        region: item.region || 'US',
+        faction: faction,
+        characterClass: charClass,
+        realm: realmName,
+        characterName: charStr,
+        character: `${charStr}-${realmName}`,
+        completionMethod: item.mode || 'Piloted',
+        vpnLocation: (item.mode && String(item.mode).toLowerCase().includes('piloted')) ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
+        details: item.details || '',
+        clientId: this.currentUser.id,
+        clientEmail: this.currentUser.email,
+        clientDiscord: this.currentUser.discordId,
+        clientName: this.currentUser.username,
+        totalPrice: finalPrice,
+        price: finalPrice,
+        companyShare: econ.company,
+        boosterPayout: econ.booster,
+        boosterPayoutRate: econ.boosterRate,
+        maxBidAllowed: econ.maxBid,
+        paymentMethod: paymentMethodLabel,
+        paymentReference: paymentRef,
+        paymentStatus: 'PAID',
+        status: 'AVAILABLE',
+        bids: [],
+        assignedBooster: null,
+        isOnAccount: false,
+        createdAt: new Date().toISOString(),
+        chat: []
+      };
+
+      if (item.referredBooster) newOrder.referredByBooster = item.referredBooster;
+      this.orders.unshift(newOrder);
+      createdOrderIds.push(newOrder.id);
+    });
+
+    this.saveOrders();
+
+    if (this.activePaymentContext.source === 'cart') {
+      this.cart = [];
+      this.saveCart();
+    } else if (this.activePaymentContext.items && this.activePaymentContext.items[0]?.orderId) {
+      const singleId = this.activePaymentContext.items[0].orderId;
+      this.cart = this.cart.filter(c => c.orderId !== singleId);
+      this.saveCart();
     }
 
-    this.orders.unshift(newOrder);
-    this.saveOrders();
-    this.cart = this.cart.filter(c => c.orderId !== item.orderId);
-    localStorage.setItem('mp_cart', JSON.stringify(this.cart));
-    this.updateCartCounter();
-    this.closeCheckoutModal();
+    this.closePaymentModal();
+    this.closeCartModal();
 
-    this.showToast(`¡Orden #${newOrder.id} creada con éxito! Redirigiendo a tu perfil de cliente...`, 'success');
+    this.showToast(`¡Pago registrado (${paymentMethodLabel})! Orden #${createdOrderIds.join(', ')} activada con éxito.`, 'success');
 
-    // Auto-redirect to client profile after 1 second
     setTimeout(() => {
       window.location.href = 'client-profile';
     }, 1200);
-  }
+  },
+
+  processCheckoutPayment() {
+    this.confirmPaymentAndCompleteOrder();
+  },
 
   // ==========================================
   
@@ -11575,6 +11919,11 @@ class MythicApp {
         pt: 'Ao concluir o pedido, você será redirecionado para o painel do cliente, onde poderá combinar horário e detalhes no chat privado com seu booster.'
       },
       'completar pedido (simular pago)': { en: 'Complete Order (Simulate Payment)', pt: 'Completar Pedido (Simular Pagamento)' },
+      'proceder al pago seguro': { en: 'Proceed to Secure Checkout', pt: 'Proceder ao Pagamento Seguro' },
+      'pasarela de pago segura': { en: 'Secure Payment Gateway', pt: 'Gateway de Pagamento Seguro' },
+      'elige tu método de pago para activar tu orden': { en: 'Choose your payment method to activate your order', pt: 'Escolha seu método de pagamento para ativar seu pedido' },
+      'confirmar pago y activar mi orden': { en: 'Confirm Payment & Activate My Order', pt: 'Confirmar Pagamento e Ativar Meu Pedido' },
+      'pagar con tarjeta internacional': { en: 'Pay with International Card', pt: 'Pagar com Cartão Internacional' },
       'bandas y asaltos míticos': { en: 'Raids & Mythic Assaults', pt: 'Raides & Assaltos Míticos' },
       'derrota a los jefes de raid más desafiantes con hermandades top mundiales. botín de nivel héroe y mito garantizado.': {
         en: 'Defeat the most challenging raid bosses with top world guilds. Guaranteed Hero and Mythic quality loot.',
