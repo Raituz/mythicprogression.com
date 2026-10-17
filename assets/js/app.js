@@ -323,6 +323,7 @@ class MythicApp {
         });
         if (ordersNeedSave) this.saveOrders();
       }
+      try { this.reconcileFinances(); } catch (e) { console.warn('reconcileFinances:', e); }
     } catch (e) {
       console.warn('Fallback loading orders:', e);
       if (!this.orders || this.orders.length === 0) this.orders = [];
@@ -999,6 +1000,7 @@ class MythicApp {
       this.boosters.forEach(b => {
         if (b) {
           b.points = Math.max(0, Number(b.points) || 0);
+          b.balance = Math.max(0, Number(b.balance) || 0);
           this.updateBoosterRank(b);
         }
       });
@@ -1056,6 +1058,83 @@ class MythicApp {
 
   saveUser() {
     localStorage.setItem('mp_current_user', JSON.stringify(this.currentUser));
+  }
+
+  reconcileFinances() {
+    if (!Array.isArray(this.orders) || !Array.isArray(this.boosters)) return;
+
+    let boostersNeedSave = false;
+    let ordersNeedSave = false;
+    const boosterEarningsMap = {};
+
+    this.orders.forEach(o => {
+      if (!o || o.status !== 'COMPLETED') return;
+
+      const safeTotal = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
+      const safeBoosterPayout = Math.max(0, Number(o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (o.assignedBooster?.payout !== undefined && !isNaN(Number(o.assignedBooster?.payout)) ? o.assignedBooster.payout : (safeTotal * 0.30))) || (safeTotal * 0.30));
+      const safeCompanyShare = Math.max(0, Number(o.companyShare !== undefined && !isNaN(Number(o.companyShare)) ? o.companyShare : (safeTotal - safeBoosterPayout)) || (safeTotal * 0.70));
+
+      if (o.totalPrice !== safeTotal || o.boosterPayout !== safeBoosterPayout || o.companyShare !== safeCompanyShare || !o.isCredited) {
+        o.totalPrice = safeTotal;
+        o.boosterPayout = safeBoosterPayout;
+        o.companyShare = safeCompanyShare;
+        o.isCredited = true;
+        ordersNeedSave = true;
+      }
+
+      if (o.assignedBooster) {
+        const bDiscordId = o.assignedBooster.discordId || '';
+        const bUsername = (o.assignedBooster.username || '').toLowerCase();
+        const bKey = bDiscordId || bUsername;
+        if (bKey) {
+          boosterEarningsMap[bKey] = (boosterEarningsMap[bKey] || 0) + safeBoosterPayout;
+        }
+      }
+    });
+
+    this.boosters.forEach(b => {
+      if (!b) return;
+      const bDiscordId = b.discord_id || '';
+      const bUsername = (b.username || '').toLowerCase();
+      const earned = Math.max(
+        Number(boosterEarningsMap[bDiscordId] || 0),
+        Number(boosterEarningsMap[bUsername] || 0)
+      );
+
+      const currentBal = Number(b.balance) || 0;
+      if (earned > currentBal) {
+        b.balance = Number(earned.toFixed(2));
+        boostersNeedSave = true;
+        console.log(`[Reconciliación] Saldo actualizado para booster ${b.username}: $${b.balance.toFixed(2)}`);
+
+        if (this.db && bDiscordId) {
+          this.db.collection('boosters').doc(String(bDiscordId)).set({
+            balance: b.balance,
+            updatedAt: new Date().toISOString()
+          }, { merge: true }).catch(() => {});
+        }
+      }
+    });
+
+    if (ordersNeedSave) {
+      this.saveOrders();
+    }
+    if (boostersNeedSave) {
+      this.saveBoosters();
+    }
+
+    if (this.currentUser) {
+      const cDiscord = String(this.currentUser.discordId || this.currentUser.discord_id || '');
+      const cUser = (this.currentUser.username || '').toLowerCase();
+      const bRecord = this.boosters.find(b => 
+        (cDiscord && b.discord_id && String(b.discord_id) === cDiscord) ||
+        (cUser && b.username && b.username.toLowerCase() === cUser)
+      );
+      if (bRecord && bRecord.balance !== undefined) {
+        this.currentUser.balance = Number(bRecord.balance);
+        this.saveUser();
+      }
+    }
   }
 
   saveCart() {
@@ -5393,6 +5472,11 @@ class MythicApp {
     const gate = document.getElementById('pro-access-gate');
     if (gate) gate.remove();
 
+    if (boosterRecord && boosterRecord.balance !== undefined && Number(boosterRecord.balance) > 0) {
+      this.currentUser.balance = Number(boosterRecord.balance);
+      this.saveUser();
+    }
+
     this.renderProOrderFeed();
     this.renderProMyOrders();
     this.renderProWallet();
@@ -6066,6 +6150,13 @@ class MythicApp {
                 <span class="hidden sm:inline">Chat</span>
               </button>
 
+              ${(isCompleted || isPendingReview) && order.completionReport?.images?.length ? `
+                <button onclick="app.openImageLightbox('${order.completionReport.images[0]}')" class="p-2.5 rounded-xl bg-purple-950/60 hover:bg-purple-900 text-purple-200 border border-purple-500/40 text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm" title="Ver capturas enviadas">
+                  <i class="fa-solid fa-camera text-purple-400"></i>
+                  <span class="hidden sm:inline">Fotos (${order.completionReport.images.length})</span>
+                </button>
+              ` : ''}
+
               <!-- Main action button by status -->
               ${isCompleted ? `
                 <button disabled class="px-5 py-2 rounded-xl bg-[#201e26] text-stone-300 border border-stone-700/80 text-xs font-bold flex items-center gap-1.5 cursor-default shadow-sm select-none" title="Contrato completado y verificado">
@@ -6149,16 +6240,100 @@ class MythicApp {
     this.showToast(isChecked ? 'Notificado al cliente: Estás en la cuenta' : 'Notificado al cliente: Saliste de la cuenta', 'info');
   }
 
+  compressImageFile(file, maxWidth = 1280, quality = 0.82) {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve(null);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width;
+          let h = img.height;
+          if (w > maxWidth || h > maxWidth) {
+            if (w > h) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            } else {
+              w = Math.round((w * maxWidth) / h);
+              h = maxWidth;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(null);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async handleCompletionImagesSelected(fileList) {
+    if (!fileList || fileList.length === 0) return;
+    this.pendingCompletionImages = this.pendingCompletionImages || [];
+    const maxAllowed = 5;
+
+    for (let i = 0; i < fileList.length; i++) {
+      if (this.pendingCompletionImages.length >= maxAllowed) {
+        this.showToast(`Máximo ${maxAllowed} capturas de pantalla permitidas por reporte.`, 'warning');
+        break;
+      }
+      const file = fileList[i];
+      if (!file.type.startsWith('image/')) continue;
+      const compressed = await this.compressImageFile(file);
+      if (compressed) {
+        this.pendingCompletionImages.push(compressed);
+      }
+    }
+
+    this.renderCompletionImagesPreview();
+  }
+
+  removePendingCompletionImage(idx) {
+    if (!Array.isArray(this.pendingCompletionImages)) return;
+    this.pendingCompletionImages.splice(idx, 1);
+    this.renderCompletionImagesPreview();
+  }
+
+  renderCompletionImagesPreview() {
+    const container = document.getElementById('completion-images-preview');
+    if (!container) return;
+    const images = this.pendingCompletionImages || [];
+    if (images.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = images.map((img, idx) => `
+      <div class="relative group rounded-xl overflow-hidden border border-stone-700 bg-black aspect-video shadow-md">
+        <img src="${img}" class="w-full h-full object-cover">
+        <button type="button" onclick="app.removePendingCompletionImage(${idx})" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white flex items-center justify-center text-xs cursor-pointer shadow transition-all" title="Eliminar captura">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
   promptBoosterReportCompletion(orderId) {
     const order = this.orders.find(o => o.id === orderId);
     if (!order) return;
+
+    this.pendingCompletionImages = [];
 
     let modal = document.getElementById('report-completion-modal');
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'report-completion-modal';
       modal.className = 'fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4';
-      modal.innerHTML = '<div id="report-completion-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>';
+      modal.innerHTML = '<div id="report-completion-modal-content" class="glass-panel rounded-2xl w-full max-w-lg border border-[#ee914f]/40 shadow-2xl max-h-[90vh] overflow-y-auto"></div>';
       document.body.appendChild(modal);
     }
 
@@ -6179,7 +6354,7 @@ class MythicApp {
               <p class="text-[11px] text-stone-400">Orden #${order.id} - ${order.serviceName}</p>
             </div>
           </div>
-          <button onclick="app.closeReportCompletionModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer">
+          <button onclick="app.closeReportCompletionModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -6187,29 +6362,96 @@ class MythicApp {
         <div class="space-y-4 text-xs">
           <div class="p-3.5 rounded-xl bg-[#221811] border border-[#ee914f]/30">
             <div class="text-stone-300 mb-1 leading-relaxed">
-              Al enviar tu reporte, el staff de administración o el cliente verificarán los objetivos del servicio. Una vez aprobado, se acreditarán <strong class="text-[#fcefc2] font-mono-gaming font-bold">$${payout.toFixed(2)}</strong> a tu saldo retirable.
+              Al enviar tu reporte, el Administrador verificará los objetivos del servicio con tus capturas. Una vez aprobado, se acreditarán <strong class="text-[#fcefc2] font-mono-gaming font-bold">$${payout.toFixed(2)}</strong> directamente a tu saldo retirable.
             </div>
+          </div>
+
+          <!-- DROPZONE / UPLOAD CAPTURAS DESDE EL ORDENADOR -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1.5 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-camera text-[#ee914f]"></i>
+                <span>Evidencia de tu Ordenador (Capturas de Pantalla):</span>
+              </span>
+              <span class="text-[10px] text-emerald-400 font-normal">Acepta archivos y Ctrl+V</span>
+            </label>
+
+            <div id="completion-dropzone" 
+                 onclick="document.getElementById('completion-image-input').click()" 
+                 class="border-2 border-dashed border-[#ee914f]/40 hover:border-[#ee914f] bg-[#17120e] hover:bg-[#201813] rounded-xl p-5 text-center cursor-pointer transition-all group">
+              <input type="file" id="completion-image-input" accept="image/*" multiple class="hidden" onchange="app.handleCompletionImagesSelected(this.files)">
+              <div class="flex flex-col items-center justify-center gap-1.5">
+                <div class="w-11 h-11 rounded-full bg-[#ee914f]/15 group-hover:bg-[#ee914f]/25 text-[#ee914f] flex items-center justify-center text-xl transition-colors">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <p class="text-xs font-bold text-stone-200">
+                  Haz clic para examinar o arrastra capturas desde tu PC
+                </p>
+                <p class="text-[10px] text-stone-400">
+                  PNG, JPG o WEBP (Marcador final, nivel, cofre, logros, trade)
+                </p>
+              </div>
+            </div>
+
+            <!-- Preview thumbnails -->
+            <div id="completion-images-preview" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mt-3 empty:hidden"></div>
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-stone-300 mb-1.5">
-              Notas de entrega / Enlace de captura (Opcional):
+              Notas de entrega / Detalles adicionales (Opcional):
             </label>
-            <textarea id="completion-report-notes" rows="3" placeholder="Ej: Keystone +10 completada a tiempo en 24min. Enlace imgur con screenshot..." class="w-full bg-[#17120e] border border-stone-700 rounded-xl p-3 text-xs text-white focus:border-[#ee914f] outline-none resize-none"></textarea>
+            <textarea id="completion-report-notes" rows="2" placeholder="Ej: Mítica +10 completada a tiempo en 24min. Cliente satisfecho..." class="w-full bg-[#17120e] border border-stone-700 rounded-xl p-3 text-xs text-white focus:border-[#ee914f] outline-none resize-none"></textarea>
           </div>
 
-          <div class="flex justify-end gap-3 pt-2">
+          <div class="flex justify-end gap-3 pt-2 border-t border-stone-800">
             <button onclick="app.closeReportCompletionModal()" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-bold transition-colors cursor-pointer">
               Cancelar
             </button>
             <button onclick="app.submitBoosterCompletionReport('${order.id}')" class="px-5 py-2.5 rounded-xl bg-[#16a34a] hover:bg-[#22c55e] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-green-950/40 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
               <i class="fa-solid fa-paper-plane"></i>
-              <span>Enviar Reporte</span>
+              <span>Enviar a Revisión</span>
             </button>
           </div>
         </div>
       </div>
     `;
+
+    // Add drag and drop listeners
+    const dropzone = document.getElementById('completion-dropzone');
+    if (dropzone) {
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-[#ee914f]', 'bg-[#251b14]');
+      };
+      dropzone.ondragleave = () => {
+        dropzone.classList.remove('border-[#ee914f]', 'bg-[#251b14]');
+      };
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-[#ee914f]', 'bg-[#251b14]');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          app.handleCompletionImagesSelected(e.dataTransfer.files);
+        }
+      };
+    }
+
+    // Add Ctrl+V paste support for screenshots
+    modal.onpaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (items) {
+        const files = [];
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type && items[i].type.startsWith('image/')) {
+            const f = items[i].getAsFile();
+            if (f) files.push(f);
+          }
+        }
+        if (files.length > 0) {
+          app.handleCompletionImagesSelected(files);
+        }
+      }
+    };
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -6220,6 +6462,7 @@ class MythicApp {
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+      this.pendingCompletionImages = [];
     }
   }
 
@@ -6229,6 +6472,7 @@ class MythicApp {
 
     const notesEl = document.getElementById('completion-report-notes');
     const notes = notesEl ? notesEl.value.trim() : '';
+    const images = Array.isArray(this.pendingCompletionImages) ? [...this.pendingCompletionImages] : [];
 
     this.closeReportCompletionModal();
 
@@ -6237,6 +6481,7 @@ class MythicApp {
     order.completionReport = {
       reportedAt: new Date().toISOString(),
       notes: notes,
+      images: images,
       booster: this.currentUser?.username || 'Booster'
     };
 
@@ -6244,7 +6489,7 @@ class MythicApp {
     order.chat.push({
       sender: 'system',
       author: 'Reporte de Servicio',
-      message: `📋 El booster ${this.currentUser?.username || 'Booster'} ha enviado el reporte de finalización del servicio.${notes ? '\nNotas/Evidencia: ' + notes : ''}\n\nEn espera de verificación y aprobación por el Administrador o el Cliente.`,
+      message: `📋 El booster ${this.currentUser?.username || 'Booster'} ha enviado el reporte de finalización del servicio.${notes ? '\nNotas/Detalles: ' + notes : ''}${images.length > 0 ? `\n📸 Se adjuntaron ${images.length} captura(s) de pantalla del ordenador como evidencia del trabajo realizado.` : ''}\n\nEn espera de verificación y aprobación por el Administrador o el Cliente.`,
       timestamp: new Date().toISOString()
     });
 
@@ -6260,7 +6505,7 @@ class MythicApp {
       } catch (e) {}
     }
 
-    this.showToast('Reporte de finalización enviado a revisión.', 'success');
+    this.showToast('¡Reporte con capturas enviado exitosamente! En espera de revisión.', 'success');
   }
 
   finishOrderModal(orderId) {
@@ -6282,9 +6527,29 @@ class MythicApp {
       });
     }
 
-    const bal = (this.currentUser?.balance !== undefined && this.currentUser?.balance !== null)
-      ? Number(this.currentUser.balance)
-      : completedEarnings;
+    const boosterRecord = (this.boosters || []).find(b => 
+      (this.currentUser?.discordId && b.discord_id && String(this.currentUser.discordId) === String(b.discord_id)) ||
+      (this.currentUser?.username && b.username && this.currentUser.username.trim().toLowerCase() === b.username.trim().toLowerCase()) ||
+      (this.currentUser?.id && b.id && String(this.currentUser.id) === String(b.id))
+    );
+
+    // Compute true available balance
+    let bal = 0;
+    if (boosterRecord && boosterRecord.balance !== undefined && Number(boosterRecord.balance) > 0) {
+      bal = Number(boosterRecord.balance);
+    } else if (this.currentUser?.balance !== undefined && Number(this.currentUser.balance) > 0) {
+      bal = Number(this.currentUser.balance);
+    } else {
+      bal = completedEarnings;
+    }
+
+    if (this.currentUser) {
+      this.currentUser.balance = bal;
+      this.saveUser();
+    }
+    if (boosterRecord) {
+      boosterRecord.balance = bal;
+    }
 
     const balanceElem = document.getElementById('booster-balance');
     if (balanceElem) {
@@ -7095,13 +7360,27 @@ class MythicApp {
   }
 
   renderAdminOverview() {
-    const totalRev = (this.orders || []).reduce((sum, o) => {
-      if (!o) return sum;
+    let completedCompanyRev = 0;
+    let completedBoosterRev = 0;
+    let totalGrossRev = 0;
+
+    (this.orders || []).forEach(o => {
+      if (!o) return;
       const p = Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00));
-      return sum + (isNaN(p) || p < 0 ? 0 : p);
-    }, 0);
-    const companyRev = Math.max(0, totalRev * (COMPANY_MARGIN_PERCENT / 100)) || 0;
-    const boosterRev = Math.max(0, totalRev * (BOOSTER_DEFAULT_PERCENT / 100)) || 0;
+      const safeP = (isNaN(p) || p < 0 ? 0 : p);
+      totalGrossRev += safeP;
+
+      const payout = Math.max(0, Number(o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (o.assignedBooster?.payout !== undefined && !isNaN(Number(o.assignedBooster?.payout)) ? o.assignedBooster.payout : (safeP * (BOOSTER_DEFAULT_PERCENT / 100)))) || (safeP * 0.30));
+      const company = Math.max(0, Number(o.companyShare !== undefined && !isNaN(Number(o.companyShare)) ? o.companyShare : (safeP - payout)) || (safeP * 0.70));
+
+      if (o.status === 'COMPLETED') {
+        completedCompanyRev += company;
+        completedBoosterRev += payout;
+      }
+    });
+
+    const companyRev = completedCompanyRev > 0 ? completedCompanyRev : (totalGrossRev * (COMPANY_MARGIN_PERCENT / 100));
+    const boosterRev = completedBoosterRev > 0 ? completedBoosterRev : (totalGrossRev * (BOOSTER_DEFAULT_PERCENT / 100));
 
     const revElem = document.getElementById('admin-company-rev');
     if (revElem) revElem.textContent = `$${companyRev.toFixed(2)}`;
@@ -7815,6 +8094,10 @@ class MythicApp {
               </button>
             ` : ''}
             ${o.status === 'PENDING_APPROVAL' ? `
+              <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0 animate-pulse" title="Ver imágenes y notas del reporte">
+                <i class="fa-solid fa-camera text-xs"></i>
+                <span>Evidencia (${(o.completionReport?.images || []).length})</span>
+              </button>
               <button onclick="app.adminApproveOrderCompletion('${o.id}')" class="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Aprobar reporte y liberar pago al booster">
                 <i class="fa-solid fa-circle-check text-xs"></i>
                 <span>Aprobar</span>
@@ -7822,6 +8105,12 @@ class MythicApp {
               <button onclick="app.adminRejectOrderCompletion('${o.id}')" class="px-2 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Rechazar reporte y devolver a En Proceso">
                 <i class="fa-solid fa-rotate-left text-xs"></i>
                 <span>Rechazar</span>
+              </button>
+            ` : ''}
+            ${o.status === 'COMPLETED' && o.completionReport?.images?.length ? `
+              <button onclick="app.openAdminOrderModal('${o.id}')" class="px-2 py-1.5 rounded-lg bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0" title="Ver capturas de evidencia">
+                <i class="fa-solid fa-camera text-xs text-purple-400"></i>
+                <span>Fotos (${o.completionReport.images.length})</span>
               </button>
             ` : ''}
             ${o.assignedBooster && o.status !== 'COMPLETED' ? `
@@ -7890,55 +8179,123 @@ class MythicApp {
     const o = this.orders.find(x => x.id === orderId);
     if (!o) return;
 
+    if (o.status === 'COMPLETED' && o.isCredited === true) {
+      console.warn(`Orden #${orderId} ya está completada y acreditada previamente.`);
+      return;
+    }
+
+    const safeTotal = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
+    const payout = Math.max(0, Number(o.assignedBooster?.payout !== undefined && !isNaN(Number(o.assignedBooster?.payout)) ? o.assignedBooster.payout : (o.boosterPayout !== undefined && !isNaN(Number(o.boosterPayout)) ? o.boosterPayout : (safeTotal * 0.30))) || (safeTotal * 0.30));
+    const companyShare = Math.max(0, safeTotal - payout);
+
     o.status = 'COMPLETED';
     o.completedAt = new Date().toISOString();
     o.isOnAccount = false;
     o.approvedBy = approverName;
-
-    const payout = Number(o.assignedBooster?.payout || o.boosterPayout || 0);
-
-    // Credit payout and award point to booster
+    o.isCredited = true;
+    o.totalPrice = safeTotal;
+    o.boosterPayout = payout;
+    o.companyShare = companyShare;
     if (o.assignedBooster) {
-      const bIdent = o.assignedBooster.discordId || o.assignedBooster.username || o.assignedBooster.id;
-      const bIdx = (this.boosters || []).findIndex(b => 
-        (b.discord_id && o.assignedBooster.discordId && String(b.discord_id) === String(o.assignedBooster.discordId)) ||
-        (b.username && o.assignedBooster.username && b.username.toLowerCase() === o.assignedBooster.username.toLowerCase()) ||
-        (b.id && o.assignedBooster.id && String(b.id) === String(o.assignedBooster.id))
+      o.assignedBooster.payout = payout;
+    }
+
+    // 1. ACREDITACIÓN DE SALDO AL BOOSTER
+    if (o.assignedBooster) {
+      const bDiscordId = o.assignedBooster.discordId || '';
+      const bUsername = o.assignedBooster.username || '';
+      const bId = o.assignedBooster.id || '';
+
+      this.boosters = this.boosters || [];
+      let bIdx = this.boosters.findIndex(b => 
+        (b.discord_id && bDiscordId && String(b.discord_id) === String(bDiscordId)) ||
+        (b.username && bUsername && b.username.toLowerCase() === bUsername.toLowerCase()) ||
+        (b.id && bId && String(b.id) === String(bId))
       );
+
+      if (bIdx === -1 && (bDiscordId || bUsername)) {
+        const newB = {
+          id: bId || 'booster_' + (bDiscordId || Date.now()),
+          discord_id: bDiscordId,
+          username: bUsername,
+          role: 'Booster',
+          roles: ['Booster'],
+          points: 0,
+          balance: 0,
+          approved: true,
+          status: 'ACTIVE'
+        };
+        this.boosters.push(newB);
+        bIdx = this.boosters.length - 1;
+      }
+
       if (bIdx >= 0) {
-        this.boosters[bIdx].balance = (Number(this.boosters[bIdx].balance) || 0) + payout;
-      }
+        const currentBal = Number(this.boosters[bIdx].balance) || 0;
+        const newBal = Number((currentBal + payout).toFixed(2));
+        this.boosters[bIdx].balance = newBal;
+        console.log(`[Finanzas] Booster ${this.boosters[bIdx].username} acreditado +$${payout.toFixed(2)}. Nuevo saldo: $${newBal.toFixed(2)}`);
 
-      if (this.currentUser && (
-        (this.currentUser.discordId && o.assignedBooster.discordId && String(this.currentUser.discordId) === String(o.assignedBooster.discordId)) ||
-        (this.currentUser.username && o.assignedBooster.username && this.currentUser.username.toLowerCase() === o.assignedBooster.username.toLowerCase())
-      )) {
-        this.currentUser.balance = (Number(this.currentUser.balance) || 0) + payout;
-      }
+        // Sincronizar en memoria si el usuario actual es este booster
+        if (this.currentUser && (
+          (this.currentUser.discordId && bDiscordId && String(this.currentUser.discordId) === String(bDiscordId)) ||
+          (this.currentUser.username && bUsername && this.currentUser.username.toLowerCase() === bUsername.toLowerCase())
+        )) {
+          this.currentUser.balance = newBal;
+          this.saveUser();
+        }
 
-      // Add 1 booster point and re-evaluate rank automatically
-      const updatedB = this.modifyBoosterPoints(bIdent, +1, `Orden #${o.id} completada exitosamente (+1 pt)`);
-      if (updatedB) {
-        o.assignedBooster.points = updatedB.points;
-        o.assignedBooster.role = updatedB.role;
-        o.assignedBooster.roles = updatedB.roles;
-        o.boosterPointsAwarded = 1;
-        o.boosterPointsAtCompletion = updatedB.points;
-        o.boosterRankAtCompletion = updatedB.role;
+        // Otorgar 1 punto de booster y recalcular rango
+        const bIdent = bDiscordId || bUsername || bId;
+        const updatedB = this.modifyBoosterPoints(bIdent, +1, `Orden #${o.id} completada exitosamente (+1 pt)`);
+        if (updatedB) {
+          o.assignedBooster.points = updatedB.points;
+          o.assignedBooster.role = updatedB.role;
+          o.assignedBooster.roles = updatedB.roles;
+          o.boosterPointsAwarded = 1;
+          o.boosterPointsAtCompletion = updatedB.points;
+          o.boosterRankAtCompletion = updatedB.role;
+        }
+
+        // GUARDADO CRÍTICO: Persistir saldo y puntos en LocalStorage y Firestore
+        this.saveBoosters();
+
+        // Actualizar directamente el documento individual del booster en Firestore
+        if (this.db && bDiscordId) {
+          this.db.collection('boosters').doc(String(bDiscordId)).set({
+            balance: newBal,
+            points: this.boosters[bIdx].points || 0,
+            role: this.boosters[bIdx].role || 'Booster',
+            roles: this.boosters[bIdx].roles || ['Booster'],
+            updatedAt: new Date().toISOString()
+          }, { merge: true }).catch(err => console.warn('Error actualizando saldo de booster en Firestore:', err));
+        }
       }
+    }
+
+    // 2. ACREDITACIÓN Y REGISTRO FINANCIERO DE LA EMPRESA
+    if (this.db) {
+      try {
+        this.db.collection('system').doc('finances').set({
+          lastOrderCompleted: o.id,
+          lastBoosterPayout: payout,
+          lastCompanyMargin: companyShare,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(() => {});
+      } catch (e) {}
     }
 
     o.chat = o.chat || [];
     o.chat.push({
       sender: 'system',
       author: 'Notificación del Sistema',
-      message: `🎉 ¡Servicio verificado y aprobado por ${approverName}! La orden #${o.id} ha sido completada con éxito. Se acreditaron $${payout.toFixed(2)} al saldo del booster.`,
+      message: `🎉 ¡Servicio verificado y aprobado por ${approverName}! La orden #${o.id} ha sido completada con éxito. Se acreditaron $${payout.toFixed(2)} USD al saldo del booster y $${companyShare.toFixed(2)} USD al balance de la empresa.`,
       timestamp: new Date().toISOString()
     });
 
     this.saveOrders();
     this.renderAdminOverview();
     if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
+    if (typeof this.renderAdminBoosters === 'function') this.renderAdminBoosters();
     if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
     if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
     if (typeof this.renderProWallet === 'function') this.renderProWallet();
@@ -7947,7 +8304,7 @@ class MythicApp {
 
     if (this.liveChatChannel) {
       try {
-        this.liveChatChannel.postMessage({ type: 'ORDER_COMPLETED', orderId: o.id, approver: approverName });
+        this.liveChatChannel.postMessage({ type: 'ORDER_COMPLETED', orderId: o.id, approver: approverName, payout: payout, companyShare: companyShare });
       } catch (e) {}
     }
   }
@@ -8337,15 +8694,82 @@ class MythicApp {
           <div><span class="text-stone-500">Reparto (70/30):</span> <strong class="text-[#f3e8ff] font-mono-gaming">$${safeCompany.toFixed(2)} / $${safeBooster.toFixed(2)}</strong></div>
         </div>
 
-        ${o.status === 'PENDING_APPROVAL' ? `
+        ${o.completionReport ? `
+          <div class="p-4 rounded-2xl bg-[#190a2c] border ${o.status === 'PENDING_APPROVAL' ? 'border-amber-500/60 shadow-lg shadow-amber-950/20' : 'border-emerald-500/40'} space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg ${o.status === 'PENDING_APPROVAL' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'} flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-camera"></i>
+                </span>
+                <div>
+                  <h4 class="font-bold text-white text-xs flex items-center gap-2">
+                    <span>Evidencia de Finalización del Booster</span>
+                    ${o.status === 'PENDING_APPROVAL' ? `<span class="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-600/50 text-[10px] uppercase font-bold animate-pulse">Pendiente Aprobación</span>` : `<span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-600/50 text-[10px] uppercase font-bold">Verificado y Aprobado</span>`}
+                  </h4>
+                  <div class="text-[11px] text-stone-400">
+                    Enviado por: <strong class="text-[#fcefc2]">${o.completionReport.booster || o.assignedBooster?.username || 'Booster'}</strong> 
+                    ${o.completionReport.reportedAt ? `• ${new Date(o.completionReport.reportedAt).toLocaleString()}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              ${o.status === 'PENDING_APPROVAL' ? `
+                <div class="flex items-center gap-2">
+                  <button onclick="app.adminApproveOrderCompletion('${o.id}'); app.closeAdminOrderModal();" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Aprobar y Pagar ($${safeBooster.toFixed(2)})</span>
+                  </button>
+                  <button onclick="app.adminRejectOrderCompletion('${o.id}'); app.closeAdminOrderModal();" class="px-3 py-2 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Rechazar</span>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+
+            ${o.completionReport.notes ? `
+              <div class="p-3 rounded-xl bg-[#120720] border border-stone-800 text-stone-300 text-xs font-sans">
+                <span class="text-stone-500 block text-[10px] uppercase font-bold mb-1">Notas del Booster:</span>
+                "${o.completionReport.notes}"
+              </div>
+            ` : ''}
+
+            <!-- Galería de Capturas / Screenshots de evidencia -->
+            <div>
+              <div class="text-[11px] text-stone-400 mb-2 font-bold flex items-center justify-between">
+                <span>Capturas de Pantalla Adjuntas (${(o.completionReport.images || []).length}):</span>
+                <span class="text-[10px] text-stone-500">Haz clic en una imagen para ampliarla en alta resolución</span>
+              </div>
+              ${(o.completionReport.images && o.completionReport.images.length > 0) ? `
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  ${o.completionReport.images.map((imgSrc, imgIdx) => `
+                    <div onclick="app.openImageLightbox('${imgSrc}')" class="group relative rounded-xl overflow-hidden border border-purple-500/30 hover:border-amber-400/80 aspect-video bg-black/60 cursor-pointer shadow-md transition-all hover:scale-[1.03] hover:shadow-purple-500/20">
+                      <img src="${imgSrc}" alt="Evidencia ${imgIdx + 1}" class="w-full h-full object-cover group-hover:opacity-90 transition-opacity">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-2">
+                        <span class="text-[10px] text-white font-mono font-bold">#${imgIdx + 1}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/80 text-purple-200 border border-purple-400/40 flex items-center gap-1">
+                          <i class="fa-solid fa-magnifying-glass-plus text-[9px]"></i> Ver
+                        </span>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : `
+                <div class="p-3 rounded-xl bg-stone-900/40 border border-stone-800/80 text-stone-400 text-xs italic flex items-center gap-2">
+                  <i class="fa-solid fa-circle-info text-stone-500"></i>
+                  El booster envió la revisión sin imágenes adjuntas.
+                </div>
+              `}
+            </div>
+          </div>
+        ` : (o.status === 'PENDING_APPROVAL' ? `
           <div class="p-3.5 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div class="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
                 <i class="fa-solid fa-clock"></i> Reporte de Finalización Pendiente de Revisión
               </div>
               <div class="text-[11px] text-stone-300 mt-1">
-                Booster: <strong class="text-white">${o.completionReport?.booster || o.assignedBooster?.username || 'Booster'}</strong>
-                ${o.completionReport?.notes ? `<br><span class="italic text-stone-300 font-mono text-[10px]">"${o.completionReport.notes}"</span>` : ''}
+                Booster: <strong class="text-white">${o.assignedBooster?.username || 'Booster'}</strong>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -8357,7 +8781,7 @@ class MythicApp {
               </button>
             </div>
           </div>
-        ` : ''}
+        ` : '')}
 
         <!-- SECCIÓN DE SUBASTA Y PUJAS (BIDS) -->
         <div class="bg-[#120822] border ${orderBids.length > 0 ? 'border-amber-600/60 shadow-lg shadow-amber-950/30' : 'border-stone-800'} rounded-xl p-4">
@@ -9119,6 +9543,7 @@ class MythicApp {
             </div>
           </td>
           <td class="py-4 px-5 font-mono-gaming text-[#f3e8ff] font-bold whitespace-nowrap">${b.points || 0} pts</td>
+          <td class="py-4 px-5 font-mono-gaming text-emerald-400 font-bold whitespace-nowrap">$${(Number(b.balance) || 0).toFixed(2)}</td>
           <td class="py-4 px-5 text-stone-400 text-xs whitespace-nowrap">
             <span class="px-2 py-1 rounded bg-[#15092a] border border-stone-800 text-[11px] text-stone-300">
               ${b.payout_method || 'Binance Pay / USDT'}
@@ -11896,6 +12321,63 @@ class MythicApp {
       }
     } catch (e) {}
   }
+
+  openImageLightbox(src) {
+    if (!src) return;
+    let modal = document.getElementById('image-lightbox-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'image-lightbox-modal';
+      modal.className = 'fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none duration-200';
+      modal.innerHTML = `
+        <div class="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center justify-center">
+          <div class="w-full flex items-center justify-between pb-3 text-stone-300">
+            <span class="text-xs font-bold font-mono tracking-wider text-[#a855f7] flex items-center gap-1.5">
+              <i class="fa-solid fa-camera"></i> Evidencia del Booster (Pantalla Completa)
+            </span>
+            <button onclick="app.closeImageLightbox()" class="w-9 h-9 rounded-full bg-stone-900/90 text-stone-400 hover:text-white hover:bg-stone-800 flex items-center justify-center cursor-pointer transition-colors border border-stone-700 shadow-xl">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+          <div class="w-full flex items-center justify-center bg-black/40 rounded-2xl overflow-hidden border border-[#a855f7]/30 shadow-2xl p-2 max-h-[80vh]">
+            <img id="image-lightbox-img" src="" alt="Evidencia" class="max-w-full max-h-[75vh] object-contain rounded-xl select-none">
+          </div>
+          <div class="mt-3 flex items-center gap-3 text-xs">
+            <a id="image-lightbox-link" href="" target="_blank" download="evidencia-servicio.png" class="px-4 py-2 rounded-xl bg-[#2b1050] hover:bg-[#3d1872] text-[#f3e8ff] border border-[#a855f7]/50 font-bold flex items-center gap-2 cursor-pointer shadow-lg transition-all">
+              <i class="fa-solid fa-arrow-down"></i> Descargar Imagen
+            </a>
+            <button onclick="app.closeImageLightbox()" class="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold cursor-pointer">
+              Cerrar (Esc)
+            </button>
+          </div>
+        </div>
+      `;
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closeImageLightbox();
+      });
+      document.body.appendChild(modal);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') this.closeImageLightbox();
+      });
+    }
+
+    const img = document.getElementById('image-lightbox-img');
+    const link = document.getElementById('image-lightbox-link');
+    if (img) img.src = src;
+    if (link) link.href = src;
+
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+  }
+
+  closeImageLightbox() {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (modal) {
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+  }
 }
 
 const app = new MythicApp();
@@ -11908,5 +12390,7 @@ window.openLiveChat = (opts) => app.openLiveChat(opts);
 window.toggleLiveChat = () => app.toggleLiveChat();
 window.setLanguage = (lang) => app.setLanguage(lang);
 window.toggleLangDropdown = (e) => app.toggleLangDropdown(e);
+window.openImageLightbox = (src) => app.openImageLightbox(src);
+window.closeImageLightbox = () => app.closeImageLightbox();
 
 
