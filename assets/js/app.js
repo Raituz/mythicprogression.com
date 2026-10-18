@@ -695,8 +695,16 @@ class MythicApp {
         return;
       }
 
-      const deletedIds = deletedOrderId ? [deletedOrderId] : [];
-      const allDeletedIds = Array.from(new Set([...deletedIds, ...DEMO_ORDER_IDS]));
+      // Persistently maintain deleted order IDs in localStorage so they don't get lost across subsequent saves
+      let storedDeleted = [];
+      try {
+        storedDeleted = JSON.parse(localStorage.getItem('mp_deleted_order_ids') || '[]');
+      } catch (e) { storedDeleted = []; }
+      if (deletedOrderId && !storedDeleted.includes(deletedOrderId)) {
+        storedDeleted.push(deletedOrderId);
+        try { localStorage.setItem('mp_deleted_order_ids', JSON.stringify(storedDeleted.slice(-100))); } catch (e) {}
+      }
+      const allDeletedIds = Array.from(new Set([...storedDeleted, ...(deletedOrderId ? [deletedOrderId] : []), ...DEMO_ORDER_IDS]));
       const payload = {
         orders: syncableOrders,
         deletedOrderIds: allDeletedIds,
@@ -9222,10 +9230,12 @@ class MythicApp {
     }
     o.boosterPenalty = -1;
 
-    // Reset order assignment and status to available pool
+    // Reset order assignment and status to available pool, and clear previous discordThreadId so a fresh thread is published
     o.status = 'AVAILABLE';
     o.assignedBooster = null;
     o.isOnAccount = false;
+    o.discordThreadId = null;
+    o.discordMessageId = null;
 
     // Send automatic notification in shared chat between booster and client
     o.chat = o.chat || [];
