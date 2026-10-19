@@ -80,6 +80,7 @@ class MythicApp {
   }
 
   async init() {
+    console.log('%c[Mythic Progression] Active Version: 3.9.0 | Payment: Changelly On-Ramp + Binance Pay | UTF-8 Clean', 'background:#1a140e; color:#ee914f; font-weight:bold; font-size:13px; padding:4px 8px; border-radius:4px; border:1px solid #ee914f;');
     try { this.cleanupGoogleTranslate(); } catch (e) {}
     try { this.cleanUrlBar(); } catch (e) { console.warn('cleanUrlBar:', e); }
     try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
