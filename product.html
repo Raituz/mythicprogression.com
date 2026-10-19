@@ -289,42 +289,30 @@
               <div class="relative z-40" id="sp-faction-dropdown-container">
                 <div class="h-6 flex items-center gap-1.5 mb-1.5">
                   <i class="fa-solid fa-shield text-[#ee914f] text-[10px]"></i>
-                  <label class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Facción:</label>
+                  <label class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Faction:</label>
                 </div>
                 <div class="relative">
                   <button type="button" onclick="app.toggleFactionDropdown()" id="sp-faction-btn" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3 flex items-center justify-between text-xs text-white transition-colors">
                     <div class="flex items-center gap-2.5">
-                      <img id="sp-faction-icon-preview" src="assets/img/factions/horde.jpg" alt="Horda" class="w-5 h-5 rounded object-cover border border-red-500/50 shadow-sm shrink-0">
-                      <span id="sp-faction-btn-label" class="font-semibold text-stone-100">Horda (Horde)</span>
+                      <img id="sp-faction-icon-preview" src="assets/img/factions/horde.jpg" alt="Horde" class="w-5 h-5 rounded object-cover border border-red-500/50 shadow-sm shrink-0">
+                      <span id="sp-faction-btn-label" class="font-semibold text-stone-100">Horde</span>
                     </div>
                     <i class="fa-solid fa-chevron-down text-stone-500 text-[10px] transition-transform duration-200" id="sp-faction-chevron"></i>
                   </button>
                   <select id="sp-faction" onchange="app.updateCombinedCharacter()" class="hidden">
-                    <option value="Horda" selected>Horda</option>
-                    <option value="Alianza">Alianza</option>
+                    <option value="Horda" selected>Horde</option>
+                    <option value="Alianza">Alliance</option>
                   </select>
 
                   <!-- Custom Dropdown Menu -->
                   <div id="sp-faction-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[90] p-1.5 space-y-1">
-                    <div onclick="app.selectFaction('Horda')" class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors group">
-                      <div class="flex items-center gap-2.5">
-                        <img src="assets/img/factions/horde.jpg" alt="Horda" class="w-6 h-6 rounded-md object-cover border border-red-500/60 shadow-sm">
-                        <div class="flex flex-col text-left">
-                          <span class="text-xs font-bold text-red-400 group-hover:text-red-300">Horda</span>
-                          <span class="text-[10px] text-stone-400">Horde</span>
-                        </div>
-                      </div>
-                      <span class="text-[9px] px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/40 font-bold">For the Horde</span>
+                    <div onclick="app.selectFaction('Horda')" class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors group">
+                      <img src="assets/img/factions/horde.jpg" alt="Horde" class="w-5 h-5 rounded object-cover border border-red-500/60 shadow-sm shrink-0">
+                      <span class="text-xs font-bold text-red-400 group-hover:text-red-300">Horde</span>
                     </div>
-                    <div onclick="app.selectFaction('Alianza')" class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors group">
-                      <div class="flex items-center gap-2.5">
-                        <img src="assets/img/factions/alliance.jpg" alt="Alianza" class="w-6 h-6 rounded-md object-cover border border-blue-500/60 shadow-sm">
-                        <div class="flex flex-col text-left">
-                          <span class="text-xs font-bold text-blue-400 group-hover:text-blue-300">Alianza</span>
-                          <span class="text-[10px] text-stone-400">Alliance</span>
-                        </div>
-                      </div>
-                      <span class="text-[9px] px-2 py-0.5 rounded bg-blue-950/60 text-blue-400 border border-blue-800/40 font-bold">For the Alliance</span>
+                    <div onclick="app.selectFaction('Alianza')" class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors group">
+                      <img src="assets/img/factions/alliance.jpg" alt="Alliance" class="w-5 h-5 rounded object-cover border border-blue-500/60 shadow-sm shrink-0">
+                      <span class="text-xs font-bold text-blue-400 group-hover:text-blue-300">Alliance</span>
                     </div>
                   </div>
                 </div>
@@ -332,12 +320,12 @@
 
               <!-- Character Class (50% on sm+) -->
               <div class="relative z-30" id="sp-class-dropdown-container">
-                <div class="h-6 flex items-center justify-between mb-1.5">
-                  <div class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-wand-magic-sparkles text-[#ee914f] text-[10px]"></i>
-                    <label class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Clase del Personaje:</label>
+                <div class="h-6 flex items-center justify-between mb-1.5 gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[#ee914f] text-[10px] shrink-0"></i>
+                    <label class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer truncate">Class:</label>
                   </div>
-                  <span class="text-[9px] text-[#ee914f]/80 font-bold">Loot Traders</span>
+                  <span class="text-[9px] px-2 py-0.5 rounded bg-[#2a1b10] text-[#ee914f] border border-[#ee914f]/30 font-bold whitespace-nowrap shrink-0">Loot Traders</span>
                 </div>
                 <div class="relative">
                   <button type="button" onclick="app.toggleClassDropdown()" id="sp-class-btn" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3 flex items-center justify-between text-xs text-white transition-colors">
@@ -367,9 +355,8 @@
                   <div id="sp-class-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[90] max-h-72 overflow-y-auto p-2 space-y-2">
                     <!-- Plate -->
                     <div>
-                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
-                        <span>Plate</span>
-                        <span class="text-[9px] text-stone-500 font-normal">Placas</span>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2.5 py-1 bg-[#1c120b] rounded-md border border-stone-800/80">
+                        Plate
                       </div>
                       <div class="grid grid-cols-1 gap-1 mt-1">
                         <div onclick="app.selectClass('Warrior')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
@@ -389,9 +376,8 @@
 
                     <!-- Mail -->
                     <div>
-                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
-                        <span>Mail</span>
-                        <span class="text-[9px] text-stone-500 font-normal">Malla</span>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2.5 py-1 bg-[#1c120b] rounded-md border border-stone-800/80">
+                        Mail
                       </div>
                       <div class="grid grid-cols-1 gap-1 mt-1">
                         <div onclick="app.selectClass('Hunter')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
@@ -411,9 +397,8 @@
 
                     <!-- Leather -->
                     <div>
-                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
-                        <span>Leather</span>
-                        <span class="text-[9px] text-stone-500 font-normal">Cuero</span>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2.5 py-1 bg-[#1c120b] rounded-md border border-stone-800/80">
+                        Leather
                       </div>
                       <div class="grid grid-cols-1 gap-1 mt-1">
                         <div onclick="app.selectClass('Rogue')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
@@ -437,9 +422,8 @@
 
                     <!-- Cloth -->
                     <div>
-                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
-                        <span>Cloth</span>
-                        <span class="text-[9px] text-stone-500 font-normal">Tela</span>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2.5 py-1 bg-[#1c120b] rounded-md border border-stone-800/80">
+                        Cloth
                       </div>
                       <div class="grid grid-cols-1 gap-1 mt-1">
                         <div onclick="app.selectClass('Priest')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
@@ -698,6 +682,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.7.5"></script>
+  <script src="assets/js/app.js?v=3.7.6"></script>
 </body>
 </html>

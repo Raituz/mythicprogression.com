@@ -11480,7 +11480,7 @@ class MythicApp {
     }
     const factionBtnLabel = document.getElementById('sp-faction-btn-label');
     if (factionBtnLabel) {
-      factionBtnLabel.textContent = faction === 'Alianza' ? 'Alianza (Alliance)' : 'Horda (Horde)';
+      factionBtnLabel.textContent = faction === 'Alianza' ? 'Alliance' : 'Horde';
     }
     const summaryFactionIconEl = document.getElementById('sp-char-summary-faction-icon');
     if (summaryFactionIconEl) {
@@ -11493,7 +11493,7 @@ class MythicApp {
     if (summaryText) summaryText.textContent = `${charName} (${charClass})`;
     if (summaryExtra) {
       const ver = this.selectedRealm?.version || 'Retail';
-      summaryExtra.textContent = `${realmName} • ${faction === 'Alianza' ? 'Alianza' : 'Horda'} • ${region === 'US' ? 'América (US)' : 'Europa (EU)'} • ${ver}`;
+      summaryExtra.textContent = `${realmName} • ${faction === 'Alianza' ? 'Alliance' : 'Horde'} • ${region === 'US' ? 'Americas (US)' : 'Europe (EU)'} • ${ver}`;
     }
   }
 
