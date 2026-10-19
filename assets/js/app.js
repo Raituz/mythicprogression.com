@@ -2547,7 +2547,7 @@ class MythicApp {
         { level: 20, price: 145.00, recommended: false }
       ];
 
-      const timerOpt = opts.timer || { enabled: true, label: 'Timer guaranteed', price: 0 };
+      const timerOpt = opts.timer || { enabled: true, label: 'Guaranteed Timer (In-time)', price: 0 };
 
       const traders = (opts.lootTraders && opts.lootTraders.length > 0) ? opts.lootTraders : [
         { label: 'Premium Group (x2 loot-traders)', price: 0 },
@@ -2607,9 +2607,9 @@ class MythicApp {
               <div class="bg-[#18110b] p-3 rounded-xl border border-stone-800 flex items-center justify-between">
                 <label class="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-stone-200">
                   <input type="checkbox" id="sp-opt-timer" data-price="${timerOpt.price || 0}" checked onchange="app.recalculateSingleProductTotal()" class="w-4 h-4 accent-[#ee914f] rounded">
-                  <span>${timerOpt.label || 'Timer guaranteed'}</span>
+                  <span id="sp-opt-timer-label">${timerOpt.label || 'Guaranteed Timer (In-time)'}</span>
                 </label>
-                <span class="text-xs ${Number(timerOpt.price) > 0 ? 'text-[#ee914f] font-mono-gaming' : 'text-emerald-400'} font-bold">
+                <span id="sp-opt-timer-badge" class="text-xs ${Number(timerOpt.price) > 0 ? 'text-[#ee914f] font-mono-gaming' : 'text-emerald-400'} font-bold">
                   ${Number(timerOpt.price) > 0 ? '+$' + Number(timerOpt.price).toFixed(2) : 'Free'}
                 </span>
               </div>
@@ -2708,6 +2708,11 @@ class MythicApp {
           </div>
         </div>
       `;
+
+      // Initialize Timer UI based on currently selected/recommended key level
+      const initialKeyLevel = recLvl ? Number(recLvl.level || 10) : 10;
+      this.currentSelectedKeyLevel = initialKeyLevel;
+      this.updateMythicPlusTimerUI(initialKeyLevel);
     } else {
       // General PvE category form (Raids, Leveling, Gearing)
       container.innerHTML = `
@@ -2739,8 +2744,64 @@ class MythicApp {
     }
   }
 
+  getMythicPlusTimerSurcharge(level) {
+    const numLevel = Number(level) || 10;
+    const timerOpt = this.currentProduct?.options?.timer || {};
+    const basePrice = Number(timerOpt.price) || 0;
+
+    // Below +12: In-time is covered by base timer price (normally Free / $0)
+    if (numLevel < 12) {
+      return basePrice;
+    }
+
+    // For +12 and higher: check custom product tier pricing first, or use calibrated standard defaults
+    const tierSurcharges = timerOpt.tierSurcharges || {};
+    if (tierSurcharges[numLevel] !== undefined) {
+      return Number(tierSurcharges[numLevel]) || 0;
+    }
+
+    // Defaults requested: +12 starts having additional cost
+    if (numLevel === 12) return 15.00;
+    if (numLevel === 13) return 25.00;
+    if (numLevel === 14) return 35.00;
+    if (numLevel >= 15) return 50.00;
+    return basePrice;
+  }
+
+  updateMythicPlusTimerUI(selectedLevel) {
+    const timerInput = document.getElementById('sp-opt-timer');
+    const badgeEl = document.getElementById('sp-opt-timer-badge');
+    const labelEl = document.getElementById('sp-opt-timer-label');
+    if (!timerInput) return;
+
+    const timerOpt = this.currentProduct?.options?.timer || {};
+    const surcharge = this.getMythicPlusTimerSurcharge(selectedLevel);
+    timerInput.dataset.price = surcharge;
+
+    if (badgeEl) {
+      if (surcharge > 0) {
+        badgeEl.textContent = `+$${surcharge.toFixed(2)}`;
+        badgeEl.className = 'text-xs text-[#ee914f] font-mono-gaming font-bold';
+      } else {
+        badgeEl.textContent = 'Free';
+        badgeEl.className = 'text-xs text-emerald-400 font-bold';
+      }
+    }
+
+    if (labelEl) {
+      const baseLabel = timerOpt.label || 'Guaranteed Timer (In-time)';
+      labelEl.textContent = baseLabel;
+    }
+  }
+
   onSpKeyLevelSelect(val) {
     this.currentSpKeyPrice = Number(val) || 38.00;
+    const select = document.getElementById('sp-key-level');
+    const selectedOption = select ? select.options[select.selectedIndex] : null;
+    const level = selectedOption ? Number(selectedOption.dataset.level || 10) : 10;
+    this.currentSelectedKeyLevel = level;
+
+    this.updateMythicPlusTimerUI(level);
     this.recalculateSingleProductTotal();
   }
 
@@ -8167,9 +8228,18 @@ class MythicApp {
     const timerChk = document.getElementById('adm-timer-enabled');
     if (timerChk) timerChk.checked = true;
     const timerLbl = document.getElementById('adm-timer-label');
-    if (timerLbl) timerLbl.value = 'Timer guaranteed';
+    if (timerLbl) timerLbl.value = 'Guaranteed Timer (In-time)';
     const timerPrc = document.getElementById('adm-timer-price');
     if (timerPrc) timerPrc.value = '0';
+
+    const t12 = document.getElementById('adm-timer-plus12');
+    if (t12) t12.value = '15';
+    const t13 = document.getElementById('adm-timer-plus13');
+    if (t13) t13.value = '25';
+    const t14 = document.getElementById('adm-timer-plus14');
+    if (t14) t14.value = '35';
+    const t15 = document.getElementById('adm-timer-plus15');
+    if (t15) t15.value = '50';
 
     this.renderModalTraders([
       { label: 'Premium Group (x2 loot-traders)', price: 0.00 },
@@ -8273,13 +8343,23 @@ class MythicApp {
     this.renderModalKeyLevels(opts.keyLevels || []);
 
     // Populate Tab 3: Timer & Traders & Modes
-    const timer = opts.timer || { enabled: true, label: 'Timer guaranteed', price: 0 };
+    const timer = opts.timer || { enabled: true, label: 'Guaranteed Timer (In-time)', price: 0 };
     const timerChk = document.getElementById('adm-timer-enabled');
     if (timerChk) timerChk.checked = timer.enabled !== false;
     const timerLbl = document.getElementById('adm-timer-label');
-    if (timerLbl) timerLbl.value = timer.label || 'Timer guaranteed';
+    if (timerLbl) timerLbl.value = timer.label || 'Guaranteed Timer (In-time)';
     const timerPrc = document.getElementById('adm-timer-price');
     if (timerPrc) timerPrc.value = timer.price !== undefined ? timer.price : 0;
+
+    const surcharges = timer.tierSurcharges || {};
+    const t12 = document.getElementById('adm-timer-plus12');
+    if (t12) t12.value = surcharges[12] !== undefined ? surcharges[12] : 15;
+    const t13 = document.getElementById('adm-timer-plus13');
+    if (t13) t13.value = surcharges[13] !== undefined ? surcharges[13] : 25;
+    const t14 = document.getElementById('adm-timer-plus14');
+    if (t14) t14.value = surcharges[14] !== undefined ? surcharges[14] : 35;
+    const t15 = document.getElementById('adm-timer-plus15');
+    if (t15) t15.value = surcharges[15] !== undefined ? surcharges[15] : 50;
 
     this.renderModalTraders(opts.lootTraders || []);
     this.renderModalModes(opts.completionMethods || []);
@@ -8352,8 +8432,14 @@ class MythicApp {
 
     const timerOpt = {
       enabled: !!document.getElementById('adm-timer-enabled')?.checked,
-      label: document.getElementById('adm-timer-label')?.value.trim() || 'Timer guaranteed',
-      price: Number(document.getElementById('adm-timer-price')?.value) || 0
+      label: document.getElementById('adm-timer-label')?.value.trim() || 'Guaranteed Timer (In-time)',
+      price: Number(document.getElementById('adm-timer-price')?.value) || 0,
+      tierSurcharges: {
+        12: Number(document.getElementById('adm-timer-plus12')?.value) || 15,
+        13: Number(document.getElementById('adm-timer-plus13')?.value) || 25,
+        14: Number(document.getElementById('adm-timer-plus14')?.value) || 35,
+        15: Number(document.getElementById('adm-timer-plus15')?.value) || 50
+      }
     };
 
     const traderRows = Array.from(document.querySelectorAll('.adm-trader-row'));

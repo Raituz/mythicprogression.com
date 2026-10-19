@@ -16,7 +16,7 @@
                                               "price":  12.00,
                                               "endIlvl":  295,
                                               "vaultIlvl":  305,
-                                              "track":  "Champion 2/6 �-\u003e Hero 1/6",
+                                              "track":  "Champion 2/6 -> Hero 1/6",
                                               "crests":  "Champion Crests",
                                               "recommended":  false
                                           },
@@ -25,7 +25,7 @@
                                               "price":  16.00,
                                               "endIlvl":  298,
                                               "vaultIlvl":  308,
-                                              "track":  "Champion 3/6 �-\u003e Hero 2/6",
+                                              "track":  "Champion 3/6 -> Hero 2/6",
                                               "crests":  "Hero Crests",
                                               "recommended":  false
                                           },
@@ -34,7 +34,7 @@
                                               "price":  22.00,
                                               "endIlvl":  305,
                                               "vaultIlvl":  311,
-                                              "track":  "Hero 1/6 �-\u003e Hero 3/6",
+                                              "track":  "Hero 1/6 -> Hero 3/6",
                                               "crests":  "Hero Crests",
                                               "recommended":  false
                                           },
@@ -43,7 +43,7 @@
                                               "price":  28.00,
                                               "endIlvl":  308,
                                               "vaultIlvl":  315,
-                                              "track":  "Hero 2/6 �-\u003e Hero 4/6",
+                                              "track":  "Hero 2/6 -> Hero 4/6",
                                               "crests":  "Hero Crests",
                                               "recommended":  false
                                           },
@@ -52,7 +52,7 @@
                                               "price":  38.00,
                                               "endIlvl":  311,
                                               "vaultIlvl":  318,
-                                              "track":  "Hero 3/6 �-\u003e Myth 1/6 (BiS)",
+                                              "track":  "Hero 3/6 -> Myth 1/6 (BiS)",
                                               "crests":  "Myth Crests",
                                               "recommended":  true
                                           },
@@ -61,7 +61,7 @@
                                               "price":  52.00,
                                               "endIlvl":  311,
                                               "vaultIlvl":  318,
-                                              "track":  "Hero 3/6 �-\u003e Myth 1/6",
+                                              "track":  "Hero 3/6 -> Myth 1/6",
                                               "crests":  "Myth Crests",
                                               "recommended":  false
                                           },
@@ -70,7 +70,7 @@
                                               "price":  70.00,
                                               "endIlvl":  311,
                                               "vaultIlvl":  318,
-                                              "track":  "Hero 3/6 �-\u003e Myth 1/6",
+                                              "track":  "Hero 3/6 -> Myth 1/6",
                                               "crests":  "Myth Crests",
                                               "recommended":  false
                                           },
@@ -79,7 +79,7 @@
                                               "price":  85.00,
                                               "endIlvl":  311,
                                               "vaultIlvl":  318,
-                                              "track":  "Hero 3/6 �-\u003e Myth 1/6",
+                                              "track":  "Hero 3/6 -> Myth 1/6",
                                               "crests":  "Myth Crests",
                                               "recommended":  false
                                           },
@@ -88,7 +88,7 @@
                                               "price":  115.00,
                                               "endIlvl":  311,
                                               "vaultIlvl":  318,
-                                              "track":  "Hero 3/6 �-\u003e Myth 1/6",
+                                              "track":  "Hero 3/6 -> Myth 1/6",
                                               "crests":  "Myth Crests",
                                               "recommended":  false
                                           },
@@ -97,15 +97,21 @@
                                               "price":  145.00,
                                               "endIlvl":  311,
                                               "vaultIlvl":  318,
-                                              "track":  "Hero 3/6 �-\u003e Myth 1/6",
+                                              "track":  "Hero 3/6 -> Myth 1/6",
                                               "crests":  "Myth Crests",
                                               "recommended":  false
                                           }
                                       ],
                         "timer":  {
                                       "enabled":  true,
-                                      "label":  "Timer garantizado (In-time)",
-                                      "price":  0.00
+                                      "label":  "Guaranteed Timer (In-time)",
+                                      "price":  0.00,
+                                      "tierSurcharges":  {
+                                                             "12":  15.00,
+                                                             "13":  25.00,
+                                                             "14":  35.00,
+                                                             "15":  50.00
+                                                         }
                                   },
                         "lootTraders":  [
                                             {
