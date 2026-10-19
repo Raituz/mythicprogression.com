@@ -982,33 +982,66 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
               </div>
             </div>
 
-            <!-- In-Time Surcharges for Higher Keystones (+12 and above) -->
-            <div class="mt-3 pt-3 border-t border-stone-800/80 space-y-2">
-              <div class="flex items-center justify-between">
+            <!-- In-Time Surcharges for All Keystones (Dynamic Dropdown Manager) -->
+            <div class="mt-3 pt-3 border-t border-stone-800/80 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h5 class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-[10px]"></i>
-                    <span>Costo Adicional In-Time para Piedras Altas (+12 y superiores)</span>
+                    <i class="fa-solid fa-stopwatch-20 text-amber-400 text-xs"></i>
+                    <span>Costo Adicional In-Time por Nivel de Piedra (Todas las Keys)</span>
                   </h5>
-                  <p class="text-[10px] text-stone-400">A partir de +12 el In-Time tiene costo extra debido a la alta dificultad y riesgo de piedra agotada.</p>
+                  <p class="text-[10px] text-stone-400">Selecciona cualquier nivel de piedra en la lista desplegable para consultar o modificar su costo extra de In-Time ($0 = Gratis / Incluido).</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="app.applyAdminTimerRecommendedPresets()" class="px-2 py-1 rounded bg-[#241042] hover:bg-[#34165e] text-[#f3e8ff] border border-[#a855f7]/40 text-[10px] font-bold transition-all cursor-pointer">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[#a855f7] mr-1"></i> Precios Sugeridos (+12 a +20)
+                  </button>
+                  <button type="button" onclick="app.clearAdminTimerSurcharges()" class="px-2 py-1 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-red-400 border border-stone-800 text-[10px] font-semibold transition-all cursor-pointer">
+                    Limpiar Todo ($0)
+                  </button>
                 </div>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                <div class="bg-[#120726] p-2 rounded-lg border border-stone-800">
-                  <label class="block text-[10px] font-bold text-stone-300 mb-1">Míticas +12 ($ USD):</label>
-                  <input type="number" step="1" id="adm-timer-plus12" value="15" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded px-2 py-1 text-xs text-white font-mono-gaming outline-none text-center">
+
+              <!-- Selector row: Dropdown + Input + Guardar button -->
+              <div class="bg-[#120726] p-3 rounded-xl border border-stone-800 space-y-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                  <div class="sm:col-span-5">
+                    <label class="block text-[10px] font-bold text-stone-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <i class="fa-solid fa-key text-[#a855f7] text-[10px]"></i>
+                      <span>Piedra Angular (Keystone Level):</span>
+                    </label>
+                    <select id="adm-timer-key-select" onchange="app.onAdminTimerKeySelectChange()" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded-lg px-3 py-2 text-xs text-white font-semibold outline-none cursor-pointer">
+                      <!-- Populated dynamically with all keys: +2 to +25 -->
+                    </select>
+                  </div>
+
+                  <div class="sm:col-span-4">
+                    <label class="block text-[10px] font-bold text-stone-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <i class="fa-solid fa-dollar-sign text-emerald-400 text-[10px]"></i>
+                      <span>Costo Extra In-Time ($ USD):</span>
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
+                      <input type="number" step="0.50" min="0" id="adm-timer-key-surcharge" oninput="app.onAdminTimerKeySurchargeInput()" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded-lg pl-7 pr-3 py-2 text-xs text-white font-mono-gaming font-bold outline-none" placeholder="0.00">
+                    </div>
+                  </div>
+
+                  <div class="sm:col-span-3">
+                    <button type="button" onclick="app.setAdminTimerKeySurcharge()" class="w-full py-2 px-3 rounded-lg bg-[#2a104f] hover:bg-[#3b176f] text-[#f3e8ff] border border-[#a855f7]/50 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                      <i class="fa-solid fa-check text-emerald-400"></i>
+                      <span>Guardar Key</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="bg-[#120726] p-2 rounded-lg border border-stone-800">
-                  <label class="block text-[10px] font-bold text-stone-300 mb-1">Míticas +13 ($ USD):</label>
-                  <input type="number" step="1" id="adm-timer-plus13" value="25" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded px-2 py-1 text-xs text-white font-mono-gaming outline-none text-center">
-                </div>
-                <div class="bg-[#120726] p-2 rounded-lg border border-stone-800">
-                  <label class="block text-[10px] font-bold text-stone-300 mb-1">Míticas +14 ($ USD):</label>
-                  <input type="number" step="1" id="adm-timer-plus14" value="35" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded px-2 py-1 text-xs text-white font-mono-gaming outline-none text-center">
-                </div>
-                <div class="bg-[#120726] p-2 rounded-lg border border-stone-800">
-                  <label class="block text-[10px] font-bold text-stone-300 mb-1">Míticas +15+ ($ USD):</label>
-                  <input type="number" step="1" id="adm-timer-plus15" value="50" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded px-2 py-1 text-xs text-white font-mono-gaming outline-none text-center">
+
+                <!-- Configured Pills list -->
+                <div class="pt-2 border-t border-stone-800/60">
+                  <div class="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>Recargos activos por piedra (haz clic para editar):</span>
+                  </div>
+                  <div id="adm-timer-surcharges-pills" class="flex flex-wrap gap-1.5 min-h-[26px]">
+                    <!-- Pills dynamically injected here -->
+                  </div>
                 </div>
               </div>
             </div>
@@ -1172,7 +1205,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=3.7.8"></script>
+  <script src="assets/js/app.js?v=3.7.9"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {

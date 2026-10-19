@@ -2749,22 +2749,27 @@ class MythicApp {
     const timerOpt = this.currentProduct?.options?.timer || {};
     const basePrice = Number(timerOpt.price) || 0;
 
+    // Check custom product tier pricing first (admin configured)
+    const tierSurcharges = timerOpt.tierSurcharges || {};
+    if (tierSurcharges[numLevel] !== undefined && tierSurcharges[numLevel] !== null) {
+      return Number(tierSurcharges[numLevel]) || 0;
+    }
+
     // Below +12: In-time is covered by base timer price (normally Free / $0)
     if (numLevel < 12) {
       return basePrice;
     }
 
-    // For +12 and higher: check custom product tier pricing first, or use calibrated standard defaults
-    const tierSurcharges = timerOpt.tierSurcharges || {};
-    if (tierSurcharges[numLevel] !== undefined) {
-      return Number(tierSurcharges[numLevel]) || 0;
-    }
-
-    // Defaults requested: +12 starts having additional cost
+    // Default calibrated scale for +12 and higher if not explicitly configured
     if (numLevel === 12) return 15.00;
     if (numLevel === 13) return 25.00;
     if (numLevel === 14) return 35.00;
-    if (numLevel >= 15) return 50.00;
+    if (numLevel === 15) return 50.00;
+    if (numLevel === 16) return 65.00;
+    if (numLevel === 17) return 80.00;
+    if (numLevel === 18) return 95.00;
+    if (numLevel === 19) return 115.00;
+    if (numLevel >= 20) return 140.00;
     return basePrice;
   }
 
@@ -3672,7 +3677,12 @@ class MythicApp {
     let detailsParts = [selectedMode, region, dungeon];
     if (selectedKeyText) detailsParts.unshift(selectedKeyText.split('(')[0].trim());
     detailsParts.push(`Clase: ${charClass}`);
-    detailsParts.push(`Facción: ${faction}`);
+    const timerInput = document.getElementById('sp-opt-timer');
+    if (timerInput && timerInput.checked) {
+      const timerSurcharge = Number(timerInput.dataset.price || 0);
+      const timerText = timerSurcharge > 0 ? `Guaranteed Timer (+$${timerSurcharge.toFixed(2)})` : `Guaranteed Timer (In-time)`;
+      detailsParts.push(timerText);
+    }
     if (traderLabel) detailsParts.push(traderLabel);
     if (extraLabels.length > 0) detailsParts.push('Extras: ' + extraLabels.join(', '));
     detailsParts.push(`Personaje: ${charName} (${realmName})`);
@@ -8061,9 +8071,11 @@ class MythicApp {
         if (content) content.classList.add('hidden');
         if (btn) {
           btn.className = 'px-3.5 py-1.5 rounded-xl bg-[#150a2e] hover:bg-[#201610] text-stone-400 hover:text-white border border-stone-800 flex items-center gap-2 transition-all cursor-pointer font-semibold';
-        }
-      }
     });
+
+    if (tabId === 'traders') {
+      this.refreshAdminTimerKeysDropdown();
+    }
   }
 
   addModalKeyLevelRow(level = '', price = '', recommended = false) {
@@ -8222,6 +8234,199 @@ class MythicApp {
     list.forEach(e => this.addModalExtraRow(e.label, e.price));
   }
 
+  getAllAdminTimerAvailableKeys() {
+    const keysSet = new Set();
+    // Standard M+ keys from 2 to 25
+    for (let k = 2; k <= 25; k++) {
+      keysSet.add(k);
+    }
+    // Inspect configured keys in Tab 2
+    const keyRows = document.querySelectorAll('.adm-key-row .adm-key-lvl');
+    keyRows.forEach(input => {
+      const num = parseInt(input.value.replace(/[^0-9]/g, ''), 10);
+      if (!isNaN(num) && num > 0) keysSet.add(num);
+    });
+    // Inspect any existing keys in adminModalTimerSurcharges
+    if (this.adminModalTimerSurcharges) {
+      Object.keys(this.adminModalTimerSurcharges).forEach(k => {
+        const num = parseInt(k, 10);
+        if (!isNaN(num) && num > 0) keysSet.add(num);
+      });
+    }
+    return Array.from(keysSet).sort((a, b) => a - b);
+  }
+
+  initAdminTimerKeysManager(surcharges = {}) {
+    this.adminModalTimerSurcharges = {};
+    if (surcharges && typeof surcharges === 'object') {
+      Object.entries(surcharges).forEach(([k, v]) => {
+        const numKey = parseInt(k, 10);
+        const numVal = parseFloat(v);
+        if (!isNaN(numKey) && !isNaN(numVal) && numVal > 0) {
+          this.adminModalTimerSurcharges[numKey] = numVal;
+        }
+      });
+    }
+    this.refreshAdminTimerKeysDropdown(12);
+  }
+
+  refreshAdminTimerKeysDropdown(preferredKey) {
+    const selectEl = document.getElementById('adm-timer-key-select');
+    if (!selectEl) return;
+
+    const allKeys = this.getAllAdminTimerAvailableKeys();
+    const currentVal = preferredKey !== undefined ? preferredKey : (parseInt(selectEl.value, 10) || 12);
+
+    selectEl.innerHTML = allKeys.map(k => {
+      const val = this.adminModalTimerSurcharges ? this.adminModalTimerSurcharges[k] : undefined;
+      const hasSurcharge = val !== undefined && val > 0;
+      const tag = hasSurcharge ? `(+$${Number(val).toFixed(2)})` : `(Gratis / $0)`;
+      return `<option value="${k}">Mítica +${k} ${tag}</option>`;
+    }).join('');
+
+    const targetKey = allKeys.includes(currentVal) ? currentVal : (allKeys.includes(12) ? 12 : allKeys[0]);
+    selectEl.value = targetKey;
+
+    const inputEl = document.getElementById('adm-timer-key-surcharge');
+    if (inputEl) {
+      inputEl.value = (this.adminModalTimerSurcharges && this.adminModalTimerSurcharges[targetKey] !== undefined)
+        ? this.adminModalTimerSurcharges[targetKey]
+        : '';
+    }
+
+    this.renderAdminTimerSurchargesPills();
+  }
+
+  onAdminTimerKeySelectChange() {
+    const selectEl = document.getElementById('adm-timer-key-select');
+    const inputEl = document.getElementById('adm-timer-key-surcharge');
+    if (!selectEl || !inputEl) return;
+
+    const key = parseInt(selectEl.value, 10);
+    const sur = this.adminModalTimerSurcharges ? this.adminModalTimerSurcharges[key] : undefined;
+    inputEl.value = sur !== undefined ? sur : '';
+    inputEl.focus();
+  }
+
+  onAdminTimerKeySurchargeInput() {
+    const selectEl = document.getElementById('adm-timer-key-select');
+    const inputEl = document.getElementById('adm-timer-key-surcharge');
+    if (!selectEl || !inputEl) return;
+
+    const key = parseInt(selectEl.value, 10);
+    const val = parseFloat(inputEl.value);
+
+    if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
+
+    if (!isNaN(val) && val > 0) {
+      this.adminModalTimerSurcharges[key] = Math.round(val * 100) / 100;
+    } else {
+      delete this.adminModalTimerSurcharges[key];
+    }
+
+    // Dynamically update option text in dropdown without closing it
+    const opt = selectEl.querySelector(`option[value="${key}"]`);
+    if (opt) {
+      const hasSur = this.adminModalTimerSurcharges[key] > 0;
+      const tag = hasSur ? `(+$${Number(this.adminModalTimerSurcharges[key]).toFixed(2)})` : `(Gratis / $0)`;
+      opt.textContent = `Mítica +${key} ${tag}`;
+    }
+
+    this.renderAdminTimerSurchargesPills();
+  }
+
+  setAdminTimerKeySurcharge() {
+    const selectEl = document.getElementById('adm-timer-key-select');
+    const inputEl = document.getElementById('adm-timer-key-surcharge');
+    if (!selectEl || !inputEl) return;
+
+    const key = parseInt(selectEl.value, 10);
+    const val = parseFloat(inputEl.value);
+
+    if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
+
+    if (!isNaN(val) && val > 0) {
+      this.adminModalTimerSurcharges[key] = Math.round(val * 100) / 100;
+      this.showToast(`Piedra +${key} guardada: In-Time +$${Number(this.adminModalTimerSurcharges[key]).toFixed(2)}`, 'success');
+    } else {
+      delete this.adminModalTimerSurcharges[key];
+      this.showToast(`Piedra +${key} fijada como Gratis / $0`, 'info');
+    }
+
+    this.refreshAdminTimerKeysDropdown(key);
+  }
+
+  removeAdminTimerKeySurcharge(key) {
+    if (this.adminModalTimerSurcharges) {
+      delete this.adminModalTimerSurcharges[key];
+    }
+    const selectEl = document.getElementById('adm-timer-key-select');
+    const currentKey = selectEl ? parseInt(selectEl.value, 10) : 12;
+    this.refreshAdminTimerKeysDropdown(currentKey);
+    if (currentKey === Number(key)) {
+      const inputEl = document.getElementById('adm-timer-key-surcharge');
+      if (inputEl) inputEl.value = '';
+    }
+  }
+
+  selectAdminTimerKey(key) {
+    const selectEl = document.getElementById('adm-timer-key-select');
+    if (selectEl) {
+      selectEl.value = key;
+      this.onAdminTimerKeySelectChange();
+    }
+  }
+
+  renderAdminTimerSurchargesPills() {
+    const container = document.getElementById('adm-timer-surcharges-pills');
+    if (!container) return;
+
+    const activeKeys = Object.keys(this.adminModalTimerSurcharges || {})
+      .map(k => parseInt(k, 10))
+      .filter(k => !isNaN(k) && this.adminModalTimerSurcharges[k] > 0)
+      .sort((a, b) => a - b);
+
+    if (activeKeys.length === 0) {
+      container.innerHTML = `<span class="text-[10px] text-stone-500 italic">No hay recargos adicionales configurados (todas las keys usan el precio base o $0 gratis).</span>`;
+      return;
+    }
+
+    container.innerHTML = activeKeys.map(k => {
+      const price = Number(this.adminModalTimerSurcharges[k]).toFixed(2);
+      return `
+        <span onclick="app.selectAdminTimerKey(${k})" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1f0d38] hover:bg-[#2d1252] border border-[#a855f7]/50 text-white text-[11px] font-mono-gaming transition-colors cursor-pointer group shadow-sm" title="Clic para editar +${k}">
+          <span class="text-stone-300 font-bold">+${k}:</span>
+          <span class="text-amber-300 font-bold">+$${price}</span>
+          <button type="button" onclick="event.stopPropagation(); app.removeAdminTimerKeySurcharge(${k})" class="text-stone-400 hover:text-red-400 text-xs ml-1 transition-colors leading-none" title="Quitar recargo para +${k}">×</button>
+        </span>
+      `;
+    }).join('');
+  }
+
+  applyAdminTimerRecommendedPresets() {
+    this.adminModalTimerSurcharges = {
+      12: 15,
+      13: 25,
+      14: 35,
+      15: 50,
+      16: 65,
+      17: 80,
+      18: 95,
+      19: 115,
+      20: 140
+    };
+    this.refreshAdminTimerKeysDropdown(12);
+    this.showToast('Precios recomendados de In-Time (+12 a +20) cargados.', 'success');
+  }
+
+  clearAdminTimerSurcharges() {
+    this.adminModalTimerSurcharges = {};
+    this.refreshAdminTimerKeysDropdown(12);
+    const inputEl = document.getElementById('adm-timer-key-surcharge');
+    if (inputEl) inputEl.value = '';
+    this.showToast('Todos los recargos de In-Time restablecidos a $0 (Gratis).', 'info');
+  }
+
   resetModalMplusDefaults() {
     this.resetModalKeyLevels();
 
@@ -8232,14 +8437,17 @@ class MythicApp {
     const timerPrc = document.getElementById('adm-timer-price');
     if (timerPrc) timerPrc.value = '0';
 
-    const t12 = document.getElementById('adm-timer-plus12');
-    if (t12) t12.value = '15';
-    const t13 = document.getElementById('adm-timer-plus13');
-    if (t13) t13.value = '25';
-    const t14 = document.getElementById('adm-timer-plus14');
-    if (t14) t14.value = '35';
-    const t15 = document.getElementById('adm-timer-plus15');
-    if (t15) t15.value = '50';
+    this.initAdminTimerKeysManager({
+      12: 15,
+      13: 25,
+      14: 35,
+      15: 50,
+      16: 65,
+      17: 80,
+      18: 95,
+      19: 115,
+      20: 140
+    });
 
     this.renderModalTraders([
       { label: 'Premium Group (x2 loot-traders)', price: 0.00 },
@@ -8351,15 +8559,16 @@ class MythicApp {
     const timerPrc = document.getElementById('adm-timer-price');
     if (timerPrc) timerPrc.value = timer.price !== undefined ? timer.price : 0;
 
-    const surcharges = timer.tierSurcharges || {};
-    const t12 = document.getElementById('adm-timer-plus12');
-    if (t12) t12.value = surcharges[12] !== undefined ? surcharges[12] : 15;
-    const t13 = document.getElementById('adm-timer-plus13');
-    if (t13) t13.value = surcharges[13] !== undefined ? surcharges[13] : 25;
-    const t14 = document.getElementById('adm-timer-plus14');
-    if (t14) t14.value = surcharges[14] !== undefined ? surcharges[14] : 35;
-    const t15 = document.getElementById('adm-timer-plus15');
-    if (t15) t15.value = surcharges[15] !== undefined ? surcharges[15] : 50;
+    const surcharges = timer.tierSurcharges || {
+      12: 15,
+      13: 25,
+      14: 35,
+      15: 50,
+      16: 65,
+      18: 95,
+      20: 140
+    };
+    this.initAdminTimerKeysManager(surcharges);
 
     this.renderModalTraders(opts.lootTraders || []);
     this.renderModalModes(opts.completionMethods || []);
@@ -8430,16 +8639,27 @@ class MythicApp {
       return { level: numLevel, price: prcVal, recommended: isRec };
     }).filter(k => k.level !== '');
 
+    // Sync active input in timer keys manager if currently typed
+    const activeTimerKey = document.getElementById('adm-timer-key-select')?.value;
+    const activeTimerInput = document.getElementById('adm-timer-key-surcharge');
+    if (activeTimerKey && activeTimerInput && activeTimerInput.value.trim() !== '') {
+      const numK = parseInt(activeTimerKey, 10);
+      const numVal = parseFloat(activeTimerInput.value);
+      if (!isNaN(numK)) {
+        if (!isNaN(numVal) && numVal > 0) {
+          if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
+          this.adminModalTimerSurcharges[numK] = Math.round(numVal * 100) / 100;
+        } else {
+          if (this.adminModalTimerSurcharges) delete this.adminModalTimerSurcharges[numK];
+        }
+      }
+    }
+
     const timerOpt = {
       enabled: !!document.getElementById('adm-timer-enabled')?.checked,
       label: document.getElementById('adm-timer-label')?.value.trim() || 'Guaranteed Timer (In-time)',
       price: Number(document.getElementById('adm-timer-price')?.value) || 0,
-      tierSurcharges: {
-        12: Number(document.getElementById('adm-timer-plus12')?.value) || 15,
-        13: Number(document.getElementById('adm-timer-plus13')?.value) || 25,
-        14: Number(document.getElementById('adm-timer-plus14')?.value) || 35,
-        15: Number(document.getElementById('adm-timer-plus15')?.value) || 50
-      }
+      tierSurcharges: Object.assign({}, this.adminModalTimerSurcharges || {})
     };
 
     const traderRows = Array.from(document.querySelectorAll('.adm-trader-row'));
