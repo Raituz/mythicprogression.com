@@ -4525,21 +4525,26 @@ class MythicApp {
       `;
     }).join('');
 
-    const paybisAmount = Math.max(10, Math.round(total));
-    const paybisUrl = `https://paybis.com/?cryptoCurrency=USDT&cryptoNetwork=BSC&cryptoAmount=${paybisAmount}&walletAddress=${this.paymentConfig.usdtAddress}`;
-    const changellyUrl = `https://changelly.com/buy-crypto?from=usd&to=usdtbsc&amount=${total.toFixed(2)}&address=${this.paymentConfig.usdtAddress}`;
+    const cardCheckoutUrl = `https://changelly.com/buy-crypto?from=usd&to=usdtbsc&amount=${total.toFixed(2)}&address=${this.paymentConfig.usdtAddress}`;
 
-    const tabBtn = (key, icon, label, badge = '') => {
+    const tabBtn = (key, icon, label, subtext = '', badge = '') => {
       const isActive = currentTab === key;
       return `
-        <button type="button" onclick="app.setPaymentMethodTab('${key}')" class="flex-1 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
+        <button type="button" onclick="app.setPaymentMethodTab('${key}')" class="group relative py-3 px-2 sm:px-2.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer min-h-[76px] sm:min-h-[82px] ${
           isActive
-            ? 'bg-[#251b14] border-[#ee914f] text-[#fcefc2] shadow-lg shadow-[#ee914f]/20 ring-1 ring-[#ee914f]/50'
-            : 'bg-[#120d09] border-stone-800 text-stone-400 hover:text-stone-200 hover:border-stone-700'
+            ? 'bg-[#251b14] border-[#ee914f] text-[#fcefc2] shadow-lg shadow-[#ee914f]/25 ring-1 ring-[#ee914f]/50'
+            : 'bg-[#120d09] border-stone-800 text-stone-400 hover:text-stone-200 hover:border-stone-700 hover:bg-[#18110b]'
         }">
-          <i class="${icon} text-sm ${isActive ? 'text-[#ee914f]' : 'text-stone-500'}"></i>
-          <span class="text-center">${label}</span>
-          ${badge ? `<span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-normal bg-emerald-950 text-emerald-400 border border-emerald-800/60 hidden md:inline">${badge}</span>` : ''}
+          ${badge ? `
+            <span class="absolute -top-2 right-2 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+              isActive
+                ? 'bg-[#ee914f] text-stone-950 font-black shadow-sm'
+                : 'bg-stone-900 text-emerald-400 border border-stone-700'
+            }">${badge}</span>
+          ` : ''}
+          <i class="${icon} text-base sm:text-lg mb-1 ${isActive ? 'text-[#ee914f]' : 'text-stone-500 group-hover:text-stone-300'}"></i>
+          <span class="text-xs font-bold leading-tight block text-center">${label}</span>
+          ${subtext ? `<span class="text-[9.5px] text-stone-500 block text-center mt-0.5 leading-tight">${subtext}</span>` : ''}
         </button>
       `;
     };
@@ -4549,10 +4554,10 @@ class MythicApp {
     if (currentTab === 'card') {
       tabBodyHtml = `
         <div class="space-y-4 animate-fade-in">
-          <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800">
-            <div class="flex items-center justify-between mb-2">
+          <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 space-y-2">
+            <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-[#fcefc2] flex items-center gap-2">
-                <i class="fa-solid fa-credit-card text-[#ee914f]"></i> Pay with International Card
+                <i class="fa-solid fa-credit-card text-[#ee914f]"></i> International Card Checkout
               </span>
               <div class="flex items-center gap-2 text-stone-400 text-sm">
                 <i class="fa-brands fa-cc-visa text-blue-400" title="Visa"></i>
@@ -4562,21 +4567,21 @@ class MythicApp {
               </div>
             </div>
             <p class="text-[11px] text-stone-400 leading-relaxed">
-              Pay 100% securely with your card via official encrypted on-ramp. No crypto wallet required; your order will be instantly verified and processed without hidden fees.
+              Pay securely with your Visa, Mastercard, Apple Pay or Google Pay via encrypted on-ramp. No crypto wallet needed; order amount and USDT settlement are prefilled.
             </p>
           </div>
 
           <div class="space-y-2">
-            <a href="${paybisUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
+            <a href="${cardCheckoutUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
               <i class="fa-solid fa-lock text-stone-950 text-base"></i>
-              <span>Pay $${total.toFixed(2)} USD with Card (Paybis)</span>
+              <span>Pay $${total.toFixed(2)} USD with Card (Apple Pay / Visa)</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
             </a>
 
             <div class="text-center pt-1">
-              <a href="${changellyUrl}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-stone-400 hover:text-[#ee914f] transition-colors underline">
-                <i class="fa-solid fa-bolt text-amber-400 mr-1"></i>Prefer Changelly (Apple Pay / Card)? Click here
-              </a>
+              <button type="button" onclick="app.openSupportChatFromPayment()" class="text-[11px] text-stone-400 hover:text-[#ee914f] transition-colors underline cursor-pointer inline-flex items-center gap-1">
+                <i class="fa-solid fa-headset text-[#ee914f]"></i>Prefer assisted payment via 24/7 Live Support? Click here
+              </button>
             </div>
           </div>
 
@@ -4760,11 +4765,11 @@ class MythicApp {
           </div>
 
           <!-- Method Selector Tabs -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            ${tabBtn('card', 'fa-solid fa-credit-card', 'Credit / Debit Card', 'USA/EU')}
-            ${tabBtn('binance', 'fa-solid fa-bolt', 'Binance Pay', '0% Fee')}
-            ${tabBtn('crypto', 'fa-brands fa-ethereum', 'USDT BEP20', 'BSC')}
-            ${tabBtn('support', 'fa-solid fa-headset', 'Live Support', 'Assisted')}
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            ${tabBtn('card', 'fa-solid fa-credit-card', 'Credit / Debit', 'Visa • Apple Pay', 'USA/EU')}
+            ${tabBtn('binance', 'fa-solid fa-bolt', 'Binance Pay', 'Instant Transfer', '0% Fee')}
+            ${tabBtn('crypto', 'fa-brands fa-ethereum', 'USDT Crypto', 'BSC Network', 'BEP20')}
+            ${tabBtn('support', 'fa-solid fa-headset', 'Live Support', 'Assisted Checkout', '24/7')}
           </div>
 
           <!-- Active Tab Content -->
