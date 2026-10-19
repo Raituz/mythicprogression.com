@@ -207,26 +207,28 @@ class MythicApp {
     // 2. Services
     try {
       const storedServices = localStorage.getItem('mp_services');
-      const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.6.0' || !storedServices);
+      let loaded = false;
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
-          if (!parsed.find(s => s.id === 'forever-powerleveling-custom') || parsed.find(s => s.id === 'forever-gold-pack') || !parsed.find(s => s.id === 'forever-gearing-preraid') || !parsed.find(s => s.id === 'forever-dungeon-deadmines')) {
-            shouldReload = true;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            this.services = parsed;
+            loaded = true;
           }
         } catch (e) {
-          shouldReload = true;
+          console.warn('Error reading storedServices:', e);
         }
       }
 
-      if (!shouldReload && storedServices) {
-        this.services = JSON.parse(storedServices);
-      } else {
-        const res = await fetch('data/seed_services.json');
-        this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.6.0');
-        this.saveServices();
+      if (!loaded) {
+        try {
+          const res = await fetch('data/seed_services.json');
+          this.services = await res.json();
+          localStorage.setItem('mp_services', JSON.stringify(this.services));
+        } catch (e) {
+          console.warn('Fallback loading seed_services:', e);
+          if (!this.services) this.services = [];
+        }
       }
 
       // Sanitize "Random Dungeon (Más Rápido)" to "Random Dungeon" across all services

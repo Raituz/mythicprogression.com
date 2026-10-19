@@ -6,7 +6,7 @@
         "page":  "mplus",
         "name":  "Mythic+ Keystone Run (+2 to +15)",
         "description":  "Complete Midnight Mythic+ dungeons on time with our elite pro team. Get loot up to 311 ilvl in end-of-dungeon chest and 318 ilvl (Mythic) in your Weekly Great Vault.",
-        "basePrice":  12.00,
+        "basePrice":  0.50,
         "icon":  "fa-dungeon",
         "badge":  "Season 2 Active",
         "options":  {
