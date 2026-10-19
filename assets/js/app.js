@@ -5154,13 +5154,15 @@ class MythicApp {
         const existingOrder = this.orders.find(o => o.id === item.orderId);
         if (existingOrder) {
           existingOrder.paymentMethod = paymentMethodLabel;
+          const hasCustomRef = paymentRef && paymentRef.toLowerCase() !== 'direct web checkout' && !paymentRef.toLowerCase().includes('pay later');
           existingOrder.paymentReference = paymentRef;
-          existingOrder.paymentStatus = 'PENDING_VERIFICATION';
+          existingOrder.paymentStatus = hasCustomRef ? 'PENDING_VERIFICATION' : 'AWAITING_PAYMENT';
+          existingOrder.paymentSubmitted = hasCustomRef;
           existingOrder.status = 'PAYMENT_PENDING';
           if (!Array.isArray(existingOrder.chat)) existingOrder.chat = [];
           existingOrder.chat.push({
             sender: 'system',
-            message: `🕒 Payment update (${paymentMethodLabel}). Reference: "${paymentRef}". Destination wallet (USDT BEP20): ${this.paymentConfig.usdtAddress}. Awaiting verification by administration.`,
+            message: `🕒 Payment update (${paymentMethodLabel}). Reference: "${paymentRef}". Destination wallet (USDT BEP20): ${this.paymentConfig.usdtAddress}.`,
             timestamp: new Date().toISOString()
           });
           createdOrderIds.push(existingOrder.id);
@@ -5210,7 +5212,8 @@ class MythicApp {
         maxBidAllowed: econ.maxBid,
         paymentMethod: paymentMethodLabel,
         paymentReference: paymentRef,
-        paymentStatus: 'PENDING_VERIFICATION',
+        paymentStatus: (paymentRef && paymentRef.toLowerCase() !== 'direct web checkout' && !paymentRef.toLowerCase().includes('pay later')) ? 'PENDING_VERIFICATION' : 'AWAITING_PAYMENT',
+        paymentSubmitted: Boolean(paymentRef && paymentRef.toLowerCase() !== 'direct web checkout' && !paymentRef.toLowerCase().includes('pay later')),
         status: 'PAYMENT_PENDING',
         bids: [],
         assignedBooster: null,
@@ -5352,8 +5355,28 @@ class MythicApp {
 
     // Metrics
     const totalCount = allMyOrders.length;
-    const isOrderUnpaid = (o) => Boolean(o && (o.paymentStatus === 'UNPAID' || (o.paymentReference && String(o.paymentReference).toLowerCase().includes('pay later'))) && o.paymentStatus !== 'PAID' && o.status !== 'COMPLETED' && o.status !== 'AVAILABLE');
-    const isOrderVerifying = (o) => Boolean(o && !isOrderUnpaid(o) && (o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION') && o.status !== 'COMPLETED' && o.status !== 'AVAILABLE' && o.paymentStatus !== 'PAID');
+    const isOrderUnpaid = (o) => Boolean(
+      o &&
+      o.status !== 'COMPLETED' &&
+      o.status !== 'AVAILABLE' &&
+      o.paymentStatus !== 'PAID' &&
+      (
+        o.paymentStatus === 'UNPAID' ||
+        o.paymentStatus === 'AWAITING_PAYMENT' ||
+        o.paymentStatus === 'PAY_LATER' ||
+        o.paymentSubmitted === false ||
+        (o.paymentReference && String(o.paymentReference).toLowerCase().includes('pay later')) ||
+        (o.paymentReference === 'Direct Web Checkout' && o.paymentSubmitted !== true)
+      )
+    );
+    const isOrderVerifying = (o) => Boolean(
+      o &&
+      !isOrderUnpaid(o) &&
+      (o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION') &&
+      o.status !== 'COMPLETED' &&
+      o.status !== 'AVAILABLE' &&
+      o.paymentStatus !== 'PAID'
+    );
 
     const unpaidCount = allMyOrders.filter(isOrderUnpaid).length;
     const verifyingCount = allMyOrders.filter(isOrderVerifying).length;
@@ -5618,12 +5641,15 @@ class MythicApp {
                       <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
                       <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD / USDT</strong></span>
                     </div>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                      <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg shadow-sm">
+                        <i class="fa-solid fa-credit-card"></i> Pay Now / Re-open Tab
+                      </button>
                       <button type="button" onclick="app.promptUpdatePaymentProof('${order.id}')" class="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg">
-                        <i class="fa-solid fa-receipt"></i> Edit Payment Proof / TXID
+                        <i class="fa-solid fa-receipt"></i> Edit Proof / TXID
                       </button>
                       <button type="button" onclick="app.openSupportChatFromPayment()" class="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg">
-                        <i class="fa-solid fa-headset"></i> Live Support
+                        <i class="fa-solid fa-headset"></i> Support
                       </button>
                       ${this.isAdminOrGerente() ? `
                         <button type="button" onclick="app.adminApprovePayment('${order.id}')" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg shadow-sm" title="Admin quick approval for testing">
@@ -5738,11 +5764,14 @@ class MythicApp {
                     <span>PAY NOW ($${safeTotal.toFixed(2)})</span>
                   </button>
                 ` : (isVerifyingPayment ? `
-                  <div class="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-[#2a1c12] to-amber-950/80 border border-amber-500/70 text-amber-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg">
+                  <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="w-full px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 transition-all cursor-pointer active:scale-95 animate-pulse">
+                    <i class="fa-solid fa-credit-card text-stone-950"></i>
+                    <span>PAY NOW / RE-OPEN</span>
+                  </button>
+                  <div class="w-full px-3 py-1.5 rounded-lg bg-amber-950/70 border border-amber-500/60 text-amber-300 font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm text-center">
                     <i class="fa-solid fa-clock-rotate-left fa-spin text-amber-400"></i>
                     <span>VERIFYING PAYMENT</span>
                   </div>
-                  <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="text-[10px] text-stone-400 hover:text-amber-300 underline cursor-pointer text-center">Change payment / re-open</button>
                 ` : '')}
                 <button type="button" onclick="app.openClientFullChat('${order.id}')" class="w-full px-4 py-2 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md hover:border-[#ee914f]">
                   <i class="fa-solid fa-comments text-[#ee914f]"></i>
