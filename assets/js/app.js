@@ -2161,10 +2161,23 @@ class MythicApp {
   
 // CART MANAGEMENT (Req 2: Add to cart & Total)
   // ==========================================
+  isPurchaseRestricted() {
+    if (!this.currentUser) return false;
+    // Admins and Managers/Staff are EXEMPT so they can test checkout and purchases
+    if (this.isAdmin() || this.isAdminOrGerente() || this.currentUser.isAdmin === true || this.currentUser.type === 'admin') {
+      return false;
+    }
+    // Only pure boosters and pro users are restricted from purchasing
+    if (this.currentUser.type === 'booster' || this.isBooster()) {
+      return true;
+    }
+    return false;
+  }
+
   addToCart(item, openDrawer = true) {
     if (!item) return;
 
-    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+    if (this.isPurchaseRestricted()) {
       this.showToast('Pro members and boosters cannot purchase services.', 'warning');
       return;
     }
@@ -2308,9 +2321,9 @@ class MythicApp {
     }
 
     const btn = document.getElementById('btn-checkout-cart');
-    const isBoosterUser = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
+    const isRestricted = this.isPurchaseRestricted();
     if (btn) {
-      if (isBoosterUser) {
+      if (isRestricted) {
         btn.disabled = true;
         btn.className = 'w-full py-3.5 rounded-2xl bg-[#70cf00] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed opacity-95 select-none notranslate';
         btn.setAttribute('translate', 'no');
@@ -2355,7 +2368,7 @@ class MythicApp {
   }
 
   processFullCartCheckout() {
-    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+    if (this.isPurchaseRestricted()) {
       this.showToast('Pro members and boosters cannot purchase services.', 'warning');
       return;
     }
@@ -2543,9 +2556,9 @@ class MythicApp {
     const container = document.getElementById('sp-action-buttons-container');
     if (!container) return;
 
-    const isBoosterUser = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
+    const isRestricted = this.isPurchaseRestricted();
 
-    if (isBoosterUser) {
+    if (isRestricted) {
       container.innerHTML = `
         <button type="button" onclick="app.showToast('Pro members and boosters cannot purchase services.', 'warning')" class="w-full py-4 rounded-2xl bg-[#70cf00] hover:bg-[#68be00] text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed shadow-lg shadow-[#70cf00]/30 select-none transition-all notranslate" translate="no" title="Pro can't buy">
           <span>Pro can't buy</span>
@@ -3599,7 +3612,7 @@ class MythicApp {
   }
 
   addCurrentSingleProductToCart() {
-    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+    if (this.isPurchaseRestricted()) {
       this.showToast('Pro members and boosters cannot purchase services.', 'warning');
       return;
     }
@@ -3766,7 +3779,7 @@ class MythicApp {
   }
 
   buyCurrentSingleProductNow() {
-    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+    if (this.isPurchaseRestricted()) {
       this.showToast('Pro members and boosters cannot purchase services.', 'warning');
       return;
     }
@@ -4446,7 +4459,7 @@ class MythicApp {
   }
 
   openPaymentModal(checkoutContext = { source: 'cart' }) {
-    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+    if (this.isPurchaseRestricted()) {
       this.showToast('Pro members and boosters cannot purchase services.', 'warning');
       return;
     }
@@ -14102,7 +14115,8 @@ class MythicApp {
     const footer = document.querySelector('footer');
     if (!footer) return;
 
-    const isBoosterUser = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
+    const isAdminUser = this.isAdmin() || this.isAdminOrGerente() || this.currentUser?.isAdmin === true || this.currentUser?.type === 'admin';
+    const isBoosterUser = !isAdminUser && this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
 
     footer.className = 'border-t border-stone-800/80 bg-[#0a0705] py-12 px-4 sm:px-6 lg:px-8 mt-auto relative z-20';
     footer.innerHTML = `
@@ -14157,12 +14171,15 @@ class MythicApp {
             <ul class="space-y-2 text-xs text-stone-400" id="footer-company-links">
               <li><button type="button" onclick="app.openPolicyModal('about')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>About Us</button></li>
               <li><button type="button" onclick="app.openPolicyModal('refund')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>The Mythic Guarantee</button></li>
-              ${isBoosterUser ? `
+              ${isAdminUser ? `
+                <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Booster Portal</a></li>
+                <li><a href="client-profile" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Client Profile & Orders</a></li>
+              ` : (isBoosterUser ? `
                 <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Booster Portal</a></li>
               ` : `
                 <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Work With Us (Apply Pro)</a></li>
                 <li><a href="client-profile" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Client Profile & Orders</a></li>
-              `}
+              `)}
             </ul>
           </div>
 
