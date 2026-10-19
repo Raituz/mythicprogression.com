@@ -868,7 +868,7 @@
       </div>
 
       <!-- Scrollable Form Body -->
-      <form id="adm-product-form" onsubmit="event.preventDefault(); app.saveProductFromAdmin();" class="flex-1 overflow-y-auto py-4 pr-1 space-y-4">
+      <form id="adm-product-form" novalidate onsubmit="event.preventDefault(); app.saveProductFromAdmin();" class="flex-1 overflow-y-auto py-4 pr-1 space-y-4">
         <input type="hidden" id="adm-prod-id">
 
         <!-- TAB 1: GENERAL -->
@@ -876,7 +876,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-stone-300 mb-1">Nombre del Servicio:</label>
-              <input id="adm-prod-name" type="text" placeholder="Ej: Mythic+ Keystone Run (+2 a +15)" class="w-full bg-[#14092b] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#a855f7] outline-none" required>
+              <input id="adm-prod-name" type="text" placeholder="Ej: Mythic+ Keystone Run (+2 a +15)" class="w-full bg-[#14092b] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#a855f7] outline-none">
             </div>
             <div>
               <label class="block text-xs font-semibold text-stone-300 mb-1">Categoría:</label>
@@ -892,7 +892,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label class="block text-xs font-semibold text-stone-300 mb-1">Precio Base / Inicial ($ USD):</label>
-              <input id="adm-prod-price" type="number" step="0.5" class="w-full bg-[#14092b] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#a855f7] outline-none" required>
+              <input id="adm-prod-price" type="text" inputmode="decimal" placeholder="0.50" class="w-full bg-[#14092b] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#a855f7] outline-none">
               <span class="text-[10px] text-stone-500 mt-0.5 block">Precio de referencia en tarjetas de tienda.</span>
             </div>
             <div>
@@ -979,7 +979,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
               </div>
               <div>
                 <label class="block text-[11px] text-stone-400 mb-1">Precio Extra Base ($ USD, Niveles +2 a +11):</label>
-                <input type="number" step="0.5" id="adm-timer-price" value="0" class="w-full bg-[#120726] border border-stone-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#a855f7]">
+                <input type="text" inputmode="decimal" id="adm-timer-price" value="0" class="w-full bg-[#120726] border border-stone-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#a855f7]">
                 <span class="text-[9px] text-stone-500 mt-0.5 block">0 = Gratis (Free) para niveles hasta +11</span>
               </div>
             </div>
@@ -1024,7 +1024,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
                     </label>
                     <div class="relative">
                       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
-                      <input type="number" step="0.50" min="0" id="adm-timer-key-surcharge" oninput="app.onAdminTimerKeySurchargeInput()" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded-lg pl-7 pr-3 py-2 text-xs text-white font-mono-gaming font-bold outline-none" placeholder="0.00">
+                      <input type="text" inputmode="decimal" id="adm-timer-key-surcharge" oninput="app.onAdminTimerKeySurchargeInput()" class="w-full bg-[#1a0c33] border border-stone-700 focus:border-[#a855f7] rounded-lg pl-7 pr-3 py-2 text-xs text-white font-mono-gaming font-bold outline-none" placeholder="0.00">
                     </div>
                   </div>
 
@@ -1186,7 +1186,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
               <span>Cargar Valores por Defecto</span>
             </button>
           </div>
-          <button type="submit" class="px-7 py-2.5 rounded-xl purple-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#a855f7]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+          <button type="button" onclick="app.saveProductFromAdmin()" class="px-7 py-2.5 rounded-xl purple-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#a855f7]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
             <i class="fa-solid fa-floppy-disk"></i>
             <span>Guardar Todos los Cambios</span>
           </button>
@@ -1207,7 +1207,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=4.1.6"></script>
+  <script src="assets/js/app.js?v=4.1.7"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {

@@ -8679,6 +8679,13 @@ class MythicApp {
     }
   }
 
+  parseSafeFloat(val, fallback = 0) {
+    if (val === null || val === undefined) return fallback;
+    const clean = String(val).replace(',', '.').replace(/[^0-9.]/g, '').trim();
+    const n = parseFloat(clean);
+    return isNaN(n) ? fallback : n;
+  }
+
   addModalKeyLevelRow(level = '', price = '', recommended = false) {
     const container = document.getElementById('adm-key-levels-list');
     if (!container) return;
@@ -8689,7 +8696,7 @@ class MythicApp {
         <input type="text" value="${level}" placeholder="+10" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white text-center font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-key-lvl">
       </div>
       <div class="col-span-4">
-        <input type="number" step="0.5" value="${price}" placeholder="38.00" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-key-prc">
+        <input type="text" inputmode="decimal" value="${price}" placeholder="0.50" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-key-prc">
       </div>
       <div class="col-span-3 flex justify-center">
         <input type="radio" name="adm_key_recommended" ${recommended ? 'checked' : ''} class="w-4 h-4 accent-[#a855f7] cursor-pointer adm-key-rec" title="Marcar como recomendado">
@@ -8744,7 +8751,7 @@ class MythicApp {
         <input type="text" value="${label}" placeholder="VIP Group (+3 traders)" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#a855f7] adm-trader-lbl">
       </div>
       <div class="col-span-3">
-        <input type="number" step="0.01" value="${price}" placeholder="2.50" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-trader-prc">
+        <input type="text" inputmode="decimal" value="${price}" placeholder="2.50" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-trader-prc">
       </div>
       <div class="col-span-2 flex justify-end">
         <button type="button" onclick="this.closest('.adm-trader-row').remove()" class="w-7 h-7 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Eliminar trader">
@@ -8777,7 +8784,7 @@ class MythicApp {
         <input type="text" value="${label}" placeholder="Self-play" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#a855f7] adm-mode-lbl">
       </div>
       <div class="col-span-3">
-        <input type="number" step="0.01" value="${price}" placeholder="0.00" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-mode-prc">
+        <input type="text" inputmode="decimal" value="${price}" placeholder="0.00" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-mode-prc">
       </div>
       <div class="col-span-2">
         <input type="text" value="${tag}" placeholder="Gratis" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2 py-1.5 text-xs text-stone-300 outline-none focus:border-[#a855f7] adm-mode-tag">
@@ -8813,7 +8820,7 @@ class MythicApp {
         <input type="text" value="${label}" placeholder="Rank One Team" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#a855f7] adm-extra-lbl">
       </div>
       <div class="col-span-3">
-        <input type="number" step="0.01" value="${price}" placeholder="1.95" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-extra-prc">
+        <input type="text" inputmode="decimal" value="${price}" placeholder="1.95" class="w-full bg-[#1b0c36] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-[#f3e8ff] font-mono-gaming font-bold outline-none focus:border-[#a855f7] adm-extra-prc">
       </div>
       <div class="col-span-2 flex justify-end">
         <button type="button" onclick="this.closest('.adm-extra-row').remove()" class="w-7 h-7 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Eliminar extra">
@@ -8915,7 +8922,7 @@ class MythicApp {
     if (!selectEl || !inputEl) return;
 
     const key = parseInt(selectEl.value, 10);
-    const val = parseFloat(inputEl.value);
+    const val = this.parseSafeFloat(inputEl.value, 0);
 
     if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
 
@@ -8942,7 +8949,7 @@ class MythicApp {
     if (!selectEl || !inputEl) return;
 
     const key = parseInt(selectEl.value, 10);
-    const val = parseFloat(inputEl.value);
+    const val = this.parseSafeFloat(inputEl.value, 0);
 
     if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
 
@@ -9217,143 +9224,167 @@ class MythicApp {
   }
 
   async saveProductFromAdmin() {
-    const idVal = document.getElementById('adm-prod-id').value.trim();
-    const name = document.getElementById('adm-prod-name').value.trim();
-    const cat = document.getElementById('adm-prod-cat').value;
-    const price = Number(document.getElementById('adm-prod-price').value);
-    const icon = document.getElementById('adm-prod-icon').value.trim() || 'fa-dungeon';
-    const badge = document.getElementById('adm-prod-badge').value.trim() || 'Popular';
-    const desc = document.getElementById('adm-prod-desc').value.trim();
+    try {
+      const idVal = (document.getElementById('adm-prod-id')?.value || '').trim();
+      const name = (document.getElementById('adm-prod-name')?.value || '').trim();
+      const cat = document.getElementById('adm-prod-cat')?.value || 'Míticas Plus';
+      let price = this.parseSafeFloat(document.getElementById('adm-prod-price')?.value, 0);
+      const icon = (document.getElementById('adm-prod-icon')?.value || '').trim() || 'fa-dungeon';
+      const badge = (document.getElementById('adm-prod-badge')?.value || '').trim() || 'Popular';
+      const desc = (document.getElementById('adm-prod-desc')?.value || '').trim();
 
-    if (!name || isNaN(price) || price <= 0) {
-      alert('Por favor completa un nombre válido y precio mayor a 0.');
-      return;
-    }
+      // Compile dynamic options from all 5 tabs FIRST
+      const keyRows = Array.from(document.querySelectorAll('.adm-key-row'));
+      const compiledKeyLevels = keyRows.map(row => {
+        const lvlVal = (row.querySelector('.adm-key-lvl')?.value || '').trim();
+        const rawPrc = row.querySelector('.adm-key-prc')?.value;
+        const prcVal = this.parseSafeFloat(rawPrc, 0);
+        const isRec = !!row.querySelector('.adm-key-rec')?.checked;
+        const numLevel = Number(lvlVal.replace(/[^0-9]/g, '')) || lvlVal;
+        return { level: numLevel, price: prcVal, recommended: isRec };
+      }).filter(k => k.level !== '');
 
-    // Compile dynamic options from all 5 tabs
-    const keyRows = Array.from(document.querySelectorAll('.adm-key-row'));
-    const compiledKeyLevels = keyRows.map(row => {
-      const lvlVal = row.querySelector('.adm-key-lvl')?.value.trim() || '';
-      const prcVal = Number(row.querySelector('.adm-key-prc')?.value) || 0;
-      const isRec = !!row.querySelector('.adm-key-rec')?.checked;
-      const numLevel = Number(lvlVal.replace(/[^0-9]/g, '')) || lvlVal;
-      return { level: numLevel, price: prcVal, recommended: isRec };
-    }).filter(k => k.level !== '');
-
-    // Sync active input in timer keys manager if currently typed
-    const activeTimerKey = document.getElementById('adm-timer-key-select')?.value;
-    const activeTimerInput = document.getElementById('adm-timer-key-surcharge');
-    if (activeTimerKey && activeTimerInput && activeTimerInput.value.trim() !== '') {
-      const numK = parseInt(activeTimerKey, 10);
-      const numVal = parseFloat(activeTimerInput.value);
-      if (!isNaN(numK)) {
-        if (!isNaN(numVal) && numVal > 0) {
-          if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
-          this.adminModalTimerSurcharges[numK] = Math.round(numVal * 100) / 100;
-        } else {
-          if (this.adminModalTimerSurcharges) delete this.adminModalTimerSurcharges[numK];
+      // CRITICAL: If this service has keyLevels (e.g. Mythic+), synchronize basePrice with the recommended key level!
+      if (compiledKeyLevels.length > 0) {
+        const recKey = compiledKeyLevels.find(k => k.recommended) || compiledKeyLevels[0];
+        if (recKey && recKey.price > 0) {
+          price = recKey.price;
+          const prodPriceEl = document.getElementById('adm-prod-price');
+          if (prodPriceEl) prodPriceEl.value = recKey.price;
         }
       }
-    }
 
-    const timerOpt = {
-      enabled: !!document.getElementById('adm-timer-enabled')?.checked,
-      label: document.getElementById('adm-timer-label')?.value.trim() || 'Guaranteed Timer (In-time)',
-      price: Number(document.getElementById('adm-timer-price')?.value) || 0,
-      tierSurcharges: Object.assign({}, this.adminModalTimerSurcharges || {})
-    };
-
-    const traderRows = Array.from(document.querySelectorAll('.adm-trader-row'));
-    const compiledTraders = traderRows.map(row => ({
-      label: row.querySelector('.adm-trader-lbl')?.value.trim() || '',
-      price: Number(row.querySelector('.adm-trader-prc')?.value) || 0
-    })).filter(t => t.label);
-
-    const modeRows = Array.from(document.querySelectorAll('.adm-mode-row'));
-    const compiledModes = modeRows.map(row => ({
-      label: row.querySelector('.adm-mode-lbl')?.value.trim() || '',
-      price: Number(row.querySelector('.adm-mode-prc')?.value) || 0,
-      tag: row.querySelector('.adm-mode-tag')?.value.trim() || ''
-    })).filter(m => m.label);
-
-    const extraRows = Array.from(document.querySelectorAll('.adm-extra-row'));
-    const compiledExtras = extraRows.map(row => ({
-      label: row.querySelector('.adm-extra-lbl')?.value.trim() || '',
-      price: Number(row.querySelector('.adm-extra-prc')?.value) || 0
-    })).filter(e => e.label);
-
-    const dungeonsRaw = document.getElementById('adm-dungeons-textarea')?.value || '';
-    const compiledDungeons = dungeonsRaw.split('\n').map(d => d.trim()).filter(Boolean);
-
-    const bulletsRaw = document.getElementById('adm-prod-bullets')?.value || '';
-    const compiledBullets = bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean);
-
-    const compiledEstimates = {
-      start: document.getElementById('adm-est-start')?.value.trim() || '10-15 min',
-      execution: document.getElementById('adm-est-exec')?.value.trim() || '15-30 min'
-    };
-
-    const compiledHeroBadges = [
-      document.getElementById('adm-badge-1')?.value.trim(),
-      document.getElementById('adm-badge-2')?.value.trim(),
-      document.getElementById('adm-badge-3')?.value.trim()
-    ].filter(Boolean);
-
-    const compiledVolumeDiscount = Number(document.getElementById('adm-vol-discount')?.value) || 0;
-    const compiledCashbackPercent = Number(document.getElementById('adm-cashback-pct')?.value) || 0;
-
-    const compiledOptions = {
-      keyLevels: compiledKeyLevels,
-      timer: timerOpt,
-      lootTraders: compiledTraders,
-      completionMethods: compiledModes,
-      extras: compiledExtras,
-      dungeons: compiledDungeons,
-      estimates: compiledEstimates,
-      heroBadges: compiledHeroBadges,
-      volumeDiscount: compiledVolumeDiscount,
-      cashbackPercent: compiledCashbackPercent
-    };
-
-    if (idVal) {
-      // Edit existing
-      const existing = this.services.find(s => s.id === idVal);
-      if (existing) {
-        existing.name = name;
-        existing.category = cat;
-        existing.basePrice = price;
-        existing.icon = icon;
-        existing.badge = badge;
-        existing.description = desc;
-        existing.bullets = compiledBullets;
-        existing.options = Object.assign({}, existing.options || {}, compiledOptions);
+      if (!name) {
+        alert('Por favor ingresa un nombre para el servicio.');
+        return;
       }
-    } else {
-      // Create new
-      const cleanSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || ('prod-' + Date.now());
-      const newService = {
-        id: cleanSlug,
-        name: name,
-        category: cat,
-        basePrice: price,
-        icon: icon,
-        badge: badge,
-        description: desc,
-        bullets: compiledBullets,
-        page: 'product?id=' + cleanSlug,
-        options: compiledOptions
-      };
-      this.services.unshift(newService);
-    }
+      if (isNaN(price) || price <= 0) {
+        alert('Por favor especifica un precio válido mayor a 0 (ej: 0.50).');
+        return;
+      }
 
-    await this.saveServices();
-    this.renderAdminProductsManager();
-    const modal = document.getElementById('admin-product-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      // Sync active input in timer keys manager if currently typed
+      const activeTimerKey = document.getElementById('adm-timer-key-select')?.value;
+      const activeTimerInput = document.getElementById('adm-timer-key-surcharge');
+      if (activeTimerKey && activeTimerInput && activeTimerInput.value.trim() !== '') {
+        const numK = parseInt(activeTimerKey, 10);
+        const numVal = this.parseSafeFloat(activeTimerInput.value, 0);
+        if (!isNaN(numK)) {
+          if (numVal > 0) {
+            if (!this.adminModalTimerSurcharges) this.adminModalTimerSurcharges = {};
+            this.adminModalTimerSurcharges[numK] = Math.round(numVal * 100) / 100;
+          } else {
+            if (this.adminModalTimerSurcharges) delete this.adminModalTimerSurcharges[numK];
+          }
+        }
+      }
+
+      const timerOpt = {
+        enabled: !!document.getElementById('adm-timer-enabled')?.checked,
+        label: (document.getElementById('adm-timer-label')?.value || '').trim() || 'Guaranteed Timer (In-time)',
+        price: this.parseSafeFloat(document.getElementById('adm-timer-price')?.value, 0),
+        tierSurcharges: Object.assign({}, this.adminModalTimerSurcharges || {})
+      };
+
+      const traderRows = Array.from(document.querySelectorAll('.adm-trader-row'));
+      const compiledTraders = traderRows.map(row => ({
+        label: (row.querySelector('.adm-trader-lbl')?.value || '').trim(),
+        price: this.parseSafeFloat(row.querySelector('.adm-trader-prc')?.value, 0)
+      })).filter(t => t.label);
+
+      const modeRows = Array.from(document.querySelectorAll('.adm-mode-row'));
+      const compiledModes = modeRows.map(row => ({
+        label: (row.querySelector('.adm-mode-lbl')?.value || '').trim(),
+        price: this.parseSafeFloat(row.querySelector('.adm-mode-prc')?.value, 0),
+        tag: (row.querySelector('.adm-mode-tag')?.value || '').trim()
+      })).filter(m => m.label);
+
+      const extraRows = Array.from(document.querySelectorAll('.adm-extra-row'));
+      const compiledExtras = extraRows.map(row => ({
+        label: (row.querySelector('.adm-extra-lbl')?.value || '').trim(),
+        price: this.parseSafeFloat(row.querySelector('.adm-extra-prc')?.value, 0)
+      })).filter(e => e.label);
+
+      const dungeonsRaw = document.getElementById('adm-dungeons-textarea')?.value || '';
+      const compiledDungeons = dungeonsRaw.split('\n').map(d => d.trim()).filter(Boolean);
+
+      const bulletsRaw = document.getElementById('adm-prod-bullets')?.value || '';
+      const compiledBullets = bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean);
+
+      const compiledEstimates = {
+        start: (document.getElementById('adm-est-start')?.value || '').trim() || '10-15 min',
+        execution: (document.getElementById('adm-est-exec')?.value || '').trim() || '15-30 min'
+      };
+
+      const compiledHeroBadges = [
+        (document.getElementById('adm-badge-1')?.value || '').trim(),
+        (document.getElementById('adm-badge-2')?.value || '').trim(),
+        (document.getElementById('adm-badge-3')?.value || '').trim()
+      ].filter(Boolean);
+
+      const compiledVolumeDiscount = this.parseSafeFloat(document.getElementById('adm-vol-discount')?.value, 0);
+      const compiledCashbackPercent = this.parseSafeFloat(document.getElementById('adm-cashback-pct')?.value, 0);
+
+      const compiledOptions = {
+        keyLevels: compiledKeyLevels,
+        timer: timerOpt,
+        lootTraders: compiledTraders,
+        completionMethods: compiledModes,
+        extras: compiledExtras,
+        dungeons: compiledDungeons,
+        estimates: compiledEstimates,
+        heroBadges: compiledHeroBadges,
+        volumeDiscount: compiledVolumeDiscount,
+        cashbackPercent: compiledCashbackPercent
+      };
+
+      if (idVal) {
+        // Edit existing
+        const existing = this.services.find(s => s.id === idVal);
+        if (existing) {
+          existing.name = name;
+          existing.category = cat;
+          existing.basePrice = price;
+          existing.icon = icon;
+          existing.badge = badge;
+          existing.description = desc;
+          existing.bullets = compiledBullets;
+          existing.options = Object.assign({}, existing.options || {}, compiledOptions);
+        }
+      } else {
+        // Create new
+        const cleanSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || ('prod-' + Date.now());
+        const newService = {
+          id: cleanSlug,
+          name: name,
+          category: cat,
+          basePrice: price,
+          icon: icon,
+          badge: badge,
+          description: desc,
+          bullets: compiledBullets,
+          page: 'product?id=' + cleanSlug,
+          options: compiledOptions
+        };
+        this.services.unshift(newService);
+      }
+
+      // Close modal immediately so user sees immediate response
+      const modal = document.getElementById('admin-product-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+
+      this.renderAdminProductsManager();
+      this.showToast(`Guardando "${name}" ($${price.toFixed(2)}) en catálogo y sincronizando...`, 'info');
+      await this.saveServices();
+      this.renderAdminProductsManager();
+      this.showToast(`¡Producto "${name}" guardado exitosamente a $${price.toFixed(2)}!`, 'success');
+    } catch (err) {
+      console.error('Error saving product from admin:', err);
+      alert('Error al guardar el producto: ' + (err.message || err));
     }
-    this.showToast(`¡Producto "${name}" y todas sus opciones guardadas con éxito!`, 'success');
   }
 
   async deleteProduct(productId) {
