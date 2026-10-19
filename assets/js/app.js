@@ -4494,7 +4494,7 @@ class MythicApp {
     this.closePaymentModal();
     const total = this.activePaymentContext?.totalPrice ? `$${this.activePaymentContext.totalPrice.toFixed(2)} USD` : '';
     this.openLiveChat({
-      prefill: `Hola! Deseo completar mi pago de ${total} para Mythic Progression mediante PayPal / Zinli / Zelle. ¿Me pueden brindar las instrucciones de pago?`
+      prefill: `Hello! I would like to complete my payment of ${total} for Mythic Progression via Credit Card / PayPal / Zelle. Could you assist me with payment instructions?`
     });
   }
 
@@ -4568,20 +4568,38 @@ class MythicApp {
               </div>
             </div>
             <p class="text-[11px] text-stone-400 leading-relaxed">
-              Pay securely with your Visa, Mastercard, Apple Pay or Google Pay via encrypted on-ramp. No crypto wallet needed; order amount and USDT settlement are prefilled.
+              Pay securely with your Visa, Mastercard, Apple Pay or Google Pay via official encrypted on-ramp.
             </p>
+          </div>
+
+          <!-- Store Destination Address Box -->
+          <div class="bg-[#120d09] p-3 rounded-xl border border-amber-600/40 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-amber-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-wallet text-[#ee914f]"></i> Store Destination Address (BSC BEP20):
+              </span>
+              <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this)" class="px-2.5 py-1 bg-[#ee914f] hover:bg-[#d87a38] text-stone-950 text-[10px] font-black rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm">
+                <i class="fa-regular fa-copy"></i> Copy Address
+              </button>
+            </div>
+            <div class="bg-[#18110b] p-2 rounded-lg border border-stone-700/80">
+              <span class="font-mono text-[10.5px] text-[#fcefc2] break-all select-all block leading-tight">${this.paymentConfig.usdtAddress}</span>
+            </div>
+            <span class="text-[9.5px] text-stone-400 block">
+              <i class="fa-solid fa-circle-info text-[#ee914f] mr-1"></i>Copy this address and paste it into the <strong>"Destination address (USDT)"</strong> field on the checkout page.
+            </span>
           </div>
 
           <div class="space-y-2">
             <a href="${cardCheckoutUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
               <i class="fa-solid fa-lock text-stone-950 text-base"></i>
-              <span>Pay $${total.toFixed(2)} USD with Card (Apple Pay / Visa)</span>
+              <span>Open Card Checkout ($${total.toFixed(2)} USD)</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
             </a>
 
             <div class="text-center pt-1">
-              <button type="button" onclick="app.openSupportChatFromPayment()" class="text-[11px] text-stone-400 hover:text-[#ee914f] transition-colors underline cursor-pointer inline-flex items-center gap-1">
-                <i class="fa-solid fa-headset text-[#ee914f]"></i>Prefer assisted payment via 24/7 Live Support? Click here
+              <button type="button" onclick="app.openSupportChatFromPayment()" class="text-[11px] text-stone-300 hover:text-[#ee914f] transition-colors underline cursor-pointer inline-flex items-center gap-1 font-medium">
+                <i class="fa-solid fa-headset text-[#ee914f]"></i>Prefer direct card payment via 24/7 Live Support? Click here
               </button>
             </div>
           </div>
