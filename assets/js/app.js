@@ -3607,7 +3607,7 @@ class MythicApp {
     const cashbackEl = document.getElementById('sp-cashback-text');
     if (cashbackEl) {
       const cashback = (subtotal * (cashbackPct / 100)).toFixed(2);
-      cashbackEl.textContent = `+$${cashback} de cashback tras la compra`;
+      cashbackEl.textContent = `+$${cashback} cashback after purchase`;
     }
   }
 
