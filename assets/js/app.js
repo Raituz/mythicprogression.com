@@ -5633,7 +5633,7 @@ class MythicApp {
                     </div>
                   </div>
                 </div>
-              ` : (isUnpaid ? `
+              ` : isUnpaid ? `
                 <div class="bg-gradient-to-b from-[#1c120a] via-[#160e08] to-[#120b06] p-4 sm:p-5 rounded-2xl border-2 border-amber-500/80 shadow-2xl space-y-3 mt-2">
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
                     <div class="flex items-center gap-2">
@@ -5677,12 +5677,12 @@ class MythicApp {
                     </div>
                   </div>
                 </div>
-              ` : (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED' ? `
+              ` : (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED') ? `
                 <div class="inline-flex items-center gap-2.5 bg-rose-950/60 px-3.5 py-2 rounded-xl border border-rose-600/50 text-xs text-rose-200 mt-1 shadow-sm">
                   <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
                   <span>Payment could not be verified with the provided reference. Please reach out to 24/7 Live Support for assistance.</span>
                 </div>
-              ` : (isAssigned ? `
+              ` : isAssigned ? `
                 <div class="inline-flex items-center gap-2.5 bg-[#1b140f] px-3.5 py-1.5 rounded-xl border border-[#ee914f]/30 text-xs mt-1">
                   <div class="w-6 h-6 rounded-full bg-[#2a1d13] border border-[#ee914f]/40 flex items-center justify-center text-[10px] text-[#fcefc2] font-black">
                     ${order.assignedBooster.avatar ? `<img src="${order.assignedBooster.avatar}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-gamepad text-[#ee914f]"></i>`}
@@ -5703,7 +5703,7 @@ class MythicApp {
                   <i class="fa-solid fa-hourglass-half text-amber-400/80"></i>
                   <span>Your order is active on the pro board. A verified booster will claim it shortly.</span>
                 </div>
-              `))}
+              `}
 
               <!-- Completion Report Alert -->
               ${order.status === 'PENDING_APPROVAL' ? `
