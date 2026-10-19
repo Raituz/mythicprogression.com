@@ -945,20 +945,55 @@ class MythicApp {
       if (doc.exists) {
         const data = doc.data();
         if (data && Array.isArray(data.services) && data.services.length > 0) {
+          console.log(`🔥 [Firestore] Sincronizados ${data.services.length} productos y precios en tiempo real para toda la web`);
           this.services = data.services;
           localStorage.setItem('mp_services', JSON.stringify(data.services));
+          localStorage.setItem('mp_catalog_v', 'firestore_' + (data.updatedAt || Date.now()));
+
+          // 1. Re-render single product page if currently on product.html
           if (this.currentProduct) {
             const updated = this.services.find(s => s.id === this.currentProduct.id);
             if (updated) {
               this.currentProduct = updated;
-              if (typeof this.renderSingleProduct === 'function') {
-                this.renderSingleProduct(updated.id);
+              if (typeof this.initSingleProductPage === 'function') {
+                this.initSingleProductPage();
+              }
+              if (typeof this.renderSingleProductOptions === 'function') {
+                this.renderSingleProductOptions(updated);
+              }
+              if (typeof this.recalculateSingleProductPrice === 'function') {
+                this.recalculateSingleProductPrice();
               }
             }
           }
+
+          // 2. Re-render store front if on index.html
+          if (document.getElementById('services-grid') || document.getElementById('services-grid-retail')) {
+            if (typeof this.renderServiceCards === 'function') {
+              this.renderServiceCards();
+            }
+          }
+
+          // 3. Re-render category page (Míticas Plus, Bandas, etc.)
+          if (document.getElementById('category-services-grid') && this.currentCategoryFilter) {
+            if (typeof this.initCategoryPage === 'function') {
+              this.initCategoryPage(this.currentCategoryFilter);
+            }
+          }
+
+          // 4. Re-render WoW Forever category if on forever.html
+          if (document.getElementById('forever-products-grid')) {
+            if (typeof this.filterForeverCategory === 'function') {
+              this.filterForeverCategory(this.currentForeverCategory || 'dungeons');
+            }
+          }
+
+          // 5. Re-render admin products manager if on admin.html
           if (typeof this.renderAdminProductsManager === 'function') {
             this.renderAdminProductsManager();
           }
+          const badgeCatalog = document.getElementById('badge-catalog-count');
+          if (badgeCatalog) badgeCatalog.textContent = this.services.length;
         }
       }
     }, (error) => {
@@ -980,13 +1015,28 @@ class MythicApp {
     }
   }
 
-  saveServices() {
+  async saveServices() {
     localStorage.setItem('mp_services', JSON.stringify(this.services));
+    if (!this.db && typeof this.initFirebase === 'function') {
+      try { await this.initFirebase(); } catch (e) {}
+    }
     if (this.db) {
-      this.db.collection('system').doc('services_catalog').set({
-        services: this.services,
-        updatedAt: new Date().toISOString()
-      }, { merge: true }).catch(err => console.warn('Firestore services_catalog sync error:', err));
+      try {
+        const cleanServices = JSON.parse(JSON.stringify(this.services));
+        await this.db.collection('system').doc('services_catalog').set({
+          services: cleanServices,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log('✅ [Firestore] Catálogo guardado en la nube exitosamente para toda la web');
+        if (typeof this.showToast === 'function') {
+          this.showToast('✅ Catálogo y precios sincronizados con toda la web (Firestore)', 'success');
+        }
+      } catch (err) {
+        console.error('Firestore services_catalog sync error:', err);
+        if (typeof this.showToast === 'function') {
+          this.showToast('Error al sincronizar con Firestore: ' + (err.message || err), 'error');
+        }
+      }
     }
   }
 
@@ -9166,7 +9216,7 @@ class MythicApp {
     modal.classList.add('flex');
   }
 
-  saveProductFromAdmin() {
+  async saveProductFromAdmin() {
     const idVal = document.getElementById('adm-prod-id').value.trim();
     const name = document.getElementById('adm-prod-name').value.trim();
     const cat = document.getElementById('adm-prod-cat').value;
@@ -9296,7 +9346,7 @@ class MythicApp {
       this.services.unshift(newService);
     }
 
-    this.saveServices();
+    await this.saveServices();
     this.renderAdminProductsManager();
     const modal = document.getElementById('admin-product-modal');
     if (modal) {
@@ -9306,13 +9356,13 @@ class MythicApp {
     this.showToast(`¡Producto "${name}" y todas sus opciones guardadas con éxito!`, 'success');
   }
 
-  deleteProduct(productId) {
+  async deleteProduct(productId) {
     const svc = this.services.find(s => s.id === productId);
     if (!svc) return;
 
     if (confirm(`¿Estás seguro de eliminar el producto "${svc.name}" (#${productId}) del catálogo?`)) {
       this.services = this.services.filter(s => s.id !== productId);
-      this.saveServices();
+      await this.saveServices();
       this.renderAdminProductsManager();
       this.showToast(`Producto ${svc.name} eliminado del catálogo.`, 'info');
     }
