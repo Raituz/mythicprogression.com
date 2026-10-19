@@ -4673,48 +4673,36 @@ class MythicApp {
               </div>
             </div>
             <p class="text-[11px] text-stone-400 leading-relaxed">
-              Pay securely with your Visa, Mastercard, Apple Pay or Google Pay via official encrypted on-ramp.
+              Pay securely with Visa, Mastercard, Apple Pay or Google Pay via our encrypted payment gateway.
             </p>
           </div>
 
-          <!-- Store Destination Address Box -->
-          <div class="bg-[#120d09] p-3 rounded-xl border border-amber-600/40 space-y-1.5">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] font-bold text-amber-400 flex items-center gap-1.5">
-                <i class="fa-solid fa-wallet text-[#ee914f]"></i> Store Destination Address (BSC BEP20):
+          <!-- Store Destination Address Box (Prominent & High-Visibility) -->
+          <div class="bg-gradient-to-r from-amber-950/60 via-[#21160e] to-amber-950/60 p-4 rounded-2xl border-2 border-[#ee914f] shadow-lg shadow-[#ee914f]/25 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-black uppercase tracking-wider text-[#fcefc2] flex items-center gap-2">
+                <i class="fa-solid fa-wallet text-[#ee914f] text-sm animate-pulse"></i>
+                <span>PAYMENT DESTINATION WALLET (COPY THIS)</span>
               </span>
-              <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this)" class="px-2.5 py-1 bg-[#ee914f] hover:bg-[#d87a38] text-stone-950 text-[10px] font-black rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm">
-                <i class="fa-regular fa-copy"></i> Copy Address
+              <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this)" class="px-3.5 py-1.5 bg-[#ee914f] hover:bg-[#d87a38] text-stone-950 text-xs font-black rounded-xl cursor-pointer transition-all flex items-center gap-1.5 shadow-md active:scale-95 shrink-0">
+                <i class="fa-regular fa-copy"></i>
+                <span>COPY ADDRESS</span>
               </button>
             </div>
-            <div class="bg-[#18110b] p-2 rounded-lg border border-stone-700/80">
-              <span class="font-mono text-[10.5px] text-[#fcefc2] break-all select-all block leading-tight">${this.paymentConfig.usdtAddress}</span>
+            <div class="bg-[#100a06] p-2.5 rounded-xl border border-[#ee914f]/50">
+              <span class="font-mono text-xs sm:text-[13px] text-[#fcefc2] font-bold break-all select-all block leading-tight text-center tracking-wide">${this.paymentConfig.usdtAddress}</span>
             </div>
-            <span class="text-[9.5px] text-stone-400 block">
-              <i class="fa-solid fa-circle-info text-[#ee914f] mr-1"></i>Copy this address and paste it into the <strong>"Destination address (USDT)"</strong> field on the checkout page.
-            </span>
-          </div>
-
-          <div class="space-y-2">
-            <a href="${cardCheckoutUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
-              <i class="fa-solid fa-lock text-stone-950 text-base"></i>
-              <span>Open Card Checkout ($${total.toFixed(2)} USD)</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
-            </a>
-
-            <div class="text-center pt-1">
-              <button type="button" onclick="app.openSupportChatFromPayment()" class="text-[11px] text-stone-300 hover:text-[#ee914f] transition-colors underline cursor-pointer inline-flex items-center gap-1 font-medium">
-                <i class="fa-solid fa-headset text-[#ee914f]"></i>Prefer direct card payment via 24/7 Live Support? Click here
-              </button>
+            <div class="flex items-center gap-2 text-[10.5px] text-amber-200/95 font-semibold bg-amber-950/50 p-2 rounded-lg border border-amber-600/40">
+              <i class="fa-solid fa-triangle-exclamation text-[#ee914f] text-xs shrink-0"></i>
+              <span>Copy this address and paste it into the <strong>"Destination address (USDT BSC)"</strong> field on the payment window.</span>
             </div>
           </div>
 
-          <div class="pt-2 border-t border-stone-800/80">
+          <div class="pt-1">
             <label class="block text-[11px] font-bold text-stone-300 mb-1">
-               <i class="fa-solid fa-receipt text-[#ee914f] mr-1"></i>Order Reference or Payment Email:
+               <i class="fa-solid fa-receipt text-[#ee914f] mr-1"></i>Order Reference or Payment Email (Optional):
             </label>
-            <input id="mp-pay-ref" type="text" placeholder="e.g. TX-98421 or the email used for payment" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
-            <span class="text-[10px] text-stone-500 mt-1 block">Once payment is completed in the gateway, paste your reference or email here to link it to your order.</span>
+            <input id="mp-pay-ref" type="text" placeholder="e.g. TX-98421 or email used during card checkout" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
           </div>
         </div>
       `;
@@ -4849,6 +4837,38 @@ class MythicApp {
       `;
     }
 
+    let primaryBtnHtml = '';
+    if (currentTab === 'card') {
+      primaryBtnHtml = `
+        <button type="button" onclick="app.executePaymentAndSaveOrder('${cardCheckoutUrl}')" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-950/60 transition-all cursor-pointer active:scale-[0.99]">
+          <i class="fa-solid fa-credit-card text-stone-950 text-base"></i>
+          <span>PAY NOW ($${total.toFixed(2)} USD)</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
+        </button>
+      `;
+    } else if (currentTab === 'binance') {
+      primaryBtnHtml = `
+        <button type="button" onclick="app.confirmPaymentAndCompleteOrder(false)" class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#F0B90B] to-[#e0ab08] hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#F0B90B]/30 transition-all cursor-pointer active:scale-[0.99]">
+          <i class="fa-solid fa-bolt text-stone-950 text-base"></i>
+          <span>I HAVE PAID WITH BINANCE PAY</span>
+        </button>
+      `;
+    } else if (currentTab === 'crypto') {
+      primaryBtnHtml = `
+        <button type="button" onclick="app.confirmPaymentAndCompleteOrder(false)" class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#ee914f] to-[#e4762b] hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#ee914f]/30 transition-all cursor-pointer active:scale-[0.99]">
+          <i class="fa-solid fa-circle-check text-stone-950 text-base"></i>
+          <span>I HAVE SENT USDT BEP20 (ACTIVATE ORDER)</span>
+        </button>
+      `;
+    } else if (currentTab === 'support') {
+      primaryBtnHtml = `
+        <button type="button" onclick="app.openSupportChatFromPayment(); app.confirmPaymentAndCompleteOrder(false);" class="w-full py-4 rounded-2xl copper-gradient-bg hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#ee914f]/30 transition-all cursor-pointer active:scale-[0.99]">
+          <i class="fa-solid fa-comments text-stone-950 text-base"></i>
+          <span>OPEN LIVE CHAT TO PAY</span>
+        </button>
+      `;
+    }
+
     modal.innerHTML = `
       <div class="glass-panel rounded-3xl w-full max-w-xl p-5 sm:p-7 border border-[#ee914f]/40 shadow-2xl relative overflow-hidden my-auto max-h-[92vh] flex flex-col">
         <!-- Top accent glow -->
@@ -4899,13 +4919,18 @@ class MythicApp {
           ${tabBodyHtml}
         </div>
 
-        <!-- Footer Actions -->
+        <!-- Footer Actions (Single Primary Button & Subtle Secondary Option) -->
         <div class="pt-4 border-t border-stone-800 flex-shrink-0 space-y-2">
-          <button type="button" onclick="app.confirmPaymentAndCompleteOrder()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#ee914f] to-[#e4762b] hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#ee914f]/30 transition-all cursor-pointer">
-            <i class="fa-solid fa-circle-check text-stone-950 text-base"></i>
-            <span>Confirm Payment & Activate My Order</span>
-          </button>
-          <div class="flex items-center justify-center gap-2 text-[10px] text-stone-500 text-center">
+          ${primaryBtnHtml}
+          <div class="flex items-center justify-between pt-1 px-1 text-[11px]">
+            <button type="button" onclick="app.confirmPaymentAndCompleteOrder(true)" class="text-stone-400 hover:text-[#ee914f] transition-colors underline cursor-pointer">
+              Pay later (keep order in pending)
+            </button>
+            <button type="button" onclick="app.openSupportChatFromPayment()" class="text-stone-400 hover:text-[#ee914f] transition-colors underline cursor-pointer inline-flex items-center gap-1">
+              <i class="fa-solid fa-headset text-[#ee914f]"></i> Need help? Live Support
+            </button>
+          </div>
+          <div class="flex items-center justify-center gap-2 text-[10px] text-stone-500 text-center pt-1">
             <i class="fa-solid fa-shield text-emerald-500"></i>
             <span>VPN Protection Included • 24/7 Live Support Available</span>
           </div>
@@ -4918,9 +4943,42 @@ class MythicApp {
     }
   }
 
-  confirmPaymentAndCompleteOrder() {
+  executePaymentAndSaveOrder(checkoutUrl) {
+    if (checkoutUrl) {
+      window.open(checkoutUrl, '_blank');
+    }
+    this.confirmPaymentAndCompleteOrder(false);
+  }
+
+  reopenPaymentForOrder(orderId) {
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) {
+      this.showToast('Order not found', 'error');
+      return;
+    }
+    const safePrice = Math.max(0, Number(order.totalPrice || order.price || 0.50));
+    this.openPaymentGateway({
+      items: [{
+        orderId: order.id,
+        serviceName: order.serviceName,
+        price: safePrice,
+        totalPrice: safePrice,
+        category: order.category,
+        region: order.region,
+        realm: order.realm,
+        characterName: order.characterName,
+        character: order.character,
+        mode: order.completionMethod,
+        details: order.details
+      }],
+      totalPrice: safePrice,
+      source: 'existing_order'
+    });
+  }
+
+  confirmPaymentAndCompleteOrder(isPayLater = false) {
     if (!this.activePaymentContext || !this.activePaymentContext.items || this.activePaymentContext.items.length === 0) {
-      this.showToast('No hay items para procesar.', 'error');
+      this.showToast('No items to process.', 'error');
       this.closePaymentModal();
       return;
     }
@@ -4940,7 +4998,7 @@ class MythicApp {
     }
 
     const refInput = document.getElementById('mp-pay-ref');
-    const paymentRef = (refInput ? refInput.value.trim() : '') || 'Direct Web Checkout';
+    const paymentRef = (refInput ? refInput.value.trim() : '') || (isPayLater ? 'Pending Payment (Pay Later)' : 'Direct Web Checkout');
 
     const methodNames = {
       card: 'Credit / Debit Card (On-Ramp)',
@@ -4952,6 +5010,25 @@ class MythicApp {
 
     const createdOrderIds = [];
     this.activePaymentContext.items.forEach(item => {
+      // Check if this is an existing order being paid
+      if (item.orderId) {
+        const existingOrder = this.orders.find(o => o.id === item.orderId);
+        if (existingOrder) {
+          existingOrder.paymentMethod = paymentMethodLabel;
+          existingOrder.paymentReference = paymentRef;
+          existingOrder.paymentStatus = 'PENDING_VERIFICATION';
+          existingOrder.status = 'PAYMENT_PENDING';
+          if (!Array.isArray(existingOrder.chat)) existingOrder.chat = [];
+          existingOrder.chat.push({
+            sender: 'system',
+            message: `🕒 Payment update (${paymentMethodLabel}). Reference: "${paymentRef}". Awaiting verification by administration.`,
+            timestamp: new Date().toISOString()
+          });
+          createdOrderIds.push(existingOrder.id);
+          return;
+        }
+      }
+
       const isUpsell = !!item.referredBooster;
       const finalPrice = Math.max(0, Number(
         item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
@@ -5001,7 +5078,7 @@ class MythicApp {
         chat: [
           {
             sender: 'system',
-            message: `🕒 Pedido registrado con ${paymentMethodLabel}. Comprobante / Ref: "${paymentRef}". Verificando pago con administración antes de liberar la orden a los boosters.`,
+            message: `🕒 Order placed with ${paymentMethodLabel}. Reference: "${paymentRef}". Awaiting verification by administration.`,
             timestamp: new Date().toISOString()
           }
         ]
@@ -5026,10 +5103,20 @@ class MythicApp {
     this.closePaymentModal();
     this.closeCartModal();
 
-    this.showToast(`Receipt submitted (${paymentMethodLabel})! Your order #${createdOrderIds.join(', ')} is under payment verification.`, 'info');
+    if (isPayLater) {
+      this.showToast(`Order #${createdOrderIds.join(', ')} saved in pending! You can click "Pay Now" anytime from your profile.`, 'info');
+    } else {
+      this.showToast(`Order #${createdOrderIds.join(', ')} placed! Complete payment in the gateway window to activate your order.`, 'success');
+    }
+
+    if (typeof this.renderClientOrders === 'function') {
+      this.renderClientOrders();
+    }
 
     setTimeout(() => {
-      window.location.href = 'client-profile';
+      if (!window.location.pathname.includes('client-profile')) {
+        window.location.href = 'client-profile';
+      }
     }, 1200);
   }
 
@@ -5144,11 +5231,11 @@ class MythicApp {
       container.innerHTML = `
         <div class="glass-panel p-10 rounded-2xl text-center border border-stone-800 bg-[#120d09]">
           <i class="fa-solid fa-receipt text-4xl text-[#ee914f]/40 mb-3"></i>
-          <h4 class="text-base font-bold text-stone-200 font-cinzel">Aún no tienes pedidos activos</h4>
-          <p class="text-xs text-stone-400 max-w-md mx-auto mt-1.5 leading-relaxed">Explora nuestro catálogo para adquirir tu primera piedra angular mítica+, raid completa o subida de nivel profesional con booster asignado.</p>
+          <h4 class="text-base font-bold text-stone-200 font-cinzel">No active orders yet</h4>
+          <p class="text-xs text-stone-400 max-w-md mx-auto mt-1.5 leading-relaxed">Explore our catalog to get your first Mythic+ Keystone, full raid clear, or powerleveling service with an assigned pro booster.</p>
           <a href="/" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl copper-gradient-bg text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all">
             <i class="fa-solid fa-store"></i>
-            <span>Ver Catálogo de Servicios</span>
+            <span>Browse Services Catalog</span>
           </a>
         </div>
       `;
@@ -5159,28 +5246,28 @@ class MythicApp {
       <!-- SUMMARY METRICS -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
-          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Total Pedidos</span>
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Total Orders</span>
           <div class="flex items-center justify-between mt-1">
             <span class="text-xl font-black font-mono-gaming text-[#fcefc2]">${totalCount}</span>
             <i class="fa-solid fa-boxes-stacked text-[#ee914f]/60 text-sm"></i>
           </div>
         </div>
         <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
-          <span class="text-[10px] text-stone-400 uppercase font-semibold block">En Proceso</span>
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">In Progress</span>
           <div class="flex items-center justify-between mt-1">
             <span class="text-xl font-black font-mono-gaming text-sky-400">${inProgressCount}</span>
             <i class="fa-solid fa-gamepad text-sky-400/60 text-sm"></i>
           </div>
         </div>
         <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
-          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Buscando Booster</span>
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Looking for Booster</span>
           <div class="flex items-center justify-between mt-1">
             <span class="text-xl font-black font-mono-gaming text-amber-400">${pendingBoosterCount}</span>
             <i class="fa-solid fa-hourglass-half text-amber-400/60 text-sm"></i>
           </div>
         </div>
         <div class="glass-panel p-3.5 rounded-xl border border-stone-800 bg-[#140e0a]">
-          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Inversión Total</span>
+          <span class="text-[10px] text-stone-400 uppercase font-semibold block">Total Spent</span>
           <div class="flex items-center justify-between mt-1">
             <span class="text-xl font-black font-mono-gaming text-emerald-400">$${totalSpent.toFixed(2)}</span>
             <i class="fa-solid fa-shield-halved text-emerald-400/60 text-sm"></i>
@@ -5191,25 +5278,25 @@ class MythicApp {
       <!-- FILTER TABS -->
       <div class="flex flex-wrap items-center gap-2 mb-4 border-b border-stone-800/80 pb-3">
         <button onclick="app.setClientOrdersFilter('ALL')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'ALL' ? 'bg-[#2b1f15] text-[#fcefc2] border border-[#ee914f]/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
-          <span>Todos</span>
+          <span>All</span>
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-stone-900 border border-stone-700 font-mono-gaming">${totalCount}</span>
         </button>
         ${pendingPaymentCount > 0 ? `
           <button onclick="app.setClientOrdersFilter('PAYMENT_PENDING')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'PAYMENT_PENDING' ? 'bg-amber-950/80 text-amber-300 border border-amber-500' : 'bg-[#1a120b] text-amber-400 hover:text-amber-200 border border-amber-900/60'}">
-            <span>Verificando Pago</span>
+            <span>Pay Now / Pending</span>
             <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-900/90 border border-amber-600 font-mono-gaming text-amber-200">${pendingPaymentCount}</span>
           </button>
         ` : ''}
         <button onclick="app.setClientOrdersFilter('IN_PROGRESS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'IN_PROGRESS' ? 'bg-[#2b1f15] text-sky-300 border border-sky-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
-          <span>En Proceso</span>
+          <span>In Progress</span>
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-sky-950/80 border border-sky-800 font-mono-gaming text-sky-300">${inProgressCount}</span>
         </button>
         <button onclick="app.setClientOrdersFilter('PENDING_BOOSTER')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'PENDING_BOOSTER' ? 'bg-[#2b1f15] text-amber-300 border border-amber-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
-          <span>Buscando Booster</span>
+          <span>Looking for Booster</span>
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-800 font-mono-gaming text-amber-300">${pendingBoosterCount}</span>
         </button>
         <button onclick="app.setClientOrdersFilter('COMPLETED')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'COMPLETED' ? 'bg-[#2b1f15] text-emerald-300 border border-emerald-600/50' : 'bg-[#150f0c] text-stone-400 hover:text-white border border-stone-800'}">
-          <span>Completados</span>
+          <span>Completed</span>
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800 font-mono-gaming text-emerald-300">${completedCount}</span>
         </button>
       </div>
@@ -5218,7 +5305,7 @@ class MythicApp {
     if (filteredOrders.length === 0) {
       container.innerHTML = metricsHtml + `
         <div class="glass-panel p-8 rounded-2xl text-center border border-stone-800 bg-[#140e0a]">
-          <p class="text-xs text-stone-400">No hay pedidos con el filtro seleccionado.</p>
+          <p class="text-xs text-stone-400">No orders found matching the selected filter.</p>
         </div>
       `;
       return;
@@ -5227,20 +5314,20 @@ class MythicApp {
     const cardsHtml = filteredOrders.map(order => {
       const isPendingPayment = order.status === 'PAYMENT_PENDING' || order.paymentStatus === 'PENDING_VERIFICATION';
       const isAssigned = !!order.assignedBooster;
-      let statusText = isPendingPayment ? 'VERIFICANDO PAGO' : (isAssigned ? 'EN PROCESO' : 'BUSCANDO BOOSTER');
+      let statusText = isPendingPayment ? 'AWAITING PAYMENT' : (isAssigned ? 'IN PROGRESS' : 'LOOKING FOR BOOSTER');
       let statusClass = isPendingPayment ? 'bg-amber-950/80 text-amber-300 border border-amber-500/80 shadow-md animate-pulse' : (isAssigned ? 'bg-[#1a2332] text-sky-300 border border-sky-700/50' : 'bg-amber-950/50 text-amber-300 border border-amber-700/50');
-      let statusIcon = isPendingPayment ? 'fa-receipt' : (isAssigned ? 'fa-gamepad' : 'fa-hourglass-half');
+      let statusIcon = isPendingPayment ? 'fa-credit-card' : (isAssigned ? 'fa-gamepad' : 'fa-hourglass-half');
 
       if (order.status === 'COMPLETED') {
-        statusText = 'COMPLETADO';
+        statusText = 'COMPLETED';
         statusClass = 'bg-[#152319] text-emerald-400 border border-emerald-800/60';
         statusIcon = 'fa-circle-check';
       } else if (order.status === 'PENDING_APPROVAL') {
-        statusText = 'REPORTE RECIBIDO (EN REVISIÓN)';
+        statusText = 'REPORT RECEIVED (UNDER REVIEW)';
         statusClass = 'bg-amber-950/90 text-amber-300 border border-amber-500/70 animate-pulse';
         statusIcon = 'fa-bell';
       } else if (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED') {
-        statusText = 'PAGO NO VERIFICADO';
+        statusText = 'PAYMENT UNVERIFIED';
         statusClass = 'bg-rose-950 text-rose-300 border border-rose-600/70';
         statusIcon = 'fa-circle-xmark';
       }
@@ -5253,8 +5340,8 @@ class MythicApp {
       ) || 45.00);
 
       const charName = order.characterName || order.character || 'Heroe-Ragnaros';
-      const realmName = order.realm || (charName.includes('-') ? charName.split('-')[1].trim() : 'Área 52');
-      const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+      const realmName = order.realm || (charName.includes('-') ? charName.split('-')[1].trim() : 'Area 52');
+      const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
 
       return `
         <div class="glass-panel p-5 rounded-2xl border border-stone-800 hover:border-[#ee914f]/50 transition-all bg-[#130d09] mb-4 shadow-xl">
@@ -5269,7 +5356,7 @@ class MythicApp {
                   <span>${statusText}</span>
                 </span>
                 <span class="px-2.5 py-0.5 rounded-lg bg-[#18110b] text-stone-300 border border-stone-800">
-                  <span>${order.category || 'Servicio WoW'}</span>
+                  <span>${order.category || 'WoW Service'}</span>
                 </span>
                 <span class="px-2.5 py-0.5 rounded-lg bg-[#18110b] text-stone-300 border border-stone-800">
                   <span>${order.completionMethod || 'Piloted'}</span> <span class="notranslate" translate="no">(${order.region || 'US'})</span>
@@ -5283,9 +5370,9 @@ class MythicApp {
               <div>
                 <h4 class="text-base font-bold text-white hover:text-[#eedaa2] transition-colors leading-snug notranslate" translate="no">${order.serviceName}</h4>
                 <div class="flex items-center gap-2 text-xs text-stone-400 mt-1 flex-wrap">
-                  <span><span>Personaje:</span> <strong class="text-stone-200 notranslate" translate="no">${charName}</strong></span>
+                  <span><span>Character:</span> <strong class="text-stone-200 notranslate" translate="no">${charName}</strong></span>
                   <span class="text-stone-600">•</span>
-                  <span><span>Reino:</span> <strong class="text-stone-200 notranslate" translate="no">${realmName}</strong></span>
+                  <span><span>Realm:</span> <strong class="text-stone-200 notranslate" translate="no">${realmName}</strong></span>
                   ${order.details ? `
                     <span class="text-stone-600">•</span>
                     <span class="text-stone-400 text-[11px] truncate max-w-md italic notranslate" translate="no">${order.details}</span>
@@ -5295,35 +5382,40 @@ class MythicApp {
 
               <!-- Booster Status Box / Payment Verification Box -->
               ${isPendingPayment ? `
-                <div class="inline-flex items-center gap-2.5 bg-[#1b120c] px-3.5 py-2 rounded-xl border border-amber-500/40 text-xs text-amber-200 mt-1 shadow-sm">
-                  <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
-                  <span>Pago con <strong>${order.paymentMethod || 'Pasarela'}</strong> (Ref: <strong class="text-white font-mono">${order.paymentReference || 'N/A'}</strong>) en revisión por Administración. Una vez validado en la app/wallet, pasará a la bolsa de boosters.</span>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 bg-gradient-to-r from-[#20150d] via-[#281a10] to-[#20150d] px-3.5 py-2.5 rounded-xl border border-amber-500/50 text-xs text-amber-200 mt-1 shadow-sm">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-400 shrink-0"></i>
+                    <span>Payment via <strong>${order.paymentMethod || 'Gateway'}</strong> (Ref: <strong class="text-white font-mono">${order.paymentReference || 'N/A'}</strong>) pending verification. If you haven't finished checkout, click <strong>Pay Now</strong>.</span>
+                  </div>
+                  <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black rounded-lg text-xs uppercase tracking-wider shrink-0 cursor-pointer shadow transition-all active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-credit-card"></i> Pay Now
+                  </button>
                 </div>
               ` : (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED' ? `
                 <div class="inline-flex items-center gap-2.5 bg-rose-950/60 px-3.5 py-2 rounded-xl border border-rose-600/50 text-xs text-rose-200 mt-1 shadow-sm">
                   <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
-                  <span>El pago no pudo ser comprobado con la referencia suministrada. Por favor contáctanos por el chat en vivo para ayudarte.</span>
+                  <span>Payment could not be verified with the provided reference. Please reach out to 24/7 Live Support for assistance.</span>
                 </div>
               ` : (isAssigned ? `
                 <div class="inline-flex items-center gap-2.5 bg-[#1b140f] px-3.5 py-1.5 rounded-xl border border-[#ee914f]/30 text-xs mt-1">
                   <div class="w-6 h-6 rounded-full bg-[#2a1d13] border border-[#ee914f]/40 flex items-center justify-center text-[10px] text-[#fcefc2] font-black">
                     ${order.assignedBooster.avatar ? `<img src="${order.assignedBooster.avatar}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-gamepad text-[#ee914f]"></i>`}
                   </div>
-                  <span class="text-stone-300"><span>Booster asignado:</span> <strong class="text-[#fcefc2] notranslate" translate="no">${order.assignedBooster.username}</strong></span>
+                  <span class="text-stone-300"><span>Assigned Booster:</span> <strong class="text-[#fcefc2] notranslate" translate="no">${order.assignedBooster.username}</strong></span>
                   ${order.isOnAccount ? `
                     <span class="ml-2 text-[10px] bg-red-950 text-red-300 px-2 py-0.5 rounded border border-red-800 font-semibold animate-pulse flex items-center gap-1">
-                      <i class="fa-solid fa-lock text-[9px]"></i> <span>En tu cuenta ahora</span>
+                      <i class="fa-solid fa-lock text-[9px]"></i> <span>On your account now</span>
                     </span>
                   ` : `
                     <span class="ml-2 text-[10px] bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/50 flex items-center gap-1">
-                      <i class="fa-solid fa-circle text-[6px]"></i> <span>En línea</span>
+                      <i class="fa-solid fa-circle text-[6px]"></i> <span>Online</span>
                     </span>
                   `}
                 </div>
               ` : `
                 <div class="inline-flex items-center gap-2 bg-[#17110c] px-3 py-1 rounded-xl border border-stone-800 text-xs text-stone-400 mt-1">
                   <i class="fa-solid fa-hourglass-half text-amber-400/80"></i>
-                  <span>Tu orden está en el tablón pro. Un booster calificado la tomará en breve.</span>
+                  <span>Your order is active on the pro board. A verified booster will claim it shortly.</span>
                 </div>
               `))}
 
@@ -5332,31 +5424,39 @@ class MythicApp {
                 <div class="mt-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
                   <div>
                     <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                      <i class="fa-solid fa-bell"></i> <span>¡El booster ha reportado tu orden como completada!</span>
+                      <i class="fa-solid fa-bell"></i> <span>The booster has reported your order as completed!</span>
                     </div>
                     <p class="text-[11px] text-stone-300 mt-0.5">
                       ${order.completionReport?.notes ? `<span class="text-stone-400 italic font-mono notranslate" translate="no">"${order.completionReport.notes}"</span><br>` : ''}
-                      <span>Por favor verifica tu personaje. Si todo está en orden, confirma para finalizar el servicio y liberar el pago.</span>
+                      <span>Please check your character in-game. If everything looks good, confirm to complete the service.</span>
                     </p>
                   </div>
                   <button onclick="app.clientConfirmOrderCompletion('${order.id}')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all cursor-pointer whitespace-nowrap">
-                    <i class="fa-solid fa-check-double"></i> <span>Confirmar y Finalizar</span>
+                    <i class="fa-solid fa-check-double"></i> <span>Confirm & Complete</span>
                   </button>
                 </div>
               ` : ''}
 
             </div>
 
-            <!-- Right Column: Price & Chat Button -->
+            <!-- Right Column: Price & Action Buttons -->
             <div class="flex items-center md:flex-col md:items-end justify-between md:justify-center gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-stone-800/80 shrink-0">
               <div class="text-left md:text-right">
-                <span class="text-[10px] text-stone-400 block uppercase font-semibold">Total Pagado</span>
+                <span class="text-[10px] text-stone-400 block uppercase font-semibold">${isPendingPayment ? 'Total to Pay' : 'Total Paid'}</span>
                 <span class="text-2xl font-black font-mono-gaming text-[#fcefc2] notranslate" translate="no">$${safeTotal.toFixed(2)}</span>
               </div>
-              <button onclick="app.openClientFullChat('${order.id}')" class="px-4 py-2.5 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md hover:border-[#ee914f]">
-                <i class="fa-solid fa-comments text-[#ee914f]"></i>
-                <span>Chat con el Booster</span>
-              </button>
+              <div class="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto">
+                ${isPendingPayment ? `
+                  <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="w-full px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 transition-all cursor-pointer active:scale-95 animate-pulse">
+                    <i class="fa-solid fa-credit-card text-stone-950"></i>
+                    <span>PAY NOW ($${safeTotal.toFixed(2)})</span>
+                  </button>
+                ` : ''}
+                <button type="button" onclick="app.openClientFullChat('${order.id}')" class="w-full px-4 py-2 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md hover:border-[#ee914f]">
+                  <i class="fa-solid fa-comments text-[#ee914f]"></i>
+                  <span>Chat with Booster</span>
+                </button>
+              </div>
             </div>
 
           </div>
