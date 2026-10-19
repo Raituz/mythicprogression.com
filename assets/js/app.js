@@ -3466,7 +3466,7 @@ class MythicApp {
     const isLeveling = (svc.id === 'powerleveling-80' || svc.id === 'forever-powerleveling-custom' || (svc.category === 'Powerleveling' && svc.game !== 'forever'));
     const isForever = (svc.game === 'forever' || svc.id?.startsWith('forever-'));
     
-    const charClass = document.getElementById('sp-character-class')?.value || 'Guerrero (Warrior)';
+    const charClass = document.getElementById('sp-character-class')?.value || 'Warrior';
     const faction = document.getElementById('sp-faction')?.value || 'Horda';
     const charName = document.getElementById('sp-char-name')?.value.trim() || 'Heroe';
     const realmName = this.selectedRealm?.name || document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros';
@@ -4740,7 +4740,7 @@ class MythicApp {
       ) || 45.00);
 
       const econ = this.calculateEconomics(finalPrice, isUpsell);
-      const charClass = item.characterClass || 'Guerrero (Warrior)';
+      const charClass = item.characterClass || 'Warrior';
       const faction = item.faction || 'Horda';
       const charStr = item.characterName || (item.character ? item.character.split('-')[0].trim() : 'Heroe');
       const realmName = item.realm || (item.character && item.character.includes('-') ? item.character.split('-')[1].trim() : (this.selectedRealm?.name || 'Ragnaros'));
@@ -11176,7 +11176,7 @@ class MythicApp {
     const charName = document.getElementById('sp-char-name')?.value.trim() || 'Heroe';
     const realmName = this.selectedRealm?.name || document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros';
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
-    const charClass = document.getElementById('sp-character-class')?.value || 'Guerrero (Warrior)';
+    const charClass = document.getElementById('sp-character-class')?.value || 'Warrior';
     const faction = document.getElementById('sp-faction')?.value || 'Horda';
     const hiddenCharInput = document.getElementById('sp-character');
     const summaryText = document.getElementById('sp-char-summary-text');
@@ -12855,7 +12855,41 @@ class MythicApp {
       'liberar orden': { en: 'Release Order', pt: 'Liberar Pedido' },
       'liberar contrato': { en: 'Release Contract', pt: 'Liberar Contrato' },
       'enviar mensaje': { en: 'Send Message', pt: 'Enviar Mensagem' },
-      'chat de la orden': { en: 'Order Chat', pt: 'Chat do Pedido' }
+      'chat de la orden': { en: 'Order Chat', pt: 'Chat do Pedido' },
+
+      // Character Classes & Armor Types
+      'clase del personaje:': { en: 'Character Class:', pt: 'Classe do Personagem:' },
+      'nombre de personaje:': { en: 'Character Name:', pt: 'Nome do Personagem:' },
+      'plate': { en: 'Plate', pt: 'Placas', es: 'Placas' },
+      'mail': { en: 'Mail', pt: 'Malha', es: 'Malla' },
+      'leather': { en: 'Leather', pt: 'Couro', es: 'Cuero' },
+      'cloth': { en: 'Cloth', pt: 'Tecido', es: 'Tela' },
+      '⚔️ warrior': { en: '⚔️ Warrior', pt: '⚔️ Guerreiro', es: '⚔️ Guerrero' },
+      '✨ paladin': { en: '✨ Paladin', pt: '✨ Paladino', es: '✨ Paladín' },
+      '💀 death knight': { en: '💀 Death Knight', pt: '💀 Cavaleiro da Morte', es: '💀 Caballero de la Muerte' },
+      '🏹 hunter': { en: '🏹 Hunter', pt: '🏹 Caçador', es: '🏹 Cazador' },
+      '⚡ shaman': { en: '⚡ Shaman', pt: '⚡ Xamã', es: '⚡ Chamán' },
+      '🐉 evoker': { en: '🐉 Evoker', pt: '🐉 Conjurante', es: '🐉 Evocador' },
+      '🗡️ rogue': { en: '🗡️ Rogue', pt: '🗡️ Ladino', es: '🗡️ Pícaro' },
+      '🐾 druid': { en: '🐾 Druid', pt: '🐾 Druida', es: '🐾 Druida' },
+      '🥋 monk': { en: '🥋 Monk', pt: '🥋 Monge', es: '🥋 Monje' },
+      '🔥 demon hunter': { en: '🔥 Demon Hunter', pt: '🔥 Caçador de Demônios', es: '🔥 Cazador de Demonios' },
+      '🕊️ priest': { en: '🕊️ Priest', pt: '🕊️ Sacerdote', es: '🕊️ Sacerdote' },
+      '❄️ mage': { en: '❄️ Mage', pt: '❄️ Mago', es: '❄️ Mago' },
+      '😈 warlock': { en: '😈 Warlock', pt: '😈 Bruxo', es: '😈 Brujo' },
+      'warrior': { en: 'Warrior', pt: 'Guerreiro', es: 'Guerrero' },
+      'paladin': { en: 'Paladin', pt: 'Paladino', es: 'Paladín' },
+      'death knight': { en: 'Death Knight', pt: 'Cavaleiro da Morte', es: 'Caballero de la Muerte' },
+      'hunter': { en: 'Hunter', pt: 'Caçador', es: 'Cazador' },
+      'shaman': { en: 'Shaman', pt: 'Xamã', es: 'Chamán' },
+      'evoker': { en: 'Evoker', pt: 'Conjurante', es: 'Evocador' },
+      'rogue': { en: 'Rogue', pt: 'Ladino', es: 'Pícaro' },
+      'druid': { en: 'Druid', pt: 'Druida', es: 'Druida' },
+      'monk': { en: 'Monk', pt: 'Monge', es: 'Monje' },
+      'demon hunter': { en: 'Demon Hunter', pt: 'Caçador de Demônios', es: 'Cazador de Demonios' },
+      'priest': { en: 'Priest', pt: 'Sacerdote', es: 'Sacerdote' },
+      'mage': { en: 'Mage', pt: 'Mago', es: 'Mago' },
+      'warlock': { en: 'Warlock', pt: 'Bruxo', es: 'Brujo' }
     };
 
     const isProtected = (el) => {
@@ -12888,9 +12922,26 @@ class MythicApp {
         if (isProtected(el)) return;
         el.setAttribute('placeholder', el.getAttribute('data-i18n-orig-ph'));
       });
+      document.querySelectorAll('optgroup[data-i18n-orig-label]').forEach(el => {
+        if (isProtected(el)) return;
+        el.setAttribute('label', el.getAttribute('data-i18n-orig-label'));
+      });
       this.cleanupGoogleTranslate();
       return;
     }
+
+    // Translate Optgroup Labels
+    document.querySelectorAll('optgroup[label]').forEach(el => {
+      if (isProtected(el)) return;
+      const raw = el.getAttribute('data-i18n-orig-label') || el.getAttribute('label') || '';
+      const cleanText = raw.replace(/\s+/g, ' ').trim();
+      if (!cleanText) return;
+      if (!el.hasAttribute('data-i18n-orig-label')) el.setAttribute('data-i18n-orig-label', cleanText);
+      const key = cleanText.toLowerCase();
+      if (dict[key] && dict[key][lang]) {
+        el.setAttribute('label', dict[key][lang]);
+      }
+    });
 
     // Translate Inputs & Placeholders
     document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {

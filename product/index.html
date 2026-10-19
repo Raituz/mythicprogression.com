@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <base href="/">
@@ -72,7 +72,7 @@
         <span class="text-stone-600">/</span>
         <span id="sp-breadcrumb-cat" class="text-stone-300">Mazmorras</span>
         <span class="text-stone-600">/</span>
-        <span id="sp-breadcrumb-name" class="text-[#fcefc2] font-bold truncate max-w-xs">Mythic +2 a +20 Dungeons Boost</span>
+        <span id="sp-breadcrumb-name" class="text-[#fcefc2] font-bold truncate max-w-xs notranslate" translate="no">Mythic +2 a +20 Dungeons Boost</span>
       </div>
 
       <button onclick="app.showToast('¡Añadido a tus favoritos!', 'success')" class="px-3.5 py-1.5 rounded-xl bg-[#1a130e] border border-stone-800 hover:border-[#ee914f]/40 text-stone-300 hover:text-white text-xs font-semibold flex items-center gap-2 transition-all">
@@ -86,7 +86,7 @@
   <main class="max-w-7xl w-full mx-auto p-4 lg:p-8 flex-1">
     
     <!-- Product Main Heading -->
-    <h1 id="sp-title" class="font-cinzel text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-8 tracking-tight">
+    <h1 id="sp-title" class="font-cinzel text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-8 tracking-tight notranslate" translate="no">
       Mythic +2-20 Dungeons Boost
     </h1>
 
@@ -102,7 +102,7 @@
         <div class="glass-panel rounded-3xl border border-stone-800 p-5 relative overflow-hidden bg-gradient-to-b from-[#1b130e] to-[#120d09]">
           
           <!-- Top Left Badges (Purple & Indigo) -->
-          <div id="sp-badges-container" class="flex flex-col gap-1.5 absolute top-4 left-4 z-10">
+          <div id="sp-badges-container" class="flex flex-col gap-1.5 absolute top-4 left-4 z-10 notranslate" translate="no">
             <span class="px-3 py-1 rounded-md bg-purple-950/80 text-purple-200 border border-purple-600/50 text-[11px] font-bold shadow-md">
               311 ilvl Gear
             </span>
@@ -187,15 +187,15 @@
         <div class="glass-panel rounded-3xl border border-stone-800 p-6 space-y-4">
           <h2 class="text-lg font-bold text-white font-cinzel">Descripción</h2>
           
-          <p id="sp-description" class="text-xs text-stone-300 leading-relaxed">
+          <p id="sp-description" class="text-xs text-stone-300 leading-relaxed notranslate" translate="no">
             Compra boost de mazmorras Míticas+ de WoW Midnight y completa piedras angulares de alto nivel con un equipo profesional sin lidiar con grupos aleatorios o piedras fallidas. Aumenta tu puntuación M+, equipa a tu personaje y asegura recompensas semanales valiosas en la Gran Cámara.
           </p>
 
-          <h3 id="sp-checklist-title" class="text-xs font-bold text-[#eedaa2] uppercase tracking-wider pt-2">
+          <h3 id="sp-checklist-title" class="text-xs font-bold text-[#eedaa2] uppercase tracking-wider pt-2 notranslate" translate="no">
             ¿Qué obtienes con nuestro servicio de Míticas+?:
           </h3>
 
-          <div id="sp-checklist-container" class="space-y-3 pt-1">
+          <div id="sp-checklist-container" class="space-y-3 pt-1 notranslate" translate="no">
             <div class="flex items-start gap-3">
               <div class="w-6 h-6 rounded-full bg-stone-900 border border-stone-700 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                 1
@@ -247,7 +247,7 @@
             <span>Personalización del Pedido</span>
           </h2>
 
-          <div id="sp-options-form">
+          <div id="sp-options-form" class="notranslate" translate="no">
             <!-- Dynamic Form injected by app.js depending on service -->
           </div>
 
@@ -268,7 +268,7 @@
               </div>
             </div>
 
-            <!-- Inputs Grid: Symmetrical Row 1 (Region & Character) + Row 2 (Realm Search Full Width) -->
+            <!-- Inputs Grid: Symmetrical Row 1 (Region & Faction) + Row 2 (Class & Character Name) + Row 3 (Realm Search Full Width) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <!-- Region (50% on sm+) -->
               <div>
@@ -285,13 +285,65 @@
                 </div>
               </div>
 
+              <!-- Faction (50% on sm+) -->
+              <div>
+                <div class="h-6 flex items-center gap-1.5 mb-1.5">
+                  <i class="fa-solid fa-shield text-[#ee914f] text-[10px]"></i>
+                  <label for="sp-faction" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Facción:</label>
+                </div>
+                <div class="relative">
+                  <select id="sp-faction" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer font-semibold">
+                    <option value="Horda">🚩 Horda (Horde)</option>
+                    <option value="Alianza">🛡️ Alianza (Alliance)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Character Class (50% on sm+) -->
+              <div>
+                <div class="h-6 flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[#ee914f] text-[10px]"></i>
+                    <label for="sp-character-class" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Clase del Personaje:</label>
+                  </div>
+                  <span class="text-[9px] text-[#ee914f]/80 font-bold">Loot Traders</span>
+                </div>
+                <div class="relative">
+                  <select id="sp-character-class" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
+                    <optgroup label="Plate">
+                      <option value="Warrior" selected>⚔️ Warrior</option>
+                      <option value="Paladin">✨ Paladin</option>
+                      <option value="Death Knight">💀 Death Knight</option>
+                    </optgroup>
+                    <optgroup label="Mail">
+                      <option value="Hunter">🏹 Hunter</option>
+                      <option value="Shaman">⚡ Shaman</option>
+                      <option value="Evoker">🐉 Evoker</option>
+                    </optgroup>
+                    <optgroup label="Leather">
+                      <option value="Rogue">🗡️ Rogue</option>
+                      <option value="Druid">🐾 Druid</option>
+                      <option value="Monk">🥋 Monk</option>
+                      <option value="Demon Hunter">🔥 Demon Hunter</option>
+                    </optgroup>
+                    <optgroup label="Cloth">
+                      <option value="Priest">🕊️ Priest</option>
+                      <option value="Mage">❄️ Mage</option>
+                      <option value="Warlock">😈 Warlock</option>
+                    </optgroup>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+                </div>
+              </div>
+
               <!-- Character Name (50% on sm+) -->
               <div>
                 <div class="h-6 flex items-center gap-1.5 mb-1.5">
                   <i class="fa-solid fa-user-shield text-[#ee914f] text-[10px]"></i>
-                  <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Personaje:</label>
+                  <label for="sp-char-name" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Nombre de Personaje:</label>
                 </div>
-                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors">
+                <input id="sp-char-name" type="text" placeholder="Ej: Shadow" oninput="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white placeholder-stone-500 focus:border-[#ee914f] outline-none transition-colors font-medium">
               </div>
 
               <!-- Realm Searchable Dropdown (Full Width - Stacking Context z-50) -->
@@ -467,8 +519,8 @@
   </main>
 
   <!-- CART DRAWER MODAL (REQ 1 & 2) -->
-  <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-end">
-    <div class="w-full max-w-md h-full bg-[#120d09] border-l border-stone-800 p-6 flex flex-col shadow-2xl overflow-y-auto">
+  <div id="cart-modal" class="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm hidden items-center justify-end">
+    <div class="w-full max-w-md h-full bg-[#120d09] border-l border-stone-800 p-6 pb-12 flex flex-col shadow-2xl overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-stone-800">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-[#251b14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f]">
@@ -495,8 +547,8 @@
           Al completar el pedido serás redirigido a tu panel de cliente donde podrás coordinar el horario y detalles en el chat privado con tu booster.
         </div>
         <button id="btn-checkout-cart" onclick="app.processFullCartCheckout()" class="w-full py-3.5 rounded-xl copper-gradient-bg font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Completar Pedido (Simular Pago)</span>
+          <i class="fa-solid fa-lock text-xs text-stone-900"></i>
+          <span>Proceder al Pago Seguro</span>
         </button>
       </div>
     </div>
@@ -516,10 +568,11 @@
         <a href="/" class="hover:text-[#ee914f]">Inicio</a>
         <a href="client-profile" class="hover:text-[#ee914f]">Mi Cuenta</a>
         <a href="pro" class="hover:text-[#ee914f]">Portal Pro</a>
+        <a href="forever" class="text-amber-400 hover:text-amber-300 font-bold">WoW Forever</a>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.7.1"></script>
+  <script src="assets/js/app.js?v=3.7.2"></script>
 </body>
 </html>
