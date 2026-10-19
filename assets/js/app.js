@@ -4489,24 +4489,30 @@ class MythicApp {
     this.closePaymentModal();
   }
 
+  openPaymentGateway(checkoutContext) {
+    return this.openPaymentModal(checkoutContext);
+  }
+
   openPaymentModal(checkoutContext = { source: 'cart' }) {
     if (this.isPurchaseRestricted()) {
       this.showToast('Pro members and boosters cannot purchase services.', 'warning');
       return;
     }
     let items = [];
-    if (checkoutContext?.source === 'single' && checkoutContext?.item) {
+    if (Array.isArray(checkoutContext?.items) && checkoutContext.items.length > 0) {
+      items = checkoutContext.items;
+    } else if (checkoutContext?.source === 'single' && checkoutContext?.item) {
       items = [checkoutContext.item];
     } else {
       items = Array.isArray(this.cart) ? [...this.cart] : [];
     }
 
     if (items.length === 0) {
-      this.showToast('Tu carrito está vacío. Agrega un servicio antes de pagar.', 'warning');
+      this.showToast('Your cart is empty. Add a service before proceeding to checkout.', 'warning');
       return;
     }
 
-    const totalPrice = items.reduce((sum, item) => {
+    const calculatedPrice = items.reduce((sum, item) => {
       const p = Math.max(0, Number(
         item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
           ? item.totalPrice
@@ -4516,6 +4522,10 @@ class MythicApp {
       ) || 0);
       return sum + p;
     }, 0);
+
+    const totalPrice = (checkoutContext?.totalPrice !== undefined && !isNaN(Number(checkoutContext.totalPrice)))
+      ? Math.max(0, Number(checkoutContext.totalPrice))
+      : calculatedPrice;
 
     this.activePaymentContext = {
       source: checkoutContext?.source || 'cart',
@@ -5541,11 +5551,8 @@ class MythicApp {
                       <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD / USDT</strong> (Ref: <strong class="text-stone-300 font-mono">${order.paymentReference || 'N/A'}</strong>)</span>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                      <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow transition-all active:scale-95">
-                        <i class="fa-solid fa-credit-card"></i> Pay Now / Open Checkout
-                      </button>
-                      <button type="button" onclick="app.openSupportChatFromPayment()" class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-300 border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all">
-                        <i class="fa-solid fa-headset"></i> Support
+                      <button type="button" onclick="app.openSupportChatFromPayment()" class="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg">
+                        <i class="fa-solid fa-headset"></i> Live Support
                       </button>
                     </div>
                   </div>
