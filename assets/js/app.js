@@ -28,9 +28,9 @@ class MythicApp {
     this.cart = JSON.parse(localStorage.getItem('mp_cart')) || [];
     this.currentChatOrderId = null;
     this.currentActiveService = null;
-    this.currentSelectedKeyPrice = 38.00;
+    this.currentSelectedKeyPrice = 0.50;
     this.currentSelectedKeyLevel = 10;
-    this.currentCalculatedModalTotal = 38.00;
+    this.currentCalculatedModalTotal = 0.50;
     this.currentProduct = null;
     this.currentRunsQuantity = 1;
     this.currentUnitCalcPrice = 0;
@@ -208,7 +208,7 @@ class MythicApp {
     try {
       const storedServices = localStorage.getItem('mp_services');
       const catalogVersion = localStorage.getItem('mp_catalog_v');
-      let shouldReload = (catalogVersion !== '3.5.0' || !storedServices);
+      let shouldReload = (catalogVersion !== '3.6.0' || !storedServices);
       if (storedServices) {
         try {
           const parsed = JSON.parse(storedServices);
@@ -225,7 +225,7 @@ class MythicApp {
       } else {
         const res = await fetch('data/seed_services.json');
         this.services = await res.json();
-        localStorage.setItem('mp_catalog_v', '3.5.0');
+        localStorage.setItem('mp_catalog_v', '3.6.0');
         this.saveServices();
       }
 
@@ -939,6 +939,31 @@ class MythicApp {
     }, (error) => {
       console.warn('Firestore boosters_list sync notice:', error);
     });
+
+    // 5. Real-time services catalog sync from Firestore
+    this.db.collection('system').doc('services_catalog').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.services) && data.services.length > 0) {
+          this.services = data.services;
+          localStorage.setItem('mp_services', JSON.stringify(data.services));
+          if (this.currentProduct) {
+            const updated = this.services.find(s => s.id === this.currentProduct.id);
+            if (updated) {
+              this.currentProduct = updated;
+              if (typeof this.renderSingleProduct === 'function') {
+                this.renderSingleProduct(updated.id);
+              }
+            }
+          }
+          if (typeof this.renderAdminProductsManager === 'function') {
+            this.renderAdminProductsManager();
+          }
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore services_catalog sync notice:', error);
+    });
   }
 
   seedFirestoreInitialOrders() {
@@ -957,6 +982,12 @@ class MythicApp {
 
   saveServices() {
     localStorage.setItem('mp_services', JSON.stringify(this.services));
+    if (this.db) {
+      this.db.collection('system').doc('services_catalog').set({
+        services: this.services,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore services_catalog sync error:', err));
+    }
   }
 
   calculateBoosterRankFromPoints(points) {
@@ -2602,7 +2633,7 @@ class MythicApp {
         { level: 4, price: 16.00, recommended: false },
         { level: 6, price: 22.00, recommended: false },
         { level: 8, price: 28.00, recommended: false },
-        { level: 10, price: 38.00, recommended: true },
+        { level: 10, price: 0.50, recommended: true },
         { level: 12, price: 52.00, recommended: false },
         { level: 14, price: 70.00, recommended: false },
         { level: 15, price: 85.00, recommended: false },
@@ -2643,7 +2674,7 @@ class MythicApp {
       ];
 
       const recLvl = keyLevels.find(l => l.recommended) || keyLevels[0];
-      this.currentSpKeyPrice = recLvl ? Number(recLvl.price) : 38.00;
+      this.currentSpKeyPrice = recLvl ? Number(recLvl.price) : 0.50;
 
       container.innerHTML = `
         <div class="space-y-5">
@@ -2863,7 +2894,7 @@ class MythicApp {
   }
 
   onSpKeyLevelSelect(val) {
-    this.currentSpKeyPrice = Number(val) || 38.00;
+    this.currentSpKeyPrice = Number(val) || 0.50;
     const select = document.getElementById('sp-key-level');
     const selectedOption = select ? select.options[select.selectedIndex] : null;
     const level = selectedOption ? Number(selectedOption.dataset.level || 10) : 10;
@@ -3556,7 +3587,7 @@ class MythicApp {
 
       unit = (base * speedMultiplier * modeMultiplier) + modePrice;
     } else {
-      unit = this.currentSpKeyPrice || this.currentProduct?.basePrice || 38.00;
+      unit = this.currentSpKeyPrice || this.currentProduct?.basePrice || 0.50;
 
       // Loot-traders extra
       const traderInput = document.querySelector('input[name="sp_traders"]:checked');
@@ -3628,7 +3659,7 @@ class MythicApp {
     const region = document.getElementById('sp-region')?.value || this.selectedRealm?.region || 'US';
     const selectedMode = document.querySelector('input[name="sp_mode"]:checked')?.value || 'Piloted (VPN)';
 
-    const calcUnit = Math.max(0, Number(this.currentUnitCalcPrice !== undefined ? this.currentUnitCalcPrice : (this.currentProduct?.basePrice || 38.00)) || 0);
+    const calcUnit = Math.max(0, Number(this.currentUnitCalcPrice !== undefined ? this.currentUnitCalcPrice : (this.currentProduct?.basePrice || 0.50)) || 0);
     const runsQty = Math.max(1, Number(this.currentRunsQuantity || 1));
     const calcTotal = Math.max(0, Number(this.currentTotalCalculated !== undefined ? this.currentTotalCalculated : (calcUnit * runsQty)) || (calcUnit * runsQty));
 
@@ -4367,7 +4398,7 @@ class MythicApp {
       </div>
     `;
 
-    this.currentSelectedKeyPrice = 38.00;
+    this.currentSelectedKeyPrice = 0.50;
     this.currentSelectedKeyLevel = 10;
     this.currentActiveService = svc;
     this.recalculateModalPrice();
@@ -4396,7 +4427,7 @@ class MythicApp {
   recalculateModalPrice() {
     let total = this.currentActiveService?.basePrice || 25.00;
     if (this.currentActiveService?.id === 'mplus-keystone') {
-      total = this.currentSelectedKeyPrice || 38.00;
+      total = this.currentSelectedKeyPrice || 0.50;
       const traderElem = document.getElementById('cfg-traders');
       if (traderElem) {
         const extra = Number(traderElem.selectedOptions[0]?.dataset.extra || 0);
@@ -8220,7 +8251,7 @@ class MythicApp {
       { level: 4, price: 16.00, recommended: false },
       { level: 6, price: 22.00, recommended: false },
       { level: 8, price: 28.00, recommended: false },
-      { level: 10, price: 38.00, recommended: true },
+      { level: 10, price: 0.50, recommended: true },
       { level: 12, price: 52.00, recommended: false },
       { level: 14, price: 70.00, recommended: false },
       { level: 15, price: 85.00, recommended: false },
