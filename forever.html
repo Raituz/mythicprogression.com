@@ -546,7 +546,7 @@
             <li><a href="raids" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Midnight Raids & Curios</a></li>
             <li><a href="leveling" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Powerleveling 1-80</a></li>
             <li><a href="gearing" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Great Vault & Gearing</a></li>
-            <li><a href="forever" class="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 font-medium"><i class="fa-solid fa-crown text-[9px]"></i>WoW Forever (Private)</a></li>
+            <li><a href="forever" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>WoW Forever</a></li>
             <li class="pt-1"><span class="text-[10px] text-stone-500 uppercase tracking-widest font-mono">More titles coming soon</span></li>
           </ul>
         </div>
@@ -554,11 +554,10 @@
         <!-- Column 3: Company & Boosters -->
         <div class="space-y-3">
           <h4 class="font-cinzel font-bold text-sm text-[#fcefc2] uppercase tracking-wider">Company</h4>
-          <ul class="space-y-2 text-xs text-stone-400">
+          <ul class="space-y-2 text-xs text-stone-400" id="footer-company-links">
             <li><button type="button" onclick="app.openPolicyModal('about')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>About Us</button></li>
             <li><button type="button" onclick="app.openPolicyModal('refund')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>The Mythic Guarantee</button></li>
             <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Work With Us (Apply Pro)</a></li>
-            <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Booster Portal</a></li>
             <li><a href="client-profile" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Client Profile & Orders</a></li>
           </ul>
         </div>
@@ -608,7 +607,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.9.6"></script>
+  <script src="assets/js/app.js?v=3.9.7"></script>
   <script>
     function filterForeverCategory(cat) {
       if (window.app && typeof window.app.filterForeverCategory === 'function') {

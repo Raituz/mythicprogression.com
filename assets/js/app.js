@@ -2164,6 +2164,11 @@ class MythicApp {
   addToCart(item, openDrawer = true) {
     if (!item) return;
 
+    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+      this.showToast('Pro members and boosters cannot purchase services.', 'warning');
+      return;
+    }
+
     // Resolve robust unit and total prices
     const rawUnitPrice = Math.max(0, Number(
       item.unitPrice !== undefined && !isNaN(Number(item.unitPrice))
@@ -2303,9 +2308,18 @@ class MythicApp {
     }
 
     const btn = document.getElementById('btn-checkout-cart');
+    const isBoosterUser = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
     if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `<i class="fa-solid fa-lock text-xs mr-1 text-emerald-400"></i><span>Proceder al Pago Seguro</span>`;
+      if (isBoosterUser) {
+        btn.disabled = true;
+        btn.className = 'w-full py-3.5 rounded-2xl bg-[#70cf00] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed opacity-95 select-none notranslate';
+        btn.setAttribute('translate', 'no');
+        btn.innerHTML = '<span>Pro can\'t buy</span>';
+      } else {
+        btn.disabled = false;
+        btn.className = 'w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer';
+        btn.innerHTML = `<i class="fa-solid fa-lock text-xs mr-1 text-emerald-400"></i><span>Proceder al Pago Seguro</span>`;
+      }
     }
 
     container.innerHTML = this.cart.map(item => {
@@ -2341,6 +2355,10 @@ class MythicApp {
   }
 
   processFullCartCheckout() {
+    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+      this.showToast('Pro members and boosters cannot purchase services.', 'warning');
+      return;
+    }
     if (!this.cart || this.cart.length === 0) {
       this.showToast('Tu carrito está vacío.', 'warning');
       return;
@@ -2515,8 +2533,38 @@ class MythicApp {
     this.recalculateSingleProductTotal();
     this.renderRelatedProducts(svc);
     this.initRealmSelector();
+    this.renderProductActionButtons();
     if (this.currentLang && this.currentLang !== 'es') {
       this.applyTranslations();
+    }
+  }
+
+  renderProductActionButtons() {
+    const container = document.getElementById('sp-action-buttons-container');
+    if (!container) return;
+
+    const isBoosterUser = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
+
+    if (isBoosterUser) {
+      container.innerHTML = `
+        <button type="button" onclick="app.showToast('Pro members and boosters cannot purchase services.', 'warning')" class="w-full py-4 rounded-2xl bg-[#70cf00] hover:bg-[#68be00] text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed shadow-lg shadow-[#70cf00]/30 select-none transition-all notranslate" translate="no" title="Pro can't buy">
+          <span>Pro can't buy</span>
+        </button>
+      `;
+    } else {
+      container.innerHTML = `
+        <!-- Primary: Add to Cart -->
+        <button type="button" onclick="app.addCurrentSingleProductToCart()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition-all transform active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-cart-shopping text-sm"></i>
+          <span>Añadir al Carrito</span>
+        </button>
+
+        <!-- Secondary: Buy Now (Instant Checkout) -->
+        <button type="button" onclick="app.buyCurrentSingleProductNow()" class="w-full py-3 rounded-2xl copper-gradient-bg font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all cursor-pointer">
+          <i class="fa-solid fa-bolt text-xs"></i>
+          <span>Comprar Ahora</span>
+        </button>
+      `;
     }
   }
 
@@ -3551,6 +3599,10 @@ class MythicApp {
   }
 
   addCurrentSingleProductToCart() {
+    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+      this.showToast('Pro members and boosters cannot purchase services.', 'warning');
+      return;
+    }
     const svc = this.currentProduct || this.services[0];
     const isLeveling = (svc.id === 'powerleveling-80' || svc.id === 'forever-powerleveling-custom' || (svc.category === 'Powerleveling' && svc.game !== 'forever'));
     const isForever = (svc.game === 'forever' || svc.id?.startsWith('forever-'));
@@ -3714,6 +3766,10 @@ class MythicApp {
   }
 
   buyCurrentSingleProductNow() {
+    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+      this.showToast('Pro members and boosters cannot purchase services.', 'warning');
+      return;
+    }
     this.addCurrentSingleProductToCart();
     // Prompt instant checkout
     setTimeout(() => {
@@ -4390,6 +4446,10 @@ class MythicApp {
   }
 
   openPaymentModal(checkoutContext = { source: 'cart' }) {
+    if (this.currentUser && (this.currentUser.type === 'booster' || this.isBooster())) {
+      this.showToast('Pro members and boosters cannot purchase services.', 'warning');
+      return;
+    }
     let items = [];
     if (checkoutContext?.source === 'single' && checkoutContext?.item) {
       items = [checkoutContext.item];
@@ -11158,6 +11218,8 @@ class MythicApp {
   // ==========================================
   renderHeader() {
     this.renderLanguageSelector();
+    try { this.renderProductActionButtons(); } catch(e) {}
+    try { this.renderGlobalFooter(); } catch(e) {}
 
     // Dynamically toggle pro-sidebar-admin-link if on /pro page
     const sidebarAdminLink = document.getElementById('pro-sidebar-admin-link');
@@ -14040,6 +14102,8 @@ class MythicApp {
     const footer = document.querySelector('footer');
     if (!footer) return;
 
+    const isBoosterUser = this.currentUser && (this.currentUser.type === 'booster' || this.isBooster());
+
     footer.className = 'border-t border-stone-800/80 bg-[#0a0705] py-12 px-4 sm:px-6 lg:px-8 mt-auto relative z-20';
     footer.innerHTML = `
       <div class="max-w-7xl mx-auto space-y-10">
@@ -14082,7 +14146,7 @@ class MythicApp {
               <li><a href="raids" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Midnight Raids & Curios</a></li>
               <li><a href="leveling" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Powerleveling 1-80</a></li>
               <li><a href="gearing" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Great Vault & Gearing</a></li>
-              <li><a href="forever" class="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 font-medium"><i class="fa-solid fa-crown text-[9px]"></i>WoW Forever (Private)</a></li>
+              <li><a href="forever" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>WoW Forever</a></li>
               <li class="pt-1"><span class="text-[10px] text-stone-500 uppercase tracking-widest font-mono">More titles coming soon</span></li>
             </ul>
           </div>
@@ -14090,12 +14154,15 @@ class MythicApp {
           <!-- Column 3: Company & Boosters -->
           <div class="space-y-3">
             <h4 class="font-cinzel font-bold text-sm text-[#fcefc2] uppercase tracking-wider">Company</h4>
-            <ul class="space-y-2 text-xs text-stone-400">
+            <ul class="space-y-2 text-xs text-stone-400" id="footer-company-links">
               <li><button type="button" onclick="app.openPolicyModal('about')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>About Us</button></li>
               <li><button type="button" onclick="app.openPolicyModal('refund')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>The Mythic Guarantee</button></li>
-              <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Work With Us (Apply Pro)</a></li>
-              <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Booster Portal</a></li>
-              <li><a href="client-profile" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Client Profile & Orders</a></li>
+              ${isBoosterUser ? `
+                <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Booster Portal</a></li>
+              ` : `
+                <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Work With Us (Apply Pro)</a></li>
+                <li><a href="client-profile" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Client Profile & Orders</a></li>
+              `}
             </ul>
           </div>
 
