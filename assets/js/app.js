@@ -44,7 +44,7 @@ class MythicApp {
       binanceNickname: 'Mythic-Progression',
       binanceEmail: 'charquin50@gmail.com',
       binanceQrImg: 'assets/img/payments/binance_pay_qr.png',
-      discordUrl: 'https://discord.gg/V7nZqX2Z'
+      discordUrl: 'https://discord.gg/WhZWCzbgXp'
     };
     this.activePaymentContext = null;
     this.init();
