@@ -4557,7 +4557,7 @@ class MythicApp {
     this.renderPaymentModalContent();
   }
 
-  copyPaymentText(text, btnElement, successMsg = '¡Copiado!') {
+  copyPaymentText(text, btnElement, successMsg = 'Copied to clipboard!') {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
         if (btnElement) {
@@ -4588,9 +4588,9 @@ class MythicApp {
     textArea.select();
     try {
       document.execCommand('copy');
-      this.showToast(`¡Copiado!: ${text}`, 'success');
+      this.showToast(`Copied to clipboard: ${text}`, 'success');
     } catch (err) {
-      prompt("Copia este dato manualmente:", text);
+      prompt("Copy this address manually:", text);
     }
     document.body.removeChild(textArea);
   }
@@ -4947,7 +4947,89 @@ class MythicApp {
     if (checkoutUrl) {
       window.open(checkoutUrl, '_blank');
     }
-    this.confirmPaymentAndCompleteOrder(false);
+    this.confirmPaymentAndCompleteOrder(false, true, checkoutUrl);
+  }
+
+  renderPostPaymentScreen(orderIds, checkoutUrl, totalAmount) {
+    const modal = document.getElementById('mp-payment-modal');
+    if (!modal) return;
+
+    const safeTotal = Math.max(0, Number(totalAmount) || 0.50);
+    const orderRef = orderIds && orderIds.length > 0 ? `#${orderIds.join(', #')}` : 'your order';
+
+    modal.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-xl p-6 sm:p-8 border-2 border-amber-500/80 shadow-2xl relative overflow-hidden my-auto text-center space-y-5 animate-fade-in">
+        <!-- Top accent glow -->
+        <div class="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-amber-500/20 blur-3xl pointer-events-none"></div>
+
+        <div class="flex items-center justify-between pb-2 border-b border-stone-800">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="text-xs uppercase font-black text-emerald-400 tracking-wider">Payment Gateway Window Active</span>
+          </div>
+          <button type="button" onclick="app.closePaymentModal(); if (!window.location.pathname.includes('client-profile')) { window.location.href = 'client-profile'; }" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer" aria-label="Close modal">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <div class="w-14 h-14 rounded-2xl bg-amber-950/80 border border-amber-500/60 flex items-center justify-center text-amber-400 text-2xl mx-auto shadow-lg shadow-amber-950/50">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+
+        <div>
+          <h3 class="text-xl sm:text-2xl font-black text-white font-cinzel">Payment Checkout Opened!</h3>
+          <p class="text-xs sm:text-sm text-stone-300 mt-1 max-w-md mx-auto leading-relaxed">
+            Order <strong class="text-[#fcefc2] font-mono notranslate" translate="no">${orderRef}</strong> is registered as Pending. When your checkout tab asks for the <strong class="text-amber-300">Destination Address</strong>, copy and paste this wallet:
+          </p>
+        </div>
+
+        <!-- High Visibility Wallet Destination Box -->
+        <div class="bg-gradient-to-b from-[#22150a] via-[#1a0f07] to-[#120b06] p-4 sm:p-5 rounded-2xl border-2 border-amber-500/80 text-left space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between text-xs border-b border-amber-500/20 pb-2">
+            <span class="text-amber-300 font-black uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-wallet text-amber-400"></i> STORE DESTINATION WALLET (COPY THIS)
+            </span>
+            <span class="text-[11px] text-stone-400 font-medium">BNB Smart Chain (BEP20)</span>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2 bg-black/85 p-2.5 sm:p-3 rounded-xl border border-amber-500/60 shadow-inner">
+              <code class="font-mono text-xs sm:text-sm font-bold text-[#fcefc2] break-all select-all flex-1 tracking-wide notranslate" translate="no">
+                ${this.paymentConfig.usdtAddress}
+              </code>
+              <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this, 'Copied!')" class="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md transition-all shrink-0">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy Address</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-stone-400 pt-1">
+            <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD</strong></span>
+            <span>Token: <strong class="text-amber-300 font-bold">USDT (BEP20)</strong></span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          ${checkoutUrl ? `
+            <button type="button" onclick="window.open('${checkoutUrl}', '_blank')" class="w-full sm:flex-1 py-3 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-500/40 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Re-open Payment Tab
+            </button>
+          ` : ''}
+          <button type="button" onclick="app.closePaymentModal(); if (!window.location.pathname.includes('client-profile')) { window.location.href = 'client-profile'; }" class="w-full sm:flex-1 py-3 px-4 rounded-xl copper-gradient-bg hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg shadow-[#ee914f]/25">
+            <span>View My Orders</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    if (typeof this.applyTranslations === 'function') {
+      this.applyTranslations(modal);
+    }
   }
 
   reopenPaymentForOrder(orderId) {
@@ -4976,7 +5058,7 @@ class MythicApp {
     });
   }
 
-  confirmPaymentAndCompleteOrder(isPayLater = false) {
+  confirmPaymentAndCompleteOrder(isPayLater = false, showPostPaymentScreen = false, checkoutUrl = '') {
     if (!this.activePaymentContext || !this.activePaymentContext.items || this.activePaymentContext.items.length === 0) {
       this.showToast('No items to process.', 'error');
       this.closePaymentModal();
@@ -5009,6 +5091,8 @@ class MythicApp {
     const paymentMethodLabel = methodNames[this.activePaymentContext.selectedMethod] || 'Web Gateway';
 
     const createdOrderIds = [];
+    let calculatedTotal = 0;
+
     this.activePaymentContext.items.forEach(item => {
       // Check if this is an existing order being paid
       if (item.orderId) {
@@ -5021,10 +5105,11 @@ class MythicApp {
           if (!Array.isArray(existingOrder.chat)) existingOrder.chat = [];
           existingOrder.chat.push({
             sender: 'system',
-            message: `🕒 Payment update (${paymentMethodLabel}). Reference: "${paymentRef}". Awaiting verification by administration.`,
+            message: `🕒 Payment update (${paymentMethodLabel}). Reference: "${paymentRef}". Destination wallet (USDT BEP20): ${this.paymentConfig.usdtAddress}. Awaiting verification by administration.`,
             timestamp: new Date().toISOString()
           });
           createdOrderIds.push(existingOrder.id);
+          calculatedTotal += Number(existingOrder.totalPrice || existingOrder.price || 0.50);
           return;
         }
       }
@@ -5038,6 +5123,7 @@ class MythicApp {
               : ((Number(item.unitPrice) || 0) * (Number(item.quantity) || 1)))
       ) || 45.00);
 
+      calculatedTotal += finalPrice;
       const econ = this.calculateEconomics(finalPrice, isUpsell);
       const charClass = item.characterClass || 'Warrior';
       const faction = item.faction || 'Horda';
@@ -5078,7 +5164,7 @@ class MythicApp {
         chat: [
           {
             sender: 'system',
-            message: `🕒 Order placed with ${paymentMethodLabel}. Reference: "${paymentRef}". Awaiting verification by administration.`,
+            message: `🕒 Order placed with ${paymentMethodLabel}. Reference: "${paymentRef}".\n\n📌 Store Destination Wallet (USDT BEP20):\n${this.paymentConfig.usdtAddress}\n\nPaste this address in your checkout window to complete payment. Our team will verify and activate your order immediately!`,
             timestamp: new Date().toISOString()
           }
         ]
@@ -5100,17 +5186,24 @@ class MythicApp {
       this.saveCart();
     }
 
-    this.closePaymentModal();
     this.closeCartModal();
+
+    if (typeof this.renderClientOrders === 'function') {
+      this.renderClientOrders();
+    }
+
+    if (showPostPaymentScreen) {
+      const totalToDisplay = this.activePaymentContext.totalPrice || calculatedTotal;
+      this.renderPostPaymentScreen(createdOrderIds, checkoutUrl, totalToDisplay);
+      return;
+    }
+
+    this.closePaymentModal();
 
     if (isPayLater) {
       this.showToast(`Order #${createdOrderIds.join(', ')} saved in pending! You can click "Pay Now" anytime from your profile.`, 'info');
     } else {
       this.showToast(`Order #${createdOrderIds.join(', ')} placed! Complete payment in the gateway window to activate your order.`, 'success');
-    }
-
-    if (typeof this.renderClientOrders === 'function') {
-      this.renderClientOrders();
     }
 
     setTimeout(() => {
@@ -5300,6 +5393,38 @@ class MythicApp {
           <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800 font-mono-gaming text-emerald-300">${completedCount}</span>
         </button>
       </div>
+
+      ${pendingPaymentCount > 0 ? `
+        <!-- PENDING PAYMENT GLOBAL REMINDER BANNER -->
+        <div class="bg-gradient-to-r from-[#22150a] via-[#1a0f07] to-[#22150a] border-2 border-amber-500/80 rounded-2xl p-4 sm:p-5 mb-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1.5 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+              <h3 class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider font-cinzel">
+                <i class="fa-solid fa-wallet text-amber-400 mr-1.5"></i> Store Payment Destination Address
+              </h3>
+            </div>
+            <p class="text-xs text-stone-300 leading-relaxed">
+              When your payment checkout asks for the destination address, copy and paste this wallet:
+            </p>
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <code class="font-mono text-xs sm:text-sm font-bold text-[#fcefc2] bg-black/80 px-3 py-1.5 rounded-xl border border-amber-500/50 break-all select-all shadow-inner notranslate" translate="no">
+                ${this.paymentConfig.usdtAddress}
+              </code>
+              <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this, 'Address Copied!')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs uppercase tracking-wider rounded-lg shrink-0 cursor-pointer shadow transition-all active:scale-95 flex items-center gap-1.5">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy Address</span>
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end gap-1.5 shrink-0 text-xs">
+            <span class="text-stone-300 bg-[#140e0a] px-3 py-1.5 rounded-xl border border-stone-800">
+              Network: <strong class="text-emerald-400 font-bold">BNB Smart Chain (BEP20)</strong>
+            </span>
+            <span class="text-stone-400 text-[11px]">Token: <strong class="text-amber-300 font-bold">USDT</strong></span>
+          </div>
+        </div>
+      ` : ''}
     `;
 
     if (filteredOrders.length === 0) {
@@ -5382,14 +5507,48 @@ class MythicApp {
 
               <!-- Booster Status Box / Payment Verification Box -->
               ${isPendingPayment ? `
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 bg-gradient-to-r from-[#20150d] via-[#281a10] to-[#20150d] px-3.5 py-2.5 rounded-xl border border-amber-500/50 text-xs text-amber-200 mt-1 shadow-sm">
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-amber-400 shrink-0"></i>
-                    <span>Payment via <strong>${order.paymentMethod || 'Gateway'}</strong> (Ref: <strong class="text-white font-mono">${order.paymentReference || 'N/A'}</strong>) pending verification. If you haven't finished checkout, click <strong>Pay Now</strong>.</span>
+                <div class="bg-gradient-to-b from-[#1c120a] via-[#160e08] to-[#120b06] p-4 sm:p-5 rounded-2xl border-2 border-amber-500/80 shadow-2xl space-y-3 mt-2">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                      <span class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider">
+                        <i class="fa-solid fa-wallet text-amber-400 mr-1.5"></i> Payment Destination Address (Send Here)
+                      </span>
+                    </div>
+                    <span class="text-[11px] text-stone-400 font-medium">
+                      Network: <strong class="text-emerald-400 font-bold">BNB Smart Chain (BEP20)</strong> • Token: <strong class="text-amber-300 font-bold">USDT</strong>
+                    </span>
                   </div>
-                  <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black rounded-lg text-xs uppercase tracking-wider shrink-0 cursor-pointer shadow transition-all active:scale-95 flex items-center gap-1.5">
-                    <i class="fa-solid fa-credit-card"></i> Pay Now
-                  </button>
+
+                  <div>
+                    <span class="text-[10px] sm:text-[11px] text-stone-300 block mb-1 font-semibold">
+                      Copy this address and paste it into the <strong>"Destination address" / "Recipient"</strong> field in your payment checkout window:
+                    </span>
+                    <div class="flex items-center gap-2 bg-black/80 p-2.5 sm:p-3 rounded-xl border border-amber-500/60 shadow-inner">
+                      <code class="font-mono text-xs sm:text-sm font-bold text-[#fcefc2] break-all select-all flex-1 tracking-wide notranslate" translate="no">
+                        ${this.paymentConfig.usdtAddress}
+                      </code>
+                      <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this, 'Address Copied!')" class="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md transition-all shrink-0">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy Address</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1 text-xs text-stone-400">
+                    <div class="flex items-center gap-2 text-stone-300">
+                      <i class="fa-solid fa-circle-info text-amber-400 text-sm shrink-0"></i>
+                      <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD / USDT</strong> (Ref: <strong class="text-stone-300 font-mono">${order.paymentReference || 'N/A'}</strong>)</span>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                      <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow transition-all active:scale-95">
+                        <i class="fa-solid fa-credit-card"></i> Pay Now / Open Checkout
+                      </button>
+                      <button type="button" onclick="app.openSupportChatFromPayment()" class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-300 border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all">
+                        <i class="fa-solid fa-headset"></i> Support
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ` : (order.status === 'PAYMENT_REJECTED' || order.paymentStatus === 'PAYMENT_FAILED' ? `
                 <div class="inline-flex items-center gap-2.5 bg-rose-950/60 px-3.5 py-2 rounded-xl border border-rose-600/50 text-xs text-rose-200 mt-1 shadow-sm">
