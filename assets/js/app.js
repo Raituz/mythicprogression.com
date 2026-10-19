@@ -2638,17 +2638,32 @@ class MythicApp {
           </div>
 
           <!-- Select Dungeon -->
-          <div>
+          <div class="relative z-20" id="sp-dungeon-dropdown-container">
             <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
               <span>Select Dungeon:</span>
               <span class="text-[9px] text-[#ee914f]/80 font-bold uppercase">Mythic+</span>
             </label>
-            <div class="relative flex items-center">
-              <img id="sp-dungeon-icon-preview" src="${this.getDungeonIconUrl(dungeons[0])}" alt="Dungeon" class="w-6 h-6 rounded-md object-cover absolute left-3 top-1/2 -translate-y-1/2 border border-[#ee914f]/50 pointer-events-none shadow-sm z-10">
-              <select id="sp-dungeon-select" onchange="app.updateDungeonIconPreview(this.value)" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-11 pr-8 py-3 text-xs text-stone-200 outline-none focus:border-[#ee914f] appearance-none cursor-pointer font-medium">
+            <div class="relative">
+              <button type="button" onclick="app.toggleDungeonDropdown()" id="sp-dungeon-btn" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3 py-2.5 flex items-center justify-between text-xs text-stone-200 transition-colors">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                  <img id="sp-dungeon-icon-preview" src="${this.getDungeonIconUrl(dungeons[0])}" alt="Dungeon" class="w-6 h-6 rounded-md object-cover border border-[#ee914f]/50 shadow-sm shrink-0">
+                  <span id="sp-dungeon-btn-label" class="font-medium truncate text-white">${dungeons[0]}</span>
+                </div>
+                <i class="fa-solid fa-chevron-down text-stone-500 text-[10px] transition-transform duration-200 shrink-0 ml-2" id="sp-dungeon-chevron"></i>
+              </button>
+              <select id="sp-dungeon-select" onchange="app.updateDungeonIconPreview(this.value)" class="hidden">
                 ${dungeons.map(d => `<option value="${d}">${d}</option>`).join('')}
               </select>
-              <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+
+              <!-- Custom Dropdown Menu with Icons for every Dungeon -->
+              <div id="sp-dungeon-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[80] max-h-60 overflow-y-auto p-1.5 space-y-1">
+                ${dungeons.map(d => `
+                  <div onclick="app.selectDungeon('${d.replace(/'/g, "\\'")}')" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white group">
+                    <img src="${this.getDungeonIconUrl(d)}" alt="${d}" class="w-6 h-6 rounded-md object-cover border border-stone-700 group-hover:border-[#ee914f]/50 shadow-sm shrink-0">
+                    <span class="font-medium truncate group-hover:text-[#fcefc2]">${d}</span>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           </div>
 
@@ -6229,7 +6244,7 @@ class MythicApp {
             <div><span class="text-stone-500">Región/Modalidad:</span> <strong class="text-white">${order.region || 'US'} | ${order.completionMethod || 'Piloted'}</strong></div>
             <div><span class="text-stone-500">VPN Requerida:</span> <strong class="text-stone-200">${order.vpnLocation || 'No requerida'}</strong></div>
             ${order.characterClass ? `<div><span class="text-stone-500">Clase (Traders):</span> <strong class="text-purple-300 inline-flex items-center gap-1.5"><img src="${this.getClassIconUrl(order.characterClass)}" alt="${order.characterClass}" class="w-3.5 h-3.5 rounded object-cover border border-purple-500/50 shadow-sm"> ${order.characterClass}</strong></div>` : ''}
-            ${order.faction ? `<div><span class="text-stone-500">Facción / Reino:</span> <strong class="text-white">${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction} ${order.realm ? `(${order.realm})` : ''}</strong></div>` : ''}
+            ${order.faction ? `<div><span class="text-stone-500">Facción / Reino:</span> <strong class="text-white inline-flex items-center gap-1.5"><img src="${this.getFactionIconUrl(order.faction)}" alt="${order.faction}" class="w-3.5 h-3.5 rounded object-cover border ${order.faction.toLowerCase().includes('alianza') ? 'border-blue-500/50' : 'border-red-500/50'} shadow-sm"> ${order.faction} ${order.realm ? `(${order.realm})` : ''}</strong></div>` : ''}
           </div>
         </div>
 
@@ -6606,7 +6621,7 @@ class MythicApp {
                 <span>Cliente: <strong class="text-stone-300">${order.clientName || 'Cliente'}</strong></span>
                 <span>• Personaje: <strong class="text-white">${order.characterName || 'No especificado'}</strong></span>
                 ${order.characterClass ? `<span class="px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold inline-flex items-center gap-1"><img src="${this.getClassIconUrl(order.characterClass)}" alt="${order.characterClass}" class="w-3 h-3 rounded object-cover border border-purple-500/50 shadow-sm"> ${order.characterClass}</span>` : ''}
-                ${order.faction ? `<span class="text-[10px] text-stone-400 font-medium">(${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction}${order.realm ? ` - ${order.realm}` : ''})</span>` : ''}
+                ${order.faction ? `<span class="text-[10px] text-stone-400 font-medium inline-flex items-center gap-1">(<img src="${this.getFactionIconUrl(order.faction)}" alt="${order.faction}" class="w-3 h-3 rounded object-cover border ${order.faction.toLowerCase().includes('alianza') ? 'border-blue-500/50' : 'border-red-500/50'} shadow-sm"> ${order.faction}${order.realm ? ` - ${order.realm}` : ''})</span>` : ''}
               </p>
             </div>
 
@@ -8514,7 +8529,7 @@ class MythicApp {
           <div class="flex items-center gap-1.5 mt-1 flex-wrap">
             <span class="text-[9px] px-1.5 py-0.2 rounded bg-stone-900 text-stone-300 border border-stone-800">${o.region || 'US'}</span>
             ${o.characterClass ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold inline-flex items-center gap-1"><img src="${this.getClassIconUrl(o.characterClass)}" alt="${o.characterClass}" class="w-3 h-3 rounded object-cover border border-purple-500/50 shadow-sm"> ${o.characterClass}</span>` : ''}
-            ${o.faction ? `<span class="text-[9px] px-1.5 py-0.2 rounded ${o.faction.toLowerCase().includes('alianza') ? 'bg-blue-950/80 text-blue-300 border border-blue-500/40' : 'bg-red-950/80 text-red-300 border border-red-500/40'} font-semibold">${o.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${o.faction}</span>` : ''}
+            ${o.faction ? `<span class="text-[9px] px-1.5 py-0.5 rounded ${o.faction.toLowerCase().includes('alianza') ? 'bg-blue-950/80 text-blue-300 border border-blue-500/40' : 'bg-red-950/80 text-red-300 border border-red-500/40'} font-semibold inline-flex items-center gap-1"><img src="${this.getFactionIconUrl(o.faction)}" alt="${o.faction}" class="w-3 h-3 rounded object-cover border ${o.faction.toLowerCase().includes('alianza') ? 'border-blue-500/50' : 'border-red-500/50'} shadow-sm"> ${o.faction}</span>` : ''}
             ${o.realm ? `<span class="text-[9px] text-stone-400 font-mono">🏰 ${o.realm}</span>` : ''}
           </div>
           <div class="text-[10px] text-stone-400 mt-1 line-clamp-2">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
@@ -11010,11 +11025,23 @@ class MythicApp {
     this.updateCombinedCharacter();
     this.renderRealmDropdownItems('');
 
-    // Click outside listener to close realm dropdown
+    // Click outside listener to close custom dropdowns
     document.addEventListener('click', (e) => {
-      const container = document.getElementById('sp-realm-dropdown-container');
-      if (container && !container.contains(e.target)) {
+      const realmContainer = document.getElementById('sp-realm-dropdown-container');
+      if (realmContainer && !realmContainer.contains(e.target)) {
         this.closeRealmDropdown();
+      }
+      const factionContainer = document.getElementById('sp-faction-dropdown-container');
+      if (factionContainer && !factionContainer.contains(e.target)) {
+        this.closeFactionDropdown();
+      }
+      const classContainer = document.getElementById('sp-class-dropdown-container');
+      if (classContainer && !classContainer.contains(e.target)) {
+        this.closeClassDropdown();
+      }
+      const dungeonContainer = document.getElementById('sp-dungeon-dropdown-container');
+      if (dungeonContainer && !dungeonContainer.contains(e.target)) {
+        this.closeDungeonDropdown();
       }
     });
   }
@@ -11060,6 +11087,9 @@ class MythicApp {
     const menu = document.getElementById('sp-realm-dropdown-menu');
     const chevron = document.getElementById('sp-realm-chevron');
     if (!menu) return;
+    this.closeFactionDropdown();
+    this.closeClassDropdown();
+    this.closeDungeonDropdown();
     menu.classList.remove('hidden');
     if (chevron) chevron.classList.add('rotate-180');
     const searchVal = document.getElementById('sp-realm-search')?.value.trim() || '';
@@ -11260,11 +11290,157 @@ class MythicApp {
     return 'assets/img/dungeons/stonevault.jpg';
   }
 
+  getFactionIconUrl(faction) {
+    if (!faction) return 'assets/img/factions/horde.jpg';
+    const f = String(faction).toLowerCase();
+    if (f.includes('alianza') || f.includes('alliance')) return 'assets/img/factions/alliance.jpg';
+    return 'assets/img/factions/horde.jpg';
+  }
+
+  toggleFactionDropdown() {
+    const menu = document.getElementById('sp-faction-dropdown-menu');
+    const chevron = document.getElementById('sp-faction-chevron');
+    if (!menu) return;
+    const isHidden = menu.classList.contains('hidden');
+    this.closeClassDropdown();
+    this.closeRealmDropdown();
+    this.closeDungeonDropdown();
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      if (chevron) chevron.classList.add('rotate-180');
+    } else {
+      menu.classList.add('hidden');
+      if (chevron) chevron.classList.remove('rotate-180');
+    }
+  }
+
+  openFactionDropdown() {
+    const menu = document.getElementById('sp-faction-dropdown-menu');
+    const chevron = document.getElementById('sp-faction-chevron');
+    if (!menu) return;
+    this.closeClassDropdown();
+    this.closeRealmDropdown();
+    this.closeDungeonDropdown();
+    menu.classList.remove('hidden');
+    if (chevron) chevron.classList.add('rotate-180');
+  }
+
+  closeFactionDropdown() {
+    const menu = document.getElementById('sp-faction-dropdown-menu');
+    const chevron = document.getElementById('sp-faction-chevron');
+    if (!menu) return;
+    menu.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+
+  selectFaction(faction) {
+    const selectEl = document.getElementById('sp-faction');
+    if (selectEl) selectEl.value = faction;
+    this.closeFactionDropdown();
+    this.updateCombinedCharacter();
+  }
+
+  toggleClassDropdown() {
+    const menu = document.getElementById('sp-class-dropdown-menu');
+    const chevron = document.getElementById('sp-class-chevron');
+    if (!menu) return;
+    const isHidden = menu.classList.contains('hidden');
+    this.closeFactionDropdown();
+    this.closeRealmDropdown();
+    this.closeDungeonDropdown();
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      if (chevron) chevron.classList.add('rotate-180');
+    } else {
+      menu.classList.add('hidden');
+      if (chevron) chevron.classList.remove('rotate-180');
+    }
+  }
+
+  openClassDropdown() {
+    const menu = document.getElementById('sp-class-dropdown-menu');
+    const chevron = document.getElementById('sp-class-chevron');
+    if (!menu) return;
+    this.closeFactionDropdown();
+    this.closeRealmDropdown();
+    this.closeDungeonDropdown();
+    menu.classList.remove('hidden');
+    if (chevron) chevron.classList.add('rotate-180');
+  }
+
+  closeClassDropdown() {
+    const menu = document.getElementById('sp-class-dropdown-menu');
+    const chevron = document.getElementById('sp-class-chevron');
+    if (!menu) return;
+    menu.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+
+  selectClass(className) {
+    const selectEl = document.getElementById('sp-character-class');
+    if (selectEl) selectEl.value = className;
+    this.closeClassDropdown();
+    this.updateCombinedCharacter();
+  }
+
+  toggleDungeonDropdown() {
+    const menu = document.getElementById('sp-dungeon-dropdown-menu');
+    const chevron = document.getElementById('sp-dungeon-chevron');
+    if (!menu) return;
+    const isHidden = menu.classList.contains('hidden');
+    this.closeFactionDropdown();
+    this.closeClassDropdown();
+    this.closeRealmDropdown();
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      if (chevron) chevron.classList.add('rotate-180');
+    } else {
+      menu.classList.add('hidden');
+      if (chevron) chevron.classList.remove('rotate-180');
+    }
+  }
+
+  openDungeonDropdown() {
+    const menu = document.getElementById('sp-dungeon-dropdown-menu');
+    const chevron = document.getElementById('sp-dungeon-chevron');
+    if (!menu) return;
+    this.closeFactionDropdown();
+    this.closeClassDropdown();
+    this.closeRealmDropdown();
+    menu.classList.remove('hidden');
+    if (chevron) chevron.classList.add('rotate-180');
+  }
+
+  closeDungeonDropdown() {
+    const menu = document.getElementById('sp-dungeon-dropdown-menu');
+    const chevron = document.getElementById('sp-dungeon-chevron');
+    if (!menu) return;
+    menu.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+
+  selectDungeon(dungeonName) {
+    const selectEl = document.getElementById('sp-dungeon-select');
+    if (selectEl) {
+      selectEl.value = dungeonName;
+      if (selectEl.onchange) selectEl.onchange();
+    }
+    const btnLabel = document.getElementById('sp-dungeon-btn-label');
+    if (btnLabel) btnLabel.textContent = dungeonName;
+    const previewImg = document.getElementById('sp-dungeon-icon-preview');
+    if (previewImg) previewImg.src = this.getDungeonIconUrl(dungeonName);
+    this.closeDungeonDropdown();
+  }
+
   updateDungeonIconPreview(dungeonName) {
     const imgEl = document.getElementById('sp-dungeon-icon-preview');
     if (imgEl) {
       imgEl.src = this.getDungeonIconUrl(dungeonName);
       imgEl.alt = dungeonName || 'Dungeon';
+    }
+    const btnLabel = document.getElementById('sp-dungeon-btn-label');
+    if (btnLabel && dungeonName) {
+      btnLabel.textContent = dungeonName;
     }
   }
 
@@ -11278,11 +11454,16 @@ class MythicApp {
     const summaryText = document.getElementById('sp-char-summary-text');
     const summaryExtra = document.getElementById('sp-char-summary-extra');
 
+    // Update Class button & preview
     const classIconUrl = this.getClassIconUrl(charClass);
     const classPreviewEl = document.getElementById('sp-class-icon-preview');
     if (classPreviewEl) {
       classPreviewEl.src = classIconUrl;
       classPreviewEl.alt = charClass;
+    }
+    const classBtnLabel = document.getElementById('sp-class-btn-label');
+    if (classBtnLabel) {
+      classBtnLabel.textContent = charClass;
     }
     const summaryClassIconEl = document.getElementById('sp-char-summary-class-icon');
     if (summaryClassIconEl) {
@@ -11290,12 +11471,29 @@ class MythicApp {
       summaryClassIconEl.alt = charClass;
     }
 
+    // Update Faction button & preview
+    const factionIconUrl = this.getFactionIconUrl(faction);
+    const factionPreviewEl = document.getElementById('sp-faction-icon-preview');
+    if (factionPreviewEl) {
+      factionPreviewEl.src = factionIconUrl;
+      factionPreviewEl.alt = faction;
+    }
+    const factionBtnLabel = document.getElementById('sp-faction-btn-label');
+    if (factionBtnLabel) {
+      factionBtnLabel.textContent = faction === 'Alianza' ? 'Alianza (Alliance)' : 'Horda (Horde)';
+    }
+    const summaryFactionIconEl = document.getElementById('sp-char-summary-faction-icon');
+    if (summaryFactionIconEl) {
+      summaryFactionIconEl.src = factionIconUrl;
+      summaryFactionIconEl.alt = faction;
+    }
+
     const combined = `${charName}-${realmName}`;
     if (hiddenCharInput) hiddenCharInput.value = combined;
     if (summaryText) summaryText.textContent = `${charName} (${charClass})`;
     if (summaryExtra) {
       const ver = this.selectedRealm?.version || 'Retail';
-      summaryExtra.textContent = `${realmName} • ${faction === 'Alianza' ? '🛡️ Alianza' : '🚩 Horda'} • ${region === 'US' ? 'América (US)' : 'Europa (EU)'} • ${ver}`;
+      summaryExtra.textContent = `${realmName} • ${faction === 'Alianza' ? 'Alianza' : 'Horda'} • ${region === 'US' ? 'América (US)' : 'Europa (EU)'} • ${ver}`;
     }
   }
 

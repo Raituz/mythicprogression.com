@@ -286,55 +286,177 @@
               </div>
 
               <!-- Faction (50% on sm+) -->
-              <div>
+              <div class="relative z-40" id="sp-faction-dropdown-container">
                 <div class="h-6 flex items-center gap-1.5 mb-1.5">
                   <i class="fa-solid fa-shield text-[#ee914f] text-[10px]"></i>
-                  <label for="sp-faction" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Facción:</label>
+                  <label class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Facción:</label>
                 </div>
                 <div class="relative">
-                  <select id="sp-faction" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer font-semibold">
-                    <option value="Horda">🚩 Horda (Horde)</option>
-                    <option value="Alianza">🛡️ Alianza (Alliance)</option>
+                  <button type="button" onclick="app.toggleFactionDropdown()" id="sp-faction-btn" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3 flex items-center justify-between text-xs text-white transition-colors">
+                    <div class="flex items-center gap-2.5">
+                      <img id="sp-faction-icon-preview" src="assets/img/factions/horde.jpg" alt="Horda" class="w-5 h-5 rounded object-cover border border-red-500/50 shadow-sm shrink-0">
+                      <span id="sp-faction-btn-label" class="font-semibold text-stone-100">Horda (Horde)</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-stone-500 text-[10px] transition-transform duration-200" id="sp-faction-chevron"></i>
+                  </button>
+                  <select id="sp-faction" onchange="app.updateCombinedCharacter()" class="hidden">
+                    <option value="Horda" selected>Horda</option>
+                    <option value="Alianza">Alianza</option>
                   </select>
-                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+
+                  <!-- Custom Dropdown Menu -->
+                  <div id="sp-faction-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[90] p-1.5 space-y-1">
+                    <div onclick="app.selectFaction('Horda')" class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors group">
+                      <div class="flex items-center gap-2.5">
+                        <img src="assets/img/factions/horde.jpg" alt="Horda" class="w-6 h-6 rounded-md object-cover border border-red-500/60 shadow-sm">
+                        <div class="flex flex-col text-left">
+                          <span class="text-xs font-bold text-red-400 group-hover:text-red-300">Horda</span>
+                          <span class="text-[10px] text-stone-400">Horde</span>
+                        </div>
+                      </div>
+                      <span class="text-[9px] px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/40 font-bold">For the Horde</span>
+                    </div>
+                    <div onclick="app.selectFaction('Alianza')" class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-stone-800/80 cursor-pointer transition-colors group">
+                      <div class="flex items-center gap-2.5">
+                        <img src="assets/img/factions/alliance.jpg" alt="Alianza" class="w-6 h-6 rounded-md object-cover border border-blue-500/60 shadow-sm">
+                        <div class="flex flex-col text-left">
+                          <span class="text-xs font-bold text-blue-400 group-hover:text-blue-300">Alianza</span>
+                          <span class="text-[10px] text-stone-400">Alliance</span>
+                        </div>
+                      </div>
+                      <span class="text-[9px] px-2 py-0.5 rounded bg-blue-950/60 text-blue-400 border border-blue-800/40 font-bold">For the Alliance</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <!-- Character Class (50% on sm+) -->
-              <div>
+              <div class="relative z-30" id="sp-class-dropdown-container">
                 <div class="h-6 flex items-center justify-between mb-1.5">
                   <div class="flex items-center gap-1.5">
                     <i class="fa-solid fa-wand-magic-sparkles text-[#ee914f] text-[10px]"></i>
-                    <label for="sp-character-class" class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Clase del Personaje:</label>
+                    <label class="text-[11px] text-stone-400 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">Clase del Personaje:</label>
                   </div>
                   <span class="text-[9px] text-[#ee914f]/80 font-bold">Loot Traders</span>
                 </div>
-                <div class="relative flex items-center">
-                  <img id="sp-class-icon-preview" src="assets/img/classes/warrior.jpg" alt="Warrior" class="w-6 h-6 rounded-md object-cover absolute left-3 top-1/2 -translate-y-1/2 border border-[#ee914f]/50 pointer-events-none shadow-sm z-10">
-                  <select id="sp-character-class" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-11 pr-8 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer font-medium">
-                    <optgroup label="Plate">
-                      <option value="Warrior" selected>⚔️ Warrior</option>
-                      <option value="Paladin">✨ Paladin</option>
-                      <option value="Death Knight">💀 Death Knight</option>
-                    </optgroup>
-                    <optgroup label="Mail">
-                      <option value="Hunter">🏹 Hunter</option>
-                      <option value="Shaman">⚡ Shaman</option>
-                      <option value="Evoker">🐉 Evoker</option>
-                    </optgroup>
-                    <optgroup label="Leather">
-                      <option value="Rogue">🗡️ Rogue</option>
-                      <option value="Druid">🐾 Druid</option>
-                      <option value="Monk">🥋 Monk</option>
-                      <option value="Demon Hunter">🔥 Demon Hunter</option>
-                    </optgroup>
-                    <optgroup label="Cloth">
-                      <option value="Priest">🕊️ Priest</option>
-                      <option value="Mage">❄️ Mage</option>
-                      <option value="Warlock">😈 Warlock</option>
-                    </optgroup>
+                <div class="relative">
+                  <button type="button" onclick="app.toggleClassDropdown()" id="sp-class-btn" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3 flex items-center justify-between text-xs text-white transition-colors">
+                    <div class="flex items-center gap-2.5">
+                      <img id="sp-class-icon-preview" src="assets/img/classes/warrior.jpg" alt="Warrior" class="w-5 h-5 rounded object-cover border border-[#c79c6e]/60 shadow-sm shrink-0">
+                      <span id="sp-class-btn-label" class="font-semibold text-stone-100">Warrior</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-stone-500 text-[10px] transition-transform duration-200" id="sp-class-chevron"></i>
+                  </button>
+                  <select id="sp-character-class" onchange="app.updateCombinedCharacter()" class="hidden">
+                    <option value="Warrior" selected>Warrior</option>
+                    <option value="Paladin">Paladin</option>
+                    <option value="Death Knight">Death Knight</option>
+                    <option value="Hunter">Hunter</option>
+                    <option value="Shaman">Shaman</option>
+                    <option value="Evoker">Evoker</option>
+                    <option value="Rogue">Rogue</option>
+                    <option value="Druid">Druid</option>
+                    <option value="Monk">Monk</option>
+                    <option value="Demon Hunter">Demon Hunter</option>
+                    <option value="Priest">Priest</option>
+                    <option value="Mage">Mage</option>
+                    <option value="Warlock">Warlock</option>
                   </select>
-                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+
+                  <!-- Custom Dropdown Menu -->
+                  <div id="sp-class-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-[#120a06]/98 backdrop-blur-xl border border-stone-700/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[90] max-h-72 overflow-y-auto p-2 space-y-2">
+                    <!-- Plate -->
+                    <div>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
+                        <span>Plate</span>
+                        <span class="text-[9px] text-stone-500 font-normal">Placas</span>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 mt-1">
+                        <div onclick="app.selectClass('Warrior')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/warrior.jpg" alt="Warrior" class="w-5 h-5 rounded object-cover border border-[#c79c6e]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#c79c6e]">Warrior</span>
+                        </div>
+                        <div onclick="app.selectClass('Paladin')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/paladin.jpg" alt="Paladin" class="w-5 h-5 rounded object-cover border border-[#f58cba]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#f58cba]">Paladin</span>
+                        </div>
+                        <div onclick="app.selectClass('Death Knight')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/deathknight.jpg" alt="Death Knight" class="w-5 h-5 rounded object-cover border border-[#c41e3a]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#c41e3a]">Death Knight</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mail -->
+                    <div>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
+                        <span>Mail</span>
+                        <span class="text-[9px] text-stone-500 font-normal">Malla</span>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 mt-1">
+                        <div onclick="app.selectClass('Hunter')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/hunter.jpg" alt="Hunter" class="w-5 h-5 rounded object-cover border border-[#abd473]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#abd473]">Hunter</span>
+                        </div>
+                        <div onclick="app.selectClass('Shaman')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/shaman.jpg" alt="Shaman" class="w-5 h-5 rounded object-cover border border-[#0070de]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#0070de]">Shaman</span>
+                        </div>
+                        <div onclick="app.selectClass('Evoker')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/evoker.jpg" alt="Evoker" class="w-5 h-5 rounded object-cover border border-[#33937f]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#33937f]">Evoker</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Leather -->
+                    <div>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
+                        <span>Leather</span>
+                        <span class="text-[9px] text-stone-500 font-normal">Cuero</span>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 mt-1">
+                        <div onclick="app.selectClass('Rogue')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/rogue.jpg" alt="Rogue" class="w-5 h-5 rounded object-cover border border-[#fff569]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#fff569]">Rogue</span>
+                        </div>
+                        <div onclick="app.selectClass('Druid')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/druid.jpg" alt="Druid" class="w-5 h-5 rounded object-cover border border-[#ff7d0a]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#ff7d0a]">Druid</span>
+                        </div>
+                        <div onclick="app.selectClass('Monk')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/monk.jpg" alt="Monk" class="w-5 h-5 rounded object-cover border border-[#00ff96]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#00ff96]">Monk</span>
+                        </div>
+                        <div onclick="app.selectClass('Demon Hunter')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/demonhunter.jpg" alt="Demon Hunter" class="w-5 h-5 rounded object-cover border border-[#a330c9]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#a330c9]">Demon Hunter</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Cloth -->
+                    <div>
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-2 py-1 bg-[#1c120b] rounded-md border border-stone-800/80 flex items-center justify-between">
+                        <span>Cloth</span>
+                        <span class="text-[9px] text-stone-500 font-normal">Tela</span>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 mt-1">
+                        <div onclick="app.selectClass('Priest')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/priest.jpg" alt="Priest" class="w-5 h-5 rounded object-cover border border-[#ffffff]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#ffffff]">Priest</span>
+                        </div>
+                        <div onclick="app.selectClass('Mage')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/mage.jpg" alt="Mage" class="w-5 h-5 rounded object-cover border border-[#3fc7eb]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#3fc7eb]">Mage</span>
+                        </div>
+                        <div onclick="app.selectClass('Warlock')" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/80 cursor-pointer transition-colors text-xs text-stone-200 hover:text-white">
+                          <img src="assets/img/classes/warlock.jpg" alt="Warlock" class="w-5 h-5 rounded object-cover border border-[#8787ed]/60 shadow-sm shrink-0">
+                          <span class="font-medium text-[#8787ed]">Warlock</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -406,6 +528,7 @@
                 <strong id="sp-char-summary-text" class="text-[#ee914f] font-mono-gaming text-xs">Heroe-Ragnaros</strong>
               </div>
               <div class="flex items-center gap-2">
+                <img id="sp-char-summary-faction-icon" src="assets/img/factions/horde.jpg" alt="Horda" class="w-4 h-4 rounded object-cover border border-red-500/50 shadow-sm">
                 <span id="sp-char-summary-extra" class="text-stone-400 text-[10px] bg-[#22160f] px-2 py-0.5 rounded-lg border border-stone-700">América (US) • Retail • América Latina</span>
               </div>
             </div>
@@ -575,6 +698,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.7.3"></script>
+  <script src="assets/js/app.js?v=3.7.5"></script>
 </body>
 </html>
