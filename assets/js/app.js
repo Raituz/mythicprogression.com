@@ -10998,17 +10998,94 @@ class MythicApp {
   // ==========================================
   // WOW REALMS SELECTOR & FAST FILTER SUITE
   // ==========================================
+  // WOW REALMS SELECTOR & FAST FILTER SUITE
+  // ==========================================
+  getProductGameVersion(svc) {
+    if (!svc) return 'Retail';
+    const g = String(svc.game || '').toLowerCase();
+    const id = String(svc.id || '').toLowerCase();
+    const cat = String(svc.category || '').toLowerCase();
+    if (g === 'forever' || id.startsWith('forever-') || cat.includes('forever')) {
+      return 'Forever';
+    }
+    if (g === 'classic' || id.startsWith('classic-') || cat.includes('classic') || cat.includes('era')) {
+      return 'Classic';
+    }
+    return 'Retail';
+  }
+
+  renderRealmQuickChips(version) {
+    const chipsContainer = document.getElementById('sp-realm-quick-chips');
+    if (!chipsContainer) return;
+
+    if (version === 'Forever') {
+      chipsContainer.innerHTML = `
+        <span onclick="app.selectQuickRealm('Forever Americas - Normal (PvE)', 'US', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-purple-300 hover:bg-[#382315] cursor-pointer font-bold border border-purple-600/40 transition-colors">⏳ Forever Americas (PvE)</span>
+        <span onclick="app.selectQuickRealm('Forever Americas - JcJ (PvP)', 'US', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-purple-300 hover:bg-[#382315] cursor-pointer font-bold border border-purple-600/40 transition-colors">⚔️ Forever Americas (PvP)</span>
+        <span onclick="app.selectQuickRealm('Forever Europe - Normal (PvE)', 'EU', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-purple-300 hover:bg-[#382315] cursor-pointer font-bold border border-purple-600/40 transition-colors">⏳ Forever Europe (PvE)</span>
+        <span onclick="app.selectQuickRealm('Forever Europe - JcJ (PvP)', 'EU', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-purple-300 hover:bg-[#382315] cursor-pointer font-bold border border-purple-600/40 transition-colors">⚔️ Forever Europe (PvP)</span>
+        <span onclick="app.selectQuickRealm('Forever Americas - Hardcore', 'US', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-red-300 hover:bg-[#382315] cursor-pointer font-bold border border-red-600/40 transition-colors">💀 Hardcore</span>
+      `;
+    } else if (version === 'Classic') {
+      chipsContainer.innerHTML = `
+        <span onclick="app.selectQuickRealm('Whitemane', 'US', 'Classic')" class="px-2 py-0.5 rounded-md bg-[#251810] text-amber-300 hover:bg-[#382315] cursor-pointer font-bold border border-amber-600/40 transition-colors">⚔️ Whitemane</span>
+        <span onclick="app.selectQuickRealm('Mankrik', 'US', 'Classic')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Mankrik</span>
+        <span onclick="app.selectQuickRealm('Firemaw', 'EU', 'Classic')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Firemaw</span>
+        <span onclick="app.selectQuickRealm('Pyrewood Village', 'EU', 'Classic')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Pyrewood Village</span>
+      `;
+    } else {
+      chipsContainer.innerHTML = `
+        <span onclick="app.selectQuickRealm('Ragnaros', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-[#ee914f] hover:bg-[#382315] cursor-pointer font-bold border border-[#ee914f]/40 transition-colors">🔥 Ragnaros</span>
+        <span onclick="app.selectQuickRealm('Quel\'Thalas', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Quel'Thalas</span>
+        <span onclick="app.selectQuickRealm('Area 52', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Area 52</span>
+        <span onclick="app.selectQuickRealm('Illidan', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Illidan</span>
+        <span onclick="app.selectQuickRealm('Silvermoon', 'EU', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Silvermoon</span>
+        <span onclick="app.selectQuickRealm('Dun Modr', 'EU', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Dun Modr</span>
+      `;
+    }
+  }
+
   initRealmSelector() {
     const realmSearchInput = document.getElementById('sp-realm-search');
     const charNameInput = document.getElementById('sp-char-name');
     const regionSelect = document.getElementById('sp-region');
     if (!realmSearchInput || !charNameInput) return;
 
-    // Default realm is Ragnaros (US - Retail)
-    if (!this.selectedRealm) {
-      this.selectedRealm = (this.realms && this.realms.length > 0)
-        ? (this.realms.find(r => r.name === 'Ragnaros' && r.region === 'US') || this.realms[0])
-        : { name: 'Ragnaros', region: 'US', version: 'Retail', category: 'América Latina', type: 'Normal' };
+    const svc = this.currentProduct || this.services[0];
+    const targetVer = this.getProductGameVersion(svc);
+    this.currentRealmVersionFilter = targetVer;
+
+    // Update Product Game Badge in UI
+    const gameBadgeEl = document.getElementById('sp-product-game-badge');
+    if (gameBadgeEl) {
+      if (targetVer === 'Forever') {
+        gameBadgeEl.className = 'px-2.5 py-1 rounded-lg text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider flex items-center gap-1.5 shadow-sm';
+        gameBadgeEl.innerHTML = '<i class="fa-solid fa-hourglass-half text-[9px]"></i> <span>WoW Forever</span>';
+      } else if (targetVer === 'Classic') {
+        gameBadgeEl.className = 'px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider flex items-center gap-1.5 shadow-sm';
+        gameBadgeEl.innerHTML = '<i class="fa-solid fa-khanda text-[9px]"></i> <span>WoW Classic</span>';
+      } else {
+        gameBadgeEl.className = 'px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 uppercase tracking-wider flex items-center gap-1.5 shadow-sm';
+        gameBadgeEl.innerHTML = '<i class="fa-solid fa-shield text-[9px]"></i> <span>Retail WoW</span>';
+      }
+    }
+
+    // Default realm strictly matching targetVer and selected region
+    const currentRegion = regionSelect ? regionSelect.value : 'US';
+    if (!this.selectedRealm || this.selectedRealm.version !== targetVer) {
+      if (targetVer === 'Forever') {
+        this.selectedRealm = (this.realms || []).find(r => r.version === 'Forever' && r.region === currentRegion)
+          || (this.realms || []).find(r => r.version === 'Forever')
+          || { name: 'Forever Americas - Normal (PvE)', region: 'US', version: 'Forever', category: 'WoW Forever', type: 'PvE' };
+      } else if (targetVer === 'Classic') {
+        this.selectedRealm = (this.realms || []).find(r => r.version === 'Classic' && r.region === currentRegion)
+          || (this.realms || []).find(r => r.version === 'Classic')
+          || { name: 'Whitemane', region: 'US', version: 'Classic', category: 'Classic Era (US)', type: 'PvP' };
+      } else {
+        this.selectedRealm = (this.realms || []).find(r => r.version === 'Retail' && r.region === currentRegion && (r.name === 'Ragnaros' || r.name === 'Silvermoon'))
+          || (this.realms || []).find(r => r.version === 'Retail' && r.region === currentRegion)
+          || { name: 'Ragnaros', region: 'US', version: 'Retail', category: 'América Latina', type: 'Normal' };
+      }
     }
 
     // Default character name from current session or fallback
@@ -11022,45 +11099,38 @@ class MythicApp {
     realmSearchInput.value = this.selectedRealm.name;
     if (regionSelect) regionSelect.value = this.selectedRealm.region;
 
+    // Render quick popular chips strictly for this game
+    this.renderRealmQuickChips(targetVer);
+
     this.updateCombinedCharacter();
     this.renderRealmDropdownItems('');
 
     // Click outside listener to close custom dropdowns
-    document.addEventListener('click', (e) => {
-      const realmContainer = document.getElementById('sp-realm-dropdown-container');
-      if (realmContainer && !realmContainer.contains(e.target)) {
-        this.closeRealmDropdown();
-      }
-      const factionContainer = document.getElementById('sp-faction-dropdown-container');
-      if (factionContainer && !factionContainer.contains(e.target)) {
-        this.closeFactionDropdown();
-      }
-      const classContainer = document.getElementById('sp-class-dropdown-container');
-      if (classContainer && !classContainer.contains(e.target)) {
-        this.closeClassDropdown();
-      }
-      const dungeonContainer = document.getElementById('sp-dungeon-dropdown-container');
-      if (dungeonContainer && !dungeonContainer.contains(e.target)) {
-        this.closeDungeonDropdown();
-      }
-    });
+    if (!this._realmClickBound) {
+      this._realmClickBound = true;
+      document.addEventListener('click', (e) => {
+        const realmContainer = document.getElementById('sp-realm-dropdown-container');
+        if (realmContainer && !realmContainer.contains(e.target)) {
+          this.closeRealmDropdown();
+        }
+        const factionContainer = document.getElementById('sp-faction-dropdown-container');
+        if (factionContainer && !factionContainer.contains(e.target)) {
+          this.closeFactionDropdown();
+        }
+        const classContainer = document.getElementById('sp-class-dropdown-container');
+        if (classContainer && !classContainer.contains(e.target)) {
+          this.closeClassDropdown();
+        }
+        const dungeonContainer = document.getElementById('sp-dungeon-dropdown-container');
+        if (dungeonContainer && !dungeonContainer.contains(e.target)) {
+          this.closeDungeonDropdown();
+        }
+      });
+    }
   }
 
   setRealmVersionFilter(version) {
     this.currentRealmVersionFilter = version;
-    
-    // Update pills styling
-    const pills = document.querySelectorAll('#sp-realm-version-pills .realm-pill-btn');
-    pills.forEach(btn => {
-      if ((version === 'ALL' && btn.textContent.trim() === 'Todos') || btn.textContent.trim() === version) {
-        btn.classList.add('active', 'bg-[#ee914f]/25', 'text-[#fcefc2]', 'border-[#ee914f]/50', 'font-bold');
-        btn.classList.remove('text-stone-400');
-      } else {
-        btn.classList.remove('active', 'bg-[#ee914f]/25', 'text-[#fcefc2]', 'border-[#ee914f]/50', 'font-bold');
-        btn.classList.add('text-stone-400');
-      }
-    });
-
     const searchVal = document.getElementById('sp-realm-search')?.value.trim() || '';
     this.renderRealmDropdownItems(searchVal);
     this.openRealmDropdown();
@@ -11068,10 +11138,19 @@ class MythicApp {
 
   onRegionChange() {
     const region = document.getElementById('sp-region')?.value || 'US';
-    // If current selected realm does not match the new region, select the primary realm of that region
-    if (this.selectedRealm && this.selectedRealm.region !== region) {
-      const newDefault = (this.realms || []).find(r => r.region === region && (r.name === 'Silvermoon' || r.name === 'Ragnaros')) 
-                      || (this.realms || []).find(r => r.region === region);
+    const targetVer = this.currentRealmVersionFilter || 'Retail';
+
+    // If current selected realm does not match the new region, select the primary realm of that region FOR THIS GAME VERSION
+    if (this.selectedRealm && (this.selectedRealm.region !== region || this.selectedRealm.version !== targetVer)) {
+      let newDefault = null;
+      if (targetVer === 'Forever') {
+        newDefault = (this.realms || []).find(r => r.version === 'Forever' && r.region === region);
+      } else if (targetVer === 'Classic') {
+        newDefault = (this.realms || []).find(r => r.version === 'Classic' && r.region === region);
+      } else {
+        newDefault = (this.realms || []).find(r => r.version === 'Retail' && r.region === region && (r.name === 'Silvermoon' || r.name === 'Ragnaros')) 
+                  || (this.realms || []).find(r => r.version === 'Retail' && r.region === region);
+      }
       if (newDefault) {
         this.selectedRealm = newDefault;
         const searchInput = document.getElementById('sp-realm-search');
@@ -11125,27 +11204,28 @@ class MythicApp {
 
     const q = query.trim().toLowerCase();
     const currentRegion = document.getElementById('sp-region')?.value || 'US';
-    const versionFilter = this.currentRealmVersionFilter || 'ALL';
+    const targetVer = this.currentRealmVersionFilter || 'Retail';
 
     let filtered = (this.realms || []).filter(r => {
-      // Version filter
-      if (versionFilter !== 'ALL' && r.version !== versionFilter) return false;
-      // Region match - if query is empty, prioritize current region, but allow searching across regions if query has text
+      // STRICT FILTER: Only show realms that belong to THIS product's game version!
+      if (r.version !== targetVer) return false;
+
+      // Region match: if query is empty, prioritize current region
       if (!q && r.region !== currentRegion) return false;
+
       // Search text filter
       if (q) {
         const matchName = r.name.toLowerCase().includes(q);
         const matchCat = (r.category || '').toLowerCase().includes(q);
         const matchType = (r.type || '').toLowerCase().includes(q);
-        const matchVer = (r.version || '').toLowerCase().includes(q);
         const matchRegion = r.region.toLowerCase() === q;
-        if (!matchName && !matchCat && !matchType && !matchVer && !matchRegion) return false;
+        if (!matchName && !matchCat && !matchType && !matchRegion) return false;
       }
       return true;
     });
 
     if (countEl) {
-      countEl.textContent = `${filtered.length} reinos encontrados`;
+      countEl.textContent = `${filtered.length} reinos (${targetVer})`;
     }
 
     if (filtered.length === 0) {

@@ -259,13 +259,11 @@
                 <span>Datos de tu Personaje (WoW):</span>
               </label>
 
-              <!-- Version filter pill buttons -->
-              <div id="sp-realm-version-pills" class="flex items-center gap-1 bg-[#120c08] p-1 rounded-xl border border-stone-800 text-[10px]">
-                <button type="button" onclick="app.setRealmVersionFilter('ALL')" class="realm-pill-btn active px-2.5 py-1 rounded-lg font-bold bg-[#ee914f]/25 text-[#fcefc2] border border-[#ee914f]/50 transition-all">Todos</button>
-                <button type="button" onclick="app.setRealmVersionFilter('Retail')" class="realm-pill-btn px-2.5 py-1 rounded-lg text-stone-400 hover:text-white transition-all font-semibold">Retail</button>
-                <button type="button" onclick="app.setRealmVersionFilter('Classic')" class="realm-pill-btn px-2.5 py-1 rounded-lg text-stone-400 hover:text-white transition-all font-semibold">Classic</button>
-                <button type="button" onclick="app.setRealmVersionFilter('Forever')" class="realm-pill-btn px-2.5 py-1 rounded-lg text-stone-400 hover:text-white transition-all font-semibold">Forever</button>
-              </div>
+              <!-- Product Game Badge (Locked to Product Type) -->
+              <span id="sp-product-game-badge" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#ee914f]/20 text-[#ee914f] border border-[#ee914f]/40 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-shield text-[9px]"></i>
+                <span>Retail WoW</span>
+              </span>
             </div>
 
             <!-- Inputs Grid: Symmetrical Row 1 (Region & Faction) + Row 2 (Class & Character Name) + Row 3 (Realm Search Full Width) -->
@@ -479,16 +477,9 @@
                       <span id="sp-realm-count" class="font-semibold text-[#fcefc2]">450 reinos encontrados</span>
                       <span class="text-stone-500 text-[9px]">Selecciona uno</span>
                     </div>
-                    <!-- Quick Popular Chips -->
+                    <!-- Quick Popular Chips (Injected dynamically based on product game version) -->
                     <div class="flex flex-wrap gap-1" id="sp-realm-quick-chips">
-                      <span onclick="app.selectQuickRealm('Ragnaros', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-[#ee914f] hover:bg-[#382315] cursor-pointer font-bold border border-[#ee914f]/40 transition-colors">🔥 Ragnaros</span>
-                      <span onclick="app.selectQuickRealm('Quel\'Thalas', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Quel'Thalas</span>
-                      <span onclick="app.selectQuickRealm('Area 52', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Area 52</span>
-                      <span onclick="app.selectQuickRealm('Illidan', 'US', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Illidan</span>
-                      <span onclick="app.selectQuickRealm('Silvermoon', 'EU', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Silvermoon</span>
-                      <span onclick="app.selectQuickRealm('Dun Modr', 'EU', 'Retail')" class="px-2 py-0.5 rounded-md bg-[#251810] text-stone-300 hover:bg-[#382315] cursor-pointer font-bold border border-stone-700 transition-colors">Dun Modr</span>
-                      <span onclick="app.selectQuickRealm('Whitemane', 'US', 'Classic')" class="px-2 py-0.5 rounded-md bg-[#251810] text-amber-300 hover:bg-[#382315] cursor-pointer font-bold border border-amber-600/40 transition-colors">⚔️ Whitemane</span>
-                      <span onclick="app.selectQuickRealm('Forever Americas - Normal (PvE)', 'US', 'Forever')" class="px-2 py-0.5 rounded-md bg-[#251810] text-purple-300 hover:bg-[#382315] cursor-pointer font-bold border border-purple-600/40 transition-colors">⏳ Forever Americas</span>
+                      <!-- Injected dynamically by JavaScript -->
                     </div>
                   </div>
 
@@ -682,6 +673,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.7.6"></script>
+  <script src="assets/js/app.js?v=3.7.7"></script>
 </body>
 </html>
