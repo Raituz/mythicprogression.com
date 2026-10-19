@@ -5068,6 +5068,51 @@ class MythicApp {
     });
   }
 
+  promptUpdatePaymentProof(orderId) {
+    const order = (this.orders || []).find(o => o && o.id === orderId);
+    if (!order) {
+      this.showToast('Order not found', 'error');
+      return;
+    }
+
+    const currentRef = (order.paymentReference && !order.paymentReference.toLowerCase().includes('pay later')) 
+      ? order.paymentReference 
+      : '';
+    const newRef = prompt(
+      `Confirm Payment Verification for Order #${orderId}:\n\nPlease enter your Transaction Hash (TXID), Binance Order ID/Nickname, or payment reference:`,
+      currentRef || 'Direct Web Checkout'
+    );
+
+    if (newRef === null) return; // User cancelled
+    const finalRef = newRef.trim() || 'Direct Web Checkout';
+
+    order.paymentReference = finalRef;
+    order.paymentStatus = 'PENDING_VERIFICATION';
+    order.paymentSubmitted = true;
+    order.status = 'PAYMENT_PENDING';
+    if (!Array.isArray(order.chat)) order.chat = [];
+    order.chat.push({
+      sender: 'client',
+      author: this.currentUser?.username || 'Client',
+      message: `💳 Payment submitted/updated by client. Reference: "${finalRef}". Verification in progress.`,
+      timestamp: new Date().toISOString()
+    });
+
+    if (this.db) {
+      this.db.collection('orders').doc(orderId).set({
+        paymentReference: finalRef,
+        paymentStatus: 'PENDING_VERIFICATION',
+        paymentSubmitted: true,
+        status: 'PAYMENT_PENDING',
+        chat: order.chat
+      }, { merge: true }).catch(e => console.warn('Firestore update proof error:', e));
+    }
+
+    this.saveOrders();
+    this.renderClientOrders();
+    this.showToast(`Order #${orderId} marked as Payment Submitted! Our team is verifying it.`, 'success');
+  }
+
   confirmPaymentAndCompleteOrder(isPayLater = false, showPostPaymentScreen = false, checkoutUrl = '') {
     if (!this.activePaymentContext || !this.activePaymentContext.items || this.activePaymentContext.items.length === 0) {
       this.showToast('No items to process.', 'error');
@@ -5307,9 +5352,15 @@ class MythicApp {
 
     // Metrics
     const totalCount = allMyOrders.length;
-    const pendingPaymentCount = allMyOrders.filter(o => o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION').length;
+    const isOrderUnpaid = (o) => Boolean(o && (o.paymentStatus === 'UNPAID' || (o.paymentReference && String(o.paymentReference).toLowerCase().includes('pay later'))) && o.paymentStatus !== 'PAID' && o.status !== 'COMPLETED' && o.status !== 'AVAILABLE');
+    const isOrderVerifying = (o) => Boolean(o && !isOrderUnpaid(o) && (o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION') && o.status !== 'COMPLETED' && o.status !== 'AVAILABLE' && o.paymentStatus !== 'PAID');
+
+    const unpaidCount = allMyOrders.filter(isOrderUnpaid).length;
+    const verifyingCount = allMyOrders.filter(isOrderVerifying).length;
+    const pendingPaymentCount = unpaidCount + verifyingCount;
+
     const inProgressCount = allMyOrders.filter(o => o.assignedBooster && o.status !== 'COMPLETED').length;
-    const pendingBoosterCount = allMyOrders.filter(o => !o.assignedBooster && o.status === 'AVAILABLE').length;
+    const pendingBoosterCount = allMyOrders.filter(o => !o.assignedBooster && (o.status === 'AVAILABLE' || o.paymentStatus === 'PAID')).length;
     const completedCount = allMyOrders.filter(o => o.status === 'COMPLETED').length;
     const totalSpent = allMyOrders.reduce((sum, o) => {
       const p = Math.max(0, Number(o.totalPrice !== undefined && !isNaN(Number(o.totalPrice)) ? o.totalPrice : (o.price !== undefined && !isNaN(Number(o.price)) ? o.price : 45.00)) || 45.00);
@@ -5321,11 +5372,11 @@ class MythicApp {
     // Apply active tab filter
     let filteredOrders = allMyOrders;
     if (currentFilter === 'PAYMENT_PENDING') {
-      filteredOrders = allMyOrders.filter(o => o.status === 'PAYMENT_PENDING' || o.paymentStatus === 'PENDING_VERIFICATION');
+      filteredOrders = allMyOrders.filter(o => isOrderUnpaid(o) || isOrderVerifying(o));
     } else if (currentFilter === 'IN_PROGRESS') {
       filteredOrders = allMyOrders.filter(o => o.assignedBooster && o.status !== 'COMPLETED');
     } else if (currentFilter === 'PENDING_BOOSTER') {
-      filteredOrders = allMyOrders.filter(o => !o.assignedBooster && o.status === 'AVAILABLE');
+      filteredOrders = allMyOrders.filter(o => !o.assignedBooster && (o.status === 'AVAILABLE' || o.paymentStatus === 'PAID'));
     } else if (currentFilter === 'COMPLETED') {
       filteredOrders = allMyOrders.filter(o => o.status === 'COMPLETED');
     }
@@ -5386,7 +5437,7 @@ class MythicApp {
         </button>
         ${pendingPaymentCount > 0 ? `
           <button onclick="app.setClientOrdersFilter('PAYMENT_PENDING')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentFilter === 'PAYMENT_PENDING' ? 'bg-amber-950/80 text-amber-300 border border-amber-500' : 'bg-[#1a120b] text-amber-400 hover:text-amber-200 border border-amber-900/60'}">
-            <span>Pay Now / Pending</span>
+            <span>${verifyingCount > 0 ? 'Verifying / Pending' : 'Pay Now / Pending'}</span>
             <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-900/90 border border-amber-600 font-mono-gaming text-amber-200">${pendingPaymentCount}</span>
           </button>
         ` : ''}
@@ -5404,8 +5455,8 @@ class MythicApp {
         </button>
       </div>
 
-      ${pendingPaymentCount > 0 ? `
-        <!-- PENDING PAYMENT GLOBAL REMINDER BANNER -->
+      ${unpaidCount > 0 ? `
+        <!-- UNPAID PAYMENT GLOBAL REMINDER BANNER -->
         <div class="bg-gradient-to-r from-[#22150a] via-[#1a0f07] to-[#22150a] border-2 border-amber-500/80 rounded-2xl p-4 sm:p-5 mb-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div class="space-y-1.5 flex-1">
             <div class="flex items-center gap-2">
@@ -5434,7 +5485,27 @@ class MythicApp {
             <span class="text-stone-400 text-[11px]">Token: <strong class="text-amber-300 font-bold">USDT</strong></span>
           </div>
         </div>
-      ` : ''}
+      ` : (verifyingCount > 0 ? `
+        <!-- PAYMENT VERIFICATION GLOBAL BANNER -->
+        <div class="bg-gradient-to-r from-[#20150d] via-[#1a0f07] to-[#20150d] border border-amber-500/70 rounded-2xl p-4 sm:p-5 mb-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1.5 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+              <h3 class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider font-cinzel">
+                <i class="fa-solid fa-clock-rotate-left text-amber-400 mr-1.5"></i> Orders Under Payment Verification
+              </h3>
+            </div>
+            <p class="text-xs text-stone-300 leading-relaxed">
+              You have <strong>${verifyingCount}</strong> order(s) submitted for payment verification. Our staff verifies transactions within 5–15 minutes, after which a verified booster will claim your order!
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="app.openSupportChatFromPayment()" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-500/40 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all">
+              <i class="fa-solid fa-headset"></i> 24/7 Live Support
+            </button>
+          </div>
+        </div>
+      ` : '')}
     `;
 
     if (filteredOrders.length === 0) {
@@ -5447,11 +5518,16 @@ class MythicApp {
     }
 
     const cardsHtml = filteredOrders.map(order => {
-      const isPendingPayment = order.status === 'PAYMENT_PENDING' || order.paymentStatus === 'PENDING_VERIFICATION';
+      const isUnpaid = isOrderUnpaid(order);
+      const isVerifyingPayment = isOrderVerifying(order);
+      const isPendingPayment = isUnpaid || isVerifyingPayment;
       const isAssigned = !!order.assignedBooster;
-      let statusText = isPendingPayment ? 'AWAITING PAYMENT' : (isAssigned ? 'IN PROGRESS' : 'LOOKING FOR BOOSTER');
-      let statusClass = isPendingPayment ? 'bg-amber-950/80 text-amber-300 border border-amber-500/80 shadow-md animate-pulse' : (isAssigned ? 'bg-[#1a2332] text-sky-300 border border-sky-700/50' : 'bg-amber-950/50 text-amber-300 border border-amber-700/50');
-      let statusIcon = isPendingPayment ? 'fa-credit-card' : (isAssigned ? 'fa-gamepad' : 'fa-hourglass-half');
+
+      let statusText = isUnpaid ? 'AWAITING PAYMENT' : (isVerifyingPayment ? 'VERIFYING PAYMENT' : (isAssigned ? 'IN PROGRESS' : 'LOOKING FOR BOOSTER'));
+      let statusClass = isUnpaid ? 'bg-stone-900 text-stone-300 border border-stone-700 shadow-md' :
+        (isVerifyingPayment ? 'bg-amber-950/90 text-amber-300 border border-amber-500/90 shadow-md animate-pulse' :
+        (isAssigned ? 'bg-[#1a2332] text-sky-300 border border-sky-700/50' : 'bg-amber-950/50 text-amber-300 border border-amber-700/50'));
+      let statusIcon = isUnpaid ? 'fa-credit-card' : (isVerifyingPayment ? 'fa-clock-rotate-left' : (isAssigned ? 'fa-gamepad' : 'fa-hourglass-half'));
 
       if (order.status === 'COMPLETED') {
         statusText = 'COMPLETED';
@@ -5516,7 +5592,48 @@ class MythicApp {
               </div>
 
               <!-- Booster Status Box / Payment Verification Box -->
-              ${isPendingPayment ? `
+              ${isVerifyingPayment ? `
+                <div class="bg-gradient-to-b from-[#1c120a] via-[#160e08] to-[#120b06] p-4 sm:p-5 rounded-2xl border-2 border-amber-500/80 shadow-2xl space-y-3 mt-2">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                      <span class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-400 mr-1.5"></i> PAYMENT SUBMITTED — UNDER VERIFICATION
+                      </span>
+                    </div>
+                    <span class="text-[11px] text-stone-400 font-medium">
+                      Method: <strong class="text-white">${order.paymentMethod || 'Credit / Debit Card (On-Ramp)'}</strong>
+                    </span>
+                  </div>
+
+                  <div class="text-xs text-stone-300 leading-relaxed">
+                    <p>
+                      We received your payment submission (Ref: <strong class="text-white font-mono bg-black/60 px-2 py-0.5 rounded border border-amber-500/40 select-all notranslate" translate="no">${order.paymentReference || 'Direct Web Checkout'}</strong>).
+                      Our team is currently verifying the transaction. Once verified, a top-ranked booster will claim your order!
+                    </p>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1 text-xs text-stone-400">
+                    <div class="flex items-center gap-2 text-stone-300">
+                      <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                      <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD / USDT</strong></span>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                      <button type="button" onclick="app.promptUpdatePaymentProof('${order.id}')" class="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg">
+                        <i class="fa-solid fa-receipt"></i> Edit Payment Proof / TXID
+                      </button>
+                      <button type="button" onclick="app.openSupportChatFromPayment()" class="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg">
+                        <i class="fa-solid fa-headset"></i> Live Support
+                      </button>
+                      ${this.isAdminOrGerente() ? `
+                        <button type="button" onclick="app.adminApprovePayment('${order.id}')" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg shadow-sm" title="Admin quick approval for testing">
+                          <i class="fa-solid fa-shield-check"></i> Admin: Approve
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>
+              ` : (isUnpaid ? `
                 <div class="bg-gradient-to-b from-[#1c120a] via-[#160e08] to-[#120b06] p-4 sm:p-5 rounded-2xl border-2 border-amber-500/80 shadow-2xl space-y-3 mt-2">
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
                     <div class="flex items-center gap-2">
@@ -5548,11 +5665,14 @@ class MythicApp {
                   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1 text-xs text-stone-400">
                     <div class="flex items-center gap-2 text-stone-300">
                       <i class="fa-solid fa-circle-info text-amber-400 text-sm shrink-0"></i>
-                      <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD / USDT</strong> (Ref: <strong class="text-stone-300 font-mono">${order.paymentReference || 'N/A'}</strong>)</span>
+                      <span>Amount: <strong class="text-white font-mono font-bold">$${safeTotal.toFixed(2)} USD / USDT</strong></span>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
+                      <button type="button" onclick="app.promptUpdatePaymentProof('${order.id}')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg shadow-sm">
+                        <i class="fa-solid fa-check"></i> I Have Paid (Submit Proof)
+                      </button>
                       <button type="button" onclick="app.openSupportChatFromPayment()" class="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-stone-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all rounded-lg">
-                        <i class="fa-solid fa-headset"></i> Live Support
+                        <i class="fa-solid fa-headset"></i> Support
                       </button>
                     </div>
                   </div>
@@ -5608,16 +5728,22 @@ class MythicApp {
             <!-- Right Column: Price & Action Buttons -->
             <div class="flex items-center md:flex-col md:items-end justify-between md:justify-center gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-stone-800/80 shrink-0">
               <div class="text-left md:text-right">
-                <span class="text-[10px] text-stone-400 block uppercase font-semibold">${isPendingPayment ? 'Total to Pay' : 'Total Paid'}</span>
+                <span class="text-[10px] text-stone-400 block uppercase font-semibold">${isUnpaid ? 'Total to Pay' : (isVerifyingPayment ? 'Total (Under Verification)' : 'Total Paid')}</span>
                 <span class="text-2xl font-black font-mono-gaming text-[#fcefc2] notranslate" translate="no">$${safeTotal.toFixed(2)}</span>
               </div>
               <div class="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto">
-                ${isPendingPayment ? `
+                ${isUnpaid ? `
                   <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="w-full px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 transition-all cursor-pointer active:scale-95 animate-pulse">
                     <i class="fa-solid fa-credit-card text-stone-950"></i>
                     <span>PAY NOW ($${safeTotal.toFixed(2)})</span>
                   </button>
-                ` : ''}
+                ` : (isVerifyingPayment ? `
+                  <div class="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-[#2a1c12] to-amber-950/80 border border-amber-500/70 text-amber-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-clock-rotate-left fa-spin text-amber-400"></i>
+                    <span>VERIFYING PAYMENT</span>
+                  </div>
+                  <button type="button" onclick="app.reopenPaymentForOrder('${order.id}')" class="text-[10px] text-stone-400 hover:text-amber-300 underline cursor-pointer text-center">Change payment / re-open</button>
+                ` : '')}
                 <button type="button" onclick="app.openClientFullChat('${order.id}')" class="w-full px-4 py-2 rounded-xl bg-[#221a14] hover:bg-[#2d221a] text-[#fcefc2] border border-[#ee914f]/40 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md hover:border-[#ee914f]">
                   <i class="fa-solid fa-comments text-[#ee914f]"></i>
                   <span>Chat with Booster</span>
