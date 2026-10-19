@@ -6809,7 +6809,7 @@ class MythicApp {
                 ) : ''}
               </div>
               <div class="text-[11px] text-stone-400 flex items-center gap-1 font-mono">
-                <span class="text-stone-500">Mínimo base:</span>
+                <span class="text-stone-500">Pago base:</span>
                 <span class="text-stone-300 font-bold">$${basePayoutVal}</span>
                 <span class="text-stone-600">|</span>
                 <span class="text-stone-500">Máx permitido:</span>
@@ -7022,6 +7022,7 @@ class MythicApp {
 
     const basePayout = Number(order.boosterPayout || (order.totalPrice ? order.totalPrice * 0.3 : 10));
     const maxBid = Number(order.maxBidAllowed || (order.totalPrice ? order.totalPrice * 0.5 : (basePayout * 1.5)));
+    const minBid = 0.50;
     const bids = Array.isArray(order.bids) ? order.bids : [];
     // The winning / best bidder is the one offering to do the work for the LOWEST payout
     const bestBid = bids.length > 0 ? [...bids].sort((a,b) => Number(a.bidAmount) - Number(b.bidAmount))[0] : null;
@@ -7030,10 +7031,15 @@ class MythicApp {
       ? bids.find(b => (this.currentUser.discordId && b.boosterDiscordId && String(b.boosterDiscordId) === String(this.currentUser.discordId)) || (this.currentUser.username && b.boosterName && b.boosterName.toLowerCase() === this.currentUser.username.toLowerCase()))
       : null;
 
-    // Suggest default value: to take the lead as best bidder, suggest undercutting the best bid by $0.50 (capped at basePayout)
-    const suggestedBid = bestBid 
-      ? Math.max(basePayout, Math.min(maxBid, Number(bestBid.bidAmount) - 0.50))
-      : basePayout;
+    // Suggest default value: if user already bid, suggest their current bid; otherwise suggest undercutting best bid or basePayout
+    let suggestedBid = basePayout;
+    if (myBid && Number(myBid.bidAmount) > 0) {
+      suggestedBid = Number(myBid.bidAmount);
+    } else if (bestBid && Number(bestBid.bidAmount) > 0) {
+      suggestedBid = Math.max(minBid, Math.min(maxBid, Math.round((Number(bestBid.bidAmount) - 0.50) * 100) / 100));
+    } else {
+      suggestedBid = Math.min(maxBid, basePayout);
+    }
 
     content.innerHTML = `
       <div class="p-6">
@@ -7086,11 +7092,11 @@ class MythicApp {
         <div class="mb-4">
           <label class="block text-xs font-semibold text-stone-300 mb-1.5 flex items-center justify-between">
             <span>Monto de tu oferta ($):</span>
-            <span class="text-[11px] text-stone-400">Mín: $${basePayout.toFixed(2)} | Máx: $${maxBid.toFixed(2)}</span>
+            <span class="text-[11px] text-stone-400">Mín: $${minBid.toFixed(2)} | Máx: $${maxBid.toFixed(2)}</span>
           </label>
           <div class="relative">
             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono-gaming text-stone-400 text-base">$</span>
-            <input id="input-bid-amount" type="number" step="0.50" min="${basePayout.toFixed(2)}" max="${maxBid.toFixed(2)}" value="${suggestedBid.toFixed(2)}" class="w-full bg-[#17120e] border border-stone-700 focus:border-[#ee914f] rounded-xl pl-8 pr-4 py-2.5 text-base font-mono-gaming text-white outline-none">
+            <input id="input-bid-amount" type="number" step="0.50" min="${minBid.toFixed(2)}" max="${maxBid.toFixed(2)}" value="${suggestedBid.toFixed(2)}" class="w-full bg-[#17120e] border border-stone-700 focus:border-[#ee914f] rounded-xl pl-8 pr-4 py-2.5 text-base font-mono-gaming text-white outline-none">
           </div>
           <p class="text-[11px] text-stone-400 mt-1.5 leading-relaxed">
             Ingresa el monto que solicitas por completar este contrato. <strong class="text-amber-300">A la empresa le conviene quien menos oferte</strong>, por lo que el booster con la oferta más baja será el <strong class="text-[#fcefc2]">Mejor Postor 👑</strong> y tendrá prioridad para ganar la orden.
@@ -7141,12 +7147,14 @@ class MythicApp {
 
     const basePayout = Number(order.boosterPayout || (order.totalPrice ? order.totalPrice * 0.3 : 10));
     const maxBid = Number(order.maxBidAllowed || (order.totalPrice ? order.totalPrice * 0.5 : (basePayout * 1.5)));
+    const minBid = 0.50;
 
     const inputEl = document.getElementById('input-bid-amount');
-    const amount = Number(inputEl ? inputEl.value : 0);
+    const rawVal = inputEl ? inputEl.value : '';
+    const amount = this.parseSafeFloat ? this.parseSafeFloat(rawVal, 0) : Number(rawVal || 0);
 
-    if (isNaN(amount) || amount < basePayout || amount > maxBid) {
-      this.showToast(`La oferta debe estar entre $${basePayout.toFixed(2)} y el máximo de $${maxBid.toFixed(2)}`, 'error');
+    if (isNaN(amount) || amount < minBid || amount > maxBid) {
+      this.showToast(`La oferta debe estar entre $${minBid.toFixed(2)} y el máximo de $${maxBid.toFixed(2)}`, 'error');
       return;
     }
 
