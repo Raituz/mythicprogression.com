@@ -14034,6 +14034,9 @@ class MythicApp {
   }
 
   renderGlobalFooter() {
+    const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+    if (path.includes('admin') || path.includes('pro')) return;
+
     const footer = document.querySelector('footer');
     if (!footer) return;
 
