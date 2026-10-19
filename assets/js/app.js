@@ -90,6 +90,7 @@ class MythicApp {
     try { await this.checkDiscordOAuthCallback(); } catch (e) { console.warn('checkDiscordOAuthCallback:', e); }
     try { this.initSession(); } catch (e) { console.warn('initSession post-data:', e); }
     try { this.renderHeader(); } catch (e) { console.warn('renderHeader:', e); }
+    try { this.renderGlobalFooter(); } catch (e) { console.warn('renderGlobalFooter:', e); }
     try { this.setupLiveSearch(); } catch (e) { console.warn('setupLiveSearch:', e); }
     try { this.updateCartCounter(); } catch (e) { console.warn('updateCartCounter:', e); }
     try { this.renderLanguageSelector(); } catch (e) { console.warn('renderLanguageSelector:', e); }
@@ -13809,17 +13810,343 @@ class MythicApp {
     modal.classList.add('opacity-100', 'pointer-events-auto');
   }
 
-  closeImageLightbox() {
-    const modal = document.getElementById('image-lightbox-modal');
-    if (modal) {
-      modal.classList.remove('opacity-100', 'pointer-events-auto');
-      modal.classList.add('opacity-0', 'pointer-events-none');
+  openPolicyModal(type = 'terms') {
+    let modal = document.getElementById('mp-policy-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mp-policy-modal';
+      modal.className = 'fixed inset-0 z-[4000] bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 overflow-y-auto';
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closePolicyModal();
+      });
     }
+
+    const policies = {
+      about: {
+        title: 'About Mythic Progression',
+        subtitle: 'Our Mission & Elite Standards',
+        icon: 'fa-solid fa-users',
+        content: `
+          <div class="space-y-4 text-xs text-stone-300 leading-relaxed">
+            <p>
+              <strong>Mythic Progression</strong> was created by seasoned World of Warcraft veterans, multi-rank Mythic raiders, and top-percentage Mythic+ key pushers. We built this platform to bring trust, absolute speed, and uncompromising account security to competitive gaming services.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+              <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 text-center space-y-1.5">
+                <i class="fa-solid fa-shield-halved text-[#ee914f] text-lg"></i>
+                <h4 class="font-bold text-white text-xs">100% Hand-Played</h4>
+                <p class="text-[11px] text-stone-400">Strictly zero bots, scripts, or automated software. Genuine human execution.</p>
+              </div>
+              <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 text-center space-y-1.5">
+                <i class="fa-solid fa-location-dot text-[#ee914f] text-lg"></i>
+                <h4 class="font-bold text-white text-xs">VPN Protection</h4>
+                <p class="text-[11px] text-stone-400">Boosters connect using dedicated VPN locations matching your exact home country or city.</p>
+              </div>
+              <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 text-center space-y-1.5">
+                <i class="fa-solid fa-headset text-[#ee914f] text-lg"></i>
+                <h4 class="font-bold text-white text-xs">24/7 Live Care</h4>
+                <p class="text-[11px] text-stone-400">Around-the-clock support via live web chat and our official Discord server.</p>
+              </div>
+            </div>
+            <p>
+              While our current core expertise focuses on World of Warcraft, Mythic Progression is engineered as an adaptable, multi-game platform built to expand into future MMOs, competitive raids, and high-difficulty titles.
+            </p>
+          </div>
+        `
+      },
+      refund: {
+        title: 'Refund & Cancellation Policy',
+        subtitle: 'Clear, Transparent, & Fair Guarantees',
+        icon: 'fa-solid fa-hand-holding-dollar',
+        content: `
+          <div class="space-y-4 text-xs text-stone-300 leading-relaxed">
+            <div class="bg-[#18110b] p-3.5 rounded-2xl border border-[#ee914f]/40 space-y-2">
+              <h4 class="font-bold text-[#fcefc2] text-xs flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i> The Mythic Guarantee
+              </h4>
+              <p class="text-[11px] text-stone-400">
+                If your order includes an in-time timer guarantee and the run fails to beat the timer, or an unforeseen server/in-game issue disrupts the run, you are protected by your choice of:
+              </p>
+              <ul class="list-disc pl-5 space-y-1 text-[11px] text-[#fcefc2]">
+                <li><strong>Free Rerun Guarantee:</strong> We rerun the dungeon or service immediately at zero extra cost until all guaranteed conditions are fully met.</li>
+                <li><strong>100% Store Credit:</strong> A full 100% refund credited directly to your store balance to spend on any service at any time.</li>
+              </ul>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-1">1. Cancellation Cutoff Window</h4>
+                <p class="text-[11px] text-stone-400">
+                  You may cancel your order at any time <strong>before the assigned booster begins the run / enters the dungeon</strong> for a complete refund without penalty. Once a service is actively underway inside the instance, cancellations are evaluated based on objectives completed.
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-1">2. Refund Disbursement Method</h4>
+                <p class="text-[11px] text-stone-400">
+                  Approved cancellations and refunds are issued as <strong>100% Store Credit (Balance)</strong> directly to your client profile. Store balance does not expire and can be redeemed for any current or future game services.
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-1">3. Dispute & Anti-Chargeback Policy</h4>
+                <p class="text-[11px] text-stone-400">
+                  Because digital gaming services entail immediate booster scheduling and reserve roster slots, unauthorized payment disputes or bank chargebacks result in permanent blacklisting from our network. Our 24/7 Live Support and Discord staff are always available to resolve any customer concerns amicably and fairly.
+                </p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      terms: {
+        title: 'Terms & Conditions',
+        subtitle: 'User Agreement & Service Specifications',
+        icon: 'fa-solid fa-file-contract',
+        content: `
+          <div class="space-y-4 text-xs text-stone-300 leading-relaxed">
+            <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-1">1. Service Execution Modes</h4>
+            <p class="text-[11px] text-stone-400 mb-2">
+              <strong>Self-Play (Recommended):</strong> You play on your own character and party up with our roster. No account credentials are ever requested or shared.
+            </p>
+            <p class="text-[11px] text-stone-400">
+              <strong>Piloted (Account Sharing):</strong> A verified booster logs onto your character to complete the contracted service. You must strictly observe our Account Safety & VPN protocols.
+            </p>
+
+            <h4 class="font-bold text-white text-xs uppercase tracking-wider pt-2 mb-1">2. Delivery Windows & Timelines</h4>
+            <p class="text-[11px] text-stone-400">
+              Advertised start times (typically 10–25 minutes) represent standard queue estimates. Blizzard unscheduled maintenance, weekly server resets, or game client updates may adjust actual execution times.
+            </p>
+
+            <h4 class="font-bold text-white text-xs uppercase tracking-wider pt-2 mb-1">3. Player Conduct & Communication</h4>
+            <p class="text-[11px] text-stone-400">
+              Customers and boosters must maintain respectful communication. Toxicity, intentional trolling during self-play keys, or sharing unauthorized links will result in order termination without refund.
+            </p>
+          </div>
+        `
+      },
+      safety: {
+        title: 'Account Safety & VPN Policy',
+        subtitle: 'Our Non-Negotiable Security Protocols',
+        icon: 'fa-solid fa-user-shield',
+        content: `
+          <div class="space-y-4 text-xs text-stone-300 leading-relaxed">
+            <div class="bg-amber-950/30 p-3 rounded-xl border border-amber-600/40 text-[11px] text-amber-200">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1.5"></i>
+              <strong>Strict Protocol for Piloted Orders:</strong> To ensure zero detection and protect your account integrity, all piloted orders must follow these mandatory rules:
+            </div>
+
+            <div class="space-y-3">
+              <div class="bg-[#18110b] p-3 rounded-xl border border-stone-800 flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-[#251b14] border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f] shrink-0 font-bold text-xs">1</div>
+                <div>
+                  <h4 class="font-bold text-white text-xs">VPN Matching Customer Location</h4>
+                  <p class="text-[11px] text-stone-400 mt-0.5">The booster connects exclusively through a high-speed, dedicated VPN server matching your specific home country and city.</p>
+                </div>
+              </div>
+
+              <div class="bg-[#18110b] p-3 rounded-xl border border-stone-800 flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-[#251b14] border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f] shrink-0 font-bold text-xs">2</div>
+                <div>
+                  <h4 class="font-bold text-white text-xs">Mandatory Password Rotation</h4>
+                  <p class="text-[11px] text-stone-400 mt-0.5">You must change your password to a temporary password before handing it over to support, and change it back immediately once the order is finished.</p>
+                </div>
+              </div>
+
+              <div class="bg-[#18110b] p-3 rounded-xl border border-stone-800 flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-[#251b14] border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f] shrink-0 font-bold text-xs">3</div>
+                <div>
+                  <h4 class="font-bold text-white text-xs">100% Hand-Played Execution</h4>
+                  <p class="text-[11px] text-stone-400 mt-0.5">Strict prohibition of bots, hacks, scripts, or automation. All gameplay is performed manually by verified master boosters.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      privacy: {
+        title: 'Privacy & Data Policy',
+        subtitle: 'Confidentiality & Player Protection',
+        icon: 'fa-solid fa-lock',
+        content: `
+          <div class="space-y-4 text-xs text-stone-300 leading-relaxed">
+            <p class="text-stone-300 text-xs">
+              We take confidentiality seriously. When using Mythic Progression, your personal details are strictly safeguarded:
+            </p>
+            <ul class="list-disc pl-5 space-y-1.5 text-[11px] text-stone-400">
+              <li><strong>Zero Password Storage:</strong> Any temporary credentials supplied for piloted runs are held only during the active session and are permanently wiped once completed.</li>
+              <li><strong>Invisible Mode Default:</strong> Boosters can play with Battle.net status set to "Appear Offline" so your friends list is never notified.</li>
+              <li><strong>Zero Data Brokerage:</strong> We never sell, trade, or distribute your email, Battletag, or order history to any third parties.</li>
+            </ul>
+          </div>
+        `
+      }
+    };
+
+    const p = policies[type] || policies.terms;
+
+    modal.innerHTML = `
+      <div class="glass-panel rounded-3xl w-full max-w-xl p-6 sm:p-7 border border-[#ee914f]/40 shadow-2xl relative overflow-hidden my-auto max-h-[90vh] flex flex-col animate-fade-in">
+        <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-[#ee914f]/15 blur-3xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-stone-800 flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#251b14] border border-[#ee914f]/40 flex items-center justify-center text-[#ee914f] shadow-md shadow-[#ee914f]/20">
+              <i class="${p.icon} text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white font-cinzel leading-tight">${p.title}</h3>
+              <span class="text-[10px] text-stone-400">${p.subtitle}</span>
+            </div>
+          </div>
+          <button type="button" onclick="app.closePolicyModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer" aria-label="Close modal">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="overflow-y-auto flex-1 py-4 pr-1">
+          ${p.content}
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-4 border-t border-stone-800 flex items-center justify-between flex-shrink-0 text-[11px]">
+          <span class="text-stone-500">Need specific help?</span>
+          <button type="button" onclick="app.closePolicyModal(); app.openLiveChat();" class="text-[#ee914f] hover:underline font-bold flex items-center gap-1 cursor-pointer">
+            <i class="fa-regular fa-comment-dots"></i> Speak to 24/7 Live Support
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  closePolicyModal() {
+    const modal = document.getElementById('mp-policy-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  renderGlobalFooter() {
+    const footer = document.querySelector('footer');
+    if (!footer) return;
+
+    footer.className = 'border-t border-stone-800/80 bg-[#0a0705] py-12 px-4 sm:px-6 lg:px-8 mt-auto relative z-20';
+    footer.innerHTML = `
+      <div class="max-w-7xl mx-auto space-y-10">
+        <!-- Top Main Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
+          
+          <!-- Column 1: Brand & Highlights (Spans 2 on large screens) -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="flex items-center gap-3">
+              <img src="assets/img/logo_circular.png" alt="Mythic Progression Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(238,145,79,0.35)]" />
+              <div>
+                <span class="font-cinzel font-black text-lg text-white tracking-wider copper-gradient-text block leading-none">MYTHIC PROGRESSION</span>
+                <span class="text-[10px] text-[#eedaa2] font-semibold tracking-widest uppercase">Elite Game Services & Coaching</span>
+              </div>
+            </div>
+            
+            <p class="text-xs text-stone-400 leading-relaxed max-w-sm">
+              The premier destination for high-end gaming carries, speed runs, and professional coaching. Operated exclusively by verified elite players with localized VPN protection and 100% hand-played execution.
+            </p>
+
+            <!-- Trust Pills -->
+            <div class="flex flex-wrap gap-2 pt-1 text-[11px]">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#18110b] border border-stone-800 text-stone-300">
+                <i class="fa-solid fa-shield-halved text-[#ee914f]"></i> VPN Protected
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#18110b] border border-stone-800 text-stone-300">
+                <i class="fa-solid fa-bolt text-amber-400"></i> 10-15m Start
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#18110b] border border-stone-800 text-stone-300">
+                <i class="fa-solid fa-user-check text-emerald-400"></i> 100% Hand-Played
+              </span>
+            </div>
+          </div>
+
+          <!-- Column 2: Game Services -->
+          <div class="space-y-3">
+            <h4 class="font-cinzel font-bold text-sm text-[#fcefc2] uppercase tracking-wider">Game Services</h4>
+            <ul class="space-y-2 text-xs text-stone-400">
+              <li><a href="mplus" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Mythic+ Dungeons (+2 to +15)</a></li>
+              <li><a href="raids" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Midnight Raids & Curios</a></li>
+              <li><a href="leveling" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Powerleveling 1-80</a></li>
+              <li><a href="gearing" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Great Vault & Gearing</a></li>
+              <li><a href="forever" class="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 font-medium"><i class="fa-solid fa-crown text-[9px]"></i>WoW Forever (Private)</a></li>
+              <li class="pt-1"><span class="text-[10px] text-stone-500 uppercase tracking-widest font-mono">More titles coming soon</span></li>
+            </ul>
+          </div>
+
+          <!-- Column 3: Company & Boosters -->
+          <div class="space-y-3">
+            <h4 class="font-cinzel font-bold text-sm text-[#fcefc2] uppercase tracking-wider">Company</h4>
+            <ul class="space-y-2 text-xs text-stone-400">
+              <li><button type="button" onclick="app.openPolicyModal('about')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>About Us</button></li>
+              <li><button type="button" onclick="app.openPolicyModal('refund')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>The Mythic Guarantee</button></li>
+              <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Work With Us (Apply Pro)</a></li>
+              <li><a href="pro" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Booster Portal</a></li>
+              <li><a href="client-profile" class="hover:text-[#ee914f] transition-colors flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Client Profile & Orders</a></li>
+            </ul>
+          </div>
+
+          <!-- Column 4: Legal & Support -->
+          <div class="space-y-3">
+            <h4 class="font-cinzel font-bold text-sm text-[#fcefc2] uppercase tracking-wider">Legal & Support</h4>
+            <ul class="space-y-2 text-xs text-stone-400">
+              <li><button type="button" onclick="app.openPolicyModal('terms')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Terms & Conditions</button></li>
+              <li><button type="button" onclick="app.openPolicyModal('refund')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Refund Policy</button></li>
+              <li><button type="button" onclick="app.openPolicyModal('safety')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Account Safety & VPN</button></li>
+              <li><button type="button" onclick="app.openPolicyModal('privacy')" class="hover:text-[#ee914f] transition-colors text-left flex items-center gap-1.5 cursor-pointer"><i class="fa-solid fa-chevron-right text-[8px] text-stone-600"></i>Privacy Policy</button></li>
+              <li><button type="button" onclick="app.openLiveChat()" class="text-emerald-400 hover:text-emerald-300 transition-colors text-left flex items-center gap-1.5 cursor-pointer font-bold"><i class="fa-regular fa-comment-dots"></i>24/7 Live Support Chat</button></li>
+              <li><a href="${this.paymentConfig.discordUrl}" target="_blank" rel="noopener noreferrer" class="text-[#5865F2] hover:text-[#7289da] transition-colors flex items-center gap-1.5 font-bold"><i class="fa-brands fa-discord"></i>Official Discord</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Middle Bar: Payment Methods Row -->
+        <div class="pt-6 border-t border-stone-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span class="text-xs text-stone-400 font-semibold tracking-wide flex items-center gap-2">
+            <i class="fa-solid fa-lock text-[#ee914f]"></i> Secure Payment Gateways Accepted:
+          </span>
+          <div class="flex items-center gap-4 text-stone-400 text-sm">
+            <i class="fa-brands fa-cc-visa text-base hover:text-blue-400 transition-colors" title="Visa"></i>
+            <i class="fa-brands fa-cc-mastercard text-base hover:text-amber-500 transition-colors" title="Mastercard"></i>
+            <i class="fa-brands fa-apple-pay text-2xl hover:text-white transition-colors" title="Apple Pay"></i>
+            <i class="fa-brands fa-google-pay text-2xl hover:text-white transition-colors" title="Google Pay"></i>
+            <span class="inline-flex items-center justify-center hover:text-[#F0B90B] transition-colors cursor-default" title="Binance Pay">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16.624 13.9202l2.7175 2.7154-7.353 7.353-7.353-7.352 2.7175-2.7164 4.6355 4.6595 4.6356-4.6595zm4.6366-4.6366L24 12l-2.7154 2.7164L18.5682 12l2.6924-2.7164zm-9.272.001l2.7163 2.6914-2.7164 2.7174v-.001L9.2721 12l2.7164-2.7154zm-9.2722-.001L5.4088 12l-2.6914 2.6924L0 12l2.7164-2.7164zM11.9885.0115l7.353 7.329-2.7174 2.7154-4.6356-4.6356-4.6355 4.6595-2.7174-2.7154 7.353-7.353z"/></svg>
+            </span>
+            <span class="inline-flex items-center justify-center hover:text-[#26A17B] transition-colors cursor-default" title="Tether USDT (BSC BEP20)">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.7538 10.5176c0 .6251-2.2379 1.1483-5.2381 1.2812l.0028.0007c-.0848.0064-.5233.0325-1.5012.0325-.7778 0-1.33-.0233-1.5237-.0325-3.0059-.1322-5.2495-.6555-5.2495-1.2819s2.2436-1.149 5.2495-1.2834v2.0442c.1965.0142.7594.0474 1.5372.0474.9334 0 1.4008-.0389 1.4849-.0466V9.2356c2.9994.1337 5.2381.657 5.2381 1.282zm5.19.5466L12.1248 22.389a.1803.1803 0 0 1-.2496 0L.0562 11.0635a.1781.1781 0 0 1-.0382-.2079l4.3762-9.1921a.1767.1767 0 0 1 .1626-.1026h14.8878a.1768.1768 0 0 1 .1612.1032l4.3762 9.1922a.1782.1782 0 0 1-.0382.2079zm-4.478-.4038c0-.8068-2.5515-1.4799-5.9473-1.6369V7.195h4.186V4.4055H6.3076V7.195h4.1852v1.8286c-3.4018.1562-5.9601.83-5.9601 1.6376 0 .8075 2.5583 1.4806 5.9601 1.6376v5.8618h3.025v-5.8639c3.394-.1563 5.948-.8295 5.948-1.6363z"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Bottom Legal & Disclaimer -->
+        <div class="pt-6 border-t border-stone-800/60 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-stone-500 text-center md:text-left">
+          <p class="max-w-2xl leading-relaxed">
+            <strong>Disclaimer:</strong> World of Warcraft and Blizzard Entertainment are registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries. Mythic Progression is an independent gaming community and service platform not affiliated with, endorsed by, or sponsored by Blizzard Entertainment or any other game publisher. All game content, trademarks, and associated imagery belong to their respective owners.
+          </p>
+          <div class="shrink-0 font-mono text-[10px] text-stone-600">
+            &copy; 2026 MythicProgression.com. All rights reserved.
+          </div>
+        </div>
+      </div>
+    `;
   }
 }
 
 const app = new MythicApp();
 window.app = app;
+window.openPolicyModal = (type) => app.openPolicyModal(type);
+window.closePolicyModal = () => app.closePolicyModal();
 window.openAuthModal = () => app.openAuthModal();
 window.closeAuthModal = () => app.closeAuthModal();
 window.handleDiscordLogin = () => app.handleDiscordLogin();
@@ -13835,6 +14162,7 @@ window.filterForeverCategory = (cat) => {
     window.app.filterForeverCategory(cat);
   }
 };
+
 
 
 
