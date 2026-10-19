@@ -8071,6 +8071,8 @@ class MythicApp {
         if (content) content.classList.add('hidden');
         if (btn) {
           btn.className = 'px-3.5 py-1.5 rounded-xl bg-[#150a2e] hover:bg-[#201610] text-stone-400 hover:text-white border border-stone-800 flex items-center gap-2 transition-all cursor-pointer font-semibold';
+        }
+      }
     });
 
     if (tabId === 'traders') {
