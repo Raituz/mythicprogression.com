@@ -4518,7 +4518,7 @@ class MythicApp {
           <div class="flex items-center gap-2 truncate pr-2">
             <span class="w-1.5 h-1.5 rounded-full bg-[#ee914f] flex-shrink-0"></span>
             <span class="text-stone-300 font-medium truncate">${it.serviceName}</span>
-            <span class="text-[10px] text-stone-500 hidden sm:inline">(${it.character || 'Personaje'})</span>
+            <span class="text-[10px] text-stone-500 hidden sm:inline">(${it.character || 'Character'})</span>
           </div>
           <span class="font-mono-gaming font-bold text-[#fcefc2] flex-shrink-0">$${price.toFixed(2)}</span>
         </div>
@@ -4552,7 +4552,7 @@ class MythicApp {
           <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-[#fcefc2] flex items-center gap-2">
-                <i class="fa-solid fa-credit-card text-[#ee914f]"></i> Pagar con Tarjeta Internacional
+                <i class="fa-solid fa-credit-card text-[#ee914f]"></i> Pay with International Card
               </span>
               <div class="flex items-center gap-2 text-stone-400 text-sm">
                 <i class="fa-brands fa-cc-visa text-blue-400" title="Visa"></i>
@@ -4562,30 +4562,30 @@ class MythicApp {
               </div>
             </div>
             <p class="text-[11px] text-stone-400 leading-relaxed">
-              Paga en dólares de forma 100% segura mediante pasarela On-Ramp oficial. Tu orden se acreditará automáticamente en el sistema sin retenciones ni comisiones imprevistas.
+              Pay 100% securely with your card via official encrypted on-ramp. No crypto wallet required; your order will be instantly verified and processed without hidden fees.
             </p>
           </div>
 
           <div class="space-y-2">
             <a href="${paybisUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
               <i class="fa-solid fa-lock text-stone-950 text-base"></i>
-              <span>Pagar $${total.toFixed(2)} USD con Tarjeta (Paybis)</span>
+              <span>Pay $${total.toFixed(2)} USD with Card (Paybis)</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
             </a>
 
             <div class="text-center pt-1">
               <a href="${changellyUrl}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-stone-400 hover:text-[#ee914f] transition-colors underline">
-                <i class="fa-solid fa-bolt text-amber-400 mr-1"></i>¿Prefieres Changelly (Apple Pay / Tarjeta)? Haz clic aquí
+                <i class="fa-solid fa-bolt text-amber-400 mr-1"></i>Prefer Changelly (Apple Pay / Card)? Click here
               </a>
             </div>
           </div>
 
           <div class="pt-2 border-t border-stone-800/80">
             <label class="block text-[11px] font-bold text-stone-300 mb-1">
-              <i class="fa-solid fa-receipt text-[#ee914f] mr-1"></i>Número de Orden o Correo de tu Tarjeta:
+               <i class="fa-solid fa-receipt text-[#ee914f] mr-1"></i>Order Reference or Payment Email:
             </label>
-            <input id="mp-pay-ref" type="text" placeholder="Ej: TX-98421 o el correo con el que pagaste" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
-            <span class="text-[10px] text-stone-500 mt-1 block">Una vez completado el pago en la pasarela, pega aquí tu referencia para asociarla a tu orden.</span>
+            <input id="mp-pay-ref" type="text" placeholder="e.g. TX-98421 or the email used for payment" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+            <span class="text-[10px] text-stone-500 mt-1 block">Once payment is completed in the gateway, paste your reference or email here to link it to your order.</span>
           </div>
         </div>
       `;
@@ -4597,39 +4597,39 @@ class MythicApp {
               <div class="w-7 h-7 rounded-lg bg-[#F0B90B] flex items-center justify-center text-stone-950 font-black text-xs">
                 <i class="fa-solid fa-bolt"></i>
               </div>
-              <span class="text-xs font-bold text-[#F0B90B]">Binance Pay (Recomendado Gamers)</span>
+              <span class="text-xs font-bold text-[#F0B90B]">Binance Pay (Instant Crypto Transfer)</span>
             </div>
-            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50 font-bold">0% Comisiones • Inmediato</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50 font-bold">0% Fees • Instant Activation</span>
           </div>
 
           <div class="flex flex-col sm:flex-row items-center gap-4 bg-[#120d09] p-3.5 rounded-xl border border-stone-800">
             <div class="flex-shrink-0">
               <img src="${this.paymentConfig.binanceQrImg}" alt="Binance Pay QR" class="w-36 h-auto rounded-xl border border-[#F0B90B]/40 shadow-xl mx-auto" />
-              <span class="text-[9px] text-stone-500 block text-center mt-1">Escanea con App de Binance</span>
+              <span class="text-[9px] text-stone-500 block text-center mt-1">Scan with Binance App</span>
             </div>
 
             <div class="flex-1 w-full space-y-2 text-left">
               <div class="bg-[#18110b] p-2.5 rounded-lg border border-stone-800">
-                <span class="text-[10px] text-stone-400 block">Binance UID (ID de Usuario):</span>
+                <span class="text-[10px] text-stone-400 block">Binance UID (User ID):</span>
                 <div class="flex items-center justify-between gap-2 mt-0.5">
                   <span class="font-mono-gaming font-bold text-[#fcefc2] text-sm">${this.paymentConfig.binanceUid}</span>
                   <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.binanceUid}', this)" class="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[#ee914f] text-[10px] font-bold rounded cursor-pointer transition-colors">
-                    <i class="fa-regular fa-copy mr-1"></i>Copiar
+                    <i class="fa-regular fa-copy mr-1"></i>Copy
                   </button>
                 </div>
               </div>
 
               <div class="bg-[#18110b] p-2.5 rounded-lg border border-stone-800">
-                <span class="text-[10px] text-stone-400 block">Apodo / Cuenta:</span>
+                <span class="text-[10px] text-stone-400 block">Account Nickname:</span>
                 <span class="font-bold text-white text-xs block mt-0.5">${this.paymentConfig.binanceNickname}</span>
               </div>
 
               <div class="bg-[#18110b] p-2.5 rounded-lg border border-stone-800">
-                <span class="text-[10px] text-stone-400 block">Correo Binance:</span>
+                <span class="text-[10px] text-stone-400 block">Binance Email:</span>
                 <div class="flex items-center justify-between gap-2 mt-0.5">
                   <span class="font-mono text-stone-300 text-[11px] truncate">${this.paymentConfig.binanceEmail}</span>
                   <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.binanceEmail}', this)" class="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[#ee914f] text-[10px] font-bold rounded cursor-pointer transition-colors">
-                    <i class="fa-regular fa-copy mr-1"></i>Copiar
+                    <i class="fa-regular fa-copy mr-1"></i>Copy
                   </button>
                 </div>
               </div>
@@ -4638,9 +4638,9 @@ class MythicApp {
 
           <div class="pt-1">
             <label class="block text-[11px] font-bold text-stone-300 mb-1">
-              <i class="fa-solid fa-receipt text-[#F0B90B] mr-1"></i>Tu ID de Pago de Binance o Usuario (Opcional):
+              <i class="fa-solid fa-receipt text-[#F0B90B] mr-1"></i>Your Binance Pay ID, Order ID or Nickname (Optional):
             </label>
-            <input id="mp-pay-ref" type="text" placeholder="Ej: UID 130948415 o tu apodo de Binance" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+            <input id="mp-pay-ref" type="text" placeholder="e.g. UID 130948415 or your Binance nickname" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
           </div>
         </div>
       `;
@@ -4649,36 +4649,36 @@ class MythicApp {
         <div class="space-y-4 animate-fade-in">
           <div class="bg-amber-950/30 p-3 rounded-xl border border-amber-600/40 text-[11px] text-amber-200 flex items-center gap-2">
             <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm flex-shrink-0"></i>
-            <span><strong>Red obligatoria:</strong> Envía únicamente a través de la red <strong>BNB Smart Chain (BEP20)</strong>. Depósito mínimo >0.01 USDT.</span>
+            <span><strong>Mandatory Network:</strong> Send strictly via <strong>BNB Smart Chain (BEP20)</strong>. Minimum deposit >0.01 USDT.</span>
           </div>
 
           <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 space-y-3">
             <div>
-              <span class="text-[10px] text-stone-400 block">Moneda y Red:</span>
-              <span class="text-xs font-bold text-emerald-400">USDT (Tether) • Red BEP20 (BSC)</span>
+              <span class="text-[10px] text-stone-400 block">Token & Network:</span>
+              <span class="text-xs font-bold text-emerald-400">USDT (Tether) • BEP20 Network (BSC)</span>
             </div>
 
             <div>
-              <span class="text-[10px] text-stone-400 block">Dirección de Depósito:</span>
+              <span class="text-[10px] text-stone-400 block">Deposit Address:</span>
               <div class="flex items-center gap-2 mt-1 bg-[#120d09] p-2 rounded-lg border border-stone-700">
                 <span class="font-mono text-xs text-[#fcefc2] break-all select-all flex-1">${this.paymentConfig.usdtAddress}</span>
                 <button type="button" onclick="app.copyPaymentText('${this.paymentConfig.usdtAddress}', this)" class="px-2.5 py-1.5 bg-[#ee914f] hover:bg-[#d87a38] text-stone-950 text-xs font-bold rounded cursor-pointer transition-colors flex-shrink-0">
-                  <i class="fa-regular fa-copy mr-1"></i>Copiar
+                  <i class="fa-regular fa-copy mr-1"></i>Copy
                 </button>
               </div>
             </div>
 
             <div class="flex items-center justify-between text-xs pt-1">
-              <span class="text-stone-400">Monto exacto a transferir:</span>
+              <span class="text-stone-400">Exact amount to send:</span>
               <span class="font-mono-gaming font-bold text-lg text-[#fcefc2]">$${total.toFixed(2)} USDT</span>
             </div>
           </div>
 
           <div class="pt-1">
             <label class="block text-[11px] font-bold text-stone-300 mb-1">
-              <i class="fa-solid fa-hashtag text-[#ee914f] mr-1"></i>Hash de la Transacción (TXID):
+              <i class="fa-solid fa-hashtag text-[#ee914f] mr-1"></i>Transaction Hash (TXID):
             </label>
-            <input id="mp-pay-ref" type="text" placeholder="Ej: 0x8f2c... (Hash de la transferencia)" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+            <input id="mp-pay-ref" type="text" placeholder="e.g. 0x8f2c... (Blockchain TXID)" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
           </div>
         </div>
       `;
@@ -4687,7 +4687,7 @@ class MythicApp {
         <div class="space-y-4 animate-fade-in">
           <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-[#fcefc2]">Métodos Asistidos en Vivo</span>
+              <span class="text-xs font-bold text-[#fcefc2]">Live Assisted Payment Methods</span>
               <div class="flex items-center gap-2 text-xs">
                 <span class="px-2 py-0.5 bg-blue-950 text-blue-400 rounded border border-blue-800/40 font-bold">PayPal</span>
                 <span class="px-2 py-0.5 bg-purple-950 text-purple-400 rounded border border-purple-800/40 font-bold">Zinli</span>
@@ -4695,27 +4695,27 @@ class MythicApp {
               </div>
             </div>
             <p class="text-[11px] text-stone-400 leading-relaxed">
-              ¿Prefieres pagar con <strong>Zinli</strong>, <strong>PayPal (Amigos y Familia)</strong> o <strong>Zelle</strong>? Para evitar las retenciones bancarias de 21 días y asignarte tu booster sin esperas, nuestro staff te atiende en vivo y te suministra los datos actualizados al instante.
+              Prefer paying with <strong>PayPal (Friends & Family)</strong>, <strong>Zelle</strong>, or <strong>Zinli</strong>? To bypass automated bank delays and instantly assign your pro booster, our 24/7 staff will assist you live with verified checkout instructions.
             </p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <button type="button" onclick="app.openSupportChatFromPayment()" class="py-3 px-4 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ee914f]/20 hover:opacity-95 transition-all cursor-pointer">
               <i class="fa-solid fa-comments text-stone-950"></i>
-              <span class="text-stone-950 font-black">Chat en Vivo Web</span>
+              <span class="text-stone-950 font-black">Live Web Chat</span>
             </button>
 
             <a href="${this.paymentConfig.discordUrl}" target="_blank" rel="noopener noreferrer" class="py-3 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#5865F2]/25 transition-all cursor-pointer">
               <i class="fa-brands fa-discord text-base"></i>
-              <span>Discord Oficial</span>
+              <span>Official Discord</span>
             </a>
           </div>
 
           <div class="pt-2 border-t border-stone-800/80">
             <label class="block text-[11px] font-bold text-stone-300 mb-1">
-              <i class="fa-solid fa-user-check text-[#ee914f] mr-1"></i>Nombre de usuario con el que hablaste en soporte:
+              <i class="fa-solid fa-user-check text-[#ee914f] mr-1"></i>Your Discord or Chat Username:
             </label>
-            <input id="mp-pay-ref" type="text" placeholder="Ej: MiUsuario#1234 en Discord o chat" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
+            <input id="mp-pay-ref" type="text" placeholder="e.g. MyUser#1234 on Discord or web chat" class="w-full bg-[#120d09] border border-stone-700 focus:border-[#ee914f] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none transition-colors" />
           </div>
         </div>
       `;
@@ -4733,11 +4733,11 @@ class MythicApp {
               <i class="fa-solid fa-shield-halved text-lg"></i>
             </div>
             <div>
-              <h3 class="text-base sm:text-lg font-bold text-white font-cinzel leading-tight">Pasarela de Pago Segura</h3>
-              <span class="text-[10px] text-stone-400">Elige tu método de pago para activar tu orden</span>
+              <h3 class="text-base sm:text-lg font-bold text-white font-cinzel leading-tight">Secure Payment Gateway</h3>
+              <span class="text-[10px] text-stone-400">Choose your payment method to activate your order</span>
             </div>
           </div>
-          <button type="button" onclick="app.closePaymentModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+          <button type="button" onclick="app.closePaymentModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer" aria-label="Close modal">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>
         </div>
@@ -4747,24 +4747,24 @@ class MythicApp {
           <!-- Order Summary Card -->
           <div class="bg-[#120d09] p-3.5 rounded-2xl border border-stone-800 space-y-2">
             <div class="flex items-center justify-between text-xs text-stone-400 font-bold uppercase tracking-wider">
-              <span>Resumen de Compra (${ctx.items.length} ${ctx.items.length === 1 ? 'servicio' : 'servicios'})</span>
-              <span class="text-[#ee914f]">Garantía Mythic</span>
+              <span>Order Summary (${ctx.items.length} ${ctx.items.length === 1 ? 'service' : 'services'})</span>
+              <span class="text-[#ee914f]">Mythic Guarantee</span>
             </div>
             <div class="space-y-1">
               ${itemsSummaryHtml}
             </div>
             <div class="pt-2 border-t border-stone-800 flex items-center justify-between">
-              <span class="text-xs font-bold text-stone-300">Total a Pagar:</span>
+              <span class="text-xs font-bold text-stone-300">Total to Pay:</span>
               <span class="font-mono-gaming text-2xl font-black text-[#fcefc2]">$${total.toFixed(2)} <span class="text-xs font-normal text-stone-400">USD</span></span>
             </div>
           </div>
 
           <!-- Method Selector Tabs -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            ${tabBtn('card', 'fa-solid fa-credit-card', 'Tarjeta', 'USA/EU')}
-            ${tabBtn('binance', 'fa-solid fa-bolt', 'Binance Pay', '0%')}
+            ${tabBtn('card', 'fa-solid fa-credit-card', 'Credit / Debit Card', 'USA/EU')}
+            ${tabBtn('binance', 'fa-solid fa-bolt', 'Binance Pay', '0% Fee')}
             ${tabBtn('crypto', 'fa-brands fa-ethereum', 'USDT BEP20', 'BSC')}
-            ${tabBtn('support', 'fa-solid fa-headset', 'Soporte', 'Zinli')}
+            ${tabBtn('support', 'fa-solid fa-headset', 'Live Support', 'Assisted')}
           </div>
 
           <!-- Active Tab Content -->
@@ -4775,11 +4775,11 @@ class MythicApp {
         <div class="pt-4 border-t border-stone-800 flex-shrink-0 space-y-2">
           <button type="button" onclick="app.confirmPaymentAndCompleteOrder()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#ee914f] to-[#e4762b] hover:brightness-110 text-stone-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#ee914f]/30 transition-all cursor-pointer">
             <i class="fa-solid fa-circle-check text-stone-950 text-base"></i>
-            <span>Confirmar Pago y Activar Mi Orden</span>
+            <span>Confirm Payment & Activate My Order</span>
           </button>
           <div class="flex items-center justify-center gap-2 text-[10px] text-stone-500 text-center">
             <i class="fa-solid fa-shield text-emerald-500"></i>
-            <span>Protección VPN incluida • Soporte 24/7 disponible</span>
+            <span>VPN Protection Included • 24/7 Live Support Available</span>
           </div>
         </div>
       </div>
@@ -4812,15 +4812,15 @@ class MythicApp {
     }
 
     const refInput = document.getElementById('mp-pay-ref');
-    const paymentRef = (refInput ? refInput.value.trim() : '') || 'Confirmación directa web';
+    const paymentRef = (refInput ? refInput.value.trim() : '') || 'Direct Web Checkout';
 
     const methodNames = {
-      card: 'Tarjeta Internacional (On-Ramp)',
-      binance: 'Binance Pay (UID 130948415)',
-      crypto: 'USDT BEP-20 Directo',
-      support: 'Soporte Asistido (PayPal/Zinli/Zelle)'
+      card: 'Credit / Debit Card (On-Ramp)',
+      binance: 'Binance Pay',
+      crypto: 'USDT BEP-20 Direct',
+      support: 'Live Assisted Support (PayPal / Zinli / Zelle)'
     };
-    const paymentMethodLabel = methodNames[this.activePaymentContext.selectedMethod] || 'Pasarela Web';
+    const paymentMethodLabel = methodNames[this.activePaymentContext.selectedMethod] || 'Web Gateway';
 
     const createdOrderIds = [];
     this.activePaymentContext.items.forEach(item => {
@@ -4898,7 +4898,7 @@ class MythicApp {
     this.closePaymentModal();
     this.closeCartModal();
 
-    this.showToast(`¡Comprobante enviado (${paymentMethodLabel})! Tu orden #${createdOrderIds.join(', ')} está en verificación de pago.`, 'info');
+    this.showToast(`Receipt submitted (${paymentMethodLabel})! Your order #${createdOrderIds.join(', ')} is under payment verification.`, 'info');
 
     setTimeout(() => {
       window.location.href = 'client-profile';
