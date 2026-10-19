@@ -4711,15 +4711,14 @@ class MythicApp {
         <div class="space-y-4 animate-fade-in">
           <div class="bg-[#18110b] p-3.5 rounded-xl border border-stone-800 space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-[#fcefc2]">Live Assisted Payment Methods</span>
+              <span class="text-xs font-bold text-[#fcefc2]">24/7 Live Checkout Assistance</span>
               <div class="flex items-center gap-2 text-xs">
-                <span class="px-2 py-0.5 bg-blue-950 text-blue-400 rounded border border-blue-800/40 font-bold">PayPal</span>
-                <span class="px-2 py-0.5 bg-purple-950 text-purple-400 rounded border border-purple-800/40 font-bold">Zinli</span>
-                <span class="px-2 py-0.5 bg-teal-950 text-teal-400 rounded border border-teal-800/40 font-bold">Zelle</span>
+                <span class="px-2 py-0.5 bg-amber-950 text-amber-400 rounded border border-amber-800/40 font-bold">Fast Activation</span>
+                <span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded border border-emerald-800/40 font-bold">Verified Support</span>
               </div>
             </div>
             <p class="text-[11px] text-stone-400 leading-relaxed">
-              Prefer paying with <strong>PayPal (Friends & Family)</strong>, <strong>Zelle</strong>, or <strong>Zinli</strong>? To bypass automated bank delays and instantly assign your pro booster, our 24/7 staff will assist you live with verified checkout instructions.
+              Need personal assistance completing your card or crypto payment? Our 24/7 support team is ready to guide you step-by-step and instantly assign your order to our professional booster team.
             </p>
           </div>
 
@@ -4842,7 +4841,7 @@ class MythicApp {
       card: 'Credit / Debit Card (On-Ramp)',
       binance: 'Binance Pay',
       crypto: 'USDT BEP-20 Direct',
-      support: 'Live Assisted Support (PayPal / Zinli / Zelle)'
+      support: 'Live Assisted Support'
     };
     const paymentMethodLabel = methodNames[this.activePaymentContext.selectedMethod] || 'Web Gateway';
 
