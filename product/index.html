@@ -309,8 +309,9 @@
                   </div>
                   <span class="text-[9px] text-[#ee914f]/80 font-bold">Loot Traders</span>
                 </div>
-                <div class="relative">
-                  <select id="sp-character-class" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl px-3.5 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer">
+                <div class="relative flex items-center">
+                  <img id="sp-class-icon-preview" src="assets/img/classes/warrior.jpg" alt="Warrior" class="w-6 h-6 rounded-md object-cover absolute left-3 top-1/2 -translate-y-1/2 border border-[#ee914f]/50 pointer-events-none shadow-sm z-10">
+                  <select id="sp-character-class" onchange="app.updateCombinedCharacter()" class="w-full h-11 bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-11 pr-8 text-xs text-white focus:border-[#ee914f] outline-none transition-colors appearance-none cursor-pointer font-medium">
                     <optgroup label="Plate">
                       <option value="Warrior" selected>⚔️ Warrior</option>
                       <option value="Paladin">✨ Paladin</option>
@@ -400,6 +401,7 @@
             <!-- Summary preview card -->
             <div id="sp-char-summary-badge" class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-400 bg-[#160f0a] px-3.5 py-2 rounded-xl border border-stone-800">
               <div class="flex items-center gap-2">
+                <img id="sp-char-summary-class-icon" src="assets/img/classes/warrior.jpg" alt="Warrior" class="w-4 h-4 rounded object-cover border border-[#ee914f]/50 shadow-sm">
                 <span class="text-stone-500 font-semibold">Personaje para la orden:</span>
                 <strong id="sp-char-summary-text" class="text-[#ee914f] font-mono-gaming text-xs">Heroe-Ragnaros</strong>
               </div>
@@ -573,6 +575,6 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=3.7.2"></script>
+  <script src="assets/js/app.js?v=3.7.3"></script>
 </body>
 </html>

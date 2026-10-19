@@ -2374,8 +2374,9 @@ class MythicApp {
         dropdown.innerHTML = results.map(s => `
           <a href="product?id=${s.id}" class="p-3 hover:bg-[#201812] flex items-center justify-between border-b border-stone-800 last:border-0 transition-colors">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-[#251b14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] text-sm">
-                <i class="fa-solid ${s.icon}"></i>
+              <div class="w-8 h-8 rounded-lg bg-[#251b14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] text-sm overflow-hidden p-0.5 shrink-0 shadow-sm">
+                <img src="${this.getServiceIconUrl(s)}" alt="${s.name}" class="w-full h-full object-cover rounded-md" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                <i class="fa-solid ${s.icon} hidden"></i>
               </div>
               <div>
                 <div class="text-xs font-bold text-[#fcefc2]">${s.name}</div>
@@ -2638,12 +2639,17 @@ class MythicApp {
 
           <!-- Select Dungeon -->
           <div>
-            <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
-              Select Dungeon:
+            <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+              <span>Select Dungeon:</span>
+              <span class="text-[9px] text-[#ee914f]/80 font-bold uppercase">Mythic+</span>
             </label>
-            <select id="sp-dungeon-select" class="w-full bg-[#18110b] border border-stone-700 rounded-xl px-4 py-3 text-xs text-stone-200 outline-none focus:border-[#ee914f]">
-              ${dungeons.map(d => `<option value="${d}">${d}</option>`).join('')}
-            </select>
+            <div class="relative flex items-center">
+              <img id="sp-dungeon-icon-preview" src="${this.getDungeonIconUrl(dungeons[0])}" alt="Dungeon" class="w-6 h-6 rounded-md object-cover absolute left-3 top-1/2 -translate-y-1/2 border border-[#ee914f]/50 pointer-events-none shadow-sm z-10">
+              <select id="sp-dungeon-select" onchange="app.updateDungeonIconPreview(this.value)" class="w-full bg-[#18110b] border border-stone-700/80 hover:border-[#ee914f]/50 rounded-xl pl-11 pr-8 py-3 text-xs text-stone-200 outline-none focus:border-[#ee914f] appearance-none cursor-pointer font-medium">
+                ${dungeons.map(d => `<option value="${d}">${d}</option>`).join('')}
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-[10px] pointer-events-none"></i>
+            </div>
           </div>
 
           <!-- Completion Method -->
@@ -3911,8 +3917,9 @@ class MythicApp {
 
             <!-- Glowing Icon (SkyCoach style) -->
             <div class="my-3 flex items-center justify-center">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-500/20 via-[#26170d] to-[#180f08] border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:scale-105 group-hover:border-amber-400/60 group-hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] transition-all duration-300">
-                <i class="fa-solid ${svc.icon || 'fa-dungeon'}"></i>
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-500/20 via-[#26170d] to-[#180f08] border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:scale-105 group-hover:border-amber-400/60 group-hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] transition-all duration-300 overflow-hidden p-1">
+                <img src="${this.getServiceIconUrl(svc)}" alt="${svc.name}" class="w-full h-full object-cover rounded-xl" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                <i class="fa-solid ${svc.icon || 'fa-dungeon'} hidden"></i>
               </div>
             </div>
 
@@ -3981,8 +3988,9 @@ class MythicApp {
           </div>
 
           <div class="flex items-start gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-[#221a14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] text-xl group-hover:scale-110 transition-transform">
-              <i class="fa-solid ${svc.icon}"></i>
+            <div class="w-12 h-12 rounded-xl bg-[#221a14] border border-[#ee914f]/30 flex items-center justify-center text-[#ee914f] text-xl group-hover:scale-110 transition-transform overflow-hidden p-0.5 shrink-0 shadow-md">
+              <img src="${this.getServiceIconUrl(svc)}" alt="${svc.name}" class="w-full h-full object-cover rounded-lg" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+              <i class="fa-solid ${svc.icon || 'fa-dungeon'} hidden"></i>
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="text-lg font-bold text-white group-hover:text-[#fcefc2] transition-colors product-card-title notranslate" translate="no">${svc.name}</h3>
@@ -6069,8 +6077,9 @@ class MythicApp {
               ${method}
             </span>
             ${order.characterClass ? `
-              <span class="text-[11px] px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold flex items-center gap-1 shadow-sm">
-                <i class="fa-solid fa-shield-halved text-[10px] text-purple-400"></i> ${order.characterClass}
+              <span class="text-[11px] px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold flex items-center gap-1.5 shadow-sm">
+                <img src="${this.getClassIconUrl(order.characterClass)}" alt="${order.characterClass}" class="w-3.5 h-3.5 rounded object-cover border border-purple-500/50 shadow-sm">
+                <span>${order.characterClass}</span>
               </span>
             ` : ''}
             ${order.faction ? `
@@ -6219,7 +6228,7 @@ class MythicApp {
           <div class="grid grid-cols-2 gap-2 text-[11px] text-stone-300 pt-1 border-t border-stone-800/60">
             <div><span class="text-stone-500">Región/Modalidad:</span> <strong class="text-white">${order.region || 'US'} | ${order.completionMethod || 'Piloted'}</strong></div>
             <div><span class="text-stone-500">VPN Requerida:</span> <strong class="text-stone-200">${order.vpnLocation || 'No requerida'}</strong></div>
-            ${order.characterClass ? `<div><span class="text-stone-500">Clase (Traders):</span> <strong class="text-purple-300">🛡️ ${order.characterClass}</strong></div>` : ''}
+            ${order.characterClass ? `<div><span class="text-stone-500">Clase (Traders):</span> <strong class="text-purple-300 inline-flex items-center gap-1.5"><img src="${this.getClassIconUrl(order.characterClass)}" alt="${order.characterClass}" class="w-3.5 h-3.5 rounded object-cover border border-purple-500/50 shadow-sm"> ${order.characterClass}</strong></div>` : ''}
             ${order.faction ? `<div><span class="text-stone-500">Facción / Reino:</span> <strong class="text-white">${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction} ${order.realm ? `(${order.realm})` : ''}</strong></div>` : ''}
           </div>
         </div>
@@ -6596,7 +6605,7 @@ class MythicApp {
               <p class="text-xs ${isCompleted ? 'text-stone-500' : 'text-stone-400'} mt-0.5 flex items-center gap-1.5 flex-wrap">
                 <span>Cliente: <strong class="text-stone-300">${order.clientName || 'Cliente'}</strong></span>
                 <span>• Personaje: <strong class="text-white">${order.characterName || 'No especificado'}</strong></span>
-                ${order.characterClass ? `<span class="px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold">🛡️ ${order.characterClass}</span>` : ''}
+                ${order.characterClass ? `<span class="px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold inline-flex items-center gap-1"><img src="${this.getClassIconUrl(order.characterClass)}" alt="${order.characterClass}" class="w-3 h-3 rounded object-cover border border-purple-500/50 shadow-sm"> ${order.characterClass}</span>` : ''}
                 ${order.faction ? `<span class="text-[10px] text-stone-400 font-medium">(${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction}${order.realm ? ` - ${order.realm}` : ''})</span>` : ''}
               </p>
             </div>
@@ -8504,7 +8513,7 @@ class MythicApp {
           <div class="font-bold text-white text-xs leading-snug">${o.serviceName}</div>
           <div class="flex items-center gap-1.5 mt-1 flex-wrap">
             <span class="text-[9px] px-1.5 py-0.2 rounded bg-stone-900 text-stone-300 border border-stone-800">${o.region || 'US'}</span>
-            ${o.characterClass ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold flex items-center gap-1">🛡️ ${o.characterClass}</span>` : ''}
+            ${o.characterClass ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 font-semibold inline-flex items-center gap-1"><img src="${this.getClassIconUrl(o.characterClass)}" alt="${o.characterClass}" class="w-3 h-3 rounded object-cover border border-purple-500/50 shadow-sm"> ${o.characterClass}</span>` : ''}
             ${o.faction ? `<span class="text-[9px] px-1.5 py-0.2 rounded ${o.faction.toLowerCase().includes('alianza') ? 'bg-blue-950/80 text-blue-300 border border-blue-500/40' : 'bg-red-950/80 text-red-300 border border-red-500/40'} font-semibold">${o.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${o.faction}</span>` : ''}
             ${o.realm ? `<span class="text-[9px] text-stone-400 font-mono">🏰 ${o.realm}</span>` : ''}
           </div>
@@ -11172,6 +11181,93 @@ class MythicApp {
     this.selectRealm(realm.name, realm.region, realm.version, realm.category);
   }
 
+  getClassIconUrl(className) {
+    if (!className) return 'assets/img/classes/warrior.jpg';
+    const c = String(className).toLowerCase();
+    if (c.includes('warrior') || c.includes('guerrero') || c.includes('guerreiro')) return 'assets/img/classes/warrior.jpg';
+    if (c.includes('paladin') || c.includes('paladín') || c.includes('paladino')) return 'assets/img/classes/paladin.jpg';
+    if (c.includes('death knight') || c.includes('deathknight') || c.includes('caballero de la muerte') || c.includes('cavaleiro da morte') || c.includes('dk')) return 'assets/img/classes/deathknight.jpg';
+    if (c.includes('hunter') || c.includes('cazador') || c.includes('caçador')) return 'assets/img/classes/hunter.jpg';
+    if (c.includes('shaman') || c.includes('chamán') || c.includes('xamã')) return 'assets/img/classes/shaman.jpg';
+    if (c.includes('evoker') || c.includes('evocador') || c.includes('conjurante')) return 'assets/img/classes/evoker.jpg';
+    if (c.includes('rogue') || c.includes('pícaro') || c.includes('picaro') || c.includes('ladino')) return 'assets/img/classes/rogue.jpg';
+    if (c.includes('druid') || c.includes('druida')) return 'assets/img/classes/druid.jpg';
+    if (c.includes('monk') || c.includes('monje') || c.includes('monge')) return 'assets/img/classes/monk.jpg';
+    if (c.includes('demon hunter') || c.includes('demonhunter') || c.includes('cazador de demonios') || c.includes('caçador de demônios') || c.includes('dh')) return 'assets/img/classes/demonhunter.jpg';
+    if (c.includes('priest') || c.includes('sacerdote')) return 'assets/img/classes/priest.jpg';
+    if (c.includes('mage') || c.includes('mago')) return 'assets/img/classes/mage.jpg';
+    if (c.includes('warlock') || c.includes('brujo') || c.includes('bruxo')) return 'assets/img/classes/warlock.jpg';
+    return 'assets/img/classes/warrior.jpg';
+  }
+
+  getDungeonIconUrl(dungeonName) {
+    if (!dungeonName) return 'assets/img/dungeons/stonevault.jpg';
+    const n = String(dungeonName).toLowerCase();
+    if (n.includes('stonevault') || n.includes('sagrario de piedra')) return 'assets/img/dungeons/stonevault.jpg';
+    if (n.includes('city of threads') || n.includes('ciudad de los hilos')) return 'assets/img/dungeons/cityofthreads.jpg';
+    if (n.includes('dawnbreaker') || n.includes('rompealbas')) return 'assets/img/dungeons/dawnbreaker.jpg';
+    if (n.includes('ara-kara') || n.includes('arakara')) return 'assets/img/dungeons/arakaracityofechoes.jpg';
+    if (n.includes('cinderbrew') || n.includes('hidromeler')) return 'assets/img/dungeons/cinderbrewmeadery.jpg';
+    if (n.includes('darkflame') || n.includes('flama oscura')) return 'assets/img/dungeons/darkflamecleft.jpg';
+    if (n.includes('priory') || n.includes('llama sagrada')) return 'assets/img/dungeons/prioryofthesacredflame.jpg';
+    if (n.includes('floodgate') || n.includes('compuerta')) return 'assets/img/dungeons/operationfloodgate.jpg';
+    if (n.includes('grim batol')) return 'assets/img/dungeons/grimbatol.jpg';
+    if (n.includes('necrotic') || n.includes('necrótica')) return 'assets/img/dungeons/necroticwake.jpg';
+    if (n.includes('tirna scithe')) return 'assets/img/dungeons/mistsoftirnascithe.jpg';
+    if (n.includes('boralus')) return 'assets/img/dungeons/siegeofboralus.jpg';
+    if (n.includes('motherlode') || n.includes('veta madre')) return 'assets/img/dungeons/motherlode.jpg';
+    if (n.includes('deadmines') || n.includes('minas de la muerte')) return 'assets/img/dungeons/deadmines.jpg';
+    if (n.includes('wailing') || n.includes('lamentos')) return 'assets/img/dungeons/wailingcaverns.jpg';
+    if (n.includes('shadowfang') || n.includes('colmillo oscuro')) return 'assets/img/dungeons/shadowfangkeep.jpg';
+    if (n.includes('blackfathom') || n.includes('cavernas profundas')) return 'assets/img/dungeons/blackfathomdeeps.jpg';
+    if (n.includes('ragefire') || n.includes('furia ígnea')) return 'assets/img/dungeons/ragefirechasm.jpg';
+    if (n.includes('shaper') || n.includes('creadores')) return 'assets/img/dungeons/shapersterrace.jpg';
+    if (n.includes('legacy') || n.includes('legado')) return 'assets/img/dungeons/dungeonlegacy.jpg';
+    if (n.includes('atal\'utek') || n.includes('atalutek') || n.includes('abyss')) return 'assets/img/raids/venomousabyss.jpg';
+    return 'assets/img/dungeons/stonevault.jpg';
+  }
+
+  getServiceIconUrl(svc) {
+    if (!svc) return 'assets/img/dungeons/stonevault.jpg';
+    if (svc.imgIcon) return svc.imgIcon;
+    const id = String(svc.id || '').toLowerCase();
+    const name = String(svc.name || '').toLowerCase();
+    const cat = String(svc.category || '').toLowerCase();
+
+    // Raids
+    if (id.includes('raid') || id.includes('abyss') || name.includes('abyss') || cat.includes('raid') || cat.includes('bandas')) {
+      if (id.includes('onyxia') || name.includes('onyxia')) return 'assets/img/raids/onyxia.jpg';
+      if (id.includes('molten') || name.includes('molten')) return 'assets/img/raids/moltencore.jpg';
+      if (id.includes('nerub') || name.includes('nerub')) return 'assets/img/raids/nerubar.jpg';
+      if (id.includes('undermine') || name.includes('undermine')) return 'assets/img/raids/undermine.jpg';
+      return 'assets/img/raids/venomousabyss.jpg';
+    }
+
+    // Classic & Forever Dungeons
+    if (id.includes('deadmines') || name.includes('deadmines')) return 'assets/img/dungeons/deadmines.jpg';
+    if (id.includes('wailing') || name.includes('wailing')) return 'assets/img/dungeons/wailingcaverns.jpg';
+    if (id.includes('shadowfang') || name.includes('shadowfang')) return 'assets/img/dungeons/shadowfangkeep.jpg';
+    if (id.includes('blackfathom') || name.includes('blackfathom')) return 'assets/img/dungeons/blackfathomdeeps.jpg';
+    if (id.includes('ragefire') || name.includes('ragefire')) return 'assets/img/dungeons/ragefirechasm.jpg';
+    if (id.includes('shaper') || name.includes('shaper')) return 'assets/img/dungeons/shapersterrace.jpg';
+    if (id.includes('legacy') || name.includes('legacy')) return 'assets/img/dungeons/dungeonlegacy.jpg';
+
+    // Other categories
+    if (id.includes('powerleveling') || cat.includes('leveling')) return 'assets/img/classes/warrior.jpg';
+    if (id.includes('gearing') || cat.includes('gear') || cat.includes('equipo')) return 'assets/img/raids/moltencore.jpg';
+
+    // Retail M+
+    return 'assets/img/dungeons/stonevault.jpg';
+  }
+
+  updateDungeonIconPreview(dungeonName) {
+    const imgEl = document.getElementById('sp-dungeon-icon-preview');
+    if (imgEl) {
+      imgEl.src = this.getDungeonIconUrl(dungeonName);
+      imgEl.alt = dungeonName || 'Dungeon';
+    }
+  }
+
   updateCombinedCharacter() {
     const charName = document.getElementById('sp-char-name')?.value.trim() || 'Heroe';
     const realmName = this.selectedRealm?.name || document.getElementById('sp-realm-search')?.value.trim() || 'Ragnaros';
@@ -11181,6 +11277,18 @@ class MythicApp {
     const hiddenCharInput = document.getElementById('sp-character');
     const summaryText = document.getElementById('sp-char-summary-text');
     const summaryExtra = document.getElementById('sp-char-summary-extra');
+
+    const classIconUrl = this.getClassIconUrl(charClass);
+    const classPreviewEl = document.getElementById('sp-class-icon-preview');
+    if (classPreviewEl) {
+      classPreviewEl.src = classIconUrl;
+      classPreviewEl.alt = charClass;
+    }
+    const summaryClassIconEl = document.getElementById('sp-char-summary-class-icon');
+    if (summaryClassIconEl) {
+      summaryClassIconEl.src = classIconUrl;
+      summaryClassIconEl.alt = charClass;
+    }
 
     const combined = `${charName}-${realmName}`;
     if (hiddenCharInput) hiddenCharInput.value = combined;
