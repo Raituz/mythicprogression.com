@@ -16845,7 +16845,7 @@ MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
               ${w.rejectionReason ? `<div class="text-[10px] text-rose-400/80 italic mt-1 max-w-[180px] truncate ml-auto" title="${w.rejectionReason}">"${w.rejectionReason}"</div>` : ''}
               <div class="text-[10px] text-stone-500 font-mono mt-0.5">Por: ${w.reviewedBy || 'Admin'}</div>
             </div>
-          `)}
+          `))}
         </td>
       </tr>
     `;
