@@ -6496,9 +6496,6 @@ class MythicApp {
               <select id="booster-apply-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 outline-none">
                 <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
                 <option value="USDT TRC20 / BSC">USDT (TRC20 / BSC)</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Zelle">Zelle</option>
-                <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
               </select>
             </div>
 
@@ -16438,7 +16435,7 @@ MythicApp.prototype.renderAdminFinancesLedgerTable = function(ledger) {
     if (isOrder) {
       typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-600/40 font-bold"><i class="fa-solid fa-check-double mr-1"></i>ORDEN</span>`;
     } else if (isWithdrawal) {
-      typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-950/80 text-rose-300 border border-rose-600/40 font-bold"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>RETIRO</span>`;
+      typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 font-bold inline-flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-400"></i>RETIRO PAGADO</span>`;
     } else if (isCredit) {
       typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-teal-950/80 text-teal-300 border border-teal-600/40 font-bold"><i class="fa-solid fa-plus-circle mr-1"></i>AJUSTE (+)</span>`;
     } else {
@@ -17084,7 +17081,7 @@ MythicApp.prototype.renderProBalance = function() {
     if (isOrder) {
       badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-600/50 font-bold"><i class="fa-solid fa-check mr-1"></i>Orden Acreditada</span>`;
     } else if (isWithdrawal) {
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-950/90 text-rose-300 border border-rose-600/50 font-bold"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Retiro Procesado</span>`;
+      badge = `<span class="px-2.5 py-0.5 rounded text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-500/50 font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>Retiro Pagado</span>`;
     } else if (isCredit) {
       badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-teal-950/90 text-teal-300 border border-teal-600/50 font-bold"><i class="fa-solid fa-plus mr-1"></i>Ajuste Admin (+)</span>`;
     } else {
@@ -17215,32 +17212,32 @@ MythicApp.prototype.renderProBalance = function() {
       <div class="mb-4">
         <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-2">Modalidad de Retiro:</label>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- STANDARD -->
-          <div id="pro-speed-card-standard" onclick="app.setProWithdrawSpeed('STANDARD')" class="p-4 rounded-xl border-2 ${currentSpeed === 'STANDARD' ? 'border-[#ee914f] bg-gradient-to-r from-[#29170c] to-[#1a1008] text-white shadow-lg' : 'border-stone-800 bg-[#140e0a] text-stone-400 hover:text-white'} cursor-pointer transition-all">
+          <!-- STANDARD (VERDE GRADIENTE) -->
+          <div id="pro-speed-card-standard" onclick="app.setProWithdrawSpeed('STANDARD')" class="p-4 rounded-xl border-2 ${currentSpeed === 'STANDARD' ? 'border-emerald-400 bg-gradient-to-br from-[#0e2a18] via-[#091f11] to-[#05130a] text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.4)]' : 'border-emerald-600/30 bg-gradient-to-br from-[#091a10]/60 to-[#040e07]/60 text-stone-300 hover:border-emerald-400/60 hover:text-emerald-200'} cursor-pointer transition-all">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-regular fa-clock text-stone-300"></i> Retiro Normal
+              <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-emerald-300">
+                <i class="fa-regular fa-clock text-emerald-400"></i> Retiro Normal
               </span>
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-stone-900 border border-stone-700 text-stone-200">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/50">
                 Fee 3%
               </span>
             </div>
-            <div class="text-xs text-stone-200 font-semibold">Entrega en 5 días hábiles</div>
-            <div class="text-[10px] text-stone-400 mt-1">Tarifa mínima estándar para retiros regulares.</div>
+            <div class="text-xs text-emerald-200 font-semibold">Entrega en 5 días hábiles</div>
+            <div class="text-[10px] text-emerald-300/70 mt-1">Tarifa mínima estándar para retiros regulares.</div>
           </div>
 
-          <!-- IMMEDIATE -->
-          <div id="pro-speed-card-immediate" onclick="app.setProWithdrawSpeed('IMMEDIATE')" class="p-4 rounded-xl border-2 ${currentSpeed === 'IMMEDIATE' ? 'border-amber-400 bg-gradient-to-r from-amber-950/80 via-[#2f1406] to-amber-950/80 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.35)]' : 'border-amber-500/30 bg-[#140e0a] text-stone-400 hover:text-amber-300'} cursor-pointer transition-all relative overflow-hidden">
+          <!-- IMMEDIATE (MORADO GRADIENTE - EXCLUSIVIDAD) -->
+          <div id="pro-speed-card-immediate" onclick="app.setProWithdrawSpeed('IMMEDIATE')" class="p-4 rounded-xl border-2 ${currentSpeed === 'IMMEDIATE' ? 'border-purple-400 bg-gradient-to-br from-[#2a0e4a] via-[#1c0833] to-[#0f041d] text-purple-100 shadow-[0_0_30px_rgba(168,85,247,0.55)]' : 'border-purple-600/40 bg-gradient-to-br from-[#1d0933]/70 to-[#0d0317]/70 text-stone-300 hover:border-purple-400/60 hover:text-purple-200'} cursor-pointer transition-all relative overflow-hidden">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-amber-300">
-                <i class="fa-solid fa-bolt-lightning text-amber-400"></i> ⚡ RETIRO INMEDIATO
+              <span class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-purple-300">
+                <i class="fa-solid fa-bolt-lightning text-purple-400"></i> ⚡ RETIRO INMEDIATO
               </span>
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-black bg-amber-500 text-stone-950 shadow-sm animate-pulse">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-black bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md animate-pulse">
                 Fee 10%
               </span>
             </div>
-            <div class="text-xs text-amber-200 font-bold">Entrega en menos de 24 horas</div>
-            <div class="text-[10px] text-amber-300/80 mt-1">Procesamiento prioritario express con máxima prioridad.</div>
+            <div class="text-xs text-purple-200 font-bold">Entrega en menos de 24 horas</div>
+            <div class="text-[10px] text-purple-300/80 mt-1">Procesamiento prioritario express con máxima exclusividad.</div>
           </div>
         </div>
       </div>
@@ -17248,39 +17245,30 @@ MythicApp.prototype.renderProBalance = function() {
       <!-- FORM -->
       <form onsubmit="event.preventDefault(); app.submitProWithdrawalRequest(this);" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Monto -->
+          <!-- Monto (Sin los botones de 25%, 50%, 100%) -->
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-xs font-semibold text-stone-300">Monto a retirar ($ USD):</label>
               <span class="text-[10px] text-stone-400">Disp: <strong>$${availableToWithdraw.toFixed(2)}</strong></span>
             </div>
-            <input id="pro-withdraw-amount" type="number" min="10" max="${availableToWithdraw}" step="any" value="${availableToWithdraw > 0 ? (availableToWithdraw >= 50 ? 50 : availableToWithdraw) : 0}" oninput="app.updateProWithdrawCalc()" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold outline-none focus:border-amber-500" required>
-            
-            <!-- Quick % buttons -->
-            <div class="flex items-center gap-1.5 mt-1.5">
-              <button type="button" onclick="app.setProWithdrawAmountPercent(0.25)" class="px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 text-[10px] font-mono cursor-pointer">25%</button>
-              <button type="button" onclick="app.setProWithdrawAmountPercent(0.5)" class="px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 text-[10px] font-mono cursor-pointer">50%</button>
-              <button type="button" onclick="app.setProWithdrawAmountPercent(1)" class="px-2 py-0.5 rounded bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/40 text-[10px] font-mono font-bold cursor-pointer">100% (Todo)</button>
-            </div>
+            <input id="pro-withdraw-amount" type="number" min="10" max="${availableToWithdraw}" step="any" placeholder="Ingresa monto a retirar (ej: 40)" oninput="app.updateProWithdrawCalc()" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold outline-none focus:border-amber-500" required>
+            <span class="text-[10px] text-stone-500 mt-1 block">Mínimo: $10.00 USD | Máx disponible: $${availableToWithdraw.toFixed(2)}</span>
           </div>
 
-          <!-- Metodo -->
+          <!-- Metodo (Solo Binance Pay y USDT TRC20/BSC) -->
           <div>
             <label class="block text-xs font-semibold text-stone-300 mb-1">Método de Pago:</label>
             <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200 outline-none focus:border-amber-500">
               <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
-              <option value="PayPal">PayPal</option>
-              <option value="Zelle">Zelle</option>
               <option value="USDT TRC20 / BSC">USDT TRC20 / BSC</option>
-              <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
             </select>
-            <span class="text-[10px] text-stone-500 mt-1 block">Selecciona cómo deseas recibir los fondos.</span>
+            <span class="text-[10px] text-stone-500 mt-1 block">Transferencia directa en criptomonedas (USDT).</span>
           </div>
 
           <!-- ID Destino -->
           <div>
             <label class="block text-xs font-semibold text-stone-300 mb-1">ID o Dirección de Destino:</label>
-            <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Correo" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none focus:border-amber-500" required>
+            <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Dirección USDT" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none focus:border-amber-500" required>
             <span class="text-[10px] text-stone-500 mt-1 block">Verifica cuidadosamente los datos antes de enviar.</span>
           </div>
         </div>
@@ -17453,13 +17441,19 @@ MythicApp.prototype.setProWithdrawSpeed = function(speed) {
   const cardStd = document.getElementById('pro-speed-card-standard');
   const cardImm = document.getElementById('pro-speed-card-immediate');
 
+  const activeStd = 'p-4 rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-[#0e2a18] via-[#091f11] to-[#05130a] text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.4)] cursor-pointer transition-all';
+  const inactiveStd = 'p-4 rounded-xl border border-emerald-600/30 bg-gradient-to-br from-[#091a10]/60 to-[#040e07]/60 text-stone-300 hover:border-emerald-400/60 hover:text-emerald-200 cursor-pointer transition-all';
+
+  const activeImm = 'p-4 rounded-xl border-2 border-purple-400 bg-gradient-to-br from-[#2a0e4a] via-[#1c0833] to-[#0f041d] text-purple-100 shadow-[0_0_30px_rgba(168,85,247,0.55)] cursor-pointer transition-all relative overflow-hidden';
+  const inactiveImm = 'p-4 rounded-xl border border-purple-600/40 bg-gradient-to-br from-[#1d0933]/70 to-[#0d0317]/70 text-stone-300 hover:border-purple-400/60 hover:text-purple-200 cursor-pointer transition-all relative overflow-hidden';
+
   if (cardStd && cardImm) {
     if (speed === 'IMMEDIATE') {
-      cardImm.className = 'p-4 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-950/80 via-[#2f1406] to-amber-950/80 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer transition-all relative overflow-hidden';
-      cardStd.className = 'p-4 rounded-xl border-2 border-stone-800 bg-[#140e0a] text-stone-400 hover:text-white cursor-pointer transition-all';
+      cardImm.className = activeImm;
+      cardStd.className = inactiveStd;
     } else {
-      cardStd.className = 'p-4 rounded-xl border-2 border-[#ee914f] bg-gradient-to-r from-[#29170c] to-[#1a1008] text-white shadow-lg cursor-pointer transition-all';
-      cardImm.className = 'p-4 rounded-xl border-2 border-amber-500/30 bg-[#140e0a] text-stone-400 hover:text-amber-300 cursor-pointer transition-all relative overflow-hidden';
+      cardStd.className = activeStd;
+      cardImm.className = inactiveImm;
     }
   }
 
@@ -17494,9 +17488,9 @@ MythicApp.prototype.updateProWithdrawCalc = function() {
   if (netEl) netEl.textContent = '+$' + netAmt.toFixed(2) + ' USD';
   if (timeEl) {
     if (speed === 'IMMEDIATE') {
-      timeEl.innerHTML = '<span class="text-amber-300 font-black flex items-center gap-1"><i class="fa-solid fa-bolt-lightning text-amber-400"></i> &lt; 24h Express</span>';
+      timeEl.innerHTML = '<span class="text-purple-300 font-black flex items-center gap-1"><i class="fa-solid fa-bolt-lightning text-purple-400"></i> &lt; 24h Express (Prioritario)</span>';
     } else {
-      timeEl.innerHTML = '<span class="text-stone-300 font-semibold flex items-center gap-1"><i class="fa-regular fa-clock text-stone-400"></i> 5 días hábiles</span>';
+      timeEl.innerHTML = '<span class="text-emerald-300 font-semibold flex items-center gap-1"><i class="fa-regular fa-clock text-emerald-400"></i> 5 días hábiles (Estándar)</span>';
     }
   }
 };

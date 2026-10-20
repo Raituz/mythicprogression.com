@@ -292,10 +292,7 @@
               <label class="block text-xs font-semibold text-stone-300 mb-1">MÉtodo de Pago:</label>
               <select id="wallet-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200">
                 <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Zelle">Zelle</option>
                 <option value="USDT TRC20 / ERC20">USDT TRC20 / BSC</option>
-                <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
               </select>
             </div>
             <div>
@@ -487,17 +484,14 @@
                   <div>
                     <label class="block text-xs font-semibold text-stone-300 mb-1">Correo de Pago / Cobro:</label>
                     <input id="pro-prof-payout-email" type="email" placeholder="cobros@tuemail.com" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#ee914f] outline-none" required>
-                    <span class="text-[10px] text-stone-500 mt-0.5 block">Email para recibir comprobantes y pagos vÍa PayPal o Binance.</span>
+                    <span class="text-[10px] text-stone-500 mt-0.5 block">Email para recibir comprobantes y pagos vía Binance.</span>
                   </div>
 
                   <div>
                     <label class="block text-xs font-semibold text-stone-300 mb-1">MÉtodo de Pago Preferido:</label>
                     <select id="pro-prof-payout-method" onchange="app.onBoosterPayoutMethodChange(this.value)" class="w-full bg-[#16110c] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-stone-200 focus:border-[#ee914f] outline-none">
                       <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
-                      <option value="PayPal">PayPal (USD / EUR)</option>
-                      <option value="Zelle">Zelle (USD)</option>
                       <option value="USDT TRC20 / ERC20">USDT (Billetera TRC20 / BSC)</option>
-                      <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
                     </select>
                   </div>
                 </div>
