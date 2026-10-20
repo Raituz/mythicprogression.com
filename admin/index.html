@@ -874,6 +874,13 @@
       <section id="tab-supplier" class="hidden space-y-6">
         <div id="supplier-dispatch-container-admin"></div>
       </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB: CONTROL DE SALDOS (FINANZAS Y AUDITORÍA)           -->
+      <!-- ======================================================== -->
+      <section id="tab-finances" class="hidden space-y-6">
+        <div id="admin-finances-container"></div>
+      </section>
 </main>
   </div>
 
@@ -1260,7 +1267,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.7"></script>
+  <script src="assets/js/app.js?v=4.2.8"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
@@ -1316,7 +1323,8 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         clients: 'Gesti\u00F3n y Base de Datos de Clientes Registrados',
         boosters: 'Gesti\u00F3n y Aprobaci\u00F3n de Boosters (Plantilla SQLite)',
         chat: 'Supervisi\u00F3n y Centro de Chat en Vivo',
-        supplier: '\uD83D\uDCE6 Publicar Orden Directa (Exclusivo Supplier)'
+        supplier: '\uD83D\uDCE6 Publicar Orden Directa (Exclusivo Supplier)',
+        finances: 'Control de Saldos de Usuarios y Auditoría Financiera'
       };
 
       const descs = {
@@ -1327,7 +1335,8 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         clients: 'Directorio maestro de clientes, BattleTags, Discord IDs, \u00D3rdenes acumuladas e inversi\u00F3n total.',
         boosters: 'Los 116 boosters provenientes del bot est\u00E1n pre-aprobados. Nuevos registros requieren autorizaci\u00F3n.',
         chat: 'Canal de mensajer\u00EDa directo entre cliente, booster asignado y supervisi\u00F3n del staff.',
-        supplier: 'Publica \u00F3rdenes de forma directa sin requerir compra de cliente. Sincronizadas en vivo con la Bolsa de Pedidos y Discord.'
+        supplier: 'Publica \u00F3rdenes de forma directa sin requerir compra de cliente. Sincronizadas en vivo con la Bolsa de Pedidos y Discord.',
+        finances: 'Control de Saldos de Usuarios y Auditoría Financiera'
       };
 
       const titleEl = document.getElementById('admin-page-title');
@@ -1372,6 +1381,14 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     }
 
     // Auto-listen to hash change
+    window.addEventListener('DOMContentLoaded', () => {
+      const h = (window.location.hash || '').replace('#', '');
+      const valid = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier', 'finances'];
+      if (valid.includes(h)) {
+        switchAdminTab(h);
+      }
+    });
+
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');
       const valid = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier', 'finances'];

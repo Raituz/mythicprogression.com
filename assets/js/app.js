@@ -8543,11 +8543,12 @@ class MythicApp {
     this.renderAdminClients();
     this.renderAdminBoosters();
     this.renderChatList();
+    if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
 
     // Initialize exclusive sidebar tab (default: 'dashboard' or URL hash)
     if (typeof window.switchAdminTab === 'function') {
       const initialTab = (window.location.hash || '').replace('#', '');
-      const validTabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat'];
+      const validTabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier', 'finances'];
       if (validTabs.includes(initialTab)) {
         window.switchAdminTab(initialTab);
         if (initialTab === 'chat') {
