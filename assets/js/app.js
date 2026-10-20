@@ -16830,6 +16830,13 @@ MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
               </span>
               <div class="text-[10px] text-stone-400 font-mono mt-1">Por: ${w.reviewedBy || 'Admin'}</div>
             </div>
+          ` : (w.status === 'CANCELLED' ? `
+            <div class="text-right">
+              <span class="px-2.5 py-1 rounded-xl bg-stone-900 text-stone-400 border border-stone-700 text-xs font-bold inline-flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-ban"></i> Cancelado
+              </span>
+              <div class="text-[10px] text-stone-500 font-mono mt-0.5">Por Booster</div>
+            </div>
           ` : `
             <div class="text-right">
               <span class="px-2.5 py-1 rounded-xl bg-rose-950/80 text-rose-300 border border-rose-600/50 text-xs font-bold inline-flex items-center gap-1 shadow-sm">
@@ -17370,23 +17377,36 @@ MythicApp.prototype.renderProBalance = function() {
         </div>
       </div>
 
+      <!-- BANNER DE AVISO SI SALDO DISPONIBLE ES MENOR A 10 -->
+      ${availableToWithdraw < 10 ? `
+        <div class="mb-4 p-4 rounded-xl bg-amber-950/70 border border-amber-500/50 text-amber-200 text-xs flex items-start gap-3 shadow-lg">
+          <i class="fa-solid fa-circle-exclamation text-amber-400 text-lg mt-0.5 shrink-0"></i>
+          <div>
+            <div class="font-bold text-white text-sm">Saldo disponible para retirar: $${availableToWithdraw.toFixed(2)} USD</div>
+            <div class="text-[11px] text-amber-200/90 mt-1 leading-relaxed">
+              Actualmente tienes <strong>$${totalPendingWithdrawalAmount.toFixed(2)} USD</strong> retenidos en solicitudes pendientes de pago. Para realizar un nuevo retiro necesitas un saldo neto disponible de al menos $10.00 USD. Puedes esperar a que la administración apruebe tus solicitudes, o cancelar alguna de ellas en la lista de abajo para liberar tu saldo de inmediato.
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
       <!-- FORM -->
       <form onsubmit="event.preventDefault(); app.submitProWithdrawalRequest(this);" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Monto (Sin los botones de 25%, 50%, 100%) -->
+          <!-- Monto -->
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-xs font-semibold text-stone-300">Monto a retirar ($ USD):</label>
-              <span class="text-[10px] text-stone-400">Disp: <strong>$${availableToWithdraw.toFixed(2)}</strong></span>
+              <span class="text-[10px] text-stone-400">Disp: <strong class="${availableToWithdraw >= 10 ? 'text-emerald-400' : 'text-amber-400'}">$${availableToWithdraw.toFixed(2)}</strong></span>
             </div>
-            <input id="pro-withdraw-amount" type="number" min="10" max="${availableToWithdraw}" step="any" placeholder="Ingresa monto a retirar (ej: 40)" oninput="app.updateProWithdrawCalc()" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold outline-none focus:border-amber-500" required>
-            <span class="text-[10px] text-stone-500 mt-1 block">Mínimo: $10.00 USD | Máx disponible: $${availableToWithdraw.toFixed(2)}</span>
+            <input id="pro-withdraw-amount" type="number" min="10" ${availableToWithdraw >= 10 ? `max="${availableToWithdraw}"` : ''} step="any" placeholder="${availableToWithdraw >= 10 ? 'Ingresa monto a retirar (ej: 20)' : 'Saldo retenido en solicitudes'}" oninput="app.updateProWithdrawCalc()" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold outline-none focus:border-amber-500 ${availableToWithdraw < 10 ? 'opacity-60 cursor-not-allowed' : ''}" ${availableToWithdraw < 10 ? 'disabled' : 'required'}>
+            <span class="text-[10px] text-stone-500 mt-1 block">Mínimo: $10.00 USD | Máx disponible: <strong class="${availableToWithdraw >= 10 ? 'text-emerald-400' : 'text-amber-400'}">$${availableToWithdraw.toFixed(2)}</strong></span>
           </div>
 
           <!-- Metodo (Solo Binance Pay y USDT TRC20/BSC) -->
           <div>
             <label class="block text-xs font-semibold text-stone-300 mb-1">Método de Pago:</label>
-            <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200 outline-none focus:border-amber-500">
+            <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200 outline-none focus:border-amber-500" ${availableToWithdraw < 10 ? 'disabled' : ''}>
               <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
               <option value="USDT TRC20 / BSC">USDT TRC20 / BSC</option>
             </select>
@@ -17396,7 +17416,7 @@ MythicApp.prototype.renderProBalance = function() {
           <!-- ID Destino -->
           <div>
             <label class="block text-xs font-semibold text-stone-300 mb-1">ID o Dirección de Destino:</label>
-            <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Dirección USDT" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none focus:border-amber-500" required>
+            <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Dirección USDT" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none focus:border-amber-500" ${availableToWithdraw < 10 ? 'disabled' : 'required'}>
             <span class="text-[10px] text-stone-500 mt-1 block">Verifica cuidadosamente los datos antes de enviar.</span>
           </div>
         </div>
@@ -17422,7 +17442,7 @@ MythicApp.prototype.renderProBalance = function() {
             </div>
           </div>
 
-          <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-[#ee914f] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-2">
+          <button type="submit" ${availableToWithdraw < 10 ? 'disabled class="px-6 py-3 rounded-xl bg-stone-800 text-stone-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed shrink-0 flex items-center justify-center gap-2"' : 'class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-[#ee914f] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-2"'}>
             <i class="fa-solid fa-paper-plane text-xs"></i>
             <span>Confirmar y Solicitar</span>
           </button>
@@ -17472,19 +17492,28 @@ MythicApp.prototype.renderProBalance = function() {
                     </div>
                     <div>
                       ${isPend ? `
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/90 text-amber-300 border border-amber-600/50 inline-flex items-center gap-1">
-                          <i class="fa-solid fa-hourglass-half text-amber-400"></i>
-                          <span>${diff > 0 ? (isImm ? `Quedan ${hours}h ${mins}m` : `En revisión`) : 'Plazo Expirado'}</span>
-                        </span>
+                        <div class="flex items-center gap-1.5">
+                          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/90 text-amber-300 border border-amber-600/50 inline-flex items-center gap-1">
+                            <i class="fa-solid fa-hourglass-half text-amber-400"></i>
+                            <span>${diff > 0 ? (isImm ? `Quedan ${hours}h ${mins}m` : `En revisión`) : 'Plazo Expirado'}</span>
+                          </span>
+                          <button onclick="app.cancelProWithdrawalRequest('${r.id}')" title="Cancelar solicitud y desbloquear fondos" class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950/80 text-rose-300 border border-rose-600/50 hover:bg-rose-900 transition-all cursor-pointer inline-flex items-center gap-1">
+                            <i class="fa-solid fa-xmark text-[10px]"></i> Cancelar
+                          </button>
+                        </div>
                       ` : (isAppr ? `
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-600/50 inline-flex items-center gap-1">
                           <i class="fa-solid fa-circle-check"></i> Pagado
+                        </span>
+                      ` : (r.status === 'CANCELLED' ? `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-900 text-stone-400 border border-stone-700 inline-flex items-center gap-1">
+                          <i class="fa-solid fa-ban"></i> Cancelado
                         </span>
                       ` : `
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950/90 text-rose-300 border border-rose-600/50 inline-flex items-center gap-1" title="${r.rejectionReason || ''}">
                           <i class="fa-solid fa-ban"></i> Rechazado
                         </span>
-                      `)}
+                      `))}
                     </div>
                   </div>
                 </div>
@@ -17712,6 +17741,31 @@ MythicApp.prototype.submitProWithdrawalRequest = function(form) {
 
   this.showToast(`¡Solicitud de retiro ${speedMsg} por $${amt.toFixed(2)} enviada! Recibirás $${netAmt.toFixed(2)} netos tras la verificación de administración.`, 'success');
   this.renderProBalance();
+};
+
+MythicApp.prototype.cancelProWithdrawalRequest = function(reqId) {
+  const req = (this.withdrawalRequests || []).find(r => r && r.id === reqId);
+  if (!req) {
+    this.showToast('Solicitud de retiro no encontrada.', 'error');
+    return;
+  }
+  if (req.status !== 'PENDING') {
+    this.showToast('Solo puedes cancelar solicitudes que estén pendientes.', 'warning');
+    return;
+  }
+  if (!confirm(`¿Deseas cancelar esta solicitud de retiro de $${(Number(req.grossAmount) || 0).toFixed(2)} USD? Los fondos retenidos volverán a estar disponibles de inmediato.`)) {
+    return;
+  }
+
+  req.status = 'CANCELLED';
+  req.reviewedAt = new Date().toISOString();
+  req.reviewedBy = 'Booster (Cancelado)';
+  req.rejectionReason = 'Cancelado por el booster';
+  this.saveWithdrawalRequests(true);
+
+  this.showToast(`Solicitud cancelada con éxito. Se liberaron $${(Number(req.grossAmount) || 0).toFixed(2)} USD a tu saldo disponible.`, 'success');
+  this.renderProBalance();
+  if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
 };
 
 
