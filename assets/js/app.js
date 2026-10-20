@@ -6753,6 +6753,8 @@ class MythicApp {
 // BOOSTER PRO PORTAL (WAR ROOM BOARD)
   // ==========================================
   initProPortal() {
+    this.cleanupLiveChatWidget();
+
     // 1. Not logged in at all -> show access gate
     if (!this.currentUser) {
       this.showProAccessGate();
@@ -8646,6 +8648,8 @@ class MythicApp {
   // ADMIN PORTAL (STAFF OVERVIEW, CLIENTS, ORDERS & PRODUCT CRUD)
   // ==========================================
   initAdminPortal() {
+    this.cleanupLiveChatWidget();
+
     // If this.currentUser is not yet populated, attempt to load from localStorage
     if (!this.currentUser) {
       try {
@@ -12874,7 +12878,36 @@ class MythicApp {
   // ==========================================
   // LIVE CHAT WIDGET SUITE (SOPORTE EN VIVO 24/7)
   // ==========================================
+  isStaffOrProPortal() {
+    if (typeof window === 'undefined') return false;
+    const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+    const cleanPath = path.replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
+    if (cleanPath.endsWith('/admin') || cleanPath === 'admin' || cleanPath.includes('/admin') || cleanPath === '/admin') return true;
+    if (cleanPath.endsWith('/pro') || cleanPath === 'pro' || cleanPath.includes('/pro') || cleanPath === '/pro') return true;
+    if (typeof document !== 'undefined' && document.body) {
+      if (document.body.classList.contains('admin-theme') || document.body.classList.contains('pro-theme')) return true;
+      if (document.getElementById('admin-products-table') || document.getElementById('pro-order-feed') || document.getElementById('admin-orders-table')) return true;
+    }
+    return false;
+  }
+
+  cleanupLiveChatWidget() {
+    if (typeof document === 'undefined') return;
+    const root = document.getElementById('mp-live-chat-root');
+    if (root) root.remove();
+    const launcher = document.getElementById('mp-live-chat-launcher');
+    if (launcher) launcher.remove();
+    const win = document.getElementById('mp-live-chat-window');
+    if (win) win.remove();
+  }
+
   initLiveChatWidget() {
+    // 0. Do NOT display support chat launcher on Admin or Pro portals
+    if (this.isStaffOrProPortal()) {
+      this.cleanupLiveChatWidget();
+      return;
+    }
+
     // 1. Check for 3rd-party provider overrides if configured
     const crispId = localStorage.getItem('mp_live_chat_crisp_id');
     const tawkId = localStorage.getItem('mp_live_chat_tawk_id');
@@ -12988,6 +13021,7 @@ class MythicApp {
 
   injectNativeLiveChat() {
     if (typeof document === 'undefined') return;
+    if (this.isStaffOrProPortal()) return;
     if (document.getElementById('mp-live-chat-launcher')) return;
 
     // Launcher visible across all portals for seamless live support communication
@@ -13250,6 +13284,7 @@ class MythicApp {
   }
 
   toggleLiveChat() {
+    if (this.isStaffOrProPortal()) return;
     const win = document.getElementById('mp-live-chat-window');
     const icon = document.getElementById('mp-chat-launcher-icon');
     const dot = document.getElementById('mp-chat-unread-dot');
@@ -13283,6 +13318,7 @@ class MythicApp {
   }
 
   openLiveChat(options = {}) {
+    if (this.isStaffOrProPortal()) return;
     // Crisp delegation
     if (window.$crisp) {
       window.$crisp.push(['do', 'chat:open']);
@@ -16748,6 +16784,12 @@ MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
           <i class="fa-solid fa-circle-check"></i> Pagado el ${revDate}
         </div>
       `;
+    } else if (w.status === 'CANCELLED') {
+      deadlineHtml = `
+        <div class="mt-1 text-[11px] text-stone-500 flex items-center gap-1 font-semibold">
+          <i class="fa-solid fa-ban"></i> Cancelado por booster
+        </div>
+      `;
     } else {
       deadlineHtml = `
         <div class="mt-1 text-[11px] text-rose-400 flex items-center gap-1 font-semibold">
@@ -16764,7 +16806,22 @@ MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
       <tr class="${rowClass}">
         <!-- 1. SPEED & DEADLINE -->
         <td class="py-3.5 px-4 align-top">
-          ${isImmediate ? `
+          ${isApproved ? `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-950/90 text-emerald-300 border border-emerald-500/50 uppercase tracking-wider shadow-sm">
+              <i class="fa-solid fa-circle-check text-emerald-400"></i>
+              <span>Pagado</span>
+            </div>
+          ` : (w.status === 'CANCELLED' ? `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-stone-900 text-stone-400 border border-stone-700 uppercase tracking-wider">
+              <i class="fa-solid fa-ban text-stone-500"></i>
+              <span>Cancelado</span>
+            </div>
+          ` : (isRejected ? `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-rose-950/80 text-rose-300 border border-rose-800/50 uppercase tracking-wider">
+              <i class="fa-solid fa-xmark text-rose-400"></i>
+              <span>Rechazado</span>
+            </div>
+          ` : (isImmediate ? `
             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-stone-950 uppercase tracking-wider shadow-[0_0_12px_rgba(245,158,11,0.5)] animate-pulse">
               <i class="fa-solid fa-bolt-lightning text-stone-950"></i>
               <span>⚡ INMEDIATO (10% FEE - &lt;24H)</span>
@@ -16774,7 +16831,7 @@ MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
               <i class="fa-regular fa-clock text-stone-400"></i>
               <span>Estándar (3% Fee - 5 días)</span>
             </div>
-          `}
+          `)))}
           <div class="text-[10px] text-stone-400 font-mono mt-1 flex items-center gap-1">
             <i class="fa-regular fa-calendar text-stone-500 text-[10px]"></i>
             <span>${dateStr}</span>
@@ -17493,7 +17550,15 @@ MythicApp.prototype.renderProBalance = function() {
                 <div class="p-3 rounded-xl bg-[#140e0a] border ${isImm && isPend ? 'border-amber-500/50 bg-gradient-to-r from-amber-950/30 to-[#140e0a]' : 'border-stone-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <div>
                     <div class="flex items-center gap-2">
-                      ${isImm ? `
+                      ${isAppr ? `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-600/50">
+                          <i class="fa-solid fa-circle-check text-emerald-400"></i> Pagado
+                        </span>
+                      ` : (r.status === 'CANCELLED' ? `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-900 text-stone-400 border border-stone-700">
+                          <i class="fa-solid fa-ban text-stone-500"></i> Cancelado
+                        </span>
+                      ` : (isImm ? `
                         <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500 text-stone-950 uppercase tracking-wide">
                           ⚡ INMEDIATO (10%)
                         </span>
@@ -17501,7 +17566,7 @@ MythicApp.prototype.renderProBalance = function() {
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-stone-800 text-stone-300 border border-stone-700">
                           Estándar (3%)
                         </span>
-                      `}
+                      `))}
                       <span class="font-mono text-stone-400 text-[11px]">${new Date(r.createdAt).toLocaleDateString('es-ES')}</span>
                       <span class="text-stone-400">• ${r.method}</span>
                     </div>
