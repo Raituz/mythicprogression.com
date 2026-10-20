@@ -97,6 +97,7 @@ class MythicApp {
     try { this.setupLiveSearch(); } catch (e) { console.warn('setupLiveSearch:', e); }
     try { this.updateCartCounter(); } catch (e) { console.warn('updateCartCounter:', e); }
     try { this.renderLanguageSelector(); } catch (e) { console.warn('renderLanguageSelector:', e); }
+    try { this.checkBoosterUpsellReferral(); } catch (e) { console.warn('checkBoosterUpsellReferral:', e); }
 
     try {
       const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
@@ -2438,7 +2439,9 @@ class MythicApp {
       mode: item.mode || 'Self-Play',
       region: item.region || 'US',
       details: item.details || '',
-      referredBooster: item.referredBooster || sessionStorage.getItem('mp_upsell_booster') || null
+      referredBooster: item.referredBooster || sessionStorage.getItem('mp_upsell_booster') || localStorage.getItem('mp_upsell_booster') || null,
+      referredBoosterId: item.referredBoosterId || sessionStorage.getItem('mp_upsell_booster_id') || localStorage.getItem('mp_upsell_booster_id') || null,
+      referredBoosterDiscord: item.referredBoosterDiscord || sessionStorage.getItem('mp_upsell_booster_discord') || localStorage.getItem('mp_upsell_booster_discord') || null
     };
 
     this.cart.push(cartItem);
@@ -2666,6 +2669,7 @@ class MythicApp {
   // SINGLE PRODUCT PAGE (Req 4 & EXACT IMAGE 4)
   // ==========================================
   initSingleProductPage() {
+    this.checkBoosterUpsellReferral();
     const params = new URLSearchParams(window.location.search);
     const serviceId = params.get('id') || 'mplus-keystone';
     const svc = this.services.find(s => s.id === serviceId) || this.services[0];
@@ -5368,7 +5372,10 @@ class MythicApp {
         }
       }
 
-      const isUpsell = !!item.referredBooster;
+      const refBoosterName = item.referredBooster || sessionStorage.getItem('mp_upsell_booster') || localStorage.getItem('mp_upsell_booster') || null;
+      const refBoosterId = item.referredBoosterId || sessionStorage.getItem('mp_upsell_booster_id') || localStorage.getItem('mp_upsell_booster_id') || null;
+      const refBoosterDiscord = item.referredBoosterDiscord || sessionStorage.getItem('mp_upsell_booster_discord') || localStorage.getItem('mp_upsell_booster_discord') || null;
+      const isUpsell = Boolean(refBoosterName || refBoosterId || refBoosterDiscord);
       const finalPrice = Math.max(0, Number(
         item.totalPrice !== undefined && !isNaN(Number(item.totalPrice))
           ? item.totalPrice
@@ -5383,6 +5390,26 @@ class MythicApp {
       const faction = item.faction || 'Horda';
       const charStr = item.characterName || (item.character ? item.character.split('-')[0].trim() : 'Heroe');
       const realmName = item.realm || (item.character && item.character.includes('-') ? item.character.split('-')[1].trim() : (this.selectedRealm?.name || 'Ragnaros'));
+
+      let assignedBoosterObj = null;
+      if (isUpsell) {
+        let boosterMatch = null;
+        if (Array.isArray(this.boosters)) {
+          boosterMatch = this.boosters.find(b => 
+            (refBoosterDiscord && b.discord_id && String(b.discord_id) === String(refBoosterDiscord)) ||
+            (refBoosterId && b.id && String(b.id) === String(refBoosterId)) ||
+            (refBoosterName && b.username && b.username.toLowerCase() === refBoosterName.toLowerCase())
+          );
+        }
+        assignedBoosterObj = {
+          username: boosterMatch?.username || refBoosterName || 'Booster',
+          discordId: boosterMatch?.discord_id || refBoosterDiscord || '',
+          id: boosterMatch?.id || refBoosterId || null,
+          payout: econ.booster
+        };
+      }
+
+      const isPaid = (paymentRef && paymentRef.toLowerCase() !== 'direct web checkout' && !paymentRef.toLowerCase().includes('pay later'));
 
       const newOrder = {
         id: item.orderId || ('MP-' + Math.floor(10000 + Math.random() * 90000)),
@@ -5409,23 +5436,29 @@ class MythicApp {
         maxBidAllowed: econ.maxBid,
         paymentMethod: paymentMethodLabel,
         paymentReference: paymentRef,
-        paymentStatus: (paymentRef && paymentRef.toLowerCase() !== 'direct web checkout' && !paymentRef.toLowerCase().includes('pay later')) ? 'PENDING_VERIFICATION' : 'AWAITING_PAYMENT',
-        paymentSubmitted: Boolean(paymentRef && paymentRef.toLowerCase() !== 'direct web checkout' && !paymentRef.toLowerCase().includes('pay later')),
+        paymentStatus: isPaid ? 'PENDING_VERIFICATION' : 'AWAITING_PAYMENT',
+        paymentSubmitted: Boolean(isPaid),
         status: 'PAYMENT_PENDING',
         bids: [],
-        assignedBooster: null,
+        assignedBooster: assignedBoosterObj,
+        isUpsell: isUpsell,
+        referredByBooster: refBoosterName,
+        referredBoosterId: refBoosterId,
+        referredBoosterDiscord: refBoosterDiscord,
         isOnAccount: false,
         createdAt: new Date().toISOString(),
         chat: [
           {
             sender: 'system',
-            message: `🕒 Order placed with ${paymentMethodLabel}. Reference: "${paymentRef}".\n\n📌 Store Destination Wallet (USDT BEP20):\n${this.paymentConfig.usdtAddress}\n\nPaste this address in your checkout window to complete payment. Our team will verify and activate your order immediately!`,
+            message: isUpsell
+              ? `💎 [Venta Directa de Booster (50%)] Esta orden fue referida por ${assignedBoosterObj.username}. Está asignada de forma exclusiva con ganancia garantizada de $${econ.booster.toFixed(2)} USD (50%). No se publicará en la bolsa general ni en Discord.`
+              : `🕒 Order placed with ${paymentMethodLabel}. Reference: "${paymentRef}".\n\n📌 Store Destination Wallet (USDT BEP20):\n${this.paymentConfig.usdtAddress}\n\nPaste this address in your checkout window to complete payment. Our team will verify and activate your order immediately!`,
             timestamp: new Date().toISOString()
           }
         ]
       };
 
-      if (item.referredBooster) newOrder.referredByBooster = item.referredBooster;
+      if (refBoosterName) newOrder.referredByBooster = refBoosterName;
       this.orders.unshift(newOrder);
       createdOrderIds.push(newOrder.id);
     });
@@ -5440,6 +5473,15 @@ class MythicApp {
       this.cart = this.cart.filter(c => c.orderId !== singleId);
       this.saveCart();
     }
+
+    try {
+      sessionStorage.removeItem('mp_upsell_booster');
+      sessionStorage.removeItem('mp_upsell_booster_id');
+      sessionStorage.removeItem('mp_upsell_booster_discord');
+      localStorage.removeItem('mp_upsell_booster');
+      localStorage.removeItem('mp_upsell_booster_id');
+      localStorage.removeItem('mp_upsell_booster_discord');
+    } catch (e) {}
 
     this.closeCartModal();
 
@@ -7409,7 +7451,8 @@ class MythicApp {
     container.innerHTML = myOrders.map(order => {
       const isCompleted = order.status === 'COMPLETED';
       const isPendingReview = order.status === 'PENDING_APPROVAL';
-      const isActive = !isCompleted && !isPendingReview;
+      const isPaymentPending = order.status === 'PAYMENT_PENDING';
+      const isActive = !isCompleted && !isPendingReview && !isPaymentPending;
 
       const safeTotal = Math.max(0, Number(order.totalPrice !== undefined && !isNaN(Number(order.totalPrice)) ? order.totalPrice : (order.price !== undefined && !isNaN(Number(order.price)) ? order.price : 45.00)) || 45.00);
       const safePayout = Math.max(0, Number(order.assignedBooster?.payout !== undefined && !isNaN(Number(order.assignedBooster?.payout)) ? order.assignedBooster.payout : (order.boosterPayout !== undefined && !isNaN(Number(order.boosterPayout)) ? order.boosterPayout : (safeTotal * 0.30))) || (safeTotal * 0.30));
@@ -7418,14 +7461,16 @@ class MythicApp {
         ? 'bg-[#121116]/85 border border-stone-800/80 rounded-2xl p-5 mb-4 shadow-sm opacity-80 hover:opacity-100 transition-all'
         : isPendingReview
           ? 'glass-panel rounded-2xl p-5 mb-4 border border-amber-500/50 bg-[#161208]/90 shadow-lg shadow-amber-950/20 transition-all'
-          : 'glass-panel rounded-2xl p-5 mb-4 border border-emerald-500/50 bg-[#0c1611]/85 shadow-lg shadow-emerald-950/25 hover:border-emerald-400/60 transition-all';
+          : isPaymentPending
+            ? 'glass-panel rounded-2xl p-5 mb-4 border border-amber-600/50 bg-[#17120a]/90 shadow-lg shadow-amber-950/20 transition-all'
+            : 'glass-panel rounded-2xl p-5 mb-4 border border-emerald-500/50 bg-[#0c1611]/85 shadow-lg shadow-emerald-950/25 hover:border-emerald-400/60 transition-all';
 
       return `
         <div class="${cardClass}">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="min-w-0">
               <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span class="text-xs font-mono-gaming font-bold ${isCompleted ? 'text-stone-500' : isPendingReview ? 'text-amber-400' : 'text-emerald-400'}">
+                <span class="text-xs font-mono-gaming font-bold ${isCompleted ? 'text-stone-500' : (isPendingReview || isPaymentPending) ? 'text-amber-400' : 'text-emerald-400'}">
                   #${order.id}
                 </span>
 
@@ -7434,14 +7479,18 @@ class MythicApp {
                     ? 'bg-[#1e1d24] text-stone-400 border border-stone-700/60' 
                     : isPendingReview 
                       ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm animate-pulse' 
-                      : 'bg-emerald-950/90 text-emerald-300 border border-emerald-500/70 shadow-sm'
+                      : isPaymentPending
+                        ? 'bg-amber-950/90 text-amber-300 border border-amber-500/70 shadow-sm'
+                        : 'bg-emerald-950/90 text-emerald-300 border border-emerald-500/70 shadow-sm'
                 }">
                   ${
                     isCompleted 
                       ? '<i class="fa-solid fa-check text-[9px] text-stone-400"></i> FINALIZADA' 
                       : isPendingReview 
                         ? '<i class="fa-solid fa-clock text-[9px] text-amber-400"></i> EN REVISIÓN' 
-                        : '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ACTIVA'
+                        : isPaymentPending
+                          ? '<i class="fa-solid fa-receipt text-[9px] text-amber-400 animate-pulse"></i> PAGO EN REVISIÓN'
+                          : '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ACTIVA'
                   }
                 </span>
 
@@ -7954,22 +8003,44 @@ class MythicApp {
 
   copyBoosterUpsellLink(serviceId) {
     const boosterName = this.currentUser?.username || 'Pro';
-    const link = `${window.location.origin}/product?id=${serviceId}&ref_booster=${encodeURIComponent(boosterName)}`;
+    const boosterId = this.currentUser?.id || '';
+    const boosterDiscord = this.currentUser?.discordId || '';
+    const origin = window.location.origin;
+    const link = `${origin}/product?id=${encodeURIComponent(serviceId)}&ref_booster=${encodeURIComponent(boosterName)}&ref_booster_id=${encodeURIComponent(boosterId)}&ref_booster_discord=${encodeURIComponent(boosterDiscord)}`;
     
     // Copy to clipboard
-    navigator.clipboard.writeText(link).then(() => {
-      this.showToast(`¡Enlace copiado! Pégalo en el chat con tu cliente. Recibirás el 50% si lo compra.`, 'success');
-    }).catch(() => {
-      prompt('Copia este enlace de venta adicional (50% de comisión):', link);
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(() => {
+        this.showToast(`¡Enlace copiado! Pégalo en el chat con tu cliente. La orden se te asignará directamente con el 50% de ganancia.`, 'success');
+      }).catch(() => {
+        prompt('Copia este enlace de venta adicional (50% de ganancia garantizada):', link);
+      });
+    } else {
+      prompt('Copia este enlace de venta adicional (50% de ganancia garantizada):', link);
+    }
   }
 
   checkBoosterUpsellReferral() {
-    const params = new URLSearchParams(window.location.search);
-    const refBooster = params.get('ref_booster');
-    if (refBooster) {
-      sessionStorage.setItem('mp_upsell_booster', refBooster);
-      this.showToast(`Promoción especial recomendada por tu booster ${refBooster}. ¡Garantía de servicio express!`, 'info');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const refBooster = params.get('ref_booster');
+      const refBoosterId = params.get('ref_booster_id') || '';
+      const refBoosterDiscord = params.get('ref_booster_discord') || '';
+      if (refBooster) {
+        sessionStorage.setItem('mp_upsell_booster', refBooster);
+        localStorage.setItem('mp_upsell_booster', refBooster);
+        if (refBoosterId) {
+          sessionStorage.setItem('mp_upsell_booster_id', refBoosterId);
+          localStorage.setItem('mp_upsell_booster_id', refBoosterId);
+        }
+        if (refBoosterDiscord) {
+          sessionStorage.setItem('mp_upsell_booster_discord', refBoosterDiscord);
+          localStorage.setItem('mp_upsell_booster_discord', refBoosterDiscord);
+        }
+        this.showToast(`Promoción especial recomendada por tu booster ${refBooster}. ¡Asignación directa con 50% de ganancia!`, 'info');
+      }
+    } catch (e) {
+      console.warn('Error checking booster referral params:', e);
     }
   }
 
@@ -10029,46 +10100,63 @@ class MythicApp {
     if (!o) return;
     const ref = o.paymentReference || 'N/A';
     const method = o.paymentMethod || 'Manual';
-    if (!confirm(`¿Confirmar recepción de fondos de la orden #${orderId} (${method} - Ref: ${ref})?\n\nAl aprobar, la orden pasará a estado DISPONIBLE y los boosters podrán verla y tomarla en el panel Pro.`)) {
+
+    const isDirectUpsell = Boolean(o.assignedBooster || o.referredByBooster || o.isUpsell);
+    const newStatus = isDirectUpsell ? 'IN_PROGRESS' : 'AVAILABLE';
+    const boosterTargetName = o.assignedBooster?.username || o.referredByBooster || 'el booster asignado';
+
+    const confirmMsg = isDirectUpsell
+      ? `¿Confirmar recepción de fondos de la orden #${orderId} (${method} - Ref: ${ref})?\n\nEsta orden proviene del enlace especial de booster (${boosterTargetName}). Al aprobar, pasará DIRECTAMENTE a "EN PROCESO" asignada a ${boosterTargetName} con el 50% de ganancia, SIN publicarse en la bolsa general ni en Discord.`
+      : `¿Confirmar recepción de fondos de la orden #${orderId} (${method} - Ref: ${ref})?\n\nAl aprobar, la orden pasará a estado DISPONIBLE y los boosters podrán verla y tomarla en el panel Pro.`;
+
+    if (!confirm(confirmMsg)) {
       return;
     }
 
     o.paymentStatus = 'PAID';
-    o.status = 'AVAILABLE';
+    o.status = newStatus;
     o.paymentApprovedAt = new Date().toISOString();
     o.paymentApprovedBy = 'Administración';
     o.chat = o.chat || [];
     o.chat.push({
       sender: 'system',
       author: 'Administración Mythic',
-      message: `✅ Pago con ${method} (Ref: "${ref}") VERIFICADO y APROBADO por Administración. La orden ahora está disponible para que un booster la reclame.`,
+      message: isDirectUpsell
+        ? `✅ Pago con ${method} (Ref: "${ref}") VERIFICADO y APROBADO por Administración. Orden asignada directamente a ${boosterTargetName} al 50% de ganancia ($${(Number(o.boosterPayout) || 0).toFixed(2)} USD). ¡En proceso de ejecución!`
+        : `✅ Pago con ${method} (Ref: "${ref}") VERIFICADO y APROBADO por Administración. La orden ahora está disponible para que un booster la reclame.`,
       timestamp: new Date().toISOString()
     });
 
     if (this.db) {
-      this.db.collection('orders').doc(orderId).set({
+      const updatePayload = {
         paymentStatus: 'PAID',
-        status: 'AVAILABLE',
+        status: newStatus,
         paymentApprovedAt: o.paymentApprovedAt,
         paymentApprovedBy: o.paymentApprovedBy,
         chat: o.chat
-      }, { merge: true }).catch(err => console.warn('Firestore payment approval write notice:', err));
+      };
+      if (o.assignedBooster) updatePayload.assignedBooster = o.assignedBooster;
+      this.db.collection('orders').doc(orderId).set(updatePayload, { merge: true }).catch(err => console.warn('Firestore payment approval write notice:', err));
     }
 
     this.saveOrders();
     this.renderAdminOverview();
     if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders(this.currentAdminOrderStatusFilter || 'ALL');
     if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+    if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
     if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
     if (typeof this.renderChatList === 'function') this.renderChatList();
 
     if (this.liveChatChannel) {
       try {
-        this.liveChatChannel.postMessage({ type: 'PAYMENT_APPROVED', orderId: o.id });
+        this.liveChatChannel.postMessage({ type: 'PAYMENT_APPROVED', orderId: o.id, status: newStatus });
       } catch (e) {}
     }
 
-    this.showToast(`¡Pago de orden #${orderId} verificado! La orden ya está en la bolsa pro.`, 'success');
+    const toastMsg = isDirectUpsell
+      ? `¡Pago de orden #${orderId} verificado! Asignada directamente a ${boosterTargetName} (50% ganancia).`
+      : `¡Pago de orden #${orderId} verificado! La orden ya está en la bolsa pro.`;
+    this.showToast(toastMsg, 'success');
   }
 
   adminRejectPayment(orderId) {

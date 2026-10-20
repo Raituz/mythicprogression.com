@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -120,12 +120,13 @@
         <p class="text-[11px] text-stone-400 hidden sm:block">Toma Órdenes al 30% base o puja en subasta hasta el lÍmite del 50%.</p>
       </div>
 
-      <!-- Top Right Status & Balance -->
+      <!-- Top Right Status & Balance (Hyperlink to Balance Tab) -->
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 bg-[#17120e] px-3.5 py-1.5 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400">Saldo:</span>
-          <span id="booster-balance" class="text-base font-bold font-mono-gaming text-[#fcefc2]">$0.00</span>
-        </div>
+        <a href="pro#balance" onclick="event.preventDefault(); if (typeof switchProTab === 'function') switchProTab('balance');" class="flex items-center gap-2 bg-[#17120e] hover:bg-[#231710] px-3.5 py-1.5 rounded-xl border border-stone-800 hover:border-[#ee914f]/50 transition-all cursor-pointer group shadow-sm" title="Ir a Balance y Retiros">
+          <span class="text-xs text-stone-400 group-hover:text-amber-300 transition-colors">Saldo:</span>
+          <span id="booster-balance" class="text-base font-bold font-mono-gaming text-[#fcefc2] group-hover:text-emerald-400 transition-colors">$0.00</span>
+          <i class="fa-solid fa-arrow-right text-[10px] text-stone-500 group-hover:text-[#ee914f] group-hover:translate-x-0.5 transition-all"></i>
+        </a>
         <div id="header-lang-selector" class="relative shrink-0 notranslate" translate="no"></div>
         <div id="user-session-badge" class="notranslate" translate="no"></div>
       </div>
@@ -189,13 +190,6 @@
               <span class="text-[9px] bg-amber-950 text-amber-200 px-1.5 py-0.5 rounded border border-amber-800 font-bold">50%</span>
             </button>
           </div>
-
-          <!-- Quick Store Link inside Chat Header -->
-          <a href="/" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#1a120c] hover:bg-[#251a11] text-stone-300 hover:text-[#fcefc2] border border-stone-800 hover:border-[#ee914f]/40 transition-all shadow-sm" title="Abrir la tienda principal con vista de precios Pro">
-            <i class="fa-solid fa-store text-[#ee914f] text-xs"></i>
-            <span>Ver Tienda como Pro</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-stone-500"></i>
-          </a>
         </div>
 
         <!-- Subview 1: Chat Messages & Rooms -->
@@ -225,28 +219,6 @@
 
         <!-- Subview 2: Ventas Extras Catalog & Store Link -->
         <div id="chat-subview-upsell" class="hidden space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-2xl border border-amber-500/30 bg-[#160f0a]">
-            <div class="flex items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 flex items-center justify-center text-stone-950 text-xl shadow-lg shrink-0">
-                <i class="fa-solid fa-gem"></i>
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-white font-cinzel flex items-center gap-2">
-                  <span>Venta de Servicios Adicionales al Cliente</span>
-                  <span class="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded-full border border-amber-600/40 font-mono font-bold">50% GANANCIA</span>
-                </h3>
-                <p class="text-xs text-stone-400 mt-0.5">Copia los links y compártelos con tu cliente durante el chat de la orden. Si compra mediante tu recomendación, garantizas el <strong class="text-amber-300">50% de la ganancia total</strong>.</p>
-              </div>
-            </div>
-
-            <!-- "Ver tienda como pro" inside Ventas Extras -->
-            <a href="/" target="_blank" class="px-4 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs flex items-center justify-center gap-2 text-stone-950 shadow-md hover:scale-[1.02] transition-all shrink-0 cursor-pointer">
-              <i class="fa-solid fa-store"></i>
-              <span>Ver Tienda como Pro</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-            </a>
-          </div>
-
           <div id="booster-upsell-container">
             <!-- Injected dynamically by app.js -->
           </div>
@@ -607,7 +579,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=4.3.1"></script>
+  <script src="assets/js/app.js?v=4.3.2"></script>
   <script>
     function switchChatSubView(view) {
       const msgView = document.getElementById('chat-subview-messages');
