@@ -6777,6 +6777,11 @@ class MythicApp {
                 ${order.faction.toLowerCase().includes('alianza') ? '🛡️' : '🚩'} ${order.faction}
               </span>
             ` : ''}
+            ${(order.source === 'supplier_dispatch' || order.supplier) ? `
+              <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-amber-950/90 text-amber-300 border border-amber-600/50 font-bold inline-flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-box-open text-amber-400 text-[10px]"></i> Supplier: ${order.supplier || order.clientName}
+              </span>
+            ` : ''}
             ${bestBid ? `
               <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-amber-950 text-amber-300 border border-amber-500/60 font-bold flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-crown text-amber-400"></i>
@@ -7301,7 +7306,14 @@ class MythicApp {
 
               <h4 class="text-sm font-bold ${isCompleted ? 'text-stone-300' : 'text-white'} truncate">${order.serviceName || 'Servicio'}</h4>
               <p class="text-xs ${isCompleted ? 'text-stone-500' : 'text-stone-400'} mt-0.5 flex items-center gap-1.5 flex-wrap">
-                <span>Cliente: <strong class="text-stone-300">${order.clientName || 'Cliente'}</strong></span>
+                ${(order.source === 'supplier_dispatch' || order.supplier) ? `
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-600/40 text-[10px] font-bold">
+                    <i class="fa-solid fa-box-open text-[9px] text-amber-400"></i> Supplier: ${order.supplier || order.clientName}
+                  </span>
+                  ${order.externalClientName ? `<span class="text-stone-400">&bull; Ref Cliente Ext: <strong class="text-stone-300">${order.externalClientName}</strong></span>` : '}
+                ` : `
+                  <span>Cliente: <strong class="text-stone-300">${order.clientName || 'Cliente'}</strong></span>
+                `}
                 <span>• Personaje: <strong class="text-white">${order.characterName || 'No especificado'}</strong></span>
                 ${order.characterClass ? `<span class="px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold inline-flex items-center gap-1"><img src="${this.getClassIconUrl(order.characterClass)}" alt="${order.characterClass}" class="w-3 h-3 rounded object-cover border border-purple-500/50 shadow-sm"> ${order.characterClass}</span>` : ''}
                 ${order.faction ? `<span class="text-[10px] text-stone-400 font-medium inline-flex items-center gap-1">(<img src="${this.getFactionIconUrl(order.faction)}" alt="${order.faction}" class="w-3 h-3 rounded object-cover border ${order.faction.toLowerCase().includes('alianza') ? 'border-blue-500/50' : 'border-red-500/50'} shadow-sm"> ${order.faction}${order.realm ? ` - ${order.realm}` : ''})</span>` : ''}
@@ -8175,7 +8187,9 @@ class MythicApp {
     listContainer.innerHTML = liveItem + myChatOrders.map(o => `
       <div onclick="app.openChat('${o.id}')" class="p-3.5 rounded-xl cursor-pointer transition-all ${this.activeChatOrderId === o.id ? 'bg-[#291e16] border border-[#ee914f]/50' : 'hover:bg-[#1a140f] border border-transparent'}">
         <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-bold text-white">${o.clientName || 'Cliente'}</span>
+          <span class="text-xs font-bold ${(o.source === 'supplier_dispatch' || o.supplier) ? 'text-amber-300 flex items-center gap-1' : 'text-white'}">
+            ${(o.source === 'supplier_dispatch' || o.supplier) ? `<i class="fa-solid fa-box-open text-[10px] text-amber-400"></i> ${o.supplier || o.clientName} (Supplier)` : (o.clientName || 'Cliente')}
+          </span>
           <span class="text-[10px] text-stone-400">#${o.id}</span>
         </div>
         <div class="flex items-center justify-between text-[10px] text-stone-500 mb-1">
@@ -8231,7 +8245,9 @@ class MythicApp {
         <div class="flex-1 flex flex-col bg-[#110d0a] rounded-xl border border-stone-800 p-4">
           <div class="flex items-center justify-between pb-3 border-b border-stone-800">
             <div>
-              <h4 class="text-sm font-bold text-white">${order.clientName} (Cliente)</h4>
+              <h4 class="text-sm font-bold ${(order.source === 'supplier_dispatch' || order.supplier) ? 'text-amber-300 flex items-center gap-1.5' : 'text-white'}">
+                ${(order.source === 'supplier_dispatch' || order.supplier) ? `<i class="fa-solid fa-box-open text-xs text-amber-400"></i> ${order.supplier || order.clientName} (Supplier / Posteador)` : `${order.clientName} (Cliente)`}
+              </h4>
               <span class="text-[10px] text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i>En línea para orden #${order.id}</span>
             </div>
             <button onclick="app.copyBoosterUpsellLink('mplus-keystone')" class="px-2.5 py-1 rounded-lg bg-[#271d15] text-[#fcefc2] border border-[#ee914f]/30 text-[11px] font-bold hover:bg-[#34271c]">
@@ -9488,7 +9504,19 @@ class MythicApp {
           <div class="text-[10px] text-stone-400 mt-1 line-clamp-2">${o.details || (o.region + ' | ' + o.completionMethod)}</div>
         </td>
         <td class="py-3 px-3 min-w-[120px]">
-          <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
+          ${(o.source === 'supplier_dispatch' || o.supplier) ? `
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="text-[9px] bg-amber-950/90 text-amber-300 px-1.5 py-0.2 rounded border border-amber-600/50 font-bold uppercase tracking-wider inline-flex items-center gap-1">
+                <i class="fa-solid fa-box-open text-[8px] text-amber-400"></i> Supplier
+              </span>
+              <strong class="text-amber-300 text-xs">${o.supplier || o.clientName || 'Supplier'}</strong>
+            </div>
+            ${o.externalClientName ? `
+              <div class="text-[10px] text-stone-400 font-sans">Cliente Ext: <span class="text-stone-200 font-medium">${o.externalClientName}</span></div>
+            ` : ''}
+          ` : `
+            <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
+          `}
           ${o.characterName ? `<div class="text-[10px] text-stone-300 font-mono mt-0.5">Char: <strong class="text-white">${o.characterName}</strong></div>` : ''}
           <div class="text-[10px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
         </td>
@@ -10286,7 +10314,21 @@ class MythicApp {
 
       <div class="space-y-4 text-xs">
         <div class="grid grid-cols-2 gap-3 bg-[#150f0c] p-4 rounded-xl border border-stone-800">
-          <div><span class="text-stone-500">Cliente:</span> <strong class="text-white">${o.clientName}</strong> (${o.clientDiscord})</div>
+          <div>
+            ${(o.source === 'supplier_dispatch' || o.supplier) ? `
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-stone-500">Posteador:</span>
+                <span class="text-[9px] bg-amber-950 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-bold uppercase inline-flex items-center gap-1">
+                  <i class="fa-solid fa-box-open text-[8px] text-amber-400"></i> Supplier
+                </span>
+                <strong class="text-amber-300">${o.supplier || o.clientName}</strong>
+                <span class="text-stone-400 font-mono text-[11px]">(${o.clientDiscord || o.supplierDiscordId || 'N/A'})</span>
+              </div>
+              ${o.externalClientName ? `<div class="text-[11px] text-stone-400 mt-0.5 font-sans"><span class="text-stone-500">Cliente Externo del Supplier:</span> <strong class="text-white">${o.externalClientName}</strong></div>` : ''}
+            ` : `
+              <span class="text-stone-500">Cliente:</span> <strong class="text-white">${o.clientName}</strong> (${o.clientDiscord})
+            `}
+          </div>
           <div><span class="text-stone-500">Booster:</span> <strong class="text-[#a855f7]">${o.assignedBooster ? o.assignedBooster.username : 'Sin Asignar'}</strong></div>
           <div><span class="text-stone-500">Personaje:</span> <strong class="text-stone-200">${o.characterName || 'N/A'} (${o.realm || 'US'})</strong></div>
           <div><span class="text-stone-500">Modalidad:</span> <strong class="text-stone-200">${o.completionMethod || 'Self-play'}</strong></div>
@@ -10985,60 +11027,112 @@ class MythicApp {
   }
 
   // 3. GESTIÓN Y BASE DE DATOS DE CLIENTES
+  // 3. GESTIÃ“N Y BASE DE DATOS DE CLIENTES & SUPPLIERS
   renderAdminClients(searchVal = '') {
     const container = document.getElementById('admin-clients-table');
     if (!container) return;
+
+    if (!Array.isArray(this.clients)) this.clients = [];
+
+    // Reconcile suppliers: Any user who dispatched orders as supplier is listed as Supplier (not regular client)
+    (this.orders || []).forEach(o => {
+      if (o && (o.source === 'supplier_dispatch' || o.supplier)) {
+        const supName = o.supplier || o.clientName;
+        if (!supName) return;
+        const supId = o.clientId || `supplier_${supName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+        let matched = this.clients.find(c => 
+          c.id === supId || 
+          (c.username && c.username.toLowerCase() === supName.toLowerCase()) ||
+          (o.supplierDiscordId && c.discordId && String(c.discordId) === String(o.supplierDiscordId))
+        );
+        if (!matched) {
+          matched = {
+            id: supId,
+            username: supName,
+            discordId: o.supplierDiscordId ? `@${supName}` : (o.clientDiscord || 'N/A'),
+            email: o.clientEmail || `supplier.${supName.toLowerCase().replace(/[^a-z0-9]/g, '')}@mythicprogression.com`,
+            battletag: 'N/A',
+            country: 'Supplier Direct',
+            totalOrders: 0,
+            totalSpent: 0,
+            role: 'supplier',
+            status: 'Supplier',
+            joinedAt: o.createdAt || new Date().toISOString()
+          };
+          this.clients.unshift(matched);
+        } else {
+          matched.role = 'supplier';
+          matched.status = 'Supplier';
+        }
+      }
+    });
 
     let list = this.clients;
     if (searchVal) {
       const q = searchVal.toLowerCase();
       list = list.filter(c => 
-        c.username.toLowerCase().includes(q) || 
-        c.discordId.toLowerCase().includes(q) || 
+        (c.username && c.username.toLowerCase().includes(q)) || 
+        (c.discordId && c.discordId.toLowerCase().includes(q)) || 
         (c.email && c.email.toLowerCase().includes(q)) ||
-        (c.battletag && c.battletag.toLowerCase().includes(q))
+        (c.battletag && c.battletag.toLowerCase().includes(q)) ||
+        (c.role && c.role.toLowerCase().includes(q)) ||
+        (c.status && c.status.toLowerCase().includes(q))
       );
     }
 
     if (list.length === 0) {
-      container.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-xs text-stone-500">No se encontraron clientes registrados con ese criterio.</td></tr>`;
+      container.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-xs text-stone-500">No se encontraron clientes ni suppliers registrados con ese criterio.</td></tr>`;
       return;
     }
 
-    container.innerHTML = list.map(c => `
+    container.innerHTML = list.map(c => {
+      const isSupplier = c.role === 'supplier' || c.status === 'Supplier' || (c.id && String(c.id).startsWith('supplier_'));
+      const statusBadge = isSupplier
+        ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-950/80 text-amber-300 border border-amber-600/50 text-[10px] font-bold shadow-sm">
+             <i class="fa-solid fa-box-open text-[9px] text-amber-400"></i> Supplier
+           </span>`
+        : `<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
+             ${c.status || 'Activo'}
+           </span>`;
+
+      const avatarBg = isSupplier
+        ? 'bg-[#29170a] border-amber-500/50 text-amber-400'
+        : 'bg-[#241042] border-[#a855f7]/40 text-[#f3e8ff]';
+
+      return `
       <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
         <td class="py-4 px-5 font-bold text-white flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-[#241042] border border-[#a855f7]/40 flex items-center justify-center text-[#f3e8ff] font-bold text-xs shrink-0">
-            ${c.username ? c.username[0].toUpperCase() : 'C'}
+          <div class="w-8 h-8 rounded-full ${avatarBg} border flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+            ${c.username ? c.username[0].toUpperCase() : (isSupplier ? 'S' : 'C')}
           </div>
           <div>
-            <div class="text-white text-sm leading-snug">${c.username}</div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-white text-sm leading-snug">${c.username}</span>
+              ${isSupplier ? `<span class="text-[9px] bg-amber-950 text-amber-300 px-1.5 py-0.2 rounded border border-amber-600/40 font-bold uppercase tracking-wider">SUPPLIER</span>` : ''}
+            </div>
             <div class="text-[11px] text-stone-500 font-mono-gaming">${c.id}</div>
           </div>
         </td>
-        <td class="py-4 px-5 font-mono-gaming text-[#a855f7] font-semibold whitespace-nowrap">${c.discordId}</td>
+        <td class="py-4 px-5 font-mono-gaming ${isSupplier ? 'text-amber-300' : 'text-[#a855f7]'} font-semibold whitespace-nowrap">${c.discordId || 'N/A'}</td>
         <td class="py-4 px-5">
           <div class="text-stone-300 text-xs">${c.email}</div>
           <div class="text-[11px] text-stone-500 font-mono-gaming mt-0.5">${c.battletag || 'N/A'}</div>
         </td>
-        <td class="py-4 px-5 text-stone-300 whitespace-nowrap">${c.country || 'Global'}</td>
+        <td class="py-4 px-5 text-stone-300 whitespace-nowrap">${c.country || (isSupplier ? 'Supplier Direct' : 'Global')}</td>
         <td class="py-4 px-5 font-mono-gaming font-bold text-white whitespace-nowrap text-center">${c.totalOrders || 0}</td>
         <td class="py-4 px-5 font-mono-gaming font-bold text-emerald-400 whitespace-nowrap text-sm">$${(Number(c.totalSpent) || 0).toFixed(2)}</td>
         <td class="py-4 px-5 text-center whitespace-nowrap">
-          <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
-            ${c.status || 'Activo'}
-          </span>
+          ${statusBadge}
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
-          <button onclick="app.viewClientDetailsModal('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 ml-auto shadow-sm transition-all">
-            <i class="fa-solid fa-receipt text-[#a855f7]"></i>
+          <button onclick="app.viewClientDetailsModal('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#241042] hover:bg-[#33175c] text-[#f3e8ff] border border-[#a855f7]/40 font-bold text-xs flex items-center gap-1.5 ml-auto shadow-sm transition-all cursor-pointer">
+            <i class="fa-solid fa-receipt ${isSupplier ? 'text-amber-400' : 'text-[#a855f7]'}"></i>
             <span>Historial</span>
           </button>
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
   }
-
   filterAdminClients(val) {
     this.renderAdminClients(val);
   }
@@ -11051,12 +11145,20 @@ class MythicApp {
     const content = document.getElementById('admin-client-modal-content');
     if (!modal || !content) return;
 
-    const clientOrders = this.orders.filter(o => o.clientId === c.id || (o.clientDiscord && o.clientDiscord === c.discordId));
+    const isSupplier = c.role === 'supplier' || c.status === 'Supplier' || (c.id && String(c.id).startsWith('supplier_'));
+    const clientOrders = (this.orders || []).filter(o => 
+      o.clientId === c.id || 
+      (o.clientDiscord && o.clientDiscord === c.discordId) ||
+      (isSupplier && (o.supplier === c.username || (o.supplierDiscordId && o.supplierDiscordId === c.discordId)))
+    );
 
     content.innerHTML = `
       <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
         <div>
-          <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Perfil del Cliente: ${c.username}</h3>
+          <div class="flex items-center gap-2">
+            <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">${isSupplier ? 'Perfil de Supplier (Posteador)' : 'Perfil del Cliente'}: ${c.username}</h3>
+            ${isSupplier ? `<span class="text-[9px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-600/50 font-bold uppercase inline-flex items-center gap-1"><i class="fa-solid fa-box-open text-[8px] text-amber-400"></i>Supplier</span>` : ''}
+          </div>
           <span class="text-xs text-[#a855f7]">${c.discordId} | ${c.country}</span>
         </div>
         <button onclick="app.closeAdminClientModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer">
@@ -11725,6 +11827,10 @@ class MythicApp {
       authorColor = '#38bdf8';
       badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0c2338] text-sky-200 border border-sky-500/40 shadow-sm"><i class="fa-solid fa-shield-halved text-[8px] text-sky-400"></i> Staff</span>`;
       bubbleClass = 'bg-[#0b1926] text-sky-100 border border-sky-600/35 shadow-sm shadow-sky-950/30';
+    } else if (rLower.includes('supplier')) {
+      authorColor = '#fbbf24';
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-950/80 text-amber-300 border border-amber-600/50 shadow-sm"><i class="fa-solid fa-box-open text-[8px] text-amber-400"></i> Supplier</span>`;
+      bubbleClass = 'bg-[#20140a] text-amber-100 border border-amber-600/40 shadow-sm';
     } else if (rLower.includes('admin') || rLower.includes('gerente')) {
       authorColor = '#c084fc';
       badgeHtml = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-[#2d124d] text-purple-200 border border-purple-500/50 shadow-sm"><i class="fa-solid fa-crown text-[8px] text-amber-300"></i> Admin</span>`;
@@ -15350,8 +15456,8 @@ class MythicApp {
 
       const supplierName = this.currentUser?.username || 'Supplier';
       const supplierDiscordId = String(this.currentUser?.discordId || this.currentUser?.discord_id || '');
-      const finalClientName = clientNameInput || `Cliente Directo (${supplierName})`;
-      const charStr = characterName || `${finalClientName}-${realm}`;
+      const externalClientRef = clientNameInput || '';
+      const charStr = characterName || `${characterName || supplierName}-${realm}`;
 
       const newOrder = {
         id: orderId,
@@ -15366,10 +15472,12 @@ class MythicApp {
         completionMethod: completionMethod,
         vpnLocation: completionMethod.includes('Piloted') ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
         details: details,
-        clientId: `supplier_${supplierDiscordId || 'direct'}`,
-        clientEmail: `supplier.${supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}@mythicprogression.com`,
-        clientDiscord: '',
-        clientName: finalClientName,
+        clientId: `supplier_${supplierDiscordId || supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+        clientEmail: this.currentUser?.email || `supplier.${supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}@mythicprogression.com`,
+        clientDiscord: supplierDiscordId ? `@${supplierName}` : (this.currentUser?.discordTag || ''),
+        clientName: supplierName,
+        externalClientName: externalClientRef,
+        clientRole: 'supplier',
         totalPrice: totalPrice,
         price: totalPrice,
         companyShare: Math.max(0, totalPrice - boosterPayout),
@@ -15401,6 +15509,38 @@ class MythicApp {
 
       if (!Array.isArray(this.orders)) this.orders = [];
       this.orders.unshift(newOrder);
+
+      // Register or update the Supplier in this.clients with role 'supplier' (not as regular client)
+      if (!Array.isArray(this.clients)) this.clients = [];
+      const supClientId = `supplier_${supplierDiscordId || supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+      let matchedClient = this.clients.find(x => 
+        x.id === supClientId || 
+        (supplierDiscordId && x.discordId && String(x.discordId) === String(supplierDiscordId)) ||
+        (x.username && x.username.toLowerCase() === supplierName.toLowerCase())
+      );
+      if (!matchedClient) {
+        matchedClient = {
+          id: supClientId,
+          username: supplierName,
+          discordId: supplierDiscordId ? `@${supplierName}` : (this.currentUser?.discordTag || 'N/A'),
+          email: this.currentUser?.email || `supplier.${supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}@mythicprogression.com`,
+          battletag: this.currentUser?.battletag || 'N/A',
+          country: 'Supplier Direct',
+          totalOrders: 1,
+          totalSpent: totalPrice,
+          role: 'supplier',
+          status: 'Supplier',
+          joinedAt: new Date().toISOString()
+        };
+        this.clients.unshift(matchedClient);
+      } else {
+        matchedClient.role = 'supplier';
+        matchedClient.status = 'Supplier';
+        matchedClient.totalOrders = (Number(matchedClient.totalOrders) || 0) + 1;
+        matchedClient.totalSpent = (Number(matchedClient.totalSpent) || 0) + totalPrice;
+      }
+      this.saveClients();
+      if (typeof this.renderAdminClients === 'function') this.renderAdminClients();
 
       // Save to localStorage, Firestore and Alwaysdata Bot
       this.saveOrders();
