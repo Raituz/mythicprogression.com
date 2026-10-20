@@ -6377,7 +6377,7 @@ class MythicApp {
             <div>
               <label class="block text-[11px] font-semibold text-stone-300 mb-1">Método de Pago Preferido para Liquidaciones:</label>
               <select id="booster-apply-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 outline-none">
-                <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada (0 fee)</option>
+                <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
                 <option value="USDT TRC20 / BSC">USDT (TRC20 / BSC)</option>
                 <option value="PayPal">PayPal</option>
                 <option value="Zelle">Zelle</option>
@@ -16519,7 +16519,7 @@ MythicApp.prototype.renderProBalance = function() {
         <div>
           <label class="block text-xs font-semibold text-stone-300 mb-1">Metodo de Pago:</label>
           <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200">
-            <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada (0 fee)</option>
+            <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
             <option value="PayPal">PayPal</option>
             <option value="Zelle">Zelle</option>
             <option value="USDT TRC20 / ERC20">USDT TRC20 / BSC</option>
