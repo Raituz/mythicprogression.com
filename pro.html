@@ -70,11 +70,12 @@
           <span class="hidden md:inline">Ver Tienda con Pro</span>
         </a>
 
-        <!-- ONLY VISIBLE TO ADMINS & GERENTES -->
-        <a href="admin" id="pro-sidebar-admin-link" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#2a170d] text-[#fcefc2] border border-[#ee914f]/50 hover:bg-[#382012] shadow-sm hidden">
-          <i class="fa-solid fa-shield-halved text-[#ee914f] text-sm"></i>
-          <span class="hidden md:inline">Panel Admin</span>
-        </a>
+                <!-- TAB: BALANCE (MOVIMIENTOS DE SALDO Y REPORTES) -->
+        <button onclick="switchProTab('balance')" id="tab-btn-balance" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] border border-transparent cursor-pointer">
+          <i class="fa-solid fa-scale-balanced text-sm text-emerald-400"></i>
+          <span class="hidden md:inline">Balance</span>
+          <span id="badge-pro-balance" class="hidden md:inline ml-auto text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-600/40 px-2 py-0.5 rounded-full font-mono font-bold">$0.00</span>
+        </button>
         <!-- SEPARACION Y SECCION EXCLUSIVA SUPPLIER (Icono circular arriba, texto Supplier abajo) -->
         <div id="supplier-sidebar-section" class="pt-3 mt-3 border-t border-stone-800/80 hidden">
           <div class="hidden md:flex items-center justify-between px-2 mb-2">
@@ -109,6 +110,11 @@
             <i class="fa-solid fa-pen-to-square text-[10px] text-stone-500 group-hover:text-[#ee914f] ml-1"></i>
           </div>
           <div id="booster-sidebar-role" class="text-[10px] text-[#eedaa2] truncate">Master Booster</div>
+          <div id="pro-admin-quick-pill" class="hidden mt-0.5">
+            <a href="admin" class="text-[9px] text-[#ee914f] hover:underline font-bold flex items-center gap-1">
+              <i class="fa-solid fa-shield-halved text-[8px]"></i> Panel Admin
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -542,7 +548,12 @@
         </div>
       </section>
 
-          <!-- TAB 7: SUPPLIER ORDER DISPATCH (Visible only to Supplier role) -->
+                <!-- TAB: BALANCE & REPORTE DE MOVIMIENTOS -->
+      <section id="tab-balance" class="hidden space-y-6">
+        <div id="pro-balance-container"></div>
+      </section>
+
+        <!-- TAB 7: SUPPLIER ORDER DISPATCH (Visible only to Supplier role) -->
       <section id="tab-supplier" class="hidden space-y-6">
         <div id="supplier-dispatch-container-pro"></div>
       </section>
@@ -559,7 +570,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.4"></script>
+  <script src="assets/js/app.js?v=4.2.5"></script>
   <script>
     function switchProTab(tabId) {
       if (tabId === 'supplier' && window.app && !app.isSupplier()) {
@@ -567,11 +578,11 @@
         switchProTab('find');
         return;
       }
-      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile, #tab-supplier').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile, #tab-supplier, #tab-balance').forEach(el => el.classList.add('hidden'));
       const activeTab = document.getElementById('tab-' + tabId);
       if (activeTab) activeTab.classList.remove('hidden');
 
-      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].forEach(t => {
+      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'balance'].forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
         if (btn) {
           if (t === tabId) {
@@ -618,14 +629,15 @@
         else if (tabId === 'upsell' && typeof app.renderBoosterUpsellCatalog === 'function') app.renderBoosterUpsellCatalog();
         else if (tabId === 'wallet' && typeof app.renderProWallet === 'function') app.renderProWallet();
         else if (tabId === 'profile' && typeof app.initBoosterProfileForm === 'function') app.initBoosterProfileForm();
-        else if (tabId === 'supplier' && typeof app.renderSupplierDispatchForm === 'function') app.renderSupplierDispatchForm('pro');
+                else if (tabId === 'supplier' && typeof app.renderSupplierDispatchForm === 'function') app.renderSupplierDispatchForm('pro');
+        else if (tabId === 'balance' && typeof app.renderProBalance === 'function') app.renderProBalance();
       }
     }
 
     // Auto-listen to URL hash change
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');
-      const valid = ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'supplier'];
+      const valid = ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'supplier', 'balance'];
       if (valid.includes(h)) {
         switchProTab(h);
       }

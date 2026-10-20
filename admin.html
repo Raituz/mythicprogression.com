@@ -110,8 +110,15 @@
         <!-- 7. Multi Chat Monitoring -->
         <button onclick="switchAdminTab('chat')" id="tab-btn-chat" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#190a33]">
           <i class="fa-solid fa-comments text-sm text-[#a855f7]"></i>
-          <span class="hidden md:inline">SupervisiÓn Chat</span>
+          <span class="hidden md:inline">Supervisi&oacute;n Chat</span>
           <span class="hidden md:inline ml-auto text-[9px] bg-[#271d15] text-[#a855f7] px-1.5 py-0.5 rounded border border-[#a855f7]/30 font-bold">Live</span>
+        </button>
+
+        <!-- 8. Finanzas & Control de Saldos -->
+        <button onclick="switchAdminTab('finances')" id="tab-btn-finances" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#190a33] cursor-pointer">
+          <i class="fa-solid fa-coins text-sm text-amber-400"></i>
+          <span class="hidden md:inline">Control de Saldos</span>
+          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30 font-mono font-bold">$ USD</span>
         </button>
         <!-- SEPARACION Y SECCION EXCLUSIVA SUPPLIER (Icono circular arriba, texto Supplier abajo) -->
         <div id="supplier-sidebar-section-admin" class="pt-3 mt-3 border-t border-stone-800/80 hidden">
@@ -346,6 +353,17 @@
               <p class="text-xs text-stone-400 mt-1">Crear pedidos directos sin compra web. PublicaciÃ³n en vivo en Bolsa y Discord.</p>
             </div>
           </div>
+            <!-- 8. Control de Saldos -->
+            <div onclick="switchAdminTab('finances')" class="p-5 rounded-2xl bg-[#140827] hover:bg-[#1f0e3a] border border-amber-500/30 hover:border-amber-400/60 transition-all cursor-pointer group shadow-sm">
+              <div class="w-10 h-10 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <h4 class="font-bold text-[#f3e8ff] text-sm group-hover:text-amber-300 flex items-center justify-between">
+                <span>Control de Saldos</span>
+                <i class="fa-solid fa-arrow-right text-xs text-stone-500 group-hover:text-amber-400 transition-transform group-hover:translate-x-1"></i>
+              </h4>
+              <p class="text-xs text-stone-400 mt-1">Supervisi&oacute;n del dinero de boosters y clientes. Agregar o deducir saldo manualmente.</p>
+            </div>
         </div>
       </section>
 
@@ -1242,7 +1260,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.4"></script>
+  <script src="assets/js/app.js?v=4.2.5"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
@@ -1251,7 +1269,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         switchAdminTab('dashboard');
         return;
       }
-      const tabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat'];
+      const tabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'finances'];
       tabs.forEach(t => {
         const el = document.getElementById('tab-' + t);
         if (el) el.classList.add('hidden');
@@ -1346,7 +1364,9 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         app.renderAdminClients();
       } else if (tabId === 'supplier' && window.app && typeof app.renderSupplierDispatchForm === 'function') {
         app.renderSupplierDispatchForm('admin');
-      } else if (tabId === 'boosters' && window.app && typeof app.renderAdminBoosters === 'function') {
+              } else if (tabId === 'finances' && window.app && typeof app.renderAdminFinances === 'function') {
+          app.renderAdminFinances();
+        } else if (tabId === 'boosters' && window.app && typeof app.renderAdminBoosters === 'function') {
         app.renderAdminBoosters();
       }
     }
@@ -1354,12 +1374,107 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     // Auto-listen to hash change
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');
-      const valid = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier'];
+      const valid = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier', 'finances'];
       if (valid.includes(h)) {
         switchAdminTab(h);
       }
     });
   </script>
+    <!-- MODAL: AJUSTE MANUAL DE SALDO -->
+    <div id="admin-balance-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
+      <div class="admin-glass-panel rounded-3xl w-full max-w-lg p-6 sm:p-7 border border-amber-500/40 shadow-2xl bg-[#130722]/95 relative">
+        <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-500/50 flex items-center justify-center text-amber-400 text-lg">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-[#f3e8ff] font-cinzel">Ajuste Manual de Saldo</h3>
+              <p class="text-xs text-stone-400">Acredita o descuenta dinero del balance de un usuario</p>
+            </div>
+          </div>
+          <button onclick="app.closeManualBalanceModal()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form onsubmit="event.preventDefault(); app.submitManualBalanceAdjustment(this);" class="space-y-4">
+          <!-- Usuario Objetivo -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1.5">Usuario / Beneficiario:</label>
+            <select id="manual-balance-user-select" onchange="app.onManualBalanceUserChanged(this.value)" class="w-full bg-[#1b0c33] border border-[#a855f7]/40 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-amber-400" required>
+              <option value="">-- Selecciona un usuario --</option>
+            </select>
+          </div>
+
+          <!-- Operacion: Acreditar (+) o Restar (-) -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1.5">Tipo de Movimiento:</label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <label class="flex items-center gap-2 p-3 rounded-xl border border-emerald-500/40 bg-emerald-950/30 cursor-pointer hover:bg-emerald-950/50 transition-all">
+                <input type="radio" name="manual_balance_type" value="ADD" checked onchange="app.updateManualBalancePreview()" class="text-emerald-500 focus:ring-0">
+                <span class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-plus-circle"></i> Acreditar (+)
+                </span>
+              </label>
+              <label class="flex items-center gap-2 p-3 rounded-xl border border-rose-500/40 bg-rose-950/30 cursor-pointer hover:bg-rose-950/50 transition-all">
+                <input type="radio" name="manual_balance_type" value="SUB" onchange="app.updateManualBalancePreview()" class="text-rose-500 focus:ring-0">
+                <span class="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-minus-circle"></i> Deducir / Restar (-)
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Monto en USD -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1.5">Monto ($ USD):</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-2.5 text-amber-400 font-bold font-mono text-sm">$</span>
+              <input id="manual-balance-amount" type="number" step="0.01" min="0.01" placeholder="0.00" oninput="app.updateManualBalancePreview()" class="w-full bg-[#1b0c33] border border-[#a855f7]/40 rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-mono font-bold text-amber-300 outline-none focus:border-amber-400" required>
+            </div>
+          </div>
+
+          <!-- Concepto -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1.5">Concepto / Motivo:</label>
+            <input id="manual-balance-concept" type="text" placeholder="Ej: Bono de productividad semanal / Retiro Binance Pay procesado" class="w-full bg-[#1b0c33] border border-[#a855f7]/40 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400" required>
+          </div>
+
+          <!-- Nota administrativa opcional -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-400 mb-1.5">Nota Interna (Opcional - solo visible para staff):</label>
+            <textarea id="manual-balance-note" rows="2" placeholder="Detalles de auditoria, ID de transaccion externa, etc." class="w-full bg-[#1b0c33] border border-stone-800 rounded-xl px-3.5 py-2 text-xs text-stone-300 outline-none focus:border-stone-600"></textarea>
+          </div>
+
+          <!-- Live Balance Preview Box -->
+          <div id="manual-balance-preview-box" class="p-3.5 rounded-xl bg-[#0d0417] border border-stone-800 flex items-center justify-between text-xs font-mono">
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-bold">Saldo Actual:</span>
+              <span id="preview-curr-bal" class="text-stone-200 font-bold">.00</span>
+            </div>
+            <div class="text-center">
+              <span class="text-stone-400 block text-[10px] uppercase font-bold">Ajuste:</span>
+              <span id="preview-delta-bal" class="text-emerald-400 font-bold">+.00</span>
+            </div>
+            <div class="text-right">
+              <span class="text-amber-400 block text-[10px] uppercase font-bold">Nuevo Saldo:</span>
+              <span id="preview-new-bal" class="text-amber-300 font-bold text-sm">.00</span>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="pt-3 border-t border-stone-800 flex items-center justify-end gap-3">
+            <button type="button" onclick="app.closeManualBalanceModal()" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> Aplicar Ajuste
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 </body>
 </html>
 

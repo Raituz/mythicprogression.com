@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mythic Progression - Core Application Engine
  * Architecture: Vanilla JS + LocalStorage / Seed JSON
  * Roles: Client, Booster (Pro), Staff/Admin
@@ -17,6 +17,7 @@ class MythicApp {
     this.services = [];
     this.boosters = [];
     this.clients = [];
+    this.balanceLedger = [];
     this.historyOrders = [];
     this.historyFiltered = [];
     this.historyCurrentPage = 1;
@@ -86,6 +87,7 @@ class MythicApp {
     try { this.initLanguage(); } catch (e) { console.warn('initLanguage:', e); }
     try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
     try { this.initSession(); } catch (e) { console.warn('initSession pre-data:', e); }
+    try { this.initBalanceLedger(); } catch (e) { console.warn('initBalanceLedger:', e); }
     try { await this.loadInitialData(); } catch (e) { console.warn('loadInitialData:', e); }
     try { await this.checkDiscordOAuthCallback(); } catch (e) { console.warn('checkDiscordOAuthCallback:', e); }
     try { this.initSession(); } catch (e) { console.warn('initSession post-data:', e); }
@@ -386,6 +388,7 @@ class MythicApp {
     } catch (e) {
       console.warn('Fallback loading clients:', e);
       if (!this.clients || this.clients.length === 0) this.clients = [];
+    this.balanceLedger = [];
     }
 
     // 5. Historical Orders (Google Sheets - 1,900 rows)
@@ -1117,6 +1120,8 @@ class MythicApp {
       this.saveUser();
       this.renderHeader();
       if (typeof this.renderProWallet === 'function') this.renderProWallet();
+    if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+    if (typeof this.renderProBalance === 'function') this.renderProBalance();
       if (typeof this.initBoosterProfileForm === 'function') this.initBoosterProfileForm();
     }
 
@@ -9763,6 +9768,28 @@ class MythicApp {
         this.boosters[bIdx].balance = newBal;
         console.log(`[Finanzas] Booster ${this.boosters[bIdx].username} acreditado +$${payout.toFixed(2)}. Nuevo saldo: $${newBal.toFixed(2)}`);
 
+        // Registrar movimiento financiero en el libro de saldo (ledger)
+        if (typeof this.recordBalanceMovement === 'function') {
+          this.recordBalanceMovement({
+            id: 'mov_ord_' + o.id + '_' + Date.now(),
+            timestamp: o.completedAt || new Date().toISOString(),
+            userId: bDiscordId || bUsername || bId,
+            username: this.boosters[bIdx].username || bUsername,
+            discordId: bDiscordId || this.boosters[bIdx].discord_id || '',
+            userRole: this.boosters[bIdx].role || 'Booster',
+            type: 'ORDER_CREDIT',
+            amount: payout,
+            previousBalance: currentBal,
+            newBalance: newBal,
+            orderId: o.id,
+            serviceName: o.serviceName || 'Servicio WoW',
+            concept: 'Pago por Orden #' + o.id + ' completada (' + (o.serviceName || 'Servicio') + ')',
+            note: 'Liquidacion por cumplimiento de contrato #' + o.id + '. Aprobado por ' + approverName + '.',
+            performedBy: approverName,
+            status: 'COMPLETED'
+          });
+        }
+
         // Sincronizar en memoria si el usuario actual es este booster
         if (this.currentUser && (
           (this.currentUser.discordId && bDiscordId && String(this.currentUser.discordId) === String(bDiscordId)) ||
@@ -9827,6 +9854,8 @@ class MythicApp {
     if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
     if (typeof this.renderProMyOrders === 'function') this.renderProMyOrders();
     if (typeof this.renderProWallet === 'function') this.renderProWallet();
+    if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+    if (typeof this.renderProBalance === 'function') this.renderProBalance();
     if (typeof this.renderChatList === 'function') this.renderChatList();
     if (typeof this.renderClientOrders === 'function') this.renderClientOrders();
 
@@ -11033,6 +11062,7 @@ class MythicApp {
     if (!container) return;
 
     if (!Array.isArray(this.clients)) this.clients = [];
+    this.balanceLedger = [];
 
     // Reconcile suppliers: Any user who dispatched orders as supplier is listed as Supplier (not regular client)
     (this.orders || []).forEach(o => {
@@ -15512,6 +15542,7 @@ class MythicApp {
 
       // Register or update the Supplier in this.clients with role 'supplier' (not as regular client)
       if (!Array.isArray(this.clients)) this.clients = [];
+    this.balanceLedger = [];
       const supClientId = `supplier_${supplierDiscordId || supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
       let matchedClient = this.clients.find(x => 
         x.id === supClientId || 
@@ -15597,6 +15628,1039 @@ class MythicApp {
   }
 
 }
+
+// ==========================================================================
+// BALANCE LEDGER & FINANCIAL MOVEMENTS SYSTEM (ADMIN + PRO)
+// ==========================================================================
+
+MythicApp.prototype.initBalanceLedger = function() {
+  try {
+    const stored = localStorage.getItem('mp_balance_ledger');
+    if (stored) {
+      this.balanceLedger = JSON.parse(stored);
+    }
+    if (!Array.isArray(this.balanceLedger)) this.balanceLedger = [];
+  } catch (e) {
+    this.balanceLedger = [];
+  }
+
+  // Auto-sync historical and existing completed orders into the ledger
+  this.syncBalanceLedgerWithCompletedOrders();
+};
+
+MythicApp.prototype.syncBalanceLedgerWithCompletedOrders = function() {
+  if (!Array.isArray(this.orders)) return;
+  let added = false;
+  this.orders.forEach(o => {
+    if (!o || o.status !== 'COMPLETED' || !o.assignedBooster) return;
+    const orderMovId = 'mov_ord_' + o.id;
+    const exists = this.balanceLedger.some(m => m.orderId === o.id || m.id === orderMovId);
+    if (!exists) {
+      const payout = Number(o.assignedBooster.payout || o.boosterPayout || 0);
+      const bName = o.assignedBooster.username || 'Booster';
+      const bDiscord = o.assignedBooster.discordId || '';
+      const bId = o.assignedBooster.id || bDiscord || bName;
+      
+      this.balanceLedger.push({
+        id: orderMovId,
+        timestamp: o.completedAt || o.updatedAt || o.createdAt || new Date().toISOString(),
+        userId: bId,
+        username: bName,
+        discordId: bDiscord,
+        userRole: o.assignedBooster.role || 'Booster',
+        type: 'ORDER_CREDIT',
+        amount: payout,
+        previousBalance: 0,
+        newBalance: payout,
+        orderId: o.id,
+        serviceName: o.serviceName || 'Servicio WoW',
+        concept: `Pago por Orden #${o.id} completada (${o.serviceName || 'Servicio'})`,
+        note: `Liquidacion automatica por cumplimiento de contrato #${o.id}. Aprobado por ${o.approvedBy || 'Administracion'}.`,
+        performedBy: o.approvedBy || 'Sistema',
+        status: 'COMPLETED'
+      });
+      added = true;
+    }
+  });
+
+  if (added) {
+    this.balanceLedger.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+    this.saveBalanceLedger(false);
+  }
+};
+
+MythicApp.prototype.saveBalanceLedger = function(syncFirestore = true) {
+  if (!Array.isArray(this.balanceLedger)) this.balanceLedger = [];
+  localStorage.setItem('mp_balance_ledger', JSON.stringify(this.balanceLedger));
+
+  if (syncFirestore && this.db) {
+    try {
+      this.db.collection('system').doc('balance_ledger').set({
+        movements: this.balanceLedger.slice(0, 500),
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore balance_ledger save err:', err));
+    } catch (e) {}
+  }
+};
+
+MythicApp.prototype.recordBalanceMovement = function(movement) {
+  if (!movement) return;
+  if (!Array.isArray(this.balanceLedger)) this.balanceLedger = [];
+  
+  movement.id = movement.id || ('mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
+  movement.timestamp = movement.timestamp || new Date().toISOString();
+  movement.status = movement.status || 'COMPLETED';
+
+  this.balanceLedger.unshift(movement);
+  this.saveBalanceLedger(true);
+
+  if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+  if (typeof this.renderProBalance === 'function') this.renderProBalance();
+  if (typeof this.renderProWallet === 'function') this.renderProWallet();
+    if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+    if (typeof this.renderProBalance === 'function') this.renderProBalance();
+};
+
+// --------------------------------------------------------------------------
+// ADMIN MANUAL BALANCE ADJUSTMENT
+// --------------------------------------------------------------------------
+MythicApp.prototype.adminApplyManualBalanceAdjustment = function(targetIdentifier, type, amount, concept, note) {
+  if (!this.isAdminOrGerente()) {
+    this.showToast('Acceso denegado: se requieren permisos de Administrador.', 'error');
+    return false;
+  }
+
+  amount = Number(amount);
+  if (isNaN(amount) || amount <= 0) {
+    this.showToast('Ingresa un monto numerico valido mayor a $0.00.', 'error');
+    return false;
+  }
+
+  // Find user in boosters first, then clients
+  let target = (this.boosters || []).find(b => 
+    b && (
+      String(b.discord_id) === String(targetIdentifier) ||
+      String(b.id) === String(targetIdentifier) ||
+      (b.username && b.username.toLowerCase() === String(targetIdentifier).toLowerCase())
+    )
+  );
+
+  let isClient = false;
+  if (!target) {
+    target = (this.clients || []).find(c => 
+      c && (
+        String(c.id) === String(targetIdentifier) ||
+        String(c.discord_id) === String(targetIdentifier) ||
+        (c.name && c.name.toLowerCase() === String(targetIdentifier).toLowerCase()) ||
+        (c.email && c.email.toLowerCase() === String(targetIdentifier).toLowerCase())
+      )
+    );
+    if (target) isClient = true;
+  }
+
+  if (!target) {
+    this.showToast('No se encontro el usuario seleccionado.', 'error');
+    return false;
+  }
+
+  const prevBal = Number(target.balance) || 0;
+  const signedDelta = type === 'ADD' ? amount : -amount;
+  const newBal = Number((prevBal + signedDelta).toFixed(2));
+
+  if (newBal < 0 && !confirm(`El nuevo saldo de ${target.username || target.name} quedara en negativo ($${newBal.toFixed(2)}). Deseas continuar?`)) {
+    return false;
+  }
+
+  target.balance = newBal;
+
+  // Sync if target is currently logged in user
+  if (this.currentUser && (
+    (this.currentUser.discordId && target.discord_id && String(this.currentUser.discordId) === String(target.discord_id)) ||
+    (this.currentUser.username && target.username && this.currentUser.username.toLowerCase() === target.username.toLowerCase()) ||
+    (this.currentUser.id && target.id && String(this.currentUser.id) === String(target.id))
+  )) {
+    this.currentUser.balance = newBal;
+    this.saveUser();
+  }
+
+  // Persist user changes
+  if (isClient) {
+    this.saveClients();
+  } else {
+    this.saveBoosters();
+    if (this.db && target.discord_id) {
+      this.db.collection('boosters').doc(String(target.discord_id)).set({
+        balance: newBal,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(() => {});
+    }
+  }
+
+  const adminName = (this.currentUser && (this.currentUser.username || this.currentUser.name)) || 'Administracion';
+
+  // Record in ledger
+  this.recordBalanceMovement({
+    id: 'mov_man_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    timestamp: new Date().toISOString(),
+    userId: target.discord_id || target.id || target.username,
+    username: target.username || target.name || 'Usuario',
+    discordId: target.discord_id || '',
+    userRole: target.role || (isClient ? 'Cliente' : 'Booster'),
+    type: type === 'ADD' ? 'MANUAL_ADD' : 'MANUAL_SUB',
+    amount: signedDelta,
+    previousBalance: prevBal,
+    newBalance: newBal,
+    concept: concept || (type === 'ADD' ? 'Acreditacion manual de fondos' : 'Deduccion manual de fondos'),
+    note: note || '',
+    performedBy: adminName,
+    status: 'COMPLETED'
+  });
+
+  this.showToast(`Saldo de ${target.username || target.name} actualizado: $${prevBal.toFixed(2)} -> $${newBal.toFixed(2)}`, 'success');
+  this.closeManualBalanceModal();
+  if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+  if (typeof this.renderAdminBoosters === 'function') this.renderAdminBoosters();
+  if (typeof this.renderProBalance === 'function') this.renderProBalance();
+  return true;
+};
+
+// --------------------------------------------------------------------------
+// ADMIN FINANCES VIEW & LEDGER RENDERING
+// --------------------------------------------------------------------------
+MythicApp.prototype.currentAdminFinancesView = 'accounts'; // 'accounts' or 'ledger'
+MythicApp.prototype.currentAdminFinancesFilter = 'ALL';
+MythicApp.prototype.currentAdminFinancesSearch = '';
+
+MythicApp.prototype.renderAdminFinances = function() {
+  const container = document.getElementById('admin-finances-container');
+  if (!container) return;
+
+  this.syncBalanceLedgerWithCompletedOrders();
+
+  // Consolidate users
+  const allUsers = [];
+  const seenIds = new Set();
+
+  (this.boosters || []).forEach(b => {
+    if (!b) return;
+    const uid = b.discord_id || b.id || b.username;
+    if (uid && !seenIds.has(uid)) {
+      seenIds.add(uid);
+      allUsers.push({
+        id: uid,
+        username: b.username || 'Booster',
+        role: b.role || 'Booster',
+        roles: b.roles || [b.role || 'Booster'],
+        discord_id: b.discord_id || '',
+        avatar: b.avatar || '',
+        balance: Number(b.balance) || 0,
+        type: 'booster'
+      });
+    }
+  });
+
+  (this.clients || []).forEach(c => {
+    if (!c) return;
+    const uid = c.id || c.discord_id || c.email || c.name;
+    if (uid && !seenIds.has(uid)) {
+      seenIds.add(uid);
+      allUsers.push({
+        id: uid,
+        username: c.name || c.username || 'Cliente',
+        role: c.role || 'Cliente',
+        roles: [c.role || 'Cliente'],
+        discord_id: c.discord_id || '',
+        avatar: c.avatar || '',
+        balance: Number(c.balance) || 0,
+        type: 'client'
+      });
+    }
+  });
+
+  // Calculate Metrics
+  const totalBalanceHeld = allUsers.reduce((acc, u) => acc + (u.balance > 0 ? u.balance : 0), 0);
+  const totalOrderEarnings = (this.balanceLedger || []).filter(m => m.type === 'ORDER_CREDIT').reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
+  const totalManualAdjustments = (this.balanceLedger || []).filter(m => m.type === 'MANUAL_ADD' || m.type === 'MANUAL_SUB').reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
+  const positiveBalanceCount = allUsers.filter(u => u.balance > 0).length;
+
+  // Filter Users for Accounts View
+  const sTerm = (this.currentAdminFinancesSearch || '').toLowerCase().trim();
+  const rFilter = this.currentAdminFinancesFilter || 'ALL';
+
+  let filteredUsers = allUsers.filter(u => {
+    if (sTerm) {
+      const matchName = (u.username || '').toLowerCase().includes(sTerm);
+      const matchId = (u.discord_id || '').toLowerCase().includes(sTerm);
+      const matchRole = (u.role || '').toLowerCase().includes(sTerm);
+      if (!matchName && !matchId && !matchRole) return false;
+    }
+    if (rFilter === 'POSITIVE') return u.balance > 0;
+    if (rFilter === 'BOOSTERS') return u.type === 'booster';
+    if (rFilter === 'SUPPLIERS') return (u.roles && u.roles.some(r => /supplier/i.test(r))) || (u.role && /supplier/i.test(u.role));
+    if (rFilter === 'STAFF') return (u.roles && u.roles.some(r => /admin|staff|gerente/i.test(r))) || (u.role && /admin|staff|gerente/i.test(u.role));
+    if (rFilter === 'CLIENTS') return u.type === 'client';
+    return true;
+  });
+
+  // Filter Ledger for Ledger View
+  let filteredLedger = (this.balanceLedger || []).filter(m => {
+    if (!m) return false;
+    if (sTerm) {
+      const matchUser = (m.username || '').toLowerCase().includes(sTerm);
+      const matchConcept = (m.concept || '').toLowerCase().includes(sTerm);
+      const matchOrder = (m.orderId || '').toLowerCase().includes(sTerm);
+      const matchNote = (m.note || '').toLowerCase().includes(sTerm);
+      if (!matchUser && !matchConcept && !matchOrder && !matchNote) return false;
+    }
+    if (rFilter === 'POSITIVE') return Number(m.amount) > 0;
+    if (rFilter === 'BOOSTERS') return m.userRole && /booster/i.test(m.userRole);
+    if (rFilter === 'SUPPLIERS') return m.userRole && /supplier/i.test(m.userRole);
+    if (rFilter === 'STAFF') return m.userRole && /staff|admin|gerente/i.test(m.userRole);
+    return true;
+  });
+
+  const isAccountsView = (this.currentAdminFinancesView !== 'ledger');
+
+  container.innerHTML = `
+    <!-- 1. KPI CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="admin-glass-panel p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#1c0d2e] to-[#120720]">
+        <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+          <span>Saldo Total en Custodia</span>
+          <i class="fa-solid fa-vault text-amber-400"></i>
+        </div>
+        <div class="text-3xl font-bold font-mono text-amber-300">$${totalBalanceHeld.toFixed(2)}</div>
+        <div class="text-[11px] text-stone-400 mt-2 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>${positiveBalanceCount} cuentas con saldo activo</span>
+        </div>
+      </div>
+
+      <div class="admin-glass-panel p-5 rounded-2xl border border-stone-800">
+        <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+          <span>Acreditado por Ordenes</span>
+          <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        </div>
+        <div class="text-2xl font-bold font-mono text-emerald-400">+$${totalOrderEarnings.toFixed(2)}</div>
+        <div class="text-[11px] text-stone-500 mt-2">Total historico ganado por boosters</div>
+      </div>
+
+      <div class="admin-glass-panel p-5 rounded-2xl border border-stone-800">
+        <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+          <span>Ajustes Manuales Netos</span>
+          <i class="fa-solid fa-sliders text-[#a855f7]"></i>
+        </div>
+        <div class="text-2xl font-bold font-mono ${totalManualAdjustments >= 0 ? 'text-purple-300' : 'text-rose-400'}">
+          ${totalManualAdjustments >= 0 ? '+' : ''}$${totalManualAdjustments.toFixed(2)}
+        </div>
+        <div class="text-[11px] text-stone-500 mt-2">Bonos, deducciones y liquidaciones</div>
+      </div>
+
+      <div class="admin-glass-panel p-5 rounded-2xl border border-stone-800 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
+            <span>Accion Rapida</span>
+            <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i>
+          </div>
+          <div class="text-xs text-stone-300">Modifica fondos de cualquier usuario con registro auditor.</div>
+        </div>
+        <button onclick="app.openManualBalanceModal()" class="mt-3 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all">
+          <i class="fa-solid fa-plus-minus"></i> Ajustar Saldo Manual
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. TOOLBAR & CONTROLS -->
+    <div class="admin-glass-panel p-4 rounded-2xl border border-stone-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <!-- View Switcher -->
+      <div class="flex items-center bg-[#140827] p-1 rounded-xl border border-stone-800">
+        <button onclick="app.switchAdminFinancesView('accounts')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${isAccountsView ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
+          <i class="fa-solid fa-users mr-1.5"></i> Directorio de Cuentas (${filteredUsers.length})
+        </button>
+        <button onclick="app.switchAdminFinancesView('ledger')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${!isAccountsView ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
+          <i class="fa-solid fa-book-open mr-1.5"></i> Libro de Movimientos (${filteredLedger.length})
+        </button>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Search -->
+        <div class="relative flex-1 sm:w-60">
+          <i class="fa-solid fa-search absolute left-3 top-2.5 text-stone-500 text-xs"></i>
+          <input type="text" placeholder="Buscar usuario, Discord ID, orden..." value="${this.currentAdminFinancesSearch || ''}" oninput="app.filterAdminFinances(this.value, null)" class="w-full bg-[#140827] border border-stone-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-stone-500 outline-none focus:border-[#a855f7]">
+        </div>
+
+        <!-- Role Filter -->
+        <select onchange="app.filterAdminFinances(null, this.value)" class="bg-[#140827] border border-stone-800 text-xs text-stone-200 font-bold rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-[#a855f7]">
+          <option value="ALL" ${rFilter === 'ALL' ? 'selected' : ''}>Todos los Usuarios</option>
+          <option value="POSITIVE" ${rFilter === 'POSITIVE' ? 'selected' : ''}>Con Saldo (&gt; $0)</option>
+          <option value="BOOSTERS" ${rFilter === 'BOOSTERS' ? 'selected' : ''}>Solo Boosters</option>
+          <option value="SUPPLIERS" ${rFilter === 'SUPPLIERS' ? 'selected' : ''}>Suppliers</option>
+          <option value="STAFF" ${rFilter === 'STAFF' ? 'selected' : ''}>Staff / Admin</option>
+          <option value="CLIENTS" ${rFilter === 'CLIENTS' ? 'selected' : ''}>Clientes</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 3. MAIN CONTENT (ACCOUNTS OR LEDGER) -->
+    ${isAccountsView ? this.renderAdminFinancesAccountsTable(filteredUsers) : this.renderAdminFinancesLedgerTable(filteredLedger)}
+  `;
+};
+
+MythicApp.prototype.switchAdminFinancesView = function(view) {
+  this.currentAdminFinancesView = view;
+  this.renderAdminFinances();
+};
+
+MythicApp.prototype.filterAdminFinances = function(search, filter) {
+  if (search !== null && search !== undefined) this.currentAdminFinancesSearch = search;
+  if (filter !== null && filter !== undefined) this.currentAdminFinancesFilter = filter;
+  this.renderAdminFinances();
+};
+
+MythicApp.prototype.filterFinancesByUser = function(username) {
+  this.currentAdminFinancesSearch = username;
+  this.currentAdminFinancesView = 'ledger';
+  this.renderAdminFinances();
+};
+
+MythicApp.prototype.renderAdminFinancesAccountsTable = function(users) {
+  if (!users || users.length === 0) {
+    return `
+      <div class="admin-glass-panel p-10 text-center rounded-2xl border border-stone-800 text-stone-400">
+        <i class="fa-solid fa-users-slash text-3xl mb-3 text-stone-600"></i>
+        <p class="text-sm font-semibold">No se encontraron usuarios con los filtros aplicados.</p>
+      </div>
+    `;
+  }
+
+  const rows = users.map(u => {
+    const isSupplier = (u.roles && u.roles.some(r => /supplier/i.test(r))) || (u.role && /supplier/i.test(u.role));
+    const isStaff = (u.roles && u.roles.some(r => /admin|staff|gerente/i.test(r))) || (u.role && /admin|staff|gerente/i.test(u.role));
+
+    let roleBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-950/70 text-purple-300 border border-purple-800/40 font-bold">${u.role || 'Booster'}</span>`;
+    if (isSupplier) roleBadge += ` <span class="px-1.5 py-0.5 rounded text-[9px] bg-amber-950/90 text-amber-300 border border-amber-600/50 font-bold">SUPPLIER</span>`;
+    if (isStaff) roleBadge += ` <span class="px-1.5 py-0.5 rounded text-[9px] bg-rose-950/90 text-rose-300 border border-rose-600/50 font-bold">STAFF</span>`;
+
+    const userOrdersEarned = (this.balanceLedger || [])
+      .filter(m => m.type === 'ORDER_CREDIT' && (
+        (m.userId && String(m.userId) === String(u.id)) ||
+        (m.username && m.username.toLowerCase() === u.username.toLowerCase()) ||
+        (m.discordId && u.discord_id && String(m.discordId) === String(u.discord_id))
+      ))
+      .reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
+
+    const balFormatted = (Number(u.balance) || 0).toFixed(2);
+    const balColor = Number(u.balance) > 0 ? 'text-emerald-400 bg-emerald-950/40 border-emerald-500/40' : (Number(u.balance) < 0 ? 'text-rose-400 bg-rose-950/40 border-rose-500/40' : 'text-stone-400 bg-stone-900 border-stone-800');
+
+    return `
+      <tr class="border-b border-stone-800/60 hover:bg-[#1a0c30]/50 transition-colors">
+        <td class="py-3 px-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-800 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-md">
+              ${(u.username || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div class="font-bold text-white text-xs flex items-center gap-1.5">
+                <span>${u.username}</span>
+                ${roleBadge}
+              </div>
+              <div class="text-[10px] text-stone-400 font-mono flex items-center gap-1 mt-0.5">
+                <i class="fa-brands fa-discord text-stone-500 text-[10px]"></i>
+                <span>${u.discord_id || 'ID: ' + u.id}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+
+        <td class="py-3 px-4 text-center font-mono text-xs">
+          <span class="px-2.5 py-1 rounded-xl border font-bold text-sm ${balColor}">
+            $${balFormatted}
+          </span>
+        </td>
+
+        <td class="py-3 px-4 text-center font-mono text-xs text-stone-300">
+          +$${userOrdersEarned.toFixed(2)}
+        </td>
+
+        <td class="py-3 px-4 text-right">
+          <div class="flex items-center justify-end gap-1.5">
+            <button onclick="app.openManualBalanceModal('${u.id}', 'ADD')" class="px-2.5 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-600/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm" title="Acreditar dinero al usuario">
+              <i class="fa-solid fa-plus text-[10px]"></i> Acreditar
+            </button>
+            <button onclick="app.openManualBalanceModal('${u.id}', 'SUB')" class="px-2.5 py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-600/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm" title="Quitar dinero al usuario">
+              <i class="fa-solid fa-minus text-[10px]"></i> Quitar
+            </button>
+            <button onclick="app.filterFinancesByUser('${u.username}')" class="px-2.5 py-1.5 rounded-lg bg-[#220d3d] hover:bg-[#321359] text-purple-200 border border-purple-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm" title="Ver historial de movimientos">
+              <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Historial
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="admin-glass-panel rounded-2xl border border-stone-800 overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-[#120521] text-stone-400 uppercase font-mono text-[10px] border-b border-stone-800">
+            <tr>
+              <th class="py-3 px-4">Usuario / Cuenta</th>
+              <th class="py-3 px-4 text-center">Saldo Actual</th>
+              <th class="py-3 px-4 text-center">Ganado en Ordenes</th>
+              <th class="py-3 px-4 text-right">Acciones de Control</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-800/40">
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+};
+
+MythicApp.prototype.renderAdminFinancesLedgerTable = function(ledger) {
+  if (!ledger || ledger.length === 0) {
+    return `
+      <div class="admin-glass-panel p-10 text-center rounded-2xl border border-stone-800 text-stone-400">
+        <i class="fa-solid fa-book text-3xl mb-3 text-stone-600"></i>
+        <p class="text-sm font-semibold">No hay movimientos registrados en el libro contable.</p>
+      </div>
+    `;
+  }
+
+  const rows = ledger.map(m => {
+    const isCredit = Number(m.amount) >= 0;
+    const isOrder = m.type === 'ORDER_CREDIT';
+    const isWithdrawal = m.type === 'WITHDRAWAL';
+
+    let typeBadge = '';
+    if (isOrder) {
+      typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-600/40 font-bold"><i class="fa-solid fa-check-double mr-1"></i>ORDEN</span>`;
+    } else if (isWithdrawal) {
+      typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-950/80 text-rose-300 border border-rose-600/40 font-bold"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>RETIRO</span>`;
+    } else if (isCredit) {
+      typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-teal-950/80 text-teal-300 border border-teal-600/40 font-bold"><i class="fa-solid fa-plus-circle mr-1"></i>AJUSTE (+)</span>`;
+    } else {
+      typeBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-950/80 text-rose-300 border border-rose-600/40 font-bold"><i class="fa-solid fa-minus-circle mr-1"></i>DEDUCCION (-)</span>`;
+    }
+
+    const dateStr = new Date(m.timestamp || Date.now()).toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    const amtFormatted = (isCredit ? '+' : '') + '$' + Math.abs(Number(m.amount) || 0).toFixed(2);
+    const amtColor = isCredit ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+
+    return `
+      <tr class="border-b border-stone-800/60 hover:bg-[#1a0c30]/50 transition-colors">
+        <td class="py-3 px-4 font-mono text-[11px] text-stone-400 whitespace-nowrap">
+          ${dateStr}
+        </td>
+
+        <td class="py-3 px-4">
+          <div class="font-bold text-white text-xs">${m.username || 'Usuario'}</div>
+          <div class="text-[10px] text-stone-400 font-mono">${m.discordId ? 'Discord: ' + m.discordId : ''}</div>
+        </td>
+
+        <td class="py-3 px-4 whitespace-nowrap">
+          ${typeBadge}
+        </td>
+
+        <td class="py-3 px-4">
+          <div class="font-semibold text-stone-200 text-xs">${m.concept || 'Movimiento de saldo'}</div>
+          ${m.note ? `<div class="text-[10px] text-stone-400 mt-0.5 italic">${m.note}</div>` : ''}
+          ${m.orderId ? `<div class="text-[10px] text-amber-400/80 font-mono mt-0.5">Ref: #${m.orderId}</div>` : ''}
+        </td>
+
+        <td class="py-3 px-4 text-center font-mono text-xs whitespace-nowrap ${amtColor}">
+          ${amtFormatted}
+        </td>
+
+        <td class="py-3 px-4 text-center font-mono text-xs text-stone-300 whitespace-nowrap">
+          ${m.newBalance !== undefined ? '$' + Number(m.newBalance).toFixed(2) : '-'}
+        </td>
+
+        <td class="py-3 px-4 text-right text-[11px] text-stone-400 whitespace-nowrap">
+          ${m.performedBy || 'Sistema'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="admin-glass-panel rounded-2xl border border-stone-800 overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-[#120521] text-stone-400 uppercase font-mono text-[10px] border-b border-stone-800">
+            <tr>
+              <th class="py-3 px-4">Fecha y Hora</th>
+              <th class="py-3 px-4">Usuario</th>
+              <th class="py-3 px-4">Tipo</th>
+              <th class="py-3 px-4">Concepto / Referencia</th>
+              <th class="py-3 px-4 text-center">Monto</th>
+              <th class="py-3 px-4 text-center">Saldo Tras Movimiento</th>
+              <th class="py-3 px-4 text-right">Aprobado Por</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-800/40">
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+};
+
+// --------------------------------------------------------------------------
+// MODAL CONTROLS: ADJUST MANUAL BALANCE
+// --------------------------------------------------------------------------
+MythicApp.prototype.openManualBalanceModal = function(targetUserId = null, initialType = 'ADD') {
+  const modal = document.getElementById('admin-balance-modal');
+  if (!modal) return;
+
+  const select = document.getElementById('manual-balance-user-select');
+  if (select) {
+    select.innerHTML = '<option value="">-- Selecciona un usuario --</option>';
+
+    // Boosters
+    const bGroup = document.createElement('optgroup');
+    bGroup.label = 'Boosters Registrados';
+    (this.boosters || []).forEach(b => {
+      if (!b) return;
+      const opt = document.createElement('option');
+      opt.value = b.discord_id || b.id || b.username;
+      opt.textContent = `${b.username} (${b.role || 'Booster'} - Saldo: $${(Number(b.balance) || 0).toFixed(2)})`;
+      bGroup.appendChild(opt);
+    });
+    select.appendChild(bGroup);
+
+    // Clients
+    const cGroup = document.createElement('optgroup');
+    cGroup.label = 'Clientes';
+    (this.clients || []).forEach(c => {
+      if (!c) return;
+      const opt = document.createElement('option');
+      opt.value = c.id || c.discord_id || c.email || c.name;
+      opt.textContent = `${c.name || c.username} (Cliente - Saldo: $${(Number(c.balance) || 0).toFixed(2)})`;
+      cGroup.appendChild(opt);
+    });
+    select.appendChild(cGroup);
+
+    if (targetUserId) {
+      select.value = targetUserId;
+    }
+  }
+
+  // Set type radio
+  const radios = document.getElementsByName('manual_balance_type');
+  radios.forEach(r => {
+    if (r.value === initialType) r.checked = true;
+  });
+
+  const amountInput = document.getElementById('manual-balance-amount');
+  if (amountInput) amountInput.value = '';
+
+  const conceptInput = document.getElementById('manual-balance-concept');
+  if (conceptInput) {
+    conceptInput.value = initialType === 'ADD' ? 'Bonificacion / Acreditacion de Gerencia' : 'Retiro / Deduccion de fondos';
+  }
+
+  const noteInput = document.getElementById('manual-balance-note');
+  if (noteInput) noteInput.value = '';
+
+  this.updateManualBalancePreview();
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+};
+
+MythicApp.prototype.closeManualBalanceModal = function() {
+  const modal = document.getElementById('admin-balance-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+MythicApp.prototype.onManualBalanceUserChanged = function(userId) {
+  this.updateManualBalancePreview();
+};
+
+MythicApp.prototype.updateManualBalancePreview = function() {
+  const select = document.getElementById('manual-balance-user-select');
+  const amountInput = document.getElementById('manual-balance-amount');
+  const previewCurr = document.getElementById('preview-curr-bal');
+  const previewDelta = document.getElementById('preview-delta-bal');
+  const previewNew = document.getElementById('preview-new-bal');
+
+  if (!previewCurr || !previewDelta || !previewNew) return;
+
+  const userId = select ? select.value : null;
+  let currBal = 0;
+
+  if (userId) {
+    const b = (this.boosters || []).find(x => x && (String(x.discord_id) === String(userId) || String(x.id) === String(userId) || (x.username && x.username.toLowerCase() === userId.toLowerCase())));
+    if (b) {
+      currBal = Number(b.balance) || 0;
+    } else {
+      const c = (this.clients || []).find(x => x && (String(x.id) === String(userId) || String(x.discord_id) === String(userId) || (x.name && x.name.toLowerCase() === userId.toLowerCase())));
+      if (c) currBal = Number(c.balance) || 0;
+    }
+  }
+
+  const typeRadios = document.getElementsByName('manual_balance_type');
+  let type = 'ADD';
+  typeRadios.forEach(r => { if (r.checked) type = r.value; });
+
+  const amt = Math.max(0, Number(amountInput ? amountInput.value : 0) || 0);
+  const delta = type === 'ADD' ? amt : -amt;
+  const newBal = Number((currBal + delta).toFixed(2));
+
+  previewCurr.textContent = `$${currBal.toFixed(2)}`;
+  previewDelta.textContent = (type === 'ADD' ? '+' : '-') + `$${amt.toFixed(2)}`;
+  previewDelta.className = type === 'ADD' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+
+  previewNew.textContent = `$${newBal.toFixed(2)}`;
+  previewNew.className = newBal >= 0 ? 'text-amber-300 font-bold text-sm' : 'text-rose-400 font-bold text-sm';
+};
+
+MythicApp.prototype.submitManualBalanceAdjustment = function(form) {
+  const select = document.getElementById('manual-balance-user-select');
+  const userId = select ? select.value : '';
+  if (!userId) {
+    this.showToast('Por favor selecciona un usuario.', 'error');
+    return;
+  }
+
+  const typeRadios = document.getElementsByName('manual_balance_type');
+  let type = 'ADD';
+  typeRadios.forEach(r => { if (r.checked) type = r.value; });
+
+  const amountInput = document.getElementById('manual-balance-amount');
+  const amount = Number(amountInput ? amountInput.value : 0);
+  if (isNaN(amount) || amount <= 0) {
+    this.showToast('Ingresa un monto valido mayor a $0.', 'error');
+    return;
+  }
+
+  const conceptInput = document.getElementById('manual-balance-concept');
+  const concept = conceptInput ? conceptInput.value.trim() : '';
+
+  const noteInput = document.getElementById('manual-balance-note');
+  const note = noteInput ? noteInput.value.trim() : '';
+
+  this.adminApplyManualBalanceAdjustment(userId, type, amount, concept, note);
+};
+
+// --------------------------------------------------------------------------
+// PRO BALANCE TAB & MOVEMENTS REPORT RENDERING
+// --------------------------------------------------------------------------
+MythicApp.prototype.currentProBalanceFilter = 'ALL';
+
+MythicApp.prototype.renderProBalance = function() {
+  const container = document.getElementById('pro-balance-container');
+  if (!container) return;
+
+  this.syncBalanceLedgerWithCompletedOrders();
+
+  const u = this.currentUser;
+  const boosterRecord = (this.boosters || []).find(b => 
+    b && (
+      (u?.discordId && b.discord_id && String(u.discordId) === String(b.discord_id)) ||
+      (u?.username && b.username && u.username.trim().toLowerCase() === b.username.trim().toLowerCase()) ||
+      (u?.id && b.id && String(u.id) === String(b.id))
+    )
+  );
+
+  const bal = Number((boosterRecord && boosterRecord.balance !== undefined) ? boosterRecord.balance : (u?.balance || 0));
+  if (u) u.balance = bal;
+
+  // Update sidebar badge
+  const sidebarBadge = document.getElementById('badge-pro-balance');
+  if (sidebarBadge) {
+    sidebarBadge.textContent = `$${bal.toFixed(2)}`;
+  }
+
+  // Filter movements for this pro booster
+  const myMovements = (this.balanceLedger || []).filter(m => {
+    if (!m) return false;
+    const matchId = (u?.discordId && m.discordId && String(u.discordId) === String(m.discordId)) ||
+                    (u?.id && m.userId && String(u.id) === String(m.userId)) ||
+                    (u?.username && m.username && u.username.trim().toLowerCase() === m.username.trim().toLowerCase());
+    return matchId;
+  });
+
+  const totalEarnedOrders = myMovements.filter(m => m.type === 'ORDER_CREDIT').reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
+  const totalWithdrawnOrDebited = myMovements.filter(m => Number(m.amount) < 0).reduce((acc, m) => acc + Math.abs(Number(m.amount) || 0), 0);
+
+  // Apply quick filter
+  const f = this.currentProBalanceFilter || 'ALL';
+  const filtered = myMovements.filter(m => {
+    if (f === 'CREDITS') return Number(m.amount) > 0;
+    if (f === 'DEBITS') return Number(m.amount) < 0;
+    if (f === 'ORDERS') return m.type === 'ORDER_CREDIT';
+    return true;
+  });
+
+  const rowsHtml = filtered.length > 0 ? filtered.map(m => {
+    const isCredit = Number(m.amount) >= 0;
+    const isOrder = m.type === 'ORDER_CREDIT';
+    const isWithdrawal = m.type === 'WITHDRAWAL';
+
+    let badge = '';
+    if (isOrder) {
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-600/50 font-bold"><i class="fa-solid fa-check mr-1"></i>Orden Acreditada</span>`;
+    } else if (isWithdrawal) {
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-950/90 text-rose-300 border border-rose-600/50 font-bold"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Retiro Procesado</span>`;
+    } else if (isCredit) {
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-teal-950/90 text-teal-300 border border-teal-600/50 font-bold"><i class="fa-solid fa-plus mr-1"></i>Ajuste Admin (+)</span>`;
+    } else {
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-950/90 text-amber-300 border border-amber-600/50 font-bold"><i class="fa-solid fa-minus mr-1"></i>Deduccion (-)</span>`;
+    }
+
+    const dateStr = new Date(m.timestamp || Date.now()).toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    const amtStr = (isCredit ? '+' : '') + '$' + Math.abs(Number(m.amount) || 0).toFixed(2);
+    const amtColor = isCredit ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+
+    return `
+      <tr class="border-b border-stone-800/60 hover:bg-[#1a120c]/60 transition-colors">
+        <td class="py-3 px-4 font-mono text-[11px] text-stone-400 whitespace-nowrap">
+          ${dateStr}
+        </td>
+
+        <td class="py-3 px-4 whitespace-nowrap">
+          ${badge}
+        </td>
+
+        <td class="py-3 px-4">
+          <div class="font-bold text-white text-xs">${m.concept || 'Movimiento de saldo'}</div>
+          ${m.note ? `<div class="text-[10px] text-stone-400 mt-0.5">${m.note}</div>` : ''}
+          ${m.orderId ? `<div class="text-[10px] text-amber-400 font-mono mt-0.5">Orden #${m.orderId}</div>` : ''}
+        </td>
+
+        <td class="py-3 px-4 text-center font-mono text-sm whitespace-nowrap ${amtColor}">
+          ${amtStr}
+        </td>
+
+        <td class="py-3 px-4 text-center font-mono text-xs text-stone-300 whitespace-nowrap">
+          ${m.newBalance !== undefined ? '$' + Number(m.newBalance).toFixed(2) : '-'}
+        </td>
+
+        <td class="py-3 px-4 text-right text-[11px] whitespace-nowrap">
+          <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check text-[10px] mr-1"></i>Completado</span>
+        </td>
+      </tr>
+    `;
+  }).join('') : `
+    <tr>
+      <td colspan="6" class="p-8 text-center text-stone-500">
+        <i class="fa-solid fa-receipt text-3xl mb-2 text-stone-700 block"></i>
+        No tienes movimientos registrados en tu balance aun. Cada orden que completes y cualquier ajuste se registrara aqui automaticamente.
+      </td>
+    </tr>
+  `;
+
+  container.innerHTML = `
+    <!-- 1. HERO BALANCE SUMMARY CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="glass-panel p-6 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-[#162214] via-[#10190e] to-[#0a1009] shadow-xl">
+        <span class="text-xs text-emerald-300/80 uppercase tracking-wider font-bold block mb-1">Saldo Disponible para Retiro</span>
+        <div class="text-4xl font-bold font-mono-gaming text-emerald-400">$${bal.toFixed(2)}</div>
+        <div class="flex items-center gap-2 mt-3">
+          <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-600/40 font-semibold">
+            <i class="fa-solid fa-circle-check mr-1"></i>Fondos Verificados
+          </span>
+          <button onclick="document.getElementById('pro-withdraw-accordion').classList.toggle('hidden')" class="text-[11px] text-[#ee914f] hover:underline font-bold ml-auto cursor-pointer">
+            Solicitar Retiro &rarr;
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-panel p-6 rounded-2xl border border-stone-800">
+        <span class="text-xs text-stone-400 uppercase tracking-wider font-bold block mb-1">Ganancias por Ordenes</span>
+        <div class="text-2xl font-bold font-mono-gaming text-stone-100">+$${totalEarnedOrders.toFixed(2)}</div>
+        <span class="text-[10px] text-stone-500 mt-2 block">Acumulado total de contratos completados</span>
+      </div>
+
+      <div class="glass-panel p-6 rounded-2xl border border-stone-800">
+        <span class="text-xs text-stone-400 uppercase tracking-wider font-bold block mb-1">Total Cobrado / Retirado</span>
+        <div class="text-2xl font-bold font-mono-gaming text-[#ee914f]">-$${totalWithdrawnOrDebited.toFixed(2)}</div>
+        <span class="text-[10px] text-stone-500 mt-2 block">Retiros procesados a tu cuenta</span>
+      </div>
+    </div>
+
+    <!-- 2. WITHDRAWAL DRAWER (COLLAPSIBLE / QUICK ACCESS) -->
+    <div id="pro-withdraw-accordion" class="glass-panel p-6 rounded-2xl border border-stone-800 hidden transition-all">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
+        <div>
+          <h3 class="text-base font-bold text-[#fcefc2] font-cinzel flex items-center gap-2">
+            <i class="fa-solid fa-money-bill-transfer text-[#ee914f]"></i>
+            <span>Solicitud de Retiro de Fondos</span>
+          </h3>
+          <p class="text-xs text-stone-400">Transfiere tu saldo disponible a tu cuenta configurada.</p>
+        </div>
+        <button onclick="document.getElementById('pro-withdraw-accordion').classList.add('hidden')" class="text-stone-400 hover:text-white text-xs">
+          <i class="fa-solid fa-xmark"></i> Cerrar
+        </button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); app.submitProWithdrawalRequest(this);" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-stone-300 mb-1">Monto a retirar ($ USD):</label>
+          <input id="pro-withdraw-amount" type="number" min="10" max="${bal}" step="any" value="${bal > 0 ? bal : 0}" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold" required>
+          <span class="text-[10px] text-stone-500 mt-1 block">Minimo: $10.00 | Maximo disponible: $${bal.toFixed(2)}</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-300 mb-1">Metodo de Pago:</label>
+          <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200">
+            <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada (0 fee)</option>
+            <option value="PayPal">PayPal</option>
+            <option value="Zelle">Zelle</option>
+            <option value="USDT TRC20 / ERC20">USDT TRC20 / BSC</option>
+            <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-300 mb-1">ID o Direccion de Destino:</label>
+          <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Correo" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono" required>
+        </div>
+
+        <div class="md:col-span-3 flex justify-end">
+          <button type="submit" class="px-6 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider shadow-md hover:scale-[1.02] transition-transform cursor-pointer">
+            Confirmar y Solicitar Retiro
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 3. REPORT OF MOVEMENTS (THE MAIN USER REQUEST) -->
+    <div class="glass-panel p-6 rounded-2xl border border-stone-800 shadow-xl space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800">
+        <div>
+          <h3 class="text-base font-bold text-[#fcefc2] font-cinzel flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-[#ee914f]"></i>
+            <span>Reporte de Movimientos de Saldo</span>
+          </h3>
+          <p class="text-xs text-stone-400">Historial completo de contratos acreditados, retiros y ajustes de tu cuenta.</p>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="flex items-center gap-1.5 bg-[#120d09] p-1 rounded-xl border border-stone-800 self-start sm:self-auto">
+          <button onclick="app.filterProBalance('ALL')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${f === 'ALL' ? 'bg-[#29170c] text-white border border-[#ee914f]/50' : 'text-stone-400 hover:text-white'}">
+            Todos (${myMovements.length})
+          </button>
+          <button onclick="app.filterProBalance('ORDERS')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${f === 'ORDERS' ? 'bg-[#29170c] text-white border border-[#ee914f]/50' : 'text-stone-400 hover:text-white'}">
+            Ordenes (+)
+          </button>
+          <button onclick="app.filterProBalance('DEBITS')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${f === 'DEBITS' ? 'bg-[#29170c] text-white border border-[#ee914f]/50' : 'text-stone-400 hover:text-white'}">
+            Retiros (-)
+          </button>
+        </div>
+      </div>
+
+      <!-- Movements Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-[#120b07] text-stone-400 uppercase font-mono text-[10px] border-b border-stone-800">
+            <tr>
+              <th class="py-3 px-4">Fecha</th>
+              <th class="py-3 px-4">Tipo</th>
+              <th class="py-3 px-4">Concepto / Contrato</th>
+              <th class="py-3 px-4 text-center">Impacto</th>
+              <th class="py-3 px-4 text-center">Saldo Resultante</th>
+              <th class="py-3 px-4 text-right">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-800/40">
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+};
+
+MythicApp.prototype.filterProBalance = function(filter) {
+  this.currentProBalanceFilter = filter;
+  this.renderProBalance();
+};
+
+MythicApp.prototype.submitProWithdrawalRequest = function(form) {
+  const amtInput = document.getElementById('pro-withdraw-amount');
+  const methodSelect = document.getElementById('pro-withdraw-method');
+  const addrInput = document.getElementById('pro-withdraw-address');
+
+  const amt = Number(amtInput ? amtInput.value : 0);
+  const method = methodSelect ? methodSelect.value : 'Binance Pay / USDT';
+  const addr = addrInput ? addrInput.value.trim() : '';
+
+  const u = this.currentUser;
+  const currBal = Number(u?.balance) || 0;
+
+  if (isNaN(amt) || amt < 10) {
+    this.showToast('El monto minimo de retiro es de $10.00 USD.', 'error');
+    return;
+  }
+  if (amt > currBal) {
+    this.showToast(`Saldo insuficiente. Tu saldo disponible es $${currBal.toFixed(2)}.`, 'error');
+    return;
+  }
+  if (!addr) {
+    this.showToast('Por favor especifica tu cuenta o direccion de destino.', 'error');
+    return;
+  }
+
+  const newBal = Number((currBal - amt).toFixed(2));
+  u.balance = newBal;
+  this.saveUser();
+
+  // Find booster record and update
+  const boosterRecord = (this.boosters || []).find(b => 
+    b && (
+      (u?.discordId && b.discord_id && String(u.discordId) === String(b.discord_id)) ||
+      (u?.username && b.username && u.username.trim().toLowerCase() === b.username.trim().toLowerCase())
+    )
+  );
+  if (boosterRecord) {
+    boosterRecord.balance = newBal;
+    this.saveBoosters();
+    if (this.db && boosterRecord.discord_id) {
+      this.db.collection('boosters').doc(String(boosterRecord.discord_id)).set({
+        balance: newBal,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(() => {});
+    }
+  }
+
+  // Record in ledger
+  this.recordBalanceMovement({
+    id: 'mov_wth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    timestamp: new Date().toISOString(),
+    userId: u.discordId || u.id || u.username,
+    username: u.username || 'Booster',
+    discordId: u.discordId || '',
+    userRole: u.role || 'Booster',
+    type: 'WITHDRAWAL',
+    amount: -amt,
+    previousBalance: currBal,
+    newBalance: newBal,
+    concept: `Solicitud de Retiro a ${method} (${addr})`,
+    note: `Retiro solicitado por el booster. Pendiente de liquidacion por administracion.`,
+    performedBy: u.username || 'Booster',
+    status: 'COMPLETED'
+  });
+
+  this.showToast(`¡Solicitud de retiro por $${amt.toFixed(2)} procesada exitosamente! Tu saldo fue actualizado.`, 'success');
+  this.renderProBalance();
+};
+
 
 const app = new MythicApp();
 window.app = app;
