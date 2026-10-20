@@ -931,18 +931,95 @@ class MythicApp {
       console.warn('Firestore staff_roles sync notice:', error);
     });
 
-    // 4. Escuchar lista de boosters completa en tiempo real
+    // 4. Escuchar lista de boosters completa y sus saldos en tiempo real
     this.db.collection('system').doc('boosters_list').onSnapshot((doc) => {
       if (doc.exists) {
         const data = doc.data();
         if (data && Array.isArray(data.boosters) && data.boosters.length > 0) {
           this.boosters = data.boosters;
           localStorage.setItem('mp_boosters', JSON.stringify(data.boosters));
+
+          // Sincronizar saldo del usuario actualmente logueado en tiempo real
+          if (this.currentUser) {
+            const cDiscord = String(this.currentUser.discordId || this.currentUser.discord_id || '');
+            const cEmail = (this.currentUser.email || '').toLowerCase();
+            const cUser = (this.currentUser.username || '').toLowerCase();
+            const matched = this.boosters.find(b => 
+              (cDiscord && b.discord_id && (String(b.discord_id) === cDiscord || String(b.discord_id).includes(cDiscord) || cDiscord.includes(String(b.discord_id)))) ||
+              (cEmail && b.email && b.email.toLowerCase() === cEmail) ||
+              (cUser && b.username && b.username.toLowerCase() === cUser)
+            );
+            if (matched && matched.balance !== undefined) {
+              this.currentUser.balance = Number(matched.balance) || 0;
+              this.saveUser();
+              this.renderHeader();
+            }
+          }
+
           if (typeof this.renderAdminBoosters === 'function') this.renderAdminBoosters();
+          if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+          if (typeof this.renderProBalance === 'function') this.renderProBalance();
+          if (typeof this.renderProWallet === 'function') this.renderProWallet();
         }
       }
     }, (error) => {
       console.warn('Firestore boosters_list sync notice:', error);
+    });
+
+    // 4b. Escuchar movimientos de saldo contables en tiempo real para todos los usuarios
+    this.db.collection('system').doc('balance_ledger').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.movements)) {
+          const seen = new Set();
+          const merged = [];
+          [...data.movements, ...(this.balanceLedger || [])].forEach(m => {
+            if (!m || !m.id) return;
+            if (!seen.has(m.id)) {
+              seen.add(m.id);
+              merged.push(m);
+            }
+          });
+          merged.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+          this.balanceLedger = merged;
+          localStorage.setItem('mp_balance_ledger', JSON.stringify(this.balanceLedger));
+
+          if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+          if (typeof this.renderProBalance === 'function') this.renderProBalance();
+          if (typeof this.renderProWallet === 'function') this.renderProWallet();
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore balance_ledger sync notice:', error);
+    });
+
+    // 4c. Escuchar lista de clientes y sus saldos en tiempo real
+    this.db.collection('system').doc('clients_list').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.clients) && data.clients.length > 0) {
+          this.clients = data.clients;
+          localStorage.setItem('mp_clients', JSON.stringify(data.clients));
+
+          if (this.currentUser && (this.currentUser.type === 'client' || !this.isBooster())) {
+            const matchedClient = this.clients.find(c => 
+              (c.id && this.currentUser.id && String(c.id) === String(this.currentUser.id)) ||
+              (c.email && this.currentUser.email && c.email.toLowerCase() === this.currentUser.email.toLowerCase()) ||
+              (c.name && this.currentUser.username && c.name.toLowerCase() === this.currentUser.username.toLowerCase())
+            );
+            if (matchedClient && matchedClient.balance !== undefined) {
+              this.currentUser.balance = Number(matchedClient.balance) || 0;
+              this.saveUser();
+              this.renderHeader();
+            }
+          }
+
+          if (typeof this.renderAdminClients === 'function') this.renderAdminClients();
+          if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore clients_list sync notice:', error);
     });
 
     // 5. Real-time services catalog sync from Firestore
@@ -1192,6 +1269,12 @@ class MythicApp {
 
   saveClients() {
     localStorage.setItem('mp_clients', JSON.stringify(this.clients));
+    if (this.db && Array.isArray(this.clients)) {
+      this.db.collection('system').doc('clients_list').set({
+        clients: this.clients,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore clients_list save error:', err));
+    }
   }
 
   saveUser() {
@@ -15666,6 +15749,32 @@ MythicApp.prototype.initBalanceLedger = function() {
 
   // Auto-sync historical and existing completed orders into the ledger
   this.syncBalanceLedgerWithCompletedOrders();
+
+  // Initial pull from Firestore system/balance_ledger
+  if (this.db) {
+    this.db.collection('system').doc('balance_ledger').get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.movements)) {
+          const seen = new Set();
+          const merged = [];
+          [...data.movements, ...(this.balanceLedger || [])].forEach(m => {
+            if (!m || !m.id) return;
+            if (!seen.has(m.id)) {
+              seen.add(m.id);
+              merged.push(m);
+            }
+          });
+          merged.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+          this.balanceLedger = merged;
+          localStorage.setItem('mp_balance_ledger', JSON.stringify(this.balanceLedger));
+          if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+          if (typeof this.renderProBalance === 'function') this.renderProBalance();
+          if (typeof this.renderProWallet === 'function') this.renderProWallet();
+        }
+      }
+    }).catch(e => console.debug('Initial balance_ledger fetch notice:', e));
+  }
 };
 
 MythicApp.prototype.syncBalanceLedgerWithCompletedOrders = function() {
