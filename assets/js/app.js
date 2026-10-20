@@ -17145,8 +17145,24 @@ MythicApp.prototype.renderProBalance = function() {
   const availableToWithdraw = Math.max(0, Number((bal - totalPendingWithdrawalAmount).toFixed(2)));
 
   const currentSpeed = this.currentProWithdrawSpeed || 'STANDARD';
+  const activeSubTab = this.currentProBalanceSubTab || 'withdraw';
 
   container.innerHTML = `
+    <!-- 0. SUB-TABS: RETIRO / MOVIMIENTOS -->
+    <div class="flex items-center gap-3 border-b border-stone-800/80 pb-4 mb-2">
+      <button onclick="app.switchProBalanceSubTab('withdraw')" class="px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2.5 ${activeSubTab === 'withdraw' ? 'bg-gradient-to-r from-amber-500/20 via-[#ee914f]/25 to-amber-600/20 text-[#ee914f] border-2 border-[#ee914f] shadow-lg shadow-[#ee914f]/20 font-black' : 'bg-[#140e0a] text-stone-400 hover:text-white border border-stone-800 hover:border-stone-700'}">
+        <i class="fa-solid fa-wallet text-sm"></i>
+        <span>Retiro</span>
+      </button>
+
+      <button onclick="app.switchProBalanceSubTab('movements')" class="px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2.5 ${activeSubTab === 'movements' ? 'bg-gradient-to-r from-amber-500/20 via-[#ee914f]/25 to-amber-600/20 text-[#ee914f] border-2 border-[#ee914f] shadow-lg shadow-[#ee914f]/20 font-black' : 'bg-[#140e0a] text-stone-400 hover:text-white border border-stone-800 hover:border-stone-700'}">
+        <i class="fa-solid fa-receipt text-sm"></i>
+        <span>Movimientos</span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full ${activeSubTab === 'movements' ? 'bg-[#ee914f] text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}">${myMovements.length}</span>
+      </button>
+    </div>
+
+    ${activeSubTab === 'withdraw' ? `
     <!-- 1. HERO BALANCE SUMMARY CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="glass-panel p-6 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-[#182615] via-[#10190e] to-[#0a1009] shadow-2xl flex flex-col justify-between relative overflow-hidden">
@@ -17366,7 +17382,7 @@ MythicApp.prototype.renderProBalance = function() {
         </div>
       ` : ''}
     </div>
-
+    ` : `
     <!-- 3. REPORT OF MOVEMENTS (THE MAIN USER REQUEST) -->
     <div class="glass-panel p-6 rounded-2xl border border-stone-800 shadow-xl space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800">
@@ -17411,14 +17427,22 @@ MythicApp.prototype.renderProBalance = function() {
         </table>
       </div>
     </div>
+    `}
   `;
 
   // Trigger initial calculation
-  setTimeout(() => {
-    if (typeof this.updateProWithdrawCalc === 'function') {
-      this.updateProWithdrawCalc();
-    }
-  }, 50);
+  if (activeSubTab === 'withdraw') {
+    setTimeout(() => {
+      if (typeof this.updateProWithdrawCalc === 'function') {
+        this.updateProWithdrawCalc();
+      }
+    }, 50);
+  }
+};
+
+MythicApp.prototype.switchProBalanceSubTab = function(subTab) {
+  this.currentProBalanceSubTab = subTab;
+  this.renderProBalance();
 };
 
 MythicApp.prototype.filterProBalance = function(filter) {
