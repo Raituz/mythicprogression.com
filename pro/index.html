@@ -80,17 +80,17 @@
           <div class="hidden md:flex items-center justify-between px-2 mb-2">
             <span class="text-[9px] font-bold text-amber-400/80 uppercase tracking-widest flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>Ãrea Supplier</span>
+              <span>&Aacute;rea Supplier</span>
             </span>
             <span class="text-[8px] bg-amber-950/90 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-mono font-bold">ROL EXCLUSIVO</span>
           </div>
 
-          <button onclick="switchProTab('supplier')" id="tab-btn-supplier" class="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170e06] text-amber-300/80 hover:text-white hover:bg-[#22140a] border border-amber-500/30 hover:border-amber-400/60 shadow-sm group cursor-pointer" title="Supplier - Publicar Ã“rdenes Directas">
+          <button onclick="switchProTab('supplier')" id="tab-btn-supplier" class="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170e06] text-amber-300/80 hover:text-white hover:bg-[#22140a] border border-amber-500/30 hover:border-amber-400/60 shadow-sm group cursor-pointer" title="Supplier - Publicar &Oacute;rdenes Directas">
             <div id="supplier-icon-circle" class="w-12 h-12 rounded-full bg-[#201207] border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-1.5 group-hover:scale-110 group-hover:text-amber-300 group-hover:border-amber-400 transition-all shadow-md">
               <i class="fa-solid fa-box-open"></i>
             </div>
             <span class="font-bold text-amber-300 group-hover:text-white tracking-wide text-xs">Supplier</span>
-            <span class="text-[9px] text-stone-400 group-hover:text-amber-200/80 font-normal hidden md:inline mt-0.5">Publicar Ã“rdenes</span>
+            <span class="text-[9px] text-stone-400 group-hover:text-amber-200/80 font-normal hidden md:inline mt-0.5">Publicar &Oacute;rdenes</span>
           </button>
         </div>
       </nav>
@@ -559,7 +559,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.3"></script>
+  <script src="assets/js/app.js?v=4.2.4"></script>
   <script>
     function switchProTab(tabId) {
       if (tabId === 'supplier' && window.app && !app.isSupplier()) {
@@ -602,11 +602,11 @@
       const titles = {
         find: 'Bolsa de Pedidos (Find Orders)',
         myorders: 'Mis Contratos (My Orders)',
-        chat: 'Centro de MensajerÃ­a (Multi Chat)',
+        chat: 'Centro de Mensajer\u00EDa (Multi Chat)',
         upsell: 'Venta de Servicios Adicionales (50% Ganancia)',
         wallet: 'Billetera y Cobros',
-        profile: 'Mi Perfil Pro (ConfiguraciÃ³n & Datos de Pago)',
-        supplier: 'ðŸ“¦ Supplier - Publicar Ã“rdenes Directas'
+        profile: 'Mi Perfil Pro (Configuraci\u00F3n & Datos de Pago)',
+        supplier: '\uD83D\uDCE6 Supplier - Publicar \u00D3rdenes Directas'
       };
       const titleEl = document.getElementById('pro-page-title');
       if (titleEl) titleEl.innerHTML = '<span>' + (titles[tabId] || 'Portal Pro Booster') + '</span>';

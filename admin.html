@@ -118,17 +118,17 @@
           <div class="hidden md:flex items-center justify-between px-2 mb-2">
             <span class="text-[9px] font-bold text-purple-300/80 uppercase tracking-widest flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-              <span>Ãrea Supplier</span>
+              <span>&Aacute;rea Supplier</span>
             </span>
             <span class="text-[8px] bg-purple-950/90 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/50 font-mono font-bold">ROL EXCLUSIVO</span>
           </div>
 
-          <button onclick="switchAdminTab('supplier')" id="tab-btn-supplier" class="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170929] text-purple-200/90 hover:text-white hover:bg-[#230d3d] border border-purple-500/30 hover:border-purple-400/60 shadow-sm group cursor-pointer" title="Supplier - Publicar Ã“rdenes Directas">
+          <button onclick="switchAdminTab('supplier')" id="tab-btn-supplier" class="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170929] text-purple-200/90 hover:text-white hover:bg-[#230d3d] border border-purple-500/30 hover:border-purple-400/60 shadow-sm group cursor-pointer" title="Supplier - Publicar &Oacute;rdenes Directas">
             <div id="supplier-icon-circle-admin" class="w-12 h-12 rounded-full bg-[#200c38] border border-purple-500/40 flex items-center justify-center text-purple-300 text-lg mb-1.5 group-hover:scale-110 group-hover:text-purple-200 group-hover:border-purple-400 transition-all shadow-md">
               <i class="fa-solid fa-box-open"></i>
             </div>
             <span class="font-bold text-purple-200 group-hover:text-white tracking-wide text-xs">Supplier</span>
-            <span class="text-[9px] text-stone-400 group-hover:text-purple-200/80 font-normal hidden md:inline mt-0.5">Publicar Ã“rdenes</span>
+            <span class="text-[9px] text-stone-400 group-hover:text-purple-200/80 font-normal hidden md:inline mt-0.5">Publicar &Oacute;rdenes</span>
           </button>
         </div>
 
@@ -332,7 +332,7 @@
                 <span>SupervisiÓn de Chat en Vivo</span>
                 <i class="fa-solid fa-arrow-right text-xs text-stone-500 group-hover:text-[#a855f7] transition-transform group-hover:translate-x-1"></i>
               </h4>
-              <p class="text-xs text-stone-400 mt-1">Sala de supervisiÓn en tiempo real de todos los chats activos entre clientes y boosters.</p>
+              <p class="text-xs text-stone-400 mt-1">Sala de supervisi&oacute;n en tiempo real de todos los chats activos entre clientes y boosters.</p>
             </div>
             <!-- 7. Publicar Orden (Supplier) -->
             <div id="admin-quick-supplier" onclick="switchAdminTab('supplier')" class="p-5 rounded-2xl bg-[#1f1309] hover:bg-[#2e1c0d] border border-amber-500/30 hover:border-amber-400/60 transition-all cursor-pointer group shadow-sm hidden">
@@ -654,16 +654,16 @@
                 <i class="fa-solid fa-user-tag text-[#a855f7] text-xs"></i>
                 <label for="admin-booster-role-filter" class="text-xs text-stone-400 font-semibold hidden sm:inline">Rol:</label>
                 <select id="admin-booster-role-filter" onchange="app.filterAdminBoostersByRole(this.value)" class="bg-transparent text-xs text-[#f3e8ff] font-bold outline-none cursor-pointer">
-                  <option value="ALL" class="bg-[#160a30] text-stone-200">Todos los Rangos / Roles</option>
-                  <option value="Master Booster" class="bg-[#160a30] text-[#a855f7]">?? Master Booster</option>
-                  <option value="Elite Booster" class="bg-[#160a30] text-purple-400">? Elite Booster</option>
-                  <option value="Veteran Booster" class="bg-[#160a30] text-cyan-400">??? Veteran Booster</option>
-                  <option value="Gold Booster" class="bg-[#160a30] text-amber-300">?? Gold Booster</option>
-                  <option value="Booster" class="bg-[#160a30] text-stone-300">? Booster</option>
-                  <option value="Staff / Admin" class="bg-[#160a30] text-rose-400">??? Staff / Admin</option>
-                  <option value="Raider" class="bg-[#160a30] text-blue-400">?? Raider</option>
-                  <option value="Supplier" class="bg-[#160a30] text-emerald-400">?? Supplier</option>
-                </select>
+                    <option value="ALL" class="bg-[#160a30] text-stone-200">Todos los Rangos / Roles</option>
+                    <option value="Master Booster" class="bg-[#160a30] text-[#a855f7]">&#x1F451; Master Booster</option>
+                    <option value="Elite Booster" class="bg-[#160a30] text-purple-400">&#x2B50; Elite Booster</option>
+                    <option value="Veteran Booster" class="bg-[#160a30] text-cyan-400">&#x1F6E1; Veteran Booster</option>
+                    <option value="Gold Booster" class="bg-[#160a30] text-amber-300">&#x1F3C5; Gold Booster</option>
+                    <option value="Booster" class="bg-[#160a30] text-stone-300">&#x2694; Booster</option>
+                    <option value="Staff / Admin" class="bg-[#160a30] text-rose-400">&#x1F6E1; Staff / Admin</option>
+                    <option value="Raider" class="bg-[#160a30] text-blue-400">&#x2694; Raider</option>
+                    <option value="Supplier" class="bg-[#160a30] text-emerald-400">&#x1F4E6; Supplier</option>
+                  </select>
               </div>
 
               <!-- Filtro de AprobaciÓn -->
@@ -811,9 +811,9 @@
             <div>
               <h2 class="text-base font-bold text-[#f3e8ff] font-cinzel flex items-center gap-2">
                 <i class="fa-solid fa-comments text-[#a855f7]"></i>
-                <span>SupervisiÓn de Chats en Vivo (Admin & Staff)</span>
+                <span>Supervisi&oacute;n de Chats en Vivo (Admin & Staff)</span>
               </h2>
-              <p class="text-xs text-stone-400">Canal exclusivo de mediaciÓn y soporte entre clientes y boosters en servicio.</p>
+              <p class="text-xs text-stone-400">Canal exclusivo de mediaci&oacute;n y soporte entre clientes y boosters en servicio.</p>
             </div>
             <div class="flex items-center gap-2.5">
               <button onclick="app.openAdminLiveSupportChat()" class="px-3 py-1.5 rounded-xl bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/50 text-[#f3e8ff] text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md">
@@ -1242,7 +1242,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.3"></script>
+  <script src="assets/js/app.js?v=4.2.4"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
@@ -1292,24 +1292,24 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
 
       const titles = {
         dashboard: 'Panel General y Finanzas (70/30)',
-        catalog: 'Gestor de Productos y Precios del CatÁlogo',
-        orders: 'SupervisiÓn de Todas las Órdenes Web',
-        history: 'Historial Consolidado de Órdenes (Google Sheets - 1,900)',
-        clients: 'GestiÓn y Base de Datos de Clientes Registrados',
-        boosters: 'GestiÓn y AprobaciÓn de Boosters (Plantilla SQLite)',
-        chat: 'SupervisiÓn y Centro de Chat en Vivo',
-        supplier: 'Publicar Orden Directa (Exclusivo Supplier)'
+        catalog: 'Gestor de Productos y Precios del Cat\u00E1logo',
+        orders: 'Supervisi\u00F3n de Todas las \u00D3rdenes Web',
+        history: 'Historial Consolidado de \u00D3rdenes (Google Sheets - 1,900)',
+        clients: 'Gesti\u00F3n y Base de Datos de Clientes Registrados',
+        boosters: 'Gesti\u00F3n y Aprobaci\u00F3n de Boosters (Plantilla SQLite)',
+        chat: 'Supervisi\u00F3n y Centro de Chat en Vivo',
+        supplier: '\uD83D\uDCE6 Publicar Orden Directa (Exclusivo Supplier)'
       };
 
       const descs = {
-        dashboard: 'Métricas de rentabilidad (70% empresa / 30% boosters), resumen de actividad y accesos directos.',
-        catalog: 'Controla los precios base, descripciones, categorías e iconos que se publican en vivo en la tienda.',
-        orders: 'Auditoría en tiempo real de pedidos web, asignaciones, comisiones y estado de entrega.',
-        history: 'Base de datos histÓrica de 1,900 Órdenes con desglose de carteras, liquidaciones y party de boosters.',
-        clients: 'Directorio maestro de clientes, BattleTags, Discord IDs, Órdenes acumuladas e inversiÓn total.',
-        boosters: 'Los 116 boosters provenientes del bot estÁn pre-aprobados. Nuevos registros requieren autorizaciÓn.',
-        chat: 'Canal de mensajería directo entre cliente, booster asignado y supervisiÓn del staff.',
-        supplier: 'Publica órdenes de forma directa sin requerir compra de cliente. Sincronizadas en vivo con la Bolsa de Pedidos y Discord.'
+        dashboard: 'M\u00E9tricas de rentabilidad (70% empresa / 30% boosters), resumen de actividad y accesos directos.',
+        catalog: 'Controla los precios base, descripciones, categor\u00EDas e iconos que se publican en vivo en la tienda.',
+        orders: 'Auditor\u00EDa en tiempo real de pedidos web, asignaciones, comisiones y estado de entrega.',
+        history: 'Base de datos hist\u00F3rica de 1,900 \u00D3rdenes con desglose de carteras, liquidaciones y party de boosters.',
+        clients: 'Directorio maestro de clientes, BattleTags, Discord IDs, \u00D3rdenes acumuladas e inversi\u00F3n total.',
+        boosters: 'Los 116 boosters provenientes del bot est\u00E1n pre-aprobados. Nuevos registros requieren autorizaci\u00F3n.',
+        chat: 'Canal de mensajer\u00EDa directo entre cliente, booster asignado y supervisi\u00F3n del staff.',
+        supplier: 'Publica \u00F3rdenes de forma directa sin requerir compra de cliente. Sincronizadas en vivo con la Bolsa de Pedidos y Discord.'
       };
 
       const titleEl = document.getElementById('admin-page-title');
