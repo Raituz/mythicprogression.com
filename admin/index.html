@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -112,6 +112,12 @@
           <i class="fa-solid fa-comments text-sm text-[#a855f7]"></i>
           <span class="hidden md:inline">SupervisiÓn Chat</span>
           <span class="hidden md:inline ml-auto text-[9px] bg-[#271d15] text-[#a855f7] px-1.5 py-0.5 rounded border border-[#a855f7]/30 font-bold">Live</span>
+        </button>
+        <!-- 8. Publicar Orden (Exclusivo Supplier) -->
+        <button onclick="switchAdminTab('supplier')" id="tab-btn-supplier" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-amber-300 hover:text-white hover:bg-[#190a33] border border-amber-500/20 hidden">
+          <i class="fa-solid fa-box-open text-sm text-amber-400"></i>
+          <span class="hidden md:inline">Publicar (Supplier)</span>
+          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-bold">SUPPLIER</span>
         </button>
 
       </nav>
@@ -315,6 +321,17 @@
                 <i class="fa-solid fa-arrow-right text-xs text-stone-500 group-hover:text-[#a855f7] transition-transform group-hover:translate-x-1"></i>
               </h4>
               <p class="text-xs text-stone-400 mt-1">Sala de supervisiÓn en tiempo real de todos los chats activos entre clientes y boosters.</p>
+            </div>
+            <!-- 7. Publicar Orden (Supplier) -->
+            <div id="admin-quick-supplier" onclick="switchAdminTab('supplier')" class="p-5 rounded-2xl bg-[#1f1309] hover:bg-[#2e1c0d] border border-amber-500/30 hover:border-amber-400/60 transition-all cursor-pointer group shadow-sm hidden">
+              <div class="w-10 h-10 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-box-open"></i>
+              </div>
+              <h4 class="font-bold text-amber-200 text-sm group-hover:text-white flex items-center justify-between">
+                <span>Publicar Orden (Supplier)</span>
+                <i class="fa-solid fa-arrow-right text-xs text-amber-500/60 group-hover:text-amber-400 transition-transform group-hover:translate-x-1"></i>
+              </h4>
+              <p class="text-xs text-stone-400 mt-1">Crear pedidos directos sin compra web. PublicaciÃ³n en vivo en Bolsa y Discord.</p>
             </div>
           </div>
         </div>
@@ -821,7 +838,13 @@
         </div>
       </section>
 
-    </main>
+          <!-- ======================================================== -->
+      <!-- TAB: PUBLICAR ORDEN DIRECTA (EXCLUSIVO SUPPLIER)         -->
+      <!-- ======================================================== -->
+      <section id="tab-supplier" class="hidden space-y-6">
+        <div id="supplier-dispatch-container-admin"></div>
+      </section>
+</main>
   </div>
 
   <!-- PRODUCT MANAGEMENT MODAL (EXPANDED ADVANCED CONFIGURATION) -->
@@ -1207,11 +1230,16 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=4.1.9"></script>
+  <script src="assets/js/app.js?v=4.2.0"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
-      const tabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat'];
+      if (tabId === 'supplier' && window.app && !app.isSupplier()) {
+        app.showToast('Acceso restringido: Se requiere el rol de Supplier.', 'error');
+        switchAdminTab('dashboard');
+        return;
+      }
+      const tabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier'];
       tabs.forEach(t => {
         const el = document.getElementById('tab-' + t);
         if (el) el.classList.add('hidden');
@@ -1235,7 +1263,8 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         history: 'Historial Consolidado de Órdenes (Google Sheets - 1,900)',
         clients: 'GestiÓn y Base de Datos de Clientes Registrados',
         boosters: 'GestiÓn y AprobaciÓn de Boosters (Plantilla SQLite)',
-        chat: 'SupervisiÓn y Centro de Chat en Vivo'
+        chat: 'SupervisiÓn y Centro de Chat en Vivo',
+        supplier: 'Publicar Orden Directa (Exclusivo Supplier)'
       };
 
       const descs = {
@@ -1245,7 +1274,8 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         history: 'Base de datos histÓrica de 1,900 Órdenes con desglose de carteras, liquidaciones y party de boosters.',
         clients: 'Directorio maestro de clientes, BattleTags, Discord IDs, Órdenes acumuladas e inversiÓn total.',
         boosters: 'Los 116 boosters provenientes del bot estÁn pre-aprobados. Nuevos registros requieren autorizaciÓn.',
-        chat: 'Canal de mensajería directo entre cliente, booster asignado y supervisiÓn del staff.'
+        chat: 'Canal de mensajería directo entre cliente, booster asignado y supervisiÓn del staff.',
+        supplier: 'Publica órdenes de forma directa sin requerir compra de cliente. Sincronizadas en vivo con la Bolsa de Pedidos y Discord.'
       };
 
       const titleEl = document.getElementById('admin-page-title');
@@ -1280,6 +1310,8 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         app.renderAdminProductsManager();
       } else if (tabId === 'clients' && window.app && typeof app.renderAdminClients === 'function') {
         app.renderAdminClients();
+      } else if (tabId === 'supplier' && window.app && typeof app.renderSupplierDispatchForm === 'function') {
+        app.renderSupplierDispatchForm('admin');
       } else if (tabId === 'boosters' && window.app && typeof app.renderAdminBoosters === 'function') {
         app.renderAdminBoosters();
       }
@@ -1288,7 +1320,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     // Auto-listen to hash change
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');
-      const valid = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat'];
+      const valid = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier'];
       if (valid.includes(h)) {
         switchAdminTab(h);
       }

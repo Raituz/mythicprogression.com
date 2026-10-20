@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Mythic Progression - Core Application Engine
  * Architecture: Vanilla JS + LocalStorage / Seed JSON
  * Roles: Client, Booster (Pro), Staff/Admin
@@ -6599,6 +6599,7 @@ class MythicApp {
 
       const gate = document.getElementById('pro-access-gate');
       if (gate) gate.remove();
+      this.updateSupplierTabVisibility();
 
       this.showToast('🎉 ¡Felicidades! Tu cuenta de Booster ha sido confirmada y activada por el Staff.', 'success');
       this.initProPortal();
@@ -6620,6 +6621,7 @@ class MythicApp {
     if (this.isAdminOrGerente() || this.isAdmin() || this.currentUser.isStaff || this.currentUser.type === 'admin' || this.currentUser.type === 'staff' || this.currentUser.discordId === '443948776562884620') {
       const gate = document.getElementById('pro-access-gate');
       if (gate) gate.remove();
+      this.updateSupplierTabVisibility();
       this.renderProOrderFeed();
       this.renderProMyOrders();
       this.renderProWallet();
@@ -6651,6 +6653,7 @@ class MythicApp {
     const gate = document.getElementById('pro-access-gate');
     if (gate) gate.remove();
 
+    this.updateSupplierTabVisibility();
     if (boosterRecord && boosterRecord.balance !== undefined && Number(boosterRecord.balance) > 0) {
       this.currentUser.balance = Number(boosterRecord.balance);
       this.saveUser();
@@ -7716,6 +7719,7 @@ class MythicApp {
 
     // Compute true available balance
     let bal = 0;
+    this.updateSupplierTabVisibility();
     if (boosterRecord && boosterRecord.balance !== undefined && Number(boosterRecord.balance) > 0) {
       bal = Number(boosterRecord.balance);
     } else if (this.currentUser?.balance !== undefined && Number(this.currentUser.balance) > 0) {
@@ -8509,6 +8513,7 @@ class MythicApp {
     }
 
     this.renderLanguageSelector();
+    this.updateSupplierTabVisibility();
     this.setupAdminSearchAndFilters();
     this.renderAdminOverview();
     this.renderAdminProductsManager();
@@ -11774,6 +11779,7 @@ class MythicApp {
   // ==========================================
   renderHeader() {
     this.renderLanguageSelector();
+    this.updateSupplierTabVisibility();
     try { this.renderProductActionButtons(); } catch(e) {}
     try { this.renderGlobalFooter(); } catch(e) {}
 
@@ -13218,6 +13224,7 @@ class MythicApp {
   initLanguage() {
     this.currentLang = localStorage.getItem('mp_lang') || 'es';
     this.renderLanguageSelector();
+    this.updateSupplierTabVisibility();
 
     if (!this._langListenerAttached && typeof document !== 'undefined') {
       document.addEventListener('click', (e) => {
@@ -14771,6 +14778,674 @@ class MythicApp {
       </div>
     `;
   }
+
+
+  // ==========================================
+  // SUPPLIER MANUAL ORDER DISPATCH SYSTEM
+  // ==========================================
+  isSupplier(user = this.currentUser) {
+    if (!user) return false;
+    const isOwner = String(user.discordId || user.discord_id || '').trim() === MythicApp.OWNER_DISCORD_ID || 
+                    (user.username && user.username.toLowerCase() === 'miguelb');
+    if (isOwner) return true;
+    const roles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+    return roles.some(r => /supplier/i.test(r)) || user.isSupplier === true;
+  }
+
+  updateSupplierTabVisibility() {
+    const isSup = this.isSupplier();
+    const proBtn = document.getElementById('tab-btn-supplier');
+    if (proBtn) {
+      if (isSup) proBtn.classList.remove('hidden');
+      else proBtn.classList.add('hidden');
+    }
+    const adminQuick = document.getElementById('admin-quick-supplier');
+    if (adminQuick) {
+      if (isSup) adminQuick.classList.remove('hidden');
+      else adminQuick.classList.add('hidden');
+    }
+  }
+
+  renderSupplierDispatchForm(portalType = 'pro') {
+    const container = document.getElementById(`supplier-dispatch-container-${portalType}`);
+    if (!container) return;
+
+    if (!this.isSupplier()) {
+      container.innerHTML = `
+        <div class="glass-panel rounded-2xl p-8 text-center border border-rose-500/30">
+          <i class="fa-solid fa-lock text-4xl text-rose-500 mb-3"></i>
+          <h3 class="text-lg font-bold text-white font-cinzel">Acceso Exclusivo para Suppliers</h3>
+          <p class="text-xs text-stone-400 mt-2 max-w-md mx-auto">
+            Este apartado está reservado únicamente para usuarios con el rol <strong>Supplier</strong>. Si crees que deberías tener acceso, comunícate con la administración.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    const supplierName = this.currentUser?.username || 'Supplier';
+    const supplierOrders = (this.orders || []).filter(o => 
+      o && (o.source === 'supplier_dispatch' || (o.supplier && o.supplier.toLowerCase() === supplierName.toLowerCase()))
+    );
+
+    const activeServices = (this.services || []).filter(s => s && s.active !== false);
+
+    const realmsOptions = (Array.isArray(this.realms) && this.realms.length > 0)
+      ? this.realms.slice(0, 80).map(r => `<option value="${r.name}">${r.name} (${r.region || 'US'})</option>`).join('')
+      : `
+        <option value="Ragnaros">Ragnaros (US)</option>
+        <option value="Quel'Thalas">Quel'Thalas (US)</option>
+        <option value="Bleeding Hollow">Bleeding Hollow (US)</option>
+        <option value="Area 52">Area 52 (US)</option>
+        <option value="Illidan">Illidan (US)</option>
+        <option value="Stormrage">Stormrage (US)</option>
+        <option value="Faerlina">Faerlina (US)</option>
+        <option value="Benediction">Benediction (US)</option>
+        <option value="Tichondrius">Tichondrius (US)</option>
+        <option value="Silvermoon">Silvermoon (EU)</option>
+        <option value="Tarren Mill">Tarren Mill (EU)</option>
+        <option value="Draenor">Draenor (EU)</option>
+        <option value="Twisting Nether">Twisting Nether (EU)</option>
+      `;
+
+    const accentBg = portalType === 'admin' ? 'bg-[#150a2e]' : 'bg-[#19110a]';
+    const accentBorder = portalType === 'admin' ? 'border-[#a855f7]/40' : 'border-[#ee914f]/40';
+    const cardBg = portalType === 'admin' ? 'bg-[#120726]' : 'bg-[#17100b]';
+    const inputBg = portalType === 'admin' ? 'bg-[#1a0c36]' : 'bg-[#140d08]';
+    const inputBorder = portalType === 'admin' ? 'border-purple-900/50 focus:border-[#a855f7]' : 'border-stone-800 focus:border-[#ee914f]';
+    const btnGrad = portalType === 'admin' ? 'bg-gradient-to-r from-purple-700 via-fuchsia-600 to-amber-600 hover:from-purple-600 hover:to-amber-500' : 'bg-gradient-to-r from-amber-600 via-[#ee914f] to-amber-700 hover:from-amber-500 hover:to-orange-600';
+
+    container.innerHTML = `
+      <!-- TOP BANNER -->
+      <div class="glass-panel p-5 rounded-2xl border ${accentBorder} flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-950/60 border border-amber-500/50 flex items-center justify-center text-amber-400 text-2xl shadow-lg shrink-0">
+            <i class="fa-solid fa-box-open"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-lg font-bold text-white font-cinzel">Publicación Directa de Órdenes (Supplier Dispatch)</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                📦 ROL: SUPPLIER
+              </span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Sync Discord & Bolsa
+              </span>
+            </div>
+            <p class="text-xs text-stone-400 mt-1">
+              Publica pedidos directamente sin esperar compra previa de un cliente. La orden ingresará inmediatamente a la <strong>Bolsa de Pedidos</strong> y creará el hilo de subasta en <strong>Discord</strong>.
+            </p>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <span class="text-[10px] text-stone-400 block uppercase font-semibold">Supplier Autenticado</span>
+          <span class="text-sm font-bold text-amber-300 font-mono-gaming">${supplierName}</span>
+        </div>
+      </div>
+
+      <!-- MAIN FORM -->
+      <form id="supplier-dispatch-form-${portalType}" onsubmit="app.handleSupplierPublishOrder(event, '${portalType}')" class="space-y-6">
+        <div class="glass-panel p-6 rounded-2xl border border-stone-800 space-y-6 shadow-xl">
+          
+          <!-- QUICK SELECTOR FROM CATALOG -->
+          <div class="p-4 rounded-xl ${accentBg} border ${accentBorder}">
+            <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+              <span>Autocompletar desde el Catálogo de Servicios (Opcional):</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <select id="supplier-catalog-select-${portalType}" onchange="app.onSupplierServiceSelect(this.value, '${portalType}')" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-stone-200 outline-none transition-colors">
+                  <option value="">-- Elige un servicio del catálogo o escribe uno manual abajo --</option>
+                  ${activeServices.map(s => `<option value="${s.id}">[${s.category || 'WoW'}] ${s.name} - $${(Number(s.price) || 0).toFixed(2)} USD</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <button type="button" onclick="app.resetSupplierForm('${portalType}')" class="w-full px-3 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-rotate-left text-xs"></i>
+                  <span>Limpiar Formulario</span>
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-2">
+              💡 Al seleccionar un producto del catálogo se completan automáticamente el nombre, categoría, detalles y precios base recomendados.
+            </p>
+          </div>
+
+          <!-- SECTION 1: DETALLES DEL JUEGO -->
+          <div>
+            <h3 class="text-xs font-bold text-stone-300 uppercase tracking-wider mb-3 flex items-center gap-2 font-cinzel">
+              <i class="fa-solid fa-gamepad text-[#ee914f]"></i>
+              <span>1. Datos del Servicio y del Personaje</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Service Name -->
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Nombre del Servicio <span class="text-rose-400">*</span>
+                </label>
+                <input type="text" id="sup-service-name-${portalType}" required placeholder="Ej: Mythic+ Keystone Run (+10) con 3 Loot Traders" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 outline-none">
+              </div>
+
+              <!-- Category -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Categoría <span class="text-rose-400">*</span>
+                </label>
+                <select id="sup-category-${portalType}" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-stone-200 outline-none">
+                  <option value="Mythic Plus">Míticas Plus (Mythic+)</option>
+                  <option value="Raids">Bandas / Raids</option>
+                  <option value="Leveling">Subida de Nivel (Leveling)</option>
+                  <option value="Gearing">Equipamiento (Gearing)</option>
+                  <option value="WoW Gold">Oro (WoW Gold)</option>
+                  <option value="Custom / Especial">Servicio Especial / Custom</option>
+                </select>
+              </div>
+
+              <!-- Region -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Región <span class="text-rose-400">*</span>
+                </label>
+                <select id="sup-region-${portalType}" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-stone-200 outline-none">
+                  <option value="US" selected>América (US)</option>
+                  <option value="EU">Europa (EU)</option>
+                </select>
+              </div>
+
+              <!-- Faction -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Facción <span class="text-rose-400">*</span>
+                </label>
+                <select id="sup-faction-${portalType}" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-stone-200 outline-none">
+                  <option value="Horda" selected>🚩 Horda</option>
+                  <option value="Alianza">🛡️ Alianza</option>
+                </select>
+              </div>
+
+              <!-- Realm -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Reino / Servidor <span class="text-rose-400">*</span>
+                </label>
+                <input type="text" id="sup-realm-${portalType}" list="supplier-realms-list-${portalType}" required value="Ragnaros" placeholder="Ej: Ragnaros, Bleeding Hollow..." class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                <datalist id="supplier-realms-list-${portalType}">
+                  ${realmsOptions}
+                </datalist>
+              </div>
+
+              <!-- Completion Method -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Modalidad de Juego <span class="text-rose-400">*</span>
+                </label>
+                <select id="sup-method-${portalType}" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-stone-200 outline-none">
+                  <option value="Self-Play" selected>🎮 Self-Play (Cliente juega su cuenta)</option>
+                  <option value="Piloted (Pro player with VPN)">🛡️ Piloted (Booster entra a la cuenta con VPN)</option>
+                </select>
+              </div>
+
+              <!-- Character Class -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Clase de Personaje / Trader
+                </label>
+                <select id="sup-class-${portalType}" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-stone-200 outline-none">
+                  <option value="No especificada">Cualquiera / No especificada</option>
+                  <option value="Guerrero">Guerrero (Warrior)</option>
+                  <option value="Paladín">Paladín (Paladin)</option>
+                  <option value="Cazador">Cazador (Hunter)</option>
+                  <option value="Pícaro">Pícaro (Rogue)</option>
+                  <option value="Sacerdote">Sacerdote (Priest)</option>
+                  <option value="Chamán">Chamán (Shaman)</option>
+                  <option value="Mago">Mago (Mage)</option>
+                  <option value="Brujo">Brujo (Warlock)</option>
+                  <option value="Monje">Monje (Monk)</option>
+                  <option value="Druida">Druida (Druid)</option>
+                  <option value="Cazador de Demonios">Cazador de Demonios (Demon Hunter)</option>
+                  <option value="Caballero de la Muerte">Caballero de la Muerte (Death Knight)</option>
+                  <option value="Evocador">Evocador (Evoker)</option>
+                </select>
+              </div>
+
+              <!-- Character Name (Optional) -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Nombre Personaje o BattleTag <span class="text-stone-500 text-[10px]">(Opcional)</span>
+                </label>
+                <input type="text" id="sup-char-name-${portalType}" placeholder="Ej: Illidari-Ragnaros o Pepe#1234" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: ECONOMÍA Y PAGOS -->
+          <div class="pt-4 border-t border-stone-800">
+            <h3 class="text-xs font-bold text-stone-300 uppercase tracking-wider mb-3 flex items-center gap-2 font-cinzel">
+              <i class="fa-solid fa-coins text-amber-400"></i>
+              <span>2. Finanzas, Pago Base al Booster y Límites</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Total Price -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Precio Total Orden ($ USD) <span class="text-rose-400">*</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold">$</span>
+                  <input type="number" step="0.01" min="1" id="sup-total-price-${portalType}" oninput="app.updateSupplierMargin('${portalType}')" required value="40.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-white outline-none">
+                </div>
+                <span class="text-[10px] text-stone-500 mt-1 block">Valor comercial de referencia del pedido.</span>
+              </div>
+
+              <!-- Booster Payout -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-xs font-semibold text-stone-300">
+                    Pago Base al Booster ($ USD) <span class="text-rose-400">*</span>
+                  </label>
+                  <div class="flex items-center gap-1">
+                    <button type="button" onclick="app.setSupplierPayoutPercent(30, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-stone-400 hover:text-white border border-stone-800 font-mono cursor-pointer">30%</button>
+                    <button type="button" onclick="app.setSupplierPayoutPercent(40, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-stone-400 hover:text-white border border-stone-800 font-mono cursor-pointer">40%</button>
+                    <button type="button" onclick="app.setSupplierPayoutPercent(50, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-amber-400 hover:text-white border border-stone-800 font-mono font-bold cursor-pointer">50%</button>
+                    <button type="button" onclick="app.setSupplierPayoutPercent(60, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-stone-400 hover:text-white border border-stone-800 font-mono cursor-pointer">60%</button>
+                  </div>
+                </div>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold">$</span>
+                  <input type="number" step="0.01" min="0.5" id="sup-booster-payout-${portalType}" oninput="app.updateSupplierMargin('${portalType}')" required value="20.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-amber-300 outline-none">
+                </div>
+                <span class="text-[10px] text-stone-500 mt-1 block">El booster que tome la orden sin pujar recibirá esta suma.</span>
+              </div>
+
+              <!-- Max Bid Allowed -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Puja Máxima Permitida ($ USD)
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold">$</span>
+                  <input type="number" step="0.01" min="0.5" id="sup-max-bid-${portalType}" value="20.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-stone-300 outline-none">
+                </div>
+                <span class="text-[10px] text-stone-500 mt-1 block">Tope máximo que un booster puede ofertar en la subasta.</span>
+              </div>
+            </div>
+
+            <!-- Live Financial Split Readout -->
+            <div id="sup-financial-split-${portalType}" class="mt-4 p-3.5 rounded-xl ${accentBg} border ${accentBorder} flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="text-stone-400">💵 Pago al Booster:</span>
+                <strong id="sup-readout-payout-${portalType}" class="text-amber-300 font-mono-gaming font-bold">$20.00 USD</strong>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-stone-400">🏢 Ganancia Plataforma / Margen:</span>
+                <strong id="sup-readout-profit-${portalType}" class="text-emerald-400 font-mono-gaming font-bold">$20.00 USD (50.0%)</strong>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-stone-400">📦 Publicador:</span>
+                <strong class="text-white">${supplierName}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: DETALLES Y CLIENTE -->
+          <div class="pt-4 border-t border-stone-800 space-y-4">
+            <h3 class="text-xs font-bold text-stone-300 uppercase tracking-wider mb-2 flex items-center gap-2 font-cinzel">
+              <i class="fa-solid fa-list-ul text-[#ee914f]"></i>
+              <span>3. Instrucciones de la Orden y Referencia de Cliente</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Details Textarea -->
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Detalles y Requisitos Específicos de la Orden <span class="text-rose-400">*</span>
+                </label>
+                <textarea id="sup-details-${portalType}" required rows="3" placeholder="Ej: Keystone +10 en tiempo. Pasar todo el loot comerciable de tela al cliente. Horario coordinado para las 8:00 PM EST." class="w-full ${inputBg} border ${inputBorder} rounded-xl p-3 text-xs text-white placeholder-stone-500 outline-none resize-none leading-relaxed"></textarea>
+              </div>
+
+              <!-- Client Reference -->
+              <div>
+                <label class="block text-xs font-semibold text-stone-300 mb-1">
+                  Referencia o Contacto del Cliente <span class="text-stone-500 text-[10px]">(Opcional)</span>
+                </label>
+                <input type="text" id="sup-client-name-${portalType}" placeholder="Ej: Cliente Discord @juanp o Directo" class="w-full ${inputBg} border ${inputBorder} rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-500 outline-none mb-2">
+                <p class="text-[10px] text-stone-500 leading-normal">
+                  Identificador para tu propio control. Si lo dejas vacío, se registrará automáticamente como <em>Cliente Directo (${supplierName})</em>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBMIT BUTTON -->
+          <div class="pt-4 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-xs text-stone-400 flex items-center gap-2">
+              <i class="fa-solid fa-circle-info text-amber-400"></i>
+              <span>Al hacer clic en publicar, la orden se emitirá con estado <strong>DISPONIBLE</strong> en la Web y Discord.</span>
+            </div>
+            <button type="submit" id="sup-submit-btn-${portalType}" class="w-full sm:w-auto px-8 py-3.5 rounded-xl ${btnGrad} text-white font-bold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] cursor-pointer">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Publicar Orden en Bolsa y Discord</span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- SECTION: LIST OF SUPPLIER'S DISPATCHED ORDERS -->
+      <div class="glass-panel p-6 rounded-2xl border border-stone-800 space-y-4 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-4">
+          <div>
+            <h3 class="text-base font-bold text-white font-cinzel flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+              <span>Mis Órdenes Publicadas como Supplier</span>
+            </h3>
+            <p class="text-xs text-stone-400 mt-0.5">Seguimiento en tiempo real de los pedidos que has publicado directamente.</p>
+          </div>
+          <span class="text-xs font-bold font-mono px-3 py-1 rounded-full bg-amber-950/60 text-amber-300 border border-amber-600/40">
+            ${supplierOrders.length} orden${supplierOrders.length === 1 ? '' : 'es'}
+          </span>
+        </div>
+
+        <div id="supplier-orders-list-${portalType}" class="space-y-3 pt-2">
+          ${supplierOrders.length === 0 ? `
+            <div class="p-8 text-center bg-black/20 rounded-xl border border-stone-800/60">
+              <i class="fa-solid fa-box-open text-3xl text-stone-600 mb-2"></i>
+              <h4 class="text-sm font-bold text-stone-300">No tienes órdenes manuales publicadas</h4>
+              <p class="text-xs text-stone-500 mt-1">Usa el formulario superior para emitir una nueva orden directa.</p>
+            </div>
+          ` : supplierOrders.map(o => {
+            const isAvailable = o.status === 'AVAILABLE';
+            const isBidding = o.status === 'BIDDING';
+            const isInProgress = o.status === 'IN_PROGRESS' || o.status === 'ASSIGNED';
+            const isCompleted = o.status === 'COMPLETED';
+            const statusBadge = isAvailable ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700">🟢 DISPONIBLE EN BOLSA</span>' :
+              isBidding ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-600 animate-pulse">🔨 EN SUBASTA</span>' :
+              isInProgress ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800">⚔️ EN PROCESO</span>' :
+              isCompleted ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/90 text-emerald-400 border border-emerald-700">✅ COMPLETADA</span>' :
+              `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-900 text-stone-400 border border-stone-800">${o.status}</span>`;
+
+            const bidsCount = (o.bids && Array.isArray(o.bids)) ? o.bids.length : 0;
+            const boosterAssigned = o.assignedBooster ? (o.assignedBooster.username || o.assignedBooster.name || 'Asignado') : null;
+            const payoutVal = Number(o.boosterPayout || 0).toFixed(2);
+            const totalVal = Number(o.totalPrice || 0).toFixed(2);
+
+            return `
+              <div class="p-4 rounded-xl ${cardBg} border border-stone-800/80 hover:border-amber-500/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1.5 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-mono-gaming font-bold text-amber-400 text-xs">#${o.id}</span>
+                    ${statusBadge}
+                    <span class="text-[10px] bg-stone-900 px-2 py-0.5 rounded text-stone-300 border border-stone-800 font-mono">${o.region || 'US'} • ${o.faction || 'Horda'} • ${o.realm || 'Ragnaros'}</span>
+                    ${o.characterClass ? `<span class="text-[10px] bg-purple-950/70 text-purple-300 px-2 py-0.5 rounded border border-purple-800/50">${o.characterClass}</span>` : ''}
+                  </div>
+                  <h4 class="text-sm font-bold text-white leading-snug">${o.serviceName}</h4>
+                  <p class="text-xs text-stone-400 line-clamp-2">${o.details || 'Sin notas adicionales.'}</p>
+                  <div class="text-[11px] text-stone-500 flex items-center gap-3 pt-1">
+                    <span>Publicada: <strong class="text-stone-300">${new Date(o.createdAt || Date.now()).toLocaleDateString()} ${new Date(o.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
+                    ${boosterAssigned ? `<span>Booster: <strong class="text-emerald-400 font-bold">⚔️ ${boosterAssigned}</strong></span>` : ''}
+                    ${bidsCount > 0 ? `<span>Pujas: <strong class="text-amber-300">${bidsCount}</strong></span>` : ''}
+                    ${o.clientName ? `<span>Ref Cliente: <strong class="text-stone-300">${o.clientName}</strong></span>` : ''}
+                  </div>
+                </div>
+
+                <div class="flex sm:flex-col items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 sm:border-l border-stone-800/60 pt-3 sm:pt-0 sm:pl-4 shrink-0">
+                  <div class="text-right">
+                    <span class="text-[10px] text-stone-500 block uppercase font-semibold">Pago Base Booster</span>
+                    <span class="text-base font-bold font-mono-gaming text-amber-300">$${payoutVal} USD</span>
+                    <span class="text-[10px] text-stone-400 block font-mono">Total: $${totalVal}</span>
+                  </div>
+
+                  ${(isAvailable || isBidding) ? `
+                    <button type="button" onclick="app.cancelSupplierOrder('${o.id}', '${portalType}')" class="px-3 py-1.5 rounded-lg bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-800/60 text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm">
+                      <i class="fa-solid fa-trash-can text-[10px]"></i>
+                      <span>Cancelar Orden</span>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    this.updateSupplierMargin(portalType);
+  }
+
+  onSupplierServiceSelect(serviceId, portalType) {
+    if (!serviceId) return;
+    const svc = (this.services || []).find(s => s.id === serviceId);
+    if (!svc) return;
+
+    const nameInput = document.getElementById(`sup-service-name-${portalType}`);
+    if (nameInput) nameInput.value = svc.name || '';
+
+    const catInput = document.getElementById(`sup-category-${portalType}`);
+    if (catInput && svc.category) {
+      for (let i = 0; i < catInput.options.length; i++) {
+        if (catInput.options[i].text.toLowerCase().includes(svc.category.toLowerCase()) || 
+            svc.category.toLowerCase().includes(catInput.options[i].value.toLowerCase())) {
+          catInput.selectedIndex = i;
+          break;
+        }
+      }
+    }
+
+    const price = Number(svc.price) || 40.0;
+    const totalInput = document.getElementById(`sup-total-price-${portalType}`);
+    if (totalInput) totalInput.value = price.toFixed(2);
+
+    const payout = Math.round(price * 0.5 * 100) / 100;
+    const payoutInput = document.getElementById(`sup-booster-payout-${portalType}`);
+    if (payoutInput) payoutInput.value = payout.toFixed(2);
+
+    const maxBidInput = document.getElementById(`sup-max-bid-${portalType}`);
+    if (maxBidInput) maxBidInput.value = payout.toFixed(2);
+
+    const detailsInput = document.getElementById(`sup-details-${portalType}`);
+    if (detailsInput && svc.description) {
+      detailsInput.value = svc.description;
+    }
+
+    this.updateSupplierMargin(portalType);
+  }
+
+  resetSupplierForm(portalType) {
+    const form = document.getElementById(`supplier-dispatch-form-${portalType}`);
+    if (form) form.reset();
+    const catSelect = document.getElementById(`supplier-catalog-select-${portalType}`);
+    if (catSelect) catSelect.value = '';
+    this.updateSupplierMargin(portalType);
+  }
+
+  setSupplierPayoutPercent(pct, portalType) {
+    const totalInput = document.getElementById(`sup-total-price-${portalType}`);
+    const payoutInput = document.getElementById(`sup-booster-payout-${portalType}`);
+    const maxBidInput = document.getElementById(`sup-max-bid-${portalType}`);
+    if (!totalInput || !payoutInput) return;
+    const total = Number(totalInput.value) || 0;
+    const payout = Math.max(0, Math.round(total * (pct / 100) * 100) / 100);
+    payoutInput.value = payout.toFixed(2);
+    if (maxBidInput) maxBidInput.value = payout.toFixed(2);
+    this.updateSupplierMargin(portalType);
+  }
+
+  updateSupplierMargin(portalType) {
+    const totalInput = document.getElementById(`sup-total-price-${portalType}`);
+    const payoutInput = document.getElementById(`sup-booster-payout-${portalType}`);
+    const payoutReadout = document.getElementById(`sup-readout-payout-${portalType}`);
+    const profitReadout = document.getElementById(`sup-readout-profit-${portalType}`);
+    if (!totalInput || !payoutInput || !payoutReadout || !profitReadout) return;
+
+    const total = Math.max(0, Number(totalInput.value) || 0);
+    const payout = Math.max(0, Number(payoutInput.value) || 0);
+    const profit = Math.max(0, total - payout);
+    const profitPct = total > 0 ? ((profit / total) * 100).toFixed(1) : '0.0';
+
+    payoutReadout.textContent = `$${payout.toFixed(2)} USD`;
+    profitReadout.textContent = `$${profit.toFixed(2)} USD (${profitPct}%)`;
+  }
+
+  async handleSupplierPublishOrder(e, portalType) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    if (!this.isSupplier()) {
+      this.showToast('Acceso restringido: Se requiere el rol de Supplier.', 'error');
+      return;
+    }
+
+    const serviceName = (document.getElementById(`sup-service-name-${portalType}`)?.value || '').trim();
+    const category = document.getElementById(`sup-category-${portalType}`)?.value || 'Mythic Plus';
+    const region = document.getElementById(`sup-region-${portalType}`)?.value || 'US';
+    const faction = document.getElementById(`sup-faction-${portalType}`)?.value || 'Horda';
+    const realm = (document.getElementById(`sup-realm-${portalType}`)?.value || 'Ragnaros').trim();
+    const completionMethod = document.getElementById(`sup-method-${portalType}`)?.value || 'Self-Play';
+    const characterClass = document.getElementById(`sup-class-${portalType}`)?.value || 'No especificada';
+    const characterName = (document.getElementById(`sup-char-name-${portalType}`)?.value || '').trim();
+    const totalPrice = Math.max(0, Number(document.getElementById(`sup-total-price-${portalType}`)?.value) || 0);
+    const boosterPayout = Math.max(0, Number(document.getElementById(`sup-booster-payout-${portalType}`)?.value) || 0);
+    const maxBidAllowed = Math.max(0, Number(document.getElementById(`sup-max-bid-${portalType}`)?.value) || boosterPayout);
+    const details = (document.getElementById(`sup-details-${portalType}`)?.value || '').trim();
+    const clientNameInput = (document.getElementById(`sup-client-name-${portalType}`)?.value || '').trim();
+
+    if (!serviceName) {
+      this.showToast('Por favor ingresa el nombre del servicio.', 'error');
+      return;
+    }
+    if (boosterPayout <= 0) {
+      this.showToast('El pago base al booster debe ser mayor a 0.', 'error');
+      return;
+    }
+
+    const submitBtn = document.getElementById(`sup-submit-btn-${portalType}`);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Publicando...';
+    }
+
+    try {
+      // Generate unique MP-XXXXX order ID
+      let orderId = '';
+      const existingIds = new Set((this.orders || []).map(o => o.id));
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const candidate = 'MP-' + Math.floor(10000 + Math.random() * 90000);
+        if (!existingIds.has(candidate)) {
+          orderId = candidate;
+          break;
+        }
+      }
+      if (!orderId) orderId = 'MP-' + Date.now().toString().slice(-5);
+
+      const supplierName = this.currentUser?.username || 'Supplier';
+      const supplierDiscordId = String(this.currentUser?.discordId || this.currentUser?.discord_id || '');
+      const finalClientName = clientNameInput || `Cliente Directo (${supplierName})`;
+      const charStr = characterName || `${finalClientName}-${realm}`;
+
+      const newOrder = {
+        id: orderId,
+        serviceName: serviceName,
+        category: category,
+        region: region,
+        faction: faction,
+        characterClass: characterClass,
+        realm: realm,
+        characterName: characterName,
+        character: `${charStr}`,
+        completionMethod: completionMethod,
+        vpnLocation: completionMethod.includes('Piloted') ? 'Estados Unidos (Chicago)' : 'N/A (Self-play)',
+        details: details,
+        clientId: `supplier_${supplierDiscordId || 'direct'}`,
+        clientEmail: `supplier.${supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}@mythicprogression.com`,
+        clientDiscord: '',
+        clientName: finalClientName,
+        totalPrice: totalPrice,
+        price: totalPrice,
+        companyShare: Math.max(0, totalPrice - boosterPayout),
+        boosterPayout: boosterPayout,
+        boosterPayoutRate: totalPrice > 0 ? Math.round((boosterPayout / totalPrice) * 100) : 50,
+        maxBidAllowed: maxBidAllowed,
+        paymentMethod: 'Supplier Direct Dispatch',
+        paymentReference: `SUPPLIER-PUB-${orderId}`,
+        paymentStatus: 'PAID_APPROVED',
+        paymentSubmitted: true,
+        status: 'AVAILABLE',
+        bids: [],
+        assignedBooster: null,
+        isOnAccount: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        source: 'supplier_dispatch',
+        supplier: supplierName,
+        supplierDiscordId: supplierDiscordId,
+        chat: [
+          {
+            sender: 'system',
+            author: 'Sistema Mythic Progression',
+            message: `📦 Orden #${orderId} publicada directamente por el Supplier ${supplierName}. Disponible de inmediato en la Bolsa de Pedidos de la web y en Discord.`,
+            timestamp: new Date().toISOString()
+          }
+        ]
+      };
+
+      if (!Array.isArray(this.orders)) this.orders = [];
+      this.orders.unshift(newOrder);
+
+      // Save to localStorage, Firestore and Alwaysdata Bot
+      this.saveOrders();
+
+      // Refresh portals
+      if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+      if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders();
+      if (typeof this.renderAdminOverview === 'function') this.renderAdminOverview();
+
+      // Broadcast to other open tabs
+      if (this.liveChatChannel) {
+        try {
+          this.liveChatChannel.postMessage({ type: 'ORDER_CREATED', order: newOrder });
+        } catch (e) {}
+      }
+
+      this.showToast(`🎉 ¡Orden #${orderId} publicada con éxito en la Web y Discord!`, 'success');
+
+      // Re-render supplier form & list
+      this.renderSupplierDispatchForm(portalType);
+
+    } catch (err) {
+      console.error('Error publishing supplier order:', err);
+      this.showToast('Error al publicar la orden: ' + (err.message || err), 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar Orden en Bolsa y Discord';
+      }
+    }
+  }
+
+  cancelSupplierOrder(orderId, portalType) {
+    const o = (this.orders || []).find(x => x.id === orderId);
+    if (!o) return;
+
+    if (!confirm(`¿Estás seguro de que deseas cancelar y retirar la orden #${orderId}?`)) {
+      return;
+    }
+
+    this.orders = this.orders.filter(x => x.id !== orderId);
+    this.saveOrders();
+
+    if (this.db) {
+      this.db.collection('orders').doc(orderId).delete().catch(e => console.warn('Firestore delete order error:', e));
+    }
+    this.syncOrdersToAlwaysdataBot(orderId);
+
+    if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
+    if (typeof this.renderAdminOrders === 'function') this.renderAdminOrders();
+    if (typeof this.renderAdminOverview === 'function') this.renderAdminOverview();
+
+    this.renderSupplierDispatchForm(portalType);
+    this.showToast(`Orden #${orderId} cancelada y retirada de la Bolsa y Discord.`, 'info');
+  }
+
 }
 
 const app = new MythicApp();

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -63,6 +63,12 @@
           <i class="fa-solid fa-id-card text-sm text-[#eedaa2]"></i>
           <span class="hidden md:inline">Mi Perfil Pro</span>
           <span class="hidden md:inline ml-auto text-[9px] bg-[#241910] text-[#ee914f] px-1.5 py-0.5 rounded border border-[#ee914f]/30 font-semibold">Editar</span>
+        </button>
+        <!-- TAB SUPPLIER (Visible only to Supplier role) -->
+        <button onclick="switchProTab('supplier')" id="tab-btn-supplier" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-amber-300 hover:text-white hover:bg-[#1a140f] border border-amber-500/20 hidden">
+          <i class="fa-solid fa-box-open text-sm text-amber-400"></i>
+          <span class="hidden md:inline">Publicar (Supplier)</span>
+          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-bold">SUPPLIER</span>
         </button>
 
         <a href="/" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-500 hover:text-[#ee914f]">
@@ -524,7 +530,11 @@
         </div>
       </section>
 
-    </main>
+          <!-- TAB 7: SUPPLIER ORDER DISPATCH (Visible only to Supplier role) -->
+      <section id="tab-supplier" class="hidden space-y-6">
+        <div id="supplier-dispatch-container-pro"></div>
+      </section>
+</main>
   </div>
 
   <!-- BID AND CONFIRM MODALS -->
@@ -537,14 +547,19 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=4.1.9"></script>
+  <script src="assets/js/app.js?v=4.2.0"></script>
   <script>
     function switchProTab(tabId) {
-      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile').forEach(el => el.classList.add('hidden'));
+      if (tabId === 'supplier' && window.app && !app.isSupplier()) {
+        app.showToast('Acceso restringido: Se requiere el rol de Supplier.', 'error');
+        switchProTab('find');
+        return;
+      }
+      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile, #tab-supplier').forEach(el => el.classList.add('hidden'));
       const activeTab = document.getElementById('tab-' + tabId);
       if (activeTab) activeTab.classList.remove('hidden');
 
-      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].forEach(t => {
+      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'supplier'].forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
         if (btn) {
           if (t === tabId) {
@@ -561,7 +576,8 @@
         chat: 'Centro de MensajerÍa (Multi Chat)',
         upsell: 'Venta de Servicios Adicionales (50% Ganancia)',
         wallet: 'Billetera y Cobros',
-        profile: 'Mi Perfil Pro (Configuración & Datos de Pago)'
+        profile: 'Mi Perfil Pro (Configuración & Datos de Pago)',
+        supplier: 'Publicar Orden Directa (Exclusivo Supplier)'
       };
       const titleEl = document.getElementById('pro-page-title');
       if (titleEl) titleEl.innerHTML = `<span>${titles[tabId] || 'Portal Pro Booster'}</span>`;
@@ -573,13 +589,14 @@
         else if (tabId === 'upsell' && typeof app.renderBoosterUpsellCatalog === 'function') app.renderBoosterUpsellCatalog();
         else if (tabId === 'wallet' && typeof app.renderProWallet === 'function') app.renderProWallet();
         else if (tabId === 'profile' && typeof app.initBoosterProfileForm === 'function') app.initBoosterProfileForm();
+        else if (tabId === 'supplier' && typeof app.renderSupplierDispatchForm === 'function') app.renderSupplierDispatchForm('pro');
       }
     }
 
     // Auto-listen to URL hash change
     window.addEventListener('hashchange', () => {
       const h = (window.location.hash || '').replace('#', '');
-      const valid = ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'];
+      const valid = ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'supplier'];
       if (valid.includes(h)) {
         switchProTab(h);
       }
@@ -634,9 +651,10 @@
           }
         }
 
+        if (typeof app.updateSupplierTabVisibility === 'function') app.updateSupplierTabVisibility();
         // Check initial URL hash
         const initialTab = (window.location.hash || '').replace('#', '') || 'find';
-        if (['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].includes(initialTab)) {
+        if (['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'supplier'].includes(initialTab)) {
           switchProTab(initialTab);
         }
       };
