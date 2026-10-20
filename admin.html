@@ -113,12 +113,24 @@
           <span class="hidden md:inline">SupervisiÓn Chat</span>
           <span class="hidden md:inline ml-auto text-[9px] bg-[#271d15] text-[#a855f7] px-1.5 py-0.5 rounded border border-[#a855f7]/30 font-bold">Live</span>
         </button>
-        <!-- 8. Publicar Orden (Exclusivo Supplier) -->
-        <button onclick="switchAdminTab('supplier')" id="tab-btn-supplier" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-amber-300 hover:text-white hover:bg-[#190a33] border border-amber-500/20 hidden">
-          <i class="fa-solid fa-box-open text-sm text-amber-400"></i>
-          <span class="hidden md:inline">Publicar (Supplier)</span>
-          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-bold">SUPPLIER</span>
-        </button>
+        <!-- SEPARACION Y SECCION EXCLUSIVA SUPPLIER (Icono circular arriba, texto Supplier abajo) -->
+        <div id="supplier-sidebar-section-admin" class="pt-3 mt-3 border-t border-stone-800/80 hidden">
+          <div class="hidden md:flex items-center justify-between px-2 mb-2">
+            <span class="text-[9px] font-bold text-purple-300/80 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+              <span>Ãrea Supplier</span>
+            </span>
+            <span class="text-[8px] bg-purple-950/90 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/50 font-mono font-bold">ROL EXCLUSIVO</span>
+          </div>
+
+          <button onclick="switchAdminTab('supplier')" id="tab-btn-supplier" class="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170929] text-purple-200/90 hover:text-white hover:bg-[#230d3d] border border-purple-500/30 hover:border-purple-400/60 shadow-sm group cursor-pointer" title="Supplier - Publicar Ã“rdenes Directas">
+            <div id="supplier-icon-circle-admin" class="w-12 h-12 rounded-full bg-[#200c38] border border-purple-500/40 flex items-center justify-center text-purple-300 text-lg mb-1.5 group-hover:scale-110 group-hover:text-purple-200 group-hover:border-purple-400 transition-all shadow-md">
+              <i class="fa-solid fa-box-open"></i>
+            </div>
+            <span class="font-bold text-purple-200 group-hover:text-white tracking-wide text-xs">Supplier</span>
+            <span class="text-[9px] text-stone-400 group-hover:text-purple-200/80 font-normal hidden md:inline mt-0.5">Publicar Ã“rdenes</span>
+          </button>
+        </div>
 
       </nav>
     </div>
@@ -1230,7 +1242,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.0"></script>
+  <script src="assets/js/app.js?v=4.2.1"></script>
   <script>
     // Tab switching function mirroring Pro Portal UX exactly
     function switchAdminTab(tabId) {
@@ -1239,7 +1251,7 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         switchAdminTab('dashboard');
         return;
       }
-      const tabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat', 'supplier'];
+      const tabs = ['dashboard', 'catalog', 'orders', 'history', 'clients', 'boosters', 'chat'];
       tabs.forEach(t => {
         const el = document.getElementById('tab-' + t);
         if (el) el.classList.add('hidden');
@@ -1253,6 +1265,28 @@ Gold for Spells & Skills included" class="w-full bg-[#14092b] border border-ston
         }
       });
 
+      // Handle supplier tab & button specifically (Circular top icon, text below)
+      const supplierTabEl = document.getElementById('tab-supplier');
+      if (supplierTabEl) {
+        if (tabId === 'supplier') supplierTabEl.classList.remove('hidden');
+        else supplierTabEl.classList.add('hidden');
+      }
+
+      const supplierBtn = document.getElementById('tab-btn-supplier');
+      const supplierIcon = document.getElementById('supplier-icon-circle-admin');
+      if (supplierBtn) {
+        if (tabId === 'supplier') {
+          supplierBtn.className = "w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#2b1046] text-white border-2 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.25)] group cursor-pointer";
+          if (supplierIcon) {
+            supplierIcon.className = "w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-fuchsia-500 border-2 border-purple-300 flex items-center justify-center text-white text-xl mb-1.5 shadow-[0_0_18px_rgba(168,85,247,0.5)] transform scale-105 transition-all";
+          }
+        } else {
+          supplierBtn.className = "w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170929] text-purple-200/90 hover:text-white hover:bg-[#230d3d] border border-purple-500/30 hover:border-purple-400/60 shadow-sm group cursor-pointer";
+          if (supplierIcon) {
+            supplierIcon.className = "w-12 h-12 rounded-full bg-[#200c38] border border-purple-500/40 flex items-center justify-center text-purple-300 text-lg mb-1.5 group-hover:scale-110 group-hover:text-purple-200 group-hover:border-purple-400 transition-all shadow-md";
+          }
+        }
+      }
       const activeEl = document.getElementById('tab-' + tabId);
       if (activeEl) activeEl.classList.remove('hidden');
 

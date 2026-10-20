@@ -64,12 +64,6 @@
           <span class="hidden md:inline">Mi Perfil Pro</span>
           <span class="hidden md:inline ml-auto text-[9px] bg-[#241910] text-[#ee914f] px-1.5 py-0.5 rounded border border-[#ee914f]/30 font-semibold">Editar</span>
         </button>
-        <!-- TAB SUPPLIER (Visible only to Supplier role) -->
-        <button onclick="switchProTab('supplier')" id="tab-btn-supplier" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-amber-300 hover:text-white hover:bg-[#1a140f] border border-amber-500/20 hidden">
-          <i class="fa-solid fa-box-open text-sm text-amber-400"></i>
-          <span class="hidden md:inline">Publicar (Supplier)</span>
-          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-bold">SUPPLIER</span>
-        </button>
 
         <a href="/" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-500 hover:text-[#ee914f]">
           <i class="fa-solid fa-store text-sm"></i>
@@ -81,6 +75,24 @@
           <i class="fa-solid fa-shield-halved text-[#ee914f] text-sm"></i>
           <span class="hidden md:inline">Panel Admin</span>
         </a>
+        <!-- SEPARACION Y SECCION EXCLUSIVA SUPPLIER (Icono circular arriba, texto Supplier abajo) -->
+        <div id="supplier-sidebar-section" class="pt-3 mt-3 border-t border-stone-800/80 hidden">
+          <div class="hidden md:flex items-center justify-between px-2 mb-2">
+            <span class="text-[9px] font-bold text-amber-400/80 uppercase tracking-widest flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>Ãrea Supplier</span>
+            </span>
+            <span class="text-[8px] bg-amber-950/90 text-amber-300 px-1.5 py-0.5 rounded border border-amber-600/50 font-mono font-bold">ROL EXCLUSIVO</span>
+          </div>
+
+          <button onclick="switchProTab('supplier')" id="tab-btn-supplier" class="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170e06] text-amber-300/80 hover:text-white hover:bg-[#22140a] border border-amber-500/30 hover:border-amber-400/60 shadow-sm group cursor-pointer" title="Supplier - Publicar Ã“rdenes Directas">
+            <div id="supplier-icon-circle" class="w-12 h-12 rounded-full bg-[#201207] border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-1.5 group-hover:scale-110 group-hover:text-amber-300 group-hover:border-amber-400 transition-all shadow-md">
+              <i class="fa-solid fa-box-open"></i>
+            </div>
+            <span class="font-bold text-amber-300 group-hover:text-white tracking-wide text-xs">Supplier</span>
+            <span class="text-[9px] text-stone-400 group-hover:text-amber-200/80 font-normal hidden md:inline mt-0.5">Publicar Ã“rdenes</span>
+          </button>
+        </div>
       </nav>
     </div>
 
@@ -547,7 +559,7 @@
     <div id="take-order-modal-content" class="glass-panel rounded-2xl w-full max-w-md border border-[#ee914f]/40 shadow-2xl"></div>
   </div>
 
-  <script src="assets/js/app.js?v=4.2.0"></script>
+  <script src="assets/js/app.js?v=4.2.1"></script>
   <script>
     function switchProTab(tabId) {
       if (tabId === 'supplier' && window.app && !app.isSupplier()) {
@@ -559,7 +571,7 @@
       const activeTab = document.getElementById('tab-' + tabId);
       if (activeTab) activeTab.classList.remove('hidden');
 
-      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'supplier'].forEach(t => {
+      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile'].forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
         if (btn) {
           if (t === tabId) {
@@ -570,17 +582,34 @@
         }
       });
 
+      // Dedicated circular button styling for Supplier (Icon on top, text Supplier below)
+      const supplierBtn = document.getElementById('tab-btn-supplier');
+      const supplierIcon = document.getElementById('supplier-icon-circle');
+      if (supplierBtn) {
+        if (tabId === 'supplier') {
+          supplierBtn.className = "w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#2a1708] text-white border-2 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.25)] group cursor-pointer";
+          if (supplierIcon) {
+            supplierIcon.className = "w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 to-amber-500 border-2 border-amber-300 flex items-center justify-center text-stone-950 text-xl mb-1.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] transform scale-105 transition-all";
+          }
+        } else {
+          supplierBtn.className = "w-full flex flex-col items-center justify-center p-3 rounded-2xl text-xs font-bold transition-all bg-[#170e06] text-amber-300/80 hover:text-white hover:bg-[#22140a] border border-amber-500/30 hover:border-amber-400/60 shadow-sm group cursor-pointer";
+          if (supplierIcon) {
+            supplierIcon.className = "w-12 h-12 rounded-full bg-[#201207] border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-1.5 group-hover:scale-110 group-hover:text-amber-300 group-hover:border-amber-400 transition-all shadow-md";
+          }
+        }
+      }
+
       const titles = {
         find: 'Bolsa de Pedidos (Find Orders)',
         myorders: 'Mis Contratos (My Orders)',
-        chat: 'Centro de MensajerÍa (Multi Chat)',
+        chat: 'Centro de MensajerÃ­a (Multi Chat)',
         upsell: 'Venta de Servicios Adicionales (50% Ganancia)',
         wallet: 'Billetera y Cobros',
-        profile: 'Mi Perfil Pro (Configuración & Datos de Pago)',
-        supplier: 'Publicar Orden Directa (Exclusivo Supplier)'
+        profile: 'Mi Perfil Pro (ConfiguraciÃ³n & Datos de Pago)',
+        supplier: 'ðŸ“¦ Supplier - Publicar Ã“rdenes Directas'
       };
       const titleEl = document.getElementById('pro-page-title');
-      if (titleEl) titleEl.innerHTML = `<span>${titles[tabId] || 'Portal Pro Booster'}</span>`;
+      if (titleEl) titleEl.innerHTML = '<span>' + (titles[tabId] || 'Portal Pro Booster') + '</span>';
 
       if (window.app) {
         if (tabId === 'find' && typeof app.renderProOrderFeed === 'function') app.renderProOrderFeed();

@@ -14794,6 +14794,16 @@ class MythicApp {
 
   updateSupplierTabVisibility() {
     const isSup = this.isSupplier();
+    const proSection = document.getElementById('supplier-sidebar-section');
+    if (proSection) {
+      if (isSup) proSection.classList.remove('hidden');
+      else proSection.classList.add('hidden');
+    }
+    const adminSection = document.getElementById('supplier-sidebar-section-admin');
+    if (adminSection) {
+      if (isSup) adminSection.classList.remove('hidden');
+      else adminSection.classList.add('hidden');
+    }
     const proBtn = document.getElementById('tab-btn-supplier');
     if (proBtn) {
       if (isSup) proBtn.classList.remove('hidden');
