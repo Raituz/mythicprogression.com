@@ -88,6 +88,7 @@ class MythicApp {
     try { this.initLiveChatWidget(); } catch (e) { console.warn('initLiveChatWidget:', e); }
     try { this.initSession(); } catch (e) { console.warn('initSession pre-data:', e); }
     try { this.initBalanceLedger(); } catch (e) { console.warn('initBalanceLedger:', e); }
+    try { this.initWithdrawalRequests(); } catch (e) { console.warn('initWithdrawalRequests:', e); }
     try { await this.loadInitialData(); } catch (e) { console.warn('loadInitialData:', e); }
     try { await this.checkDiscordOAuthCallback(); } catch (e) { console.warn('checkDiscordOAuthCallback:', e); }
     try { this.initSession(); } catch (e) { console.warn('initSession post-data:', e); }
@@ -996,6 +997,34 @@ class MythicApp {
       }
     }, (error) => {
       console.warn('Firestore balance_ledger sync notice:', error);
+    });
+
+    // 4bb. Escuchar solicitudes de retiro (Withdrawal Requests) en tiempo real
+    this.db.collection('system').doc('withdrawal_requests').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.requests)) {
+          const seen = new Set();
+          const merged = [];
+          [...data.requests, ...(this.withdrawalRequests || [])].forEach(r => {
+            if (!r || !r.id) return;
+            if (!seen.has(r.id)) {
+              seen.add(r.id);
+              merged.push(r);
+            }
+          });
+          merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          this.withdrawalRequests = merged;
+          localStorage.setItem('mp_withdrawal_requests', JSON.stringify(this.withdrawalRequests));
+
+          if (typeof this.renderAdminFinances === 'function' && this.currentAdminFinancesView === 'withdrawals') {
+            this.renderAdminFinances();
+          }
+          if (typeof this.renderProBalance === 'function') this.renderProBalance();
+        }
+      }
+    }, (error) => {
+      console.warn('Firestore withdrawal_requests sync notice:', error);
     });
 
     // 4c. Escuchar lista de clientes y sus saldos en tiempo real
@@ -15867,8 +15896,62 @@ MythicApp.prototype.recordBalanceMovement = function(movement) {
   if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
   if (typeof this.renderProBalance === 'function') this.renderProBalance();
   if (typeof this.renderProWallet === 'function') this.renderProWallet();
-    if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
-    if (typeof this.renderProBalance === 'function') this.renderProBalance();
+};
+
+// --------------------------------------------------------------------------
+// WITHDRAWAL REQUESTS SYSTEM (FEES & APPROVAL WORKFLOW)
+// --------------------------------------------------------------------------
+MythicApp.prototype.initWithdrawalRequests = function() {
+  try {
+    const stored = localStorage.getItem('mp_withdrawal_requests');
+    if (stored) {
+      this.withdrawalRequests = JSON.parse(stored);
+    }
+    if (!Array.isArray(this.withdrawalRequests)) this.withdrawalRequests = [];
+  } catch (e) {
+    this.withdrawalRequests = [];
+  }
+
+  // Initial pull from Firestore system/withdrawal_requests
+  if (this.db) {
+    this.db.collection('system').doc('withdrawal_requests').get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.requests)) {
+          const seen = new Set();
+          const merged = [];
+          [...data.requests, ...(this.withdrawalRequests || [])].forEach(r => {
+            if (!r || !r.id) return;
+            if (!seen.has(r.id)) {
+              seen.add(r.id);
+              merged.push(r);
+            }
+          });
+          merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          this.withdrawalRequests = merged;
+          localStorage.setItem('mp_withdrawal_requests', JSON.stringify(this.withdrawalRequests));
+          if (typeof this.renderAdminFinances === 'function' && this.currentAdminFinancesView === 'withdrawals') {
+            this.renderAdminFinances();
+          }
+          if (typeof this.renderProBalance === 'function') this.renderProBalance();
+        }
+      }
+    }).catch(e => console.debug('Initial withdrawal_requests fetch notice:', e));
+  }
+};
+
+MythicApp.prototype.saveWithdrawalRequests = function(syncFirestore = true) {
+  if (!Array.isArray(this.withdrawalRequests)) this.withdrawalRequests = [];
+  localStorage.setItem('mp_withdrawal_requests', JSON.stringify(this.withdrawalRequests));
+
+  if (syncFirestore && this.db) {
+    try {
+      this.db.collection('system').doc('withdrawal_requests').set({
+        requests: this.withdrawalRequests.slice(0, 500),
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(err => console.warn('Firestore withdrawal_requests save err:', err));
+    } catch (e) {}
+  }
 };
 
 // --------------------------------------------------------------------------
@@ -16069,9 +16152,38 @@ MythicApp.prototype.renderAdminFinances = function() {
     return true;
   });
 
-  const isAccountsView = (this.currentAdminFinancesView !== 'ledger');
+  // Withdrawal Requests Metrics
+  const allWithdrawals = Array.isArray(this.withdrawalRequests) ? this.withdrawalRequests : [];
+  const pendingWithdrawals = allWithdrawals.filter(w => w && w.status === 'PENDING');
+  const pendingImmediateWithdrawals = pendingWithdrawals.filter(w => w.speed === 'IMMEDIATE');
+  const totalPendingNet = pendingWithdrawals.reduce((acc, w) => acc + (Number(w.netAmount) || 0), 0);
+
+  const currentView = this.currentAdminFinancesView || 'accounts';
+  const wFilter = this.currentAdminFinancesWithdrawalFilter || 'ALL';
 
   container.innerHTML = `
+    <!-- URGENT IMMEDIATE WITHDRAWALS BANNER (<24H) -->
+    ${pendingImmediateWithdrawals.length > 0 ? `
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-950/90 via-[#2f1406] to-amber-950/90 border-2 border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.35)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-pulse">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-black text-xl shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.6)]">
+            <i class="fa-solid fa-bolt-lightning"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h4 class="text-sm font-black text-amber-200 uppercase tracking-wide">¡${pendingImmediateWithdrawals.length} Retiro(s) Inmediato(s) Requiere(n) Atención!</h4>
+              <span class="px-2 py-0.5 rounded bg-amber-500 text-stone-950 font-black text-[10px] uppercase">Prioridad Máxima</span>
+            </div>
+            <p class="text-xs text-amber-300/80 mt-0.5">Retiros Express con tarifa del 10%. Plazo estricto de pago: <strong>menos de 24 horas</strong>.</p>
+          </div>
+        </div>
+        <button onclick="app.switchAdminFinancesView('withdrawals', 'IMMEDIATE')" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg shrink-0 cursor-pointer flex items-center gap-2 transition-all">
+          <span>Ver Retiros Inmediatos</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    ` : ''}
+
     <!-- 1. KPI CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="admin-glass-panel p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#1c0d2e] to-[#120720]">
@@ -16095,15 +16207,21 @@ MythicApp.prototype.renderAdminFinances = function() {
         <div class="text-[11px] text-stone-500 mt-2">Total historico ganado por boosters</div>
       </div>
 
-      <div class="admin-glass-panel p-5 rounded-2xl border border-stone-800">
+      <div class="admin-glass-panel p-5 rounded-2xl border ${pendingWithdrawals.length > 0 ? 'border-amber-500/50 bg-gradient-to-br from-amber-950/30 to-[#120720]' : 'border-stone-800'} cursor-pointer" onclick="app.switchAdminFinancesView('withdrawals')">
         <div class="flex items-center justify-between text-xs text-stone-400 mb-1">
-          <span>Ajustes Manuales Netos</span>
-          <i class="fa-solid fa-sliders text-[#a855f7]"></i>
+          <span>Retiros Pendientes de Pago</span>
+          <i class="fa-solid fa-money-bill-transfer text-amber-400"></i>
         </div>
-        <div class="text-2xl font-bold font-mono ${totalManualAdjustments >= 0 ? 'text-purple-300' : 'text-rose-400'}">
-          ${totalManualAdjustments >= 0 ? '+' : ''}$${totalManualAdjustments.toFixed(2)}
+        <div class="text-2xl font-bold font-mono ${pendingWithdrawals.length > 0 ? 'text-amber-300' : 'text-stone-400'}">
+          $${totalPendingNet.toFixed(2)} <span class="text-xs font-normal text-stone-400">neto</span>
         </div>
-        <div class="text-[11px] text-stone-500 mt-2">Bonos, deducciones y liquidaciones</div>
+        <div class="text-[11px] text-stone-400 mt-2 flex items-center gap-1.5">
+          ${pendingImmediateWithdrawals.length > 0 ? `
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            <span class="text-amber-300 font-bold">${pendingImmediateWithdrawals.length} Express (&lt;24h)</span> • 
+          ` : ''}
+          <span>${pendingWithdrawals.length} solicitudes pendientes</span>
+        </div>
       </div>
 
       <div class="admin-glass-panel p-5 rounded-2xl border border-stone-800 flex flex-col justify-between">
@@ -16122,13 +16240,21 @@ MythicApp.prototype.renderAdminFinances = function() {
 
     <!-- 2. TOOLBAR & CONTROLS -->
     <div class="admin-glass-panel p-4 rounded-2xl border border-stone-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
-      <!-- View Switcher -->
-      <div class="flex items-center bg-[#140827] p-1 rounded-xl border border-stone-800">
-        <button onclick="app.switchAdminFinancesView('accounts')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${isAccountsView ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
+      <!-- View Switcher (Accounts, Ledger, Withdrawal Requests) -->
+      <div class="flex flex-wrap items-center bg-[#140827] p-1 rounded-xl border border-stone-800 gap-1">
+        <button onclick="app.switchAdminFinancesView('accounts')" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentView === 'accounts' ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
           <i class="fa-solid fa-users mr-1.5"></i> Directorio de Cuentas (${filteredUsers.length})
         </button>
-        <button onclick="app.switchAdminFinancesView('ledger')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${!isAccountsView ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
+        <button onclick="app.switchAdminFinancesView('ledger')" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentView === 'ledger' ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
           <i class="fa-solid fa-book-open mr-1.5"></i> Libro de Movimientos (${filteredLedger.length})
+        </button>
+        <button onclick="app.switchAdminFinancesView('withdrawals')" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer relative ${currentView === 'withdrawals' ? 'bg-[#271047] text-white border border-[#a855f7]/50 shadow-sm' : 'text-stone-400 hover:text-white'}">
+          <i class="fa-solid fa-money-bill-transfer mr-1.5 ${pendingImmediateWithdrawals.length > 0 ? 'text-amber-400 animate-pulse' : ''}"></i> Solicitudes de Retiro
+          ${pendingWithdrawals.length > 0 ? `
+            <span class="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-black ${pendingImmediateWithdrawals.length > 0 ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 animate-bounce' : 'bg-amber-600 text-white'} shadow-sm">
+              ${pendingWithdrawals.length}
+            </span>
+          ` : `<span class="ml-1 text-[10px] text-stone-400">(${allWithdrawals.length})</span>`}
         </button>
       </div>
 
@@ -16137,28 +16263,50 @@ MythicApp.prototype.renderAdminFinances = function() {
         <!-- Search -->
         <div class="relative flex-1 sm:w-60">
           <i class="fa-solid fa-search absolute left-3 top-2.5 text-stone-500 text-xs"></i>
-          <input type="text" placeholder="Buscar usuario, Discord ID, orden..." value="${this.currentAdminFinancesSearch || ''}" oninput="app.filterAdminFinances(this.value, null)" class="w-full bg-[#140827] border border-stone-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-stone-500 outline-none focus:border-[#a855f7]">
+          <input type="text" placeholder="${currentView === 'withdrawals' ? 'Buscar booster, Discord, método...' : 'Buscar usuario, Discord ID, orden...'}" value="${this.currentAdminFinancesSearch || ''}" oninput="app.filterAdminFinances(this.value, null)" class="w-full bg-[#140827] border border-stone-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-stone-500 outline-none focus:border-[#a855f7]">
         </div>
 
-        <!-- Role Filter -->
-        <select onchange="app.filterAdminFinances(null, this.value)" class="bg-[#140827] border border-stone-800 text-xs text-stone-200 font-bold rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-[#a855f7]">
-          <option value="ALL" ${rFilter === 'ALL' ? 'selected' : ''}>Todos los Usuarios</option>
-          <option value="POSITIVE" ${rFilter === 'POSITIVE' ? 'selected' : ''}>Con Saldo (&gt; $0)</option>
-          <option value="BOOSTERS" ${rFilter === 'BOOSTERS' ? 'selected' : ''}>Solo Boosters</option>
-          <option value="SUPPLIERS" ${rFilter === 'SUPPLIERS' ? 'selected' : ''}>Suppliers</option>
-          <option value="STAFF" ${rFilter === 'STAFF' ? 'selected' : ''}>Staff / Admin</option>
-          <option value="CLIENTS" ${rFilter === 'CLIENTS' ? 'selected' : ''}>Clientes</option>
-        </select>
+        <!-- Filter Dropdown depending on View -->
+        ${currentView === 'withdrawals' ? `
+          <select onchange="app.filterAdminFinancesWithdrawals(this.value)" class="bg-[#140827] border border-stone-800 text-xs text-stone-200 font-bold rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-[#a855f7]">
+            <option value="ALL" ${wFilter === 'ALL' ? 'selected' : ''}>Todas las Solicitudes (${allWithdrawals.length})</option>
+            <option value="PENDING" ${wFilter === 'PENDING' ? 'selected' : ''}>⏳ Solo Pendientes (${pendingWithdrawals.length})</option>
+            <option value="IMMEDIATE" ${wFilter === 'IMMEDIATE' ? 'selected' : ''}>⚡ Inmediatos (&lt;24h) (${allWithdrawals.filter(w => w.speed === 'IMMEDIATE').length})</option>
+            <option value="APPROVED" ${wFilter === 'APPROVED' ? 'selected' : ''}>✅ Aprobados / Pagados</option>
+            <option value="REJECTED" ${wFilter === 'REJECTED' ? 'selected' : ''}>❌ Rechazados</option>
+          </select>
+        ` : `
+          <select onchange="app.filterAdminFinances(null, this.value)" class="bg-[#140827] border border-stone-800 text-xs text-stone-200 font-bold rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-[#a855f7]">
+            <option value="ALL" ${rFilter === 'ALL' ? 'selected' : ''}>Todos los Usuarios</option>
+            <option value="POSITIVE" ${rFilter === 'POSITIVE' ? 'selected' : ''}>Con Saldo (&gt; $0)</option>
+            <option value="BOOSTERS" ${rFilter === 'BOOSTERS' ? 'selected' : ''}>Solo Boosters</option>
+            <option value="SUPPLIERS" ${rFilter === 'SUPPLIERS' ? 'selected' : ''}>Suppliers</option>
+            <option value="STAFF" ${rFilter === 'STAFF' ? 'selected' : ''}>Staff / Admin</option>
+            <option value="CLIENTS" ${rFilter === 'CLIENTS' ? 'selected' : ''}>Clientes</option>
+          </select>
+        `}
       </div>
     </div>
 
-    <!-- 3. MAIN CONTENT (ACCOUNTS OR LEDGER) -->
-    ${isAccountsView ? this.renderAdminFinancesAccountsTable(filteredUsers) : this.renderAdminFinancesLedgerTable(filteredLedger)}
+    <!-- 3. MAIN CONTENT (ACCOUNTS, LEDGER, OR WITHDRAWAL REQUESTS) -->
+    ${
+      currentView === 'withdrawals' 
+        ? this.renderAdminFinancesWithdrawalsTable() 
+        : (currentView === 'ledger' ? this.renderAdminFinancesLedgerTable(filteredLedger) : this.renderAdminFinancesAccountsTable(filteredUsers))
+    }
   `;
 };
 
-MythicApp.prototype.switchAdminFinancesView = function(view) {
+MythicApp.prototype.switchAdminFinancesView = function(view, subFilter = null) {
   this.currentAdminFinancesView = view;
+  if (view === 'withdrawals' && subFilter) {
+    this.currentAdminFinancesWithdrawalFilter = subFilter;
+  }
+  this.renderAdminFinances();
+};
+
+MythicApp.prototype.filterAdminFinancesWithdrawals = function(filter) {
+  this.currentAdminFinancesWithdrawalFilter = filter;
   this.renderAdminFinances();
 };
 
@@ -16362,6 +16510,379 @@ MythicApp.prototype.renderAdminFinancesLedgerTable = function(ledger) {
       </div>
     </div>
   `;
+};
+
+// --------------------------------------------------------------------------
+// ADMIN WITHDRAWAL REQUESTS MANAGEMENT (APPROVALS & AUDIT)
+// --------------------------------------------------------------------------
+MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
+  const requests = Array.isArray(this.withdrawalRequests) ? this.withdrawalRequests : [];
+  const sTerm = (this.currentAdminFinancesSearch || '').toLowerCase().trim();
+  const wFilter = this.currentAdminFinancesWithdrawalFilter || 'ALL';
+
+  let filtered = requests.filter(w => {
+    if (!w) return false;
+    if (sTerm) {
+      const matchUser = (w.username || '').toLowerCase().includes(sTerm);
+      const matchDiscord = (w.discordId || '').toLowerCase().includes(sTerm);
+      const matchMethod = (w.method || '').toLowerCase().includes(sTerm);
+      const matchDest = (w.destinationAddress || '').toLowerCase().includes(sTerm);
+      const matchId = (w.id || '').toLowerCase().includes(sTerm);
+      if (!matchUser && !matchDiscord && !matchMethod && !matchDest && !matchId) return false;
+    }
+    if (wFilter === 'PENDING') return w.status === 'PENDING';
+    if (wFilter === 'IMMEDIATE') return w.speed === 'IMMEDIATE';
+    if (wFilter === 'APPROVED') return w.status === 'APPROVED';
+    if (wFilter === 'REJECTED') return w.status === 'REJECTED';
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    return `
+      <div class="admin-glass-panel p-12 text-center rounded-2xl border border-stone-800 text-stone-400">
+        <i class="fa-solid fa-money-bill-transfer text-4xl mb-3 text-stone-600 block"></i>
+        <h4 class="text-sm font-bold text-stone-300">No se encontraron solicitudes de retiro</h4>
+        <p class="text-xs text-stone-500 mt-1">No hay solicitudes que coincidan con los filtros aplicados actualmente.</p>
+      </div>
+    `;
+  }
+
+  // Sort: Pending first (with Immediate pending at the top), then chronological
+  filtered.sort((a, b) => {
+    if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+    if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+    if (a.status === 'PENDING' && b.status === 'PENDING') {
+      if (a.speed === 'IMMEDIATE' && b.speed !== 'IMMEDIATE') return -1;
+      if (a.speed !== 'IMMEDIATE' && b.speed === 'IMMEDIATE') return 1;
+      return new Date(a.deadlineAt || 0) - new Date(b.deadlineAt || 0);
+    }
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+
+  const now = Date.now();
+
+  const rows = filtered.map(w => {
+    const isImmediate = w.speed === 'IMMEDIATE';
+    const isPending = w.status === 'PENDING';
+    const isApproved = w.status === 'APPROVED';
+    const isRejected = w.status === 'REJECTED';
+
+    const reqDate = new Date(w.createdAt || Date.now());
+    const dateStr = reqDate.toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    const deadlineMs = w.deadlineAt ? new Date(w.deadlineAt).getTime() : (reqDate.getTime() + (isImmediate ? 24*3600000 : 5*24*3600000));
+    const diffMs = deadlineMs - now;
+
+    let deadlineHtml = '';
+    if (isPending) {
+      if (diffMs > 0) {
+        const hours = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        if (isImmediate) {
+          deadlineHtml = `
+            <div class="mt-1 text-xs font-mono font-black text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-lg border border-amber-500/50 inline-flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-hourglass-half text-amber-400 animate-spin" style="animation-duration: 3s"></i>
+              <span>Quedan ${hours}h ${mins}m</span>
+            </div>
+          `;
+        } else {
+          const days = Math.floor(hours / 24);
+          const remH = hours % 24;
+          deadlineHtml = `
+            <div class="mt-1 text-xs font-mono text-stone-300 bg-stone-900/90 px-2 py-0.5 rounded-lg border border-stone-700 inline-flex items-center gap-1">
+              <i class="fa-regular fa-clock text-stone-400"></i>
+              <span>Quedan ${days > 0 ? days + 'd ' : ''}${remH}h</span>
+            </div>
+          `;
+        }
+      } else {
+        const overdueHours = Math.abs(Math.floor(diffMs / 3600000));
+        deadlineHtml = `
+          <div class="mt-1 text-xs font-mono font-black text-rose-300 bg-rose-950/90 px-2 py-0.5 rounded-lg border border-rose-600/80 inline-flex items-center gap-1.5 animate-pulse">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+            <span>PLAZO VENCIDO (+${overdueHours}h)</span>
+          </div>
+        `;
+      }
+    } else if (isApproved) {
+      const revDate = w.reviewedAt ? new Date(w.reviewedAt).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+      deadlineHtml = `
+        <div class="mt-1 text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
+          <i class="fa-solid fa-circle-check"></i> Pagado el ${revDate}
+        </div>
+      `;
+    } else {
+      deadlineHtml = `
+        <div class="mt-1 text-[11px] text-rose-400 flex items-center gap-1 font-semibold">
+          <i class="fa-solid fa-circle-xmark"></i> Rechazado
+        </div>
+      `;
+    }
+
+    const rowClass = (isImmediate && isPending)
+      ? 'bg-gradient-to-r from-[#2a1306]/90 via-[#1c0c28]/90 to-[#140827] border-l-4 border-l-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.18)]'
+      : 'border-b border-stone-800/60 hover:bg-[#1a0c30]/50 transition-colors';
+
+    return `
+      <tr class="${rowClass}">
+        <!-- 1. SPEED & DEADLINE -->
+        <td class="py-3.5 px-4 align-top">
+          ${isImmediate ? `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-stone-950 uppercase tracking-wider shadow-[0_0_12px_rgba(245,158,11,0.5)] animate-pulse">
+              <i class="fa-solid fa-bolt-lightning text-stone-950"></i>
+              <span>⚡ INMEDIATO (10% FEE - &lt;24H)</span>
+            </div>
+          ` : `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-stone-800 text-stone-300 border border-stone-700">
+              <i class="fa-regular fa-clock text-stone-400"></i>
+              <span>Estándar (3% Fee - 5 días)</span>
+            </div>
+          `}
+          <div class="text-[10px] text-stone-400 font-mono mt-1 flex items-center gap-1">
+            <i class="fa-regular fa-calendar text-stone-500 text-[10px]"></i>
+            <span>${dateStr}</span>
+          </div>
+          ${deadlineHtml}
+        </td>
+
+        <!-- 2. BOOSTER -->
+        <td class="py-3.5 px-4 align-top">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-800 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow">
+              ${(w.username || 'B').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div class="font-bold text-white text-xs flex items-center gap-1.5">
+                <span>${w.username || 'Booster'}</span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] bg-purple-950/80 text-purple-300 border border-purple-800/40">${w.userRole || 'Booster'}</span>
+              </div>
+              <div class="text-[10px] text-stone-400 font-mono flex items-center gap-1 mt-0.5">
+                <i class="fa-brands fa-discord text-stone-500 text-[10px]"></i>
+                <span>${w.discordId ? w.discordId : ('ID: ' + (w.userId || '-'))}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+
+        <!-- 3. AMOUNTS BREAKDOWN -->
+        <td class="py-3.5 px-4 align-top">
+          <div class="space-y-0.5">
+            <div class="text-xs font-mono text-stone-400 flex items-center justify-between gap-3">
+              <span>Bruto:</span>
+              <span class="font-bold text-stone-200">$${(Number(w.grossAmount) || 0).toFixed(2)} USD</span>
+            </div>
+            <div class="text-[11px] font-mono text-rose-400 flex items-center justify-between gap-3">
+              <span>Tarifa (${w.feePercent}%):</span>
+              <span>-$${(Number(w.feeAmount) || 0).toFixed(2)} USD</span>
+            </div>
+            <div class="pt-1 border-t border-stone-800 flex items-center justify-between gap-3">
+              <span class="text-[10px] uppercase font-bold text-emerald-400">A Transferir:</span>
+              <span class="text-sm font-black font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-500/40 shadow-sm">
+                +$${(Number(w.netAmount) || 0).toFixed(2)} USD
+              </span>
+            </div>
+          </div>
+        </td>
+
+        <!-- 4. METHOD & DESTINATION -->
+        <td class="py-3.5 px-4 align-top">
+          <div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1e102e] text-purple-200 border border-purple-700/50">
+              ${w.method || 'Binance Pay'}
+            </span>
+            <div class="flex items-center gap-1.5 mt-1.5 bg-[#0e0717] px-2.5 py-1.5 rounded-xl border border-stone-800 font-mono text-xs text-stone-200">
+              <span class="truncate max-w-[170px]" title="${w.destinationAddress}">${w.destinationAddress}</span>
+              <button onclick="navigator.clipboard.writeText('${w.destinationAddress}'); app.showToast('¡Dirección copiada!', 'info');" class="text-stone-400 hover:text-white px-1.5 py-0.5 bg-stone-800 hover:bg-stone-700 rounded text-[10px] ml-auto cursor-pointer transition-colors" title="Copiar dirección">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </div>
+        </td>
+
+        <!-- 5. ACTIONS / STATUS -->
+        <td class="py-3.5 px-4 align-top text-right">
+          ${isPending ? `
+            <div class="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2">
+              <button onclick="app.adminApproveWithdrawal('${w.id}')" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-stone-950 font-black text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.35)] hover:shadow-[0_0_20px_rgba(16,185,129,0.55)] cursor-pointer flex items-center gap-1.5 transition-all transform hover:scale-105 active:scale-95" title="Confirmar pago enviado y debitar del saldo web">
+                <i class="fa-solid fa-check text-xs"></i>
+                <span>Aceptar</span>
+              </button>
+              <button onclick="app.adminRejectWithdrawal('${w.id}')" class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-rose-950 text-stone-400 hover:text-rose-300 border border-stone-800 hover:border-rose-600 text-xs font-bold transition-all cursor-pointer flex items-center gap-1" title="Rechazar y desbloquear fondos al booster">
+                <i class="fa-solid fa-xmark text-xs"></i>
+                <span>Rechazar</span>
+              </button>
+            </div>
+          ` : (isApproved ? `
+            <div class="text-right">
+              <span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-600/50 text-xs font-bold inline-flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-circle-check"></i> Retiro Aprobado
+              </span>
+              <div class="text-[10px] text-stone-400 font-mono mt-1">Por: ${w.reviewedBy || 'Admin'}</div>
+            </div>
+          ` : `
+            <div class="text-right">
+              <span class="px-2.5 py-1 rounded-xl bg-rose-950/80 text-rose-300 border border-rose-600/50 text-xs font-bold inline-flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-ban"></i> Rechazado
+              </span>
+              ${w.rejectionReason ? `<div class="text-[10px] text-rose-400/80 italic mt-1 max-w-[180px] truncate ml-auto" title="${w.rejectionReason}">"${w.rejectionReason}"</div>` : ''}
+              <div class="text-[10px] text-stone-500 font-mono mt-0.5">Por: ${w.reviewedBy || 'Admin'}</div>
+            </div>
+          `)}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="admin-glass-panel rounded-2xl border border-stone-800 overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-[#120521] text-stone-400 uppercase font-mono text-[10px] border-b border-stone-800">
+            <tr>
+              <th class="py-3 px-4">Prioridad / Plazo / Fecha</th>
+              <th class="py-3 px-4">Booster</th>
+              <th class="py-3 px-4">Monto &amp; Desglose</th>
+              <th class="py-3 px-4">Método &amp; Destino</th>
+              <th class="py-3 px-4 text-right">Acción de Aprobación</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-800/40">
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+};
+
+MythicApp.prototype.adminApproveWithdrawal = function(reqId) {
+  if (!this.isAdminOrGerente()) {
+    this.showToast('Acceso denegado: se requieren permisos de Administrador.', 'error');
+    return;
+  }
+  const req = (this.withdrawalRequests || []).find(r => r && r.id === reqId);
+  if (!req) {
+    this.showToast('Solicitud de retiro no encontrada.', 'error');
+    return;
+  }
+  if (req.status !== 'PENDING') {
+    this.showToast(`Esta solicitud ya fue procesada anteriormente (${req.status}).`, 'warning');
+    return;
+  }
+
+  // Find booster in boosters list or users
+  let target = (this.boosters || []).find(b => 
+    b && (
+      (req.discordId && b.discord_id && String(b.discord_id) === String(req.discordId)) ||
+      (req.userId && b.id && String(b.id) === String(req.userId)) ||
+      (req.username && b.username && b.username.toLowerCase() === req.username.toLowerCase())
+    )
+  );
+
+  if (!target) {
+    target = (this.clients || []).find(c =>
+      c && (
+        (req.discordId && c.discord_id && String(c.discord_id) === String(req.discordId)) ||
+        (req.userId && c.id && String(c.id) === String(req.userId)) ||
+        (req.username && c.name && c.name.toLowerCase() === req.username.toLowerCase())
+      )
+    );
+  }
+
+  const currentBal = target ? (Number(target.balance) || 0) : 0;
+  const gross = Number(req.grossAmount) || 0;
+  const net = Number(req.netAmount) || 0;
+  const fee = Number(req.feeAmount) || 0;
+
+  const confirmMsg = `¿Confirmas que ya realizaste la transferencia de $${net.toFixed(2)} USD a ${req.username} (${req.method}: ${req.destinationAddress})?\n\nAl ACEPTAR:\n1. Se debitarán $${gross.toFixed(2)} USD de su saldo web (saldo pasa de $${currentBal.toFixed(2)} a $${(currentBal - gross).toFixed(2)}).\n2. Se registrará en su libro de movimientos como "Retiro Aprobado".\n3. La solicitud quedará marcada como "Liquidada".`;
+
+  if (!confirm(confirmMsg)) return;
+
+  const newBal = Number((currentBal - gross).toFixed(2));
+  if (target) {
+    target.balance = newBal;
+    this.saveBoosters();
+    if (this.db && target.discord_id) {
+      this.db.collection('boosters').doc(String(target.discord_id)).set({
+        balance: newBal,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(() => {});
+    }
+  }
+
+  // If the logged in user is this booster, update their session balance too
+  if (this.currentUser && (
+    (req.discordId && this.currentUser.discordId && String(this.currentUser.discordId) === String(req.discordId)) ||
+    (req.username && this.currentUser.username && this.currentUser.username.toLowerCase() === req.username.toLowerCase())
+  )) {
+    this.currentUser.balance = newBal;
+    this.saveUser();
+  }
+
+  const adminName = (this.currentUser && this.currentUser.username) ? this.currentUser.username : 'Administrador';
+  const speedLabel = req.speed === 'IMMEDIATE' ? '⚡ Inmediato (10% fee)' : 'Estándar (3% fee)';
+
+  // Record in balance ledger
+  this.recordBalanceMovement({
+    id: 'mov_wth_' + req.id,
+    timestamp: new Date().toISOString(),
+    userId: req.discordId || req.userId || (target ? target.id : 'unknown'),
+    username: req.username || (target ? target.username : 'Booster'),
+    discordId: req.discordId || (target ? target.discord_id : ''),
+    userRole: req.userRole || (target ? target.role : 'Booster'),
+    type: 'WITHDRAWAL',
+    amount: -gross,
+    previousBalance: currentBal,
+    newBalance: newBal,
+    concept: `Retiro Aprobado [${speedLabel}] - Pago enviado`,
+    note: `Transferido $${net.toFixed(2)} USD neto a ${req.method} (${req.destinationAddress}). Fee retenido: $${fee.toFixed(2)} USD (${req.feePercent}%). Aprobado y liquidado por ${adminName}.`,
+    performedBy: adminName,
+    status: 'COMPLETED',
+    orderId: req.id
+  });
+
+  // Update request status
+  req.status = 'APPROVED';
+  req.reviewedAt = new Date().toISOString();
+  req.reviewedBy = adminName;
+  this.saveWithdrawalRequests(true);
+
+  this.showToast(`¡Retiro de ${req.username} aprobado exitosamente! Se debitaron $${gross.toFixed(2)} USD.`, 'success');
+  this.renderAdminFinances();
+  if (typeof this.renderProBalance === 'function') this.renderProBalance();
+};
+
+MythicApp.prototype.adminRejectWithdrawal = function(reqId) {
+  if (!this.isAdminOrGerente()) {
+    this.showToast('Acceso denegado: se requieren permisos de Administrador.', 'error');
+    return;
+  }
+  const req = (this.withdrawalRequests || []).find(r => r && r.id === reqId);
+  if (!req) {
+    this.showToast('Solicitud de retiro no encontrada.', 'error');
+    return;
+  }
+  if (req.status !== 'PENDING') {
+    this.showToast(`Esta solicitud ya fue procesada (${req.status}).`, 'warning');
+    return;
+  }
+
+  const reason = prompt(`Indica el motivo de rechazo para el retiro de ${req.username}:`, 'Datos de pago incorrectos o incompletos');
+  if (reason === null) return;
+
+  const adminName = (this.currentUser && this.currentUser.username) ? this.currentUser.username : 'Administrador';
+
+  req.status = 'REJECTED';
+  req.rejectionReason = (reason && reason.trim()) ? reason.trim() : 'Rechazado por administración';
+  req.reviewedAt = new Date().toISOString();
+  req.reviewedBy = adminName;
+  this.saveWithdrawalRequests(true);
+
+  this.showToast(`Solicitud rechazada. Los fondos quedaron desbloqueados para ${req.username}.`, 'info');
+  this.renderAdminFinances();
+  if (typeof this.renderProBalance === 'function') this.renderProBalance();
 };
 
 // --------------------------------------------------------------------------
@@ -16615,18 +17136,49 @@ MythicApp.prototype.renderProBalance = function() {
     </tr>
   `;
 
+  // Calculate booster's pending withdrawals
+  const myWithdrawals = (this.withdrawalRequests || []).filter(r => {
+    if (!r) return false;
+    return (u?.discordId && r.discordId && String(u.discordId) === String(r.discordId)) ||
+           (u?.id && r.userId && String(u.id) === String(r.userId)) ||
+           (u?.username && r.username && u.username.trim().toLowerCase() === r.username.trim().toLowerCase());
+  });
+  const myPendingWithdrawals = myWithdrawals.filter(r => r.status === 'PENDING');
+  const totalPendingWithdrawalAmount = myPendingWithdrawals.reduce((sum, r) => sum + (Number(r.grossAmount) || 0), 0);
+  const availableToWithdraw = Math.max(0, Number((bal - totalPendingWithdrawalAmount).toFixed(2)));
+
+  const currentSpeed = this.currentProWithdrawSpeed || 'STANDARD';
+
   container.innerHTML = `
     <!-- 1. HERO BALANCE SUMMARY CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="glass-panel p-6 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-[#162214] via-[#10190e] to-[#0a1009] shadow-xl">
-        <span class="text-xs text-emerald-300/80 uppercase tracking-wider font-bold block mb-1">Saldo Disponible para Retiro</span>
-        <div class="text-4xl font-bold font-mono-gaming text-emerald-400">$${bal.toFixed(2)}</div>
-        <div class="flex items-center gap-2 mt-3">
-          <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-600/40 font-semibold">
-            <i class="fa-solid fa-circle-check mr-1"></i>Fondos Verificados
-          </span>
-          <button onclick="document.getElementById('pro-withdraw-accordion').classList.toggle('hidden')" class="text-[11px] text-[#ee914f] hover:underline font-bold ml-auto cursor-pointer">
-            Solicitar Retiro &rarr;
+      <div class="glass-panel p-6 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-[#182615] via-[#10190e] to-[#0a1009] shadow-2xl flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-emerald-300/90 uppercase tracking-wider font-bold">Saldo de Cuenta</span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-600/40 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-circle-check text-emerald-400"></i>Verificado
+            </span>
+          </div>
+          <div class="text-4xl font-black font-mono-gaming text-emerald-400 tracking-tight">$${bal.toFixed(2)}</div>
+          ${totalPendingWithdrawalAmount > 0 ? `
+            <div class="mt-2 text-[11px] text-amber-300/90 bg-amber-950/60 border border-amber-600/40 rounded-lg px-2.5 py-1 flex items-center gap-1.5 font-medium">
+              <i class="fa-solid fa-hourglass-half text-amber-400 animate-spin" style="animation-duration: 4s"></i>
+              <span><strong>$${totalPendingWithdrawalAmount.toFixed(2)}</strong> retenido en solicitudes pendientes</span>
+            </div>
+            <div class="text-[11px] text-stone-400 mt-1 font-mono">Disponible neto: <strong class="text-emerald-300">$${availableToWithdraw.toFixed(2)}</strong></div>
+          ` : `
+            <div class="text-[11px] text-stone-400 mt-2">100% libre para solicitar retiro a tus cuentas</div>
+          `}
+        </div>
+
+        <!-- Glowing, Prominent "Solicitar Dinero / Retiro" Button -->
+        <div class="mt-4 pt-3 border-t border-emerald-500/20">
+          <button onclick="app.toggleProWithdrawalDrawer()" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-[#ee914f] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-[0_0_25px_rgba(245,158,11,0.65)] hover:shadow-[0_0_35px_rgba(245,158,11,0.9)] border border-amber-300/40 cursor-pointer transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2.5 group">
+            <i class="fa-solid fa-money-bill-transfer text-stone-950 text-base group-hover:rotate-12 transition-transform"></i>
+            <span class="tracking-widest">Solicitar Retiro de Dinero</span>
+            <i class="fa-solid fa-arrow-right text-[11px] group-hover:translate-x-1 transition-transform"></i>
           </button>
         </div>
       </div>
@@ -16645,49 +17197,186 @@ MythicApp.prototype.renderProBalance = function() {
     </div>
 
     <!-- 2. WITHDRAWAL DRAWER (COLLAPSIBLE / QUICK ACCESS) -->
-    <div id="pro-withdraw-accordion" class="glass-panel p-6 rounded-2xl border border-stone-800 hidden transition-all">
+    <div id="pro-withdraw-accordion" class="glass-panel p-6 rounded-2xl border border-amber-500/40 bg-gradient-to-b from-[#1c1209] via-[#140e0a] to-[#0e0906] shadow-2xl hidden transition-all">
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
         <div>
           <h3 class="text-base font-bold text-[#fcefc2] font-cinzel flex items-center gap-2">
             <i class="fa-solid fa-money-bill-transfer text-[#ee914f]"></i>
             <span>Solicitud de Retiro de Fondos</span>
           </h3>
-          <p class="text-xs text-stone-400">Transfiere tu saldo disponible a tu cuenta configurada.</p>
+          <p class="text-xs text-stone-400">Selecciona el tipo de retiro según tu urgencia y completa los datos de destino.</p>
         </div>
-        <button onclick="document.getElementById('pro-withdraw-accordion').classList.add('hidden')" class="text-stone-400 hover:text-white text-xs">
-          <i class="fa-solid fa-xmark"></i> Cerrar
+        <button onclick="app.toggleProWithdrawalDrawer()" class="text-stone-400 hover:text-white text-xs px-2.5 py-1 rounded-lg bg-stone-900 border border-stone-800 cursor-pointer">
+          <i class="fa-solid fa-xmark mr-1"></i> Cerrar
         </button>
       </div>
 
-      <form onsubmit="event.preventDefault(); app.submitProWithdrawalRequest(this);" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-stone-300 mb-1">Monto a retirar ($ USD):</label>
-          <input id="pro-withdraw-amount" type="number" min="10" max="${bal}" step="any" value="${bal > 0 ? bal : 0}" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold" required>
-          <span class="text-[10px] text-stone-500 mt-1 block">Minimo: $10.00 | Maximo disponible: $${bal.toFixed(2)}</span>
+      <!-- SPEED OPTIONS: NORMAL (3% - 5 DIAS) VS INMEDIATO (10% - <24H) -->
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-2">Modalidad de Retiro:</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- STANDARD -->
+          <div id="pro-speed-card-standard" onclick="app.setProWithdrawSpeed('STANDARD')" class="p-4 rounded-xl border-2 ${currentSpeed === 'STANDARD' ? 'border-[#ee914f] bg-gradient-to-r from-[#29170c] to-[#1a1008] text-white shadow-lg' : 'border-stone-800 bg-[#140e0a] text-stone-400 hover:text-white'} cursor-pointer transition-all">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-regular fa-clock text-stone-300"></i> Retiro Normal
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-stone-900 border border-stone-700 text-stone-200">
+                Fee 3%
+              </span>
+            </div>
+            <div class="text-xs text-stone-200 font-semibold">Entrega en 5 días hábiles</div>
+            <div class="text-[10px] text-stone-400 mt-1">Tarifa mínima estándar para retiros regulares.</div>
+          </div>
+
+          <!-- IMMEDIATE -->
+          <div id="pro-speed-card-immediate" onclick="app.setProWithdrawSpeed('IMMEDIATE')" class="p-4 rounded-xl border-2 ${currentSpeed === 'IMMEDIATE' ? 'border-amber-400 bg-gradient-to-r from-amber-950/80 via-[#2f1406] to-amber-950/80 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.35)]' : 'border-amber-500/30 bg-[#140e0a] text-stone-400 hover:text-amber-300'} cursor-pointer transition-all relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-amber-300">
+                <i class="fa-solid fa-bolt-lightning text-amber-400"></i> ⚡ RETIRO INMEDIATO
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-black bg-amber-500 text-stone-950 shadow-sm animate-pulse">
+                Fee 10%
+              </span>
+            </div>
+            <div class="text-xs text-amber-200 font-bold">Entrega en menos de 24 horas</div>
+            <div class="text-[10px] text-amber-300/80 mt-1">Procesamiento prioritario express con máxima prioridad.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <form onsubmit="event.preventDefault(); app.submitProWithdrawalRequest(this);" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Monto -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-stone-300">Monto a retirar ($ USD):</label>
+              <span class="text-[10px] text-stone-400">Disp: <strong>$${availableToWithdraw.toFixed(2)}</strong></span>
+            </div>
+            <input id="pro-withdraw-amount" type="number" min="10" max="${availableToWithdraw}" step="any" value="${availableToWithdraw > 0 ? (availableToWithdraw >= 50 ? 50 : availableToWithdraw) : 0}" oninput="app.updateProWithdrawCalc()" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-bold outline-none focus:border-amber-500" required>
+            
+            <!-- Quick % buttons -->
+            <div class="flex items-center gap-1.5 mt-1.5">
+              <button type="button" onclick="app.setProWithdrawAmountPercent(0.25)" class="px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 text-[10px] font-mono cursor-pointer">25%</button>
+              <button type="button" onclick="app.setProWithdrawAmountPercent(0.5)" class="px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 text-[10px] font-mono cursor-pointer">50%</button>
+              <button type="button" onclick="app.setProWithdrawAmountPercent(1)" class="px-2 py-0.5 rounded bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/40 text-[10px] font-mono font-bold cursor-pointer">100% (Todo)</button>
+            </div>
+          </div>
+
+          <!-- Metodo -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1">Método de Pago:</label>
+            <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200 outline-none focus:border-amber-500">
+              <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
+              <option value="PayPal">PayPal</option>
+              <option value="Zelle">Zelle</option>
+              <option value="USDT TRC20 / BSC">USDT TRC20 / BSC</option>
+              <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
+            </select>
+            <span class="text-[10px] text-stone-500 mt-1 block">Selecciona cómo deseas recibir los fondos.</span>
+          </div>
+
+          <!-- ID Destino -->
+          <div>
+            <label class="block text-xs font-semibold text-stone-300 mb-1">ID o Dirección de Destino:</label>
+            <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Correo" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none focus:border-amber-500" required>
+            <span class="text-[10px] text-stone-500 mt-1 block">Verifica cuidadosamente los datos antes de enviar.</span>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-stone-300 mb-1">Metodo de Pago:</label>
-          <select id="pro-withdraw-method" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-200">
-            <option value="Binance Pay / USDT">Binance Pay (USDT) - Red recomendada</option>
-            <option value="PayPal">PayPal</option>
-            <option value="Zelle">Zelle</option>
-            <option value="USDT TRC20 / ERC20">USDT TRC20 / BSC</option>
-            <option value="Transferencia Bancaria">Transferencia Bancaria Directa</option>
-          </select>
-        </div>
+        <!-- DYNAMIC CALCULATOR SUMMARY BOX -->
+        <div class="p-4 rounded-xl bg-[#0f0906] border border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs w-full sm:w-auto flex-1">
+            <div>
+              <span class="text-stone-500 block text-[10px] uppercase font-bold">Monto Bruto:</span>
+              <span id="pro-calc-gross" class="font-mono font-bold text-stone-200 text-sm">$0.00</span>
+            </div>
+            <div>
+              <span class="text-stone-500 block text-[10px] uppercase font-bold">Tarifa (Fee):</span>
+              <span id="pro-calc-fee" class="font-mono font-bold text-rose-400 text-sm">-$0.00</span>
+            </div>
+            <div>
+              <span class="text-emerald-400 block text-[10px] uppercase font-bold">Neto a Recibir:</span>
+              <span id="pro-calc-net" class="font-mono font-black text-emerald-400 text-base">$0.00</span>
+            </div>
+            <div>
+              <span class="text-stone-500 block text-[10px] uppercase font-bold">Plazo Estimado:</span>
+              <div id="pro-calc-time" class="text-stone-300 font-semibold text-xs mt-0.5">5 días hábiles</div>
+            </div>
+          </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-stone-300 mb-1">ID o Direccion de Destino:</label>
-          <input id="pro-withdraw-address" type="text" value="${u?.payoutAddress || u?.payout_address || u?.wallet_id || ''}" placeholder="Ej: Binance Pay ID / Correo" class="w-full bg-[#17120e] border border-stone-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono" required>
-        </div>
-
-        <div class="md:col-span-3 flex justify-end">
-          <button type="submit" class="px-6 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs uppercase tracking-wider shadow-md hover:scale-[1.02] transition-transform cursor-pointer">
-            Confirmar y Solicitar Retiro
+          <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-[#ee914f] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span>Confirmar y Solicitar</span>
           </button>
         </div>
       </form>
+
+      <!-- MY RECENT WITHDRAWAL REQUESTS ACCORDION LIST -->
+      ${myWithdrawals.length > 0 ? `
+        <div class="mt-6 pt-4 border-t border-stone-800">
+          <h4 class="text-xs font-bold text-stone-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-amber-400"></i>
+            <span>Tus Solicitudes de Retiro (${myWithdrawals.length})</span>
+          </h4>
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+            ${myWithdrawals.slice(0, 10).map(r => {
+              const isImm = r.speed === 'IMMEDIATE';
+              const isPend = r.status === 'PENDING';
+              const isAppr = r.status === 'APPROVED';
+              const diff = new Date(r.deadlineAt || 0).getTime() - Date.now();
+              const hours = Math.floor(diff / 3600000);
+              const mins = Math.floor((diff % 3600000) / 60000);
+
+              return `
+                <div class="p-3 rounded-xl bg-[#140e0a] border ${isImm && isPend ? 'border-amber-500/50 bg-gradient-to-r from-amber-950/30 to-[#140e0a]' : 'border-stone-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      ${isImm ? `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500 text-stone-950 uppercase tracking-wide">
+                          ⚡ INMEDIATO (10%)
+                        </span>
+                      ` : `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-stone-800 text-stone-300 border border-stone-700">
+                          Estándar (3%)
+                        </span>
+                      `}
+                      <span class="font-mono text-stone-400 text-[11px]">${new Date(r.createdAt).toLocaleDateString('es-ES')}</span>
+                      <span class="text-stone-400">• ${r.method}</span>
+                    </div>
+                    <div class="text-[11px] text-stone-400 font-mono mt-1">
+                      Destino: <span class="text-stone-200">${r.destinationAddress}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1">
+                    <div class="font-mono text-sm font-black text-emerald-400">
+                      +$${(Number(r.netAmount) || 0).toFixed(2)} USD <span class="text-[10px] text-stone-500 font-normal">(Bruto: $${(Number(r.grossAmount) || 0).toFixed(2)})</span>
+                    </div>
+                    <div>
+                      ${isPend ? `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/90 text-amber-300 border border-amber-600/50 inline-flex items-center gap-1">
+                          <i class="fa-solid fa-hourglass-half text-amber-400"></i>
+                          <span>${diff > 0 ? (isImm ? `Quedan ${hours}h ${mins}m` : `En revisión`) : 'Plazo Expirado'}</span>
+                        </span>
+                      ` : (isAppr ? `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-600/50 inline-flex items-center gap-1">
+                          <i class="fa-solid fa-circle-check"></i> Pagado
+                        </span>
+                      ` : `
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950/90 text-rose-300 border border-rose-600/50 inline-flex items-center gap-1" title="${r.rejectionReason || ''}">
+                          <i class="fa-solid fa-ban"></i> Rechazado
+                        </span>
+                      `)}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
     </div>
 
     <!-- 3. REPORT OF MOVEMENTS (THE MAIN USER REQUEST) -->
@@ -16735,11 +17424,81 @@ MythicApp.prototype.renderProBalance = function() {
       </div>
     </div>
   `;
+
+  // Trigger initial calculation
+  setTimeout(() => {
+    if (typeof this.updateProWithdrawCalc === 'function') {
+      this.updateProWithdrawCalc();
+    }
+  }, 50);
 };
 
 MythicApp.prototype.filterProBalance = function(filter) {
   this.currentProBalanceFilter = filter;
   this.renderProBalance();
+};
+
+MythicApp.prototype.toggleProWithdrawalDrawer = function() {
+  const drawer = document.getElementById('pro-withdraw-accordion');
+  if (!drawer) return;
+  drawer.classList.toggle('hidden');
+  if (!drawer.classList.contains('hidden')) {
+    drawer.scrollIntoView({ behavior: 'smooth' });
+    this.updateProWithdrawCalc();
+  }
+};
+
+MythicApp.prototype.setProWithdrawSpeed = function(speed) {
+  this.currentProWithdrawSpeed = speed; // 'STANDARD' | 'IMMEDIATE'
+  const cardStd = document.getElementById('pro-speed-card-standard');
+  const cardImm = document.getElementById('pro-speed-card-immediate');
+
+  if (cardStd && cardImm) {
+    if (speed === 'IMMEDIATE') {
+      cardImm.className = 'p-4 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-950/80 via-[#2f1406] to-amber-950/80 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer transition-all relative overflow-hidden';
+      cardStd.className = 'p-4 rounded-xl border-2 border-stone-800 bg-[#140e0a] text-stone-400 hover:text-white cursor-pointer transition-all';
+    } else {
+      cardStd.className = 'p-4 rounded-xl border-2 border-[#ee914f] bg-gradient-to-r from-[#29170c] to-[#1a1008] text-white shadow-lg cursor-pointer transition-all';
+      cardImm.className = 'p-4 rounded-xl border-2 border-amber-500/30 bg-[#140e0a] text-stone-400 hover:text-amber-300 cursor-pointer transition-all relative overflow-hidden';
+    }
+  }
+
+  this.updateProWithdrawCalc();
+};
+
+MythicApp.prototype.setProWithdrawAmountPercent = function(pct) {
+  const amtInput = document.getElementById('pro-withdraw-amount');
+  if (!amtInput) return;
+  const max = Number(amtInput.getAttribute('max')) || 0;
+  const targetVal = Number((max * pct).toFixed(2));
+  amtInput.value = targetVal > 0 ? targetVal : 0;
+  this.updateProWithdrawCalc();
+};
+
+MythicApp.prototype.updateProWithdrawCalc = function() {
+  const amtInput = document.getElementById('pro-withdraw-amount');
+  if (!amtInput) return;
+  const gross = Number(amtInput.value) || 0;
+  const speed = this.currentProWithdrawSpeed || 'STANDARD';
+  const feePercent = speed === 'IMMEDIATE' ? 10 : 3;
+  const feeAmt = Number((gross * feePercent / 100).toFixed(2));
+  const netAmt = Math.max(0, Number((gross - feeAmt).toFixed(2)));
+
+  const grossEl = document.getElementById('pro-calc-gross');
+  const feeEl = document.getElementById('pro-calc-fee');
+  const netEl = document.getElementById('pro-calc-net');
+  const timeEl = document.getElementById('pro-calc-time');
+
+  if (grossEl) grossEl.textContent = '$' + gross.toFixed(2) + ' USD';
+  if (feeEl) feeEl.textContent = '-$' + feeAmt.toFixed(2) + ' USD (' + feePercent + '%)';
+  if (netEl) netEl.textContent = '+$' + netAmt.toFixed(2) + ' USD';
+  if (timeEl) {
+    if (speed === 'IMMEDIATE') {
+      timeEl.innerHTML = '<span class="text-amber-300 font-black flex items-center gap-1"><i class="fa-solid fa-bolt-lightning text-amber-400"></i> &lt; 24h Express</span>';
+    } else {
+      timeEl.innerHTML = '<span class="text-stone-300 font-semibold flex items-center gap-1"><i class="fa-regular fa-clock text-stone-400"></i> 5 días hábiles</span>';
+    }
+  }
 };
 
 MythicApp.prototype.submitProWithdrawalRequest = function(form) {
@@ -16750,64 +17509,77 @@ MythicApp.prototype.submitProWithdrawalRequest = function(form) {
   const amt = Number(amtInput ? amtInput.value : 0);
   const method = methodSelect ? methodSelect.value : 'Binance Pay / USDT';
   const addr = addrInput ? addrInput.value.trim() : '';
+  const speed = this.currentProWithdrawSpeed || 'STANDARD';
 
   const u = this.currentUser;
   const currBal = Number(u?.balance) || 0;
 
+  // Calculate existing pending requests to ensure no double-withdrawal
+  const myPending = (this.withdrawalRequests || []).filter(r => 
+    r && r.status === 'PENDING' && (
+      (u?.discordId && r.discordId && String(u.discordId) === String(r.discordId)) ||
+      (u?.id && r.userId && String(u.id) === String(r.userId)) ||
+      (u?.username && r.username && u.username.trim().toLowerCase() === r.username.trim().toLowerCase())
+    )
+  );
+  const totalPending = myPending.reduce((sum, r) => sum + (Number(r.grossAmount) || 0), 0);
+  const availableToWithdraw = Math.max(0, Number((currBal - totalPending).toFixed(2)));
+
   if (isNaN(amt) || amt < 10) {
-    this.showToast('El monto minimo de retiro es de $10.00 USD.', 'error');
+    this.showToast('El monto mínimo de retiro es de $10.00 USD.', 'error');
     return;
   }
-  if (amt > currBal) {
-    this.showToast(`Saldo insuficiente. Tu saldo disponible es $${currBal.toFixed(2)}.`, 'error');
+  if (amt > availableToWithdraw) {
+    this.showToast(`Saldo disponible insuficiente. Tienes $${availableToWithdraw.toFixed(2)} disponible para solicitar ($${totalPending.toFixed(2)} retenido en solicitudes pendientes).`, 'error');
     return;
   }
   if (!addr) {
-    this.showToast('Por favor especifica tu cuenta o direccion de destino.', 'error');
+    this.showToast('Por favor especifica tu cuenta o dirección de destino.', 'error');
     return;
   }
 
-  const newBal = Number((currBal - amt).toFixed(2));
-  u.balance = newBal;
-  this.saveUser();
+  const feePercent = speed === 'IMMEDIATE' ? 10 : 3;
+  const feeAmt = Number((amt * feePercent / 100).toFixed(2));
+  const netAmt = Number((amt - feeAmt).toFixed(2));
 
-  // Find booster record and update
-  const boosterRecord = (this.boosters || []).find(b => 
-    b && (
-      (u?.discordId && b.discord_id && String(u.discordId) === String(b.discord_id)) ||
-      (u?.username && b.username && u.username.trim().toLowerCase() === b.username.trim().toLowerCase())
-    )
-  );
-  if (boosterRecord) {
-    boosterRecord.balance = newBal;
-    this.saveBoosters();
-    if (this.db && boosterRecord.discord_id) {
-      this.db.collection('boosters').doc(String(boosterRecord.discord_id)).set({
-        balance: newBal,
-        updatedAt: new Date().toISOString()
-      }, { merge: true }).catch(() => {});
-    }
-  }
+  const now = new Date();
+  const deadlineHours = speed === 'IMMEDIATE' ? 24 : (5 * 24);
+  const deadlineAt = new Date(now.getTime() + deadlineHours * 3600 * 1000);
 
-  // Record in ledger
-  this.recordBalanceMovement({
-    id: 'mov_wth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-    timestamp: new Date().toISOString(),
+  const newRequest = {
+    id: 'wth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    createdAt: now.toISOString(),
+    deadlineAt: deadlineAt.toISOString(),
     userId: u.discordId || u.id || u.username,
     username: u.username || 'Booster',
-    discordId: u.discordId || '',
+    discordId: u.discordId || u.discord_id || '',
     userRole: u.role || 'Booster',
-    type: 'WITHDRAWAL',
-    amount: -amt,
-    previousBalance: currBal,
-    newBalance: newBal,
-    concept: `Solicitud de Retiro a ${method} (${addr})`,
-    note: `Retiro solicitado por el booster. Pendiente de liquidacion por administracion.`,
-    performedBy: u.username || 'Booster',
-    status: 'COMPLETED'
-  });
+    speed: speed, // 'STANDARD' | 'IMMEDIATE'
+    grossAmount: amt,
+    feePercent: feePercent,
+    feeAmount: feeAmt,
+    netAmount: netAmt,
+    method: method,
+    destinationAddress: addr,
+    status: 'PENDING',
+    reviewedAt: null,
+    reviewedBy: null,
+    rejectionReason: null
+  };
 
-  this.showToast(`¡Solicitud de retiro por $${amt.toFixed(2)} procesada exitosamente! Tu saldo fue actualizado.`, 'success');
+  if (!Array.isArray(this.withdrawalRequests)) this.withdrawalRequests = [];
+  this.withdrawalRequests.unshift(newRequest);
+  this.saveWithdrawalRequests(true);
+
+  // Remember payout address in user profile
+  u.payoutAddress = addr;
+  this.saveUser();
+
+  const speedMsg = speed === 'IMMEDIATE' 
+    ? '⚡ INMEDIATO (<24h, Fee 10%)' 
+    : 'Estándar (5 días hábiles, Fee 3%)';
+
+  this.showToast(`¡Solicitud de retiro ${speedMsg} por $${amt.toFixed(2)} enviada! Recibirás $${netAmt.toFixed(2)} netos tras la verificación de administración.`, 'success');
   this.renderProBalance();
 };
 
