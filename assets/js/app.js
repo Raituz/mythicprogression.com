@@ -15192,16 +15192,16 @@ class MythicApp {
                   <label class="text-xs font-semibold text-stone-300">
                     Pago Base al Booster ($ USD) <span class="text-rose-400">*</span>
                   </label>
-                  <div class="flex items-center gap-1">
-                    <button type="button" onclick="app.setSupplierPayoutPercent(30, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-stone-400 hover:text-white border border-stone-800 font-mono cursor-pointer">30%</button>
-                    <button type="button" onclick="app.setSupplierPayoutPercent(40, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-stone-400 hover:text-white border border-stone-800 font-mono cursor-pointer">40%</button>
-                    <button type="button" onclick="app.setSupplierPayoutPercent(50, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-amber-400 hover:text-white border border-stone-800 font-mono font-bold cursor-pointer">50%</button>
-                    <button type="button" onclick="app.setSupplierPayoutPercent(60, '${portalType}')" class="px-1.5 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-[9px] text-stone-400 hover:text-white border border-stone-800 font-mono cursor-pointer">60%</button>
-                  </div>
+                                      <div class="flex items-center gap-1" id="sup-pct-group-${portalType}">
+                      <button type="button" onclick="app.setSupplierPayoutPercent(30, '${portalType}')" id="sup-pct-btn-30-${portalType}" class="px-2 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.65)] font-mono font-bold ring-1 ring-amber-400/70 scale-105 cursor-pointer transition-all">30%</button>
+                      <button type="button" onclick="app.setSupplierPayoutPercent(40, '${portalType}')" id="sup-pct-btn-40-${portalType}" class="px-2 py-0.5 rounded bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-stone-200 border border-stone-800 font-mono font-medium cursor-pointer transition-all">40%</button>
+                      <button type="button" onclick="app.setSupplierPayoutPercent(50, '${portalType}')" id="sup-pct-btn-50-${portalType}" class="px-2 py-0.5 rounded bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-stone-200 border border-stone-800 font-mono font-medium cursor-pointer transition-all">50%</button>
+                      <button type="button" onclick="app.setSupplierPayoutPercent(60, '${portalType}')" id="sup-pct-btn-60-${portalType}" class="px-2 py-0.5 rounded bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-stone-200 border border-stone-800 font-mono font-medium cursor-pointer transition-all">60%</button>
+                    </div>
                 </div>
                 <div class="relative">
                   <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold">$</span>
-                  <input type="number" step="0.01" min="0.5" id="sup-booster-payout-${portalType}" oninput="app.updateSupplierMargin('${portalType}')" required value="20.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-amber-300 outline-none">
+                  <input type="number" step="0.01" min="0.5" id="sup-booster-payout-${portalType}" oninput="app.updateSupplierMargin('${portalType}')" required value="12.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-amber-300 outline-none">
                 </div>
                 <span class="text-[10px] text-stone-500 mt-1 block">El booster que tome la orden sin pujar recibirá esta suma.</span>
               </div>
@@ -15213,7 +15213,7 @@ class MythicApp {
                 </label>
                 <div class="relative">
                   <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold">$</span>
-                  <input type="number" step="0.01" min="0.5" id="sup-max-bid-${portalType}" value="20.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-stone-300 outline-none">
+                  <input type="number" step="0.01" min="0.5" id="sup-max-bid-${portalType}" value="12.00" class="w-full ${inputBg} border ${inputBorder} rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono-gaming text-stone-300 outline-none">
                 </div>
                 <span class="text-[10px] text-stone-500 mt-1 block">Tope máximo que un booster puede ofertar en la subasta.</span>
               </div>
@@ -15223,11 +15223,11 @@ class MythicApp {
             <div id="sup-financial-split-${portalType}" class="mt-4 p-3.5 rounded-xl ${accentBg} border ${accentBorder} flex flex-wrap items-center justify-between gap-3 text-xs">
               <div class="flex items-center gap-2">
                 <span class="text-stone-400">💵 Pago al Booster:</span>
-                <strong id="sup-readout-payout-${portalType}" class="text-amber-300 font-mono-gaming font-bold">$20.00 USD</strong>
+                <strong id="sup-readout-payout-${portalType}" class="text-amber-300 font-mono-gaming font-bold">$12.00 USD</strong>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-stone-400">🏢 Ganancia Plataforma / Margen:</span>
-                <strong id="sup-readout-profit-${portalType}" class="text-emerald-400 font-mono-gaming font-bold">$20.00 USD (50.0%)</strong>
+                <strong id="sup-readout-profit-${portalType}" class="text-emerald-400 font-mono-gaming font-bold">$28.00 USD (70.0%)</strong>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-stone-400">📦 Publicador:</span>
@@ -15383,7 +15383,7 @@ class MythicApp {
     const totalInput = document.getElementById(`sup-total-price-${portalType}`);
     if (totalInput) totalInput.value = price.toFixed(2);
 
-    const payout = Math.round(price * 0.5 * 100) / 100;
+    const payout = Math.round(price * 0.30 * 100) / 100;
     const payoutInput = document.getElementById(`sup-booster-payout-${portalType}`);
     if (payoutInput) payoutInput.value = payout.toFixed(2);
 
@@ -15415,10 +15415,11 @@ class MythicApp {
     const payout = Math.max(0, Math.round(total * (pct / 100) * 100) / 100);
     payoutInput.value = payout.toFixed(2);
     if (maxBidInput) maxBidInput.value = payout.toFixed(2);
-    this.updateSupplierMargin(portalType);
+    this.updateSupplierPercentButtons(pct, portalType);
+    this.updateSupplierMargin(portalType, pct);
   }
 
-  updateSupplierMargin(portalType) {
+  updateSupplierMargin(portalType, forcedPct = null) {
     const totalInput = document.getElementById(`sup-total-price-${portalType}`);
     const payoutInput = document.getElementById(`sup-booster-payout-${portalType}`);
     const payoutReadout = document.getElementById(`sup-readout-payout-${portalType}`);
@@ -15432,7 +15433,25 @@ class MythicApp {
 
     payoutReadout.textContent = `$${payout.toFixed(2)} USD`;
     profitReadout.textContent = `$${profit.toFixed(2)} USD (${profitPct}%)`;
+
+    const activePct = forcedPct !== null ? forcedPct : (total > 0 ? Math.round((payout / total) * 100) : 0);
+    this.updateSupplierPercentButtons(activePct, portalType);
   }
+
+  updateSupplierPercentButtons(activePct, portalType) {
+    const pcts = [30, 40, 50, 60];
+    const rounded = Math.round(Number(activePct) || 0);
+    pcts.forEach(p => {
+      const btn = document.getElementById(`sup-pct-btn-${p}-${portalType}`);
+      if (!btn) return;
+      if (rounded === p) {
+        btn.className = "px-2 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.7)] font-mono font-bold ring-1 ring-amber-400/80 scale-105 transition-all cursor-pointer";
+      } else {
+        btn.className = "px-2 py-0.5 rounded bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-stone-200 border border-stone-800 font-mono font-medium transition-all cursor-pointer";
+      }
+    });
+  }
+
 
   async handleSupplierPublishOrder(e, portalType) {
     if (e && e.preventDefault) e.preventDefault();
