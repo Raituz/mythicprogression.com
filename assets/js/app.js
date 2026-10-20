@@ -821,10 +821,15 @@ class MythicApp {
       const remoteOrders = [];
       snapshot.forEach(doc => {
         let data = doc.data();
-        if (data && data.id) {
+        if (data) {
+          if (!data.id) data.id = doc.id;
           if (DEMO_ORDER_IDS.includes(data.id)) {
             // Delete legacy demo order from Firestore permanently
             this.db.collection('orders').doc(data.id).delete().catch(() => {});
+            return;
+          }
+          // Safeguard: ignore incomplete ghost documents lacking both status and serviceName
+          if (!data.status && !data.serviceName) {
             return;
           }
           const rawPrice = data.totalPrice;
@@ -15643,9 +15648,20 @@ class MythicApp {
       if (!Array.isArray(this.orders)) this.orders = [];
       this.orders.unshift(newOrder);
 
+      // Ensure Firebase is initialized for direct cloud persistence
+      if (!this.db && typeof this.initFirebase === 'function') {
+        try { await this.initFirebase(); } catch (e) { console.warn('Firebase init in supplier:', e); }
+      }
+      if (this.db) {
+        try {
+          await this.db.collection('orders').doc(orderId).set(newOrder, { merge: true });
+        } catch (dbErr) {
+          console.warn('Direct Firestore order save error:', dbErr);
+        }
+      }
+
       // Register or update the Supplier in this.clients with role 'supplier' (not as regular client)
       if (!Array.isArray(this.clients)) this.clients = [];
-    this.balanceLedger = [];
       const supClientId = `supplier_${supplierDiscordId || supplierName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
       let matchedClient = this.clients.find(x => 
         x.id === supClientId || 
