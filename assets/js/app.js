@@ -7310,7 +7310,7 @@ class MythicApp {
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-600/40 text-[10px] font-bold">
                     <i class="fa-solid fa-box-open text-[9px] text-amber-400"></i> Supplier: ${order.supplier || order.clientName}
                   </span>
-                  ${order.externalClientName ? `<span class="text-stone-400">&bull; Ref Cliente Ext: <strong class="text-stone-300">${order.externalClientName}</strong></span>` : '}
+                  ${order.externalClientName ? `<span class="text-stone-400">&bull; Ref Cliente Ext: <strong class="text-stone-300">${order.externalClientName}</strong></span>` : ''}
                 ` : `
                   <span>Cliente: <strong class="text-stone-300">${order.clientName || 'Cliente'}</strong></span>
                 `}
