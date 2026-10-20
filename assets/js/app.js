@@ -595,12 +595,23 @@ class MythicApp {
   }
 
   initSession() {
-    // SECURITY: invalidate every session created before the identity fix.
-    // Older builds could impersonate the owner (demo buttons, /pro auto-login, name matching).
+    // SECURITY: invalidate only legacy demo sessions if mp_session_v changed, preserving real accounts
     if (localStorage.getItem('mp_session_v') !== MythicApp.SESSION_VERSION) {
-      localStorage.removeItem('mp_current_user');
-      sessionStorage.removeItem('mp_current_user');
-      localStorage.removeItem('mp_discord_avatar_backup');
+      const storedRaw = localStorage.getItem('mp_current_user');
+      let preserveUser = false;
+      try {
+        if (storedRaw) {
+          const parsed = JSON.parse(storedRaw);
+          if (parsed && (parsed.discordId || parsed.email || parsed.googleId || parsed.isAdmin || parsed.isStaff)) {
+            preserveUser = true;
+          }
+        }
+      } catch (e) {}
+      if (!preserveUser) {
+        localStorage.removeItem('mp_current_user');
+        sessionStorage.removeItem('mp_current_user');
+        localStorage.removeItem('mp_discord_avatar_backup');
+      }
       localStorage.setItem('mp_session_v', MythicApp.SESSION_VERSION);
     }
 
@@ -1319,7 +1330,12 @@ class MythicApp {
   }
 
   saveUser() {
-    localStorage.setItem('mp_current_user', JSON.stringify(this.currentUser));
+    if (this.currentUser) {
+      localStorage.setItem('mp_current_user', JSON.stringify(this.currentUser));
+      localStorage.setItem('mp_session_v', MythicApp.SESSION_VERSION);
+    } else {
+      localStorage.removeItem('mp_current_user');
+    }
   }
 
   reconcileFinances() {
@@ -8630,6 +8646,14 @@ class MythicApp {
   // ADMIN PORTAL (STAFF OVERVIEW, CLIENTS, ORDERS & PRODUCT CRUD)
   // ==========================================
   initAdminPortal() {
+    // If this.currentUser is not yet populated, attempt to load from localStorage
+    if (!this.currentUser) {
+      try {
+        const raw = localStorage.getItem('mp_current_user');
+        if (raw) this.currentUser = JSON.parse(raw);
+      } catch(e) {}
+    }
+
     // STRICT ACCESS GUARD: Staff & Admin Only
     if (!this.currentUser) {
       this.showToast('Inicia sesión con tu cuenta de Staff o Administrador para acceder al panel.', 'info');
@@ -8659,17 +8683,17 @@ class MythicApp {
       }
     }
 
-    this.renderLanguageSelector();
-    this.updateSupplierTabVisibility();
-    this.setupAdminSearchAndFilters();
-    this.renderAdminOverview();
-    this.renderAdminProductsManager();
-    this.renderAdminOrders();
-    this.initHistoryOrdersPanel();
-    this.renderAdminClients();
-    this.renderAdminBoosters();
-    this.renderChatList();
-    if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances();
+    try { this.renderLanguageSelector(); } catch(e) { console.warn('renderLanguageSelector:', e); }
+    try { this.updateSupplierTabVisibility(); } catch(e) { console.warn('updateSupplierTabVisibility:', e); }
+    try { this.setupAdminSearchAndFilters(); } catch(e) { console.warn('setupAdminSearchAndFilters:', e); }
+    try { this.renderAdminOverview(); } catch(e) { console.warn('renderAdminOverview:', e); }
+    try { this.renderAdminProductsManager(); } catch(e) { console.warn('renderAdminProductsManager:', e); }
+    try { this.renderAdminOrders(); } catch(e) { console.warn('renderAdminOrders:', e); }
+    try { this.initHistoryOrdersPanel(); } catch(e) { console.warn('initHistoryOrdersPanel:', e); }
+    try { this.renderAdminClients(); } catch(e) { console.warn('renderAdminClients:', e); }
+    try { this.renderAdminBoosters(); } catch(e) { console.warn('renderAdminBoosters:', e); }
+    try { this.renderChatList(); } catch(e) { console.warn('renderChatList:', e); }
+    try { if (typeof this.renderAdminFinances === 'function') this.renderAdminFinances(); } catch(e) { console.warn('renderAdminFinances:', e); }
 
     // Initialize exclusive sidebar tab (default: 'dashboard' or URL hash)
     if (typeof window.switchAdminTab === 'function') {
@@ -8729,13 +8753,13 @@ class MythicApp {
     if (topBoosterRev) topBoosterRev.textContent = `$${boosterRev.toFixed(2)}`;
 
     const ordersCount = document.getElementById('admin-orders-count');
-    if (ordersCount) ordersCount.textContent = this.orders.length;
+    if (ordersCount) ordersCount.textContent = (this.orders || []).length;
 
     const boostersCount = document.getElementById('admin-boosters-count');
-    if (boostersCount) boostersCount.textContent = this.boosters.length;
+    if (boostersCount) boostersCount.textContent = (this.boosters || []).length;
 
     const clientsCount = document.getElementById('admin-clients-count');
-    if (clientsCount) clientsCount.textContent = this.clients.length;
+    if (clientsCount) clientsCount.textContent = (this.clients || []).length;
 
     // Sidebar navigation badges (Órdenes Web count only available orders)
     const availableOrdersCount = (this.orders || []).filter(o => o && (o.status === 'AVAILABLE' || o.status === 'BIDDING')).length;
@@ -8743,13 +8767,13 @@ class MythicApp {
     if (badgeOrders) badgeOrders.textContent = availableOrdersCount;
 
     const badgeBoosters = document.getElementById('badge-boosters-count');
-    if (badgeBoosters) badgeBoosters.textContent = this.boosters.length;
+    if (badgeBoosters) badgeBoosters.textContent = (this.boosters || []).length;
 
     const badgeClients = document.getElementById('badge-clients-count');
-    if (badgeClients) badgeClients.textContent = this.clients.length;
+    if (badgeClients) badgeClients.textContent = (this.clients || []).length;
 
     const badgeCatalog = document.getElementById('badge-catalog-count');
-    if (badgeCatalog) badgeCatalog.textContent = this.services.length;
+    if (badgeCatalog) badgeCatalog.textContent = (this.services || []).length;
   }
 
   // 1. GESTOR DE PRODUCTOS Y PRECIOS DEL CATÁLOGO (CRUD COMPLETO)
@@ -8757,13 +8781,13 @@ class MythicApp {
     const container = document.getElementById('admin-products-table');
     if (!container) return;
 
-    let list = this.services;
+    let list = this.services || [];
     if (filterTerm) {
       const term = filterTerm.toLowerCase();
       list = list.filter(s => 
-        s.name.toLowerCase().includes(term) || 
-        s.category.toLowerCase().includes(term) || 
-        s.id.toLowerCase().includes(term)
+        (s.name && s.name.toLowerCase().includes(term)) || 
+        (s.category && s.category.toLowerCase().includes(term)) || 
+        (s.id && s.id.toLowerCase().includes(term))
       );
     }
 
