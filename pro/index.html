@@ -20,14 +20,16 @@
   <!-- LEFT SIDEBAR: GUILD WAR ROOM THEME -->
   <aside class="w-16 md:w-64 glass-panel border-r border-stone-800 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-30">
     <div>
-      <!-- Brand Logo -->
-      <div class="p-4 flex items-center gap-3 border-b border-stone-800">
-        <img src="assets/img/logo_circular.png" alt="Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(238,145,79,0.4)]">
-        <div class="hidden md:block">
-          <span class="font-cinzel font-bold text-sm copper-gradient-text tracking-wider block leading-tight">MYTHIC PRO</span>
-          <span class="text-[9px] text-[#eedaa2] font-semibold uppercase tracking-wider">TablÓn de Contratos</span>
+      <!-- Brand Logo (Clickable Link to Store / Home) -->
+      <a href="/" class="p-4 flex items-center gap-3 border-b border-stone-800 hover:bg-[#1a140f] transition-all group block cursor-pointer" title="Volver al Inicio / Tienda">
+        <div class="flex items-center gap-3">
+          <img src="assets/img/logo_circular.png" alt="Mythic Progression" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(238,145,79,0.4)] group-hover:scale-105 transition-transform">
+          <div class="hidden md:block">
+            <span class="font-cinzel font-bold text-sm copper-gradient-text tracking-wider block leading-tight group-hover:text-[#fcefc2]">MYTHIC PRO</span>
+            <span class="text-[9px] text-[#eedaa2] font-semibold uppercase tracking-wider">Tablón de Contratos</span>
+          </div>
         </div>
-      </div>
+      </a>
 
       <!-- Navigation Tabs -->
       <nav class="p-2 space-y-1.5">
@@ -43,20 +45,9 @@
           <span id="badge-my-count" class="hidden md:inline ml-auto text-[10px] bg-stone-900 px-2 py-0.5 rounded-full">0</span>
         </button>
 
-        <button onclick="switchProTab('chat')" id="tab-btn-chat" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
+        <button onclick="switchProTab('chat')" id="tab-btn-chat" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] cursor-pointer">
           <i class="fa-solid fa-comments text-sm"></i>
-          <span class="hidden md:inline">Multi Chat</span>
-        </button>
-
-        <button onclick="switchProTab('upsell')" id="tab-btn-upsell" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
-          <i class="fa-solid fa-gem text-sm text-[#ee914f]"></i>
-          <span class="hidden md:inline">Venta Extra (50%)</span>
-          <span class="hidden md:inline ml-auto text-[9px] bg-amber-950 text-[#fcefc2] px-1.5 py-0.5 rounded border border-amber-800 font-bold">50%</span>
-        </button>
-
-        <button onclick="switchProTab('wallet')" id="tab-btn-wallet" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
-          <i class="fa-solid fa-wallet text-sm"></i>
-          <span class="hidden md:inline">Billetera / Pagos</span>
+          <span class="hidden md:inline">Chat</span>
         </button>
 
         <button onclick="switchProTab('profile')" id="tab-btn-profile" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]">
@@ -64,11 +55,6 @@
           <span class="hidden md:inline">Mi Perfil Pro</span>
           <span class="hidden md:inline ml-auto text-[9px] bg-[#241910] text-[#ee914f] px-1.5 py-0.5 rounded border border-[#ee914f]/30 font-semibold">Editar</span>
         </button>
-
-        <a href="/" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-500 hover:text-[#ee914f]">
-          <i class="fa-solid fa-store text-sm"></i>
-          <span class="hidden md:inline">Ver Tienda con Pro</span>
-        </a>
 
                 <!-- TAB: BALANCE (MOVIMIENTOS DE SALDO Y REPORTES) -->
         <button onclick="switchProTab('balance')" id="tab-btn-balance" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] border border-transparent cursor-pointer">
@@ -188,11 +174,39 @@
         <div id="pro-my-orders"></div>
       </section>
 
-      <!-- TAB 3: MULTI CHAT (STRICT PRIVACY: ONLY MY ORDERS) -->
-      <section id="tab-chat" class="hidden">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- TAB 3: CHAT & VENTAS EXTRAS (MINIMALIST CONSOLIDATED VIEW) -->
+      <section id="tab-chat" class="hidden space-y-4">
+        <!-- Sub-header navigation inside Chat -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-[#140e0a] p-2 rounded-2xl border border-stone-800/80">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="switchChatSubView('messages')" id="chat-subtab-messages" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#271d15] text-[#fcefc2] border border-[#ee914f]/40 shadow-sm flex items-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-comments text-[#ee914f]"></i>
+              <span>Salas de Chat</span>
+            </button>
+            <button type="button" onclick="switchChatSubView('upsell')" id="chat-subtab-upsell" class="px-4 py-2 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] flex items-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-gem text-amber-400"></i>
+              <span>Ventas Extras</span>
+              <span class="text-[9px] bg-amber-950 text-amber-200 px-1.5 py-0.5 rounded border border-amber-800 font-bold">50%</span>
+            </button>
+          </div>
+
+          <!-- Quick Store Link inside Chat Header -->
+          <a href="/" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#1a120c] hover:bg-[#251a11] text-stone-300 hover:text-[#fcefc2] border border-stone-800 hover:border-[#ee914f]/40 transition-all shadow-sm" title="Abrir la tienda principal con vista de precios Pro">
+            <i class="fa-solid fa-store text-[#ee914f] text-xs"></i>
+            <span>Ver Tienda como Pro</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-stone-500"></i>
+          </a>
+        </div>
+
+        <!-- Subview 1: Chat Messages & Rooms -->
+        <div id="chat-subview-messages" class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="glass-panel rounded-2xl border border-stone-800 p-3 h-[580px] flex flex-col">
-            <h3 class="text-xs font-bold text-[#fcefc2] uppercase tracking-wider p-2 border-b border-stone-800 font-cinzel">Mis Chats Activos</h3>
+            <div class="flex items-center justify-between p-2 border-b border-stone-800">
+              <h3 class="text-xs font-bold text-[#fcefc2] uppercase tracking-wider font-cinzel">Mis Chats Activos</h3>
+              <button onclick="switchChatSubView('upsell')" class="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer" title="Abrir catálogo de Ventas Extras">
+                <i class="fa-solid fa-gem text-[9px]"></i> Upsells (50%)
+              </button>
+            </div>
             <div id="chat-conversations-list" class="flex-1 overflow-y-auto space-y-1 py-2"></div>
           </div>
 
@@ -200,18 +214,47 @@
             <div class="h-[550px] flex flex-col items-center justify-center text-center p-8">
               <i class="fa-solid fa-comments text-4xl text-[#ee914f]/30 mb-3"></i>
               <h4 class="text-sm font-bold text-stone-300 font-cinzel">Selecciona una orden para abrir la sala de chat</h4>
-              <p class="text-xs text-stone-500 max-w-sm mt-1">Solo tÚ y el cliente que pagÓ la orden pueden ver esta conversación.</p>
+              <p class="text-xs text-stone-500 max-w-sm mt-1">Solo tú y el cliente que pagó la orden pueden ver esta conversación.</p>
+              <button onclick="switchChatSubView('upsell')" class="mt-4 px-4 py-2 rounded-xl bg-[#241910] hover:bg-[#342214] border border-amber-500/40 text-amber-200 text-xs font-bold flex items-center gap-2 cursor-pointer transition-all">
+                <i class="fa-solid fa-gem text-amber-400"></i>
+                <span>Ver Catálogo de Ventas Extras (50% Ganancia)</span>
+              </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Subview 2: Ventas Extras Catalog & Store Link -->
+        <div id="chat-subview-upsell" class="hidden space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-2xl border border-amber-500/30 bg-[#160f0a]">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 flex items-center justify-center text-stone-950 text-xl shadow-lg shrink-0">
+                <i class="fa-solid fa-gem"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white font-cinzel flex items-center gap-2">
+                  <span>Venta de Servicios Adicionales al Cliente</span>
+                  <span class="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded-full border border-amber-600/40 font-mono font-bold">50% GANANCIA</span>
+                </h3>
+                <p class="text-xs text-stone-400 mt-0.5">Copia los links y compártelos con tu cliente durante el chat de la orden. Si compra mediante tu recomendación, garantizas el <strong class="text-amber-300">50% de la ganancia total</strong>.</p>
+              </div>
+            </div>
+
+            <!-- "Ver tienda como pro" inside Ventas Extras -->
+            <a href="/" target="_blank" class="px-4 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs flex items-center justify-center gap-2 text-stone-950 shadow-md hover:scale-[1.02] transition-all shrink-0 cursor-pointer">
+              <i class="fa-solid fa-store"></i>
+              <span>Ver Tienda como Pro</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+
+          <div id="booster-upsell-container">
+            <!-- Injected dynamically by app.js -->
           </div>
         </div>
       </section>
 
-      <!-- TAB 4: UPSELL / VENTAS EXTRA AL CLIENTE (REQ 6: 50% GANANCIA) -->
-      <section id="tab-upsell" class="hidden space-y-4">
-        <div id="booster-upsell-container">
-          <!-- Injected dynamically by app.js -->
-        </div>
-      </section>
+      <!-- LEGACY UPSELL TAB ALIAS (Kept hidden for backward compatibility) -->
+      <section id="tab-upsell" class="hidden"></section>
 
       <!-- TAB 5: WALLET & PAYOUTS -->
       <section id="tab-wallet" class="hidden space-y-6">
@@ -572,23 +615,52 @@
 
   <script src="assets/js/app.js?v=4.2.9"></script>
   <script>
+    function switchChatSubView(view) {
+      const msgView = document.getElementById('chat-subview-messages');
+      const upsellView = document.getElementById('chat-subview-upsell');
+      const msgBtn = document.getElementById('chat-subtab-messages');
+      const upsellBtn = document.getElementById('chat-subtab-upsell');
+      if (view === 'upsell') {
+        if (msgView) msgView.classList.add('hidden');
+        if (upsellView) upsellView.classList.remove('hidden');
+        if (msgBtn) msgBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] flex items-center gap-2 cursor-pointer";
+        if (upsellBtn) upsellBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#271d15] text-[#fcefc2] border border-[#ee914f]/40 shadow-sm flex items-center gap-2 cursor-pointer";
+        if (window.app && typeof app.renderBoosterUpsellCatalog === 'function') app.renderBoosterUpsellCatalog();
+      } else {
+        if (msgView) msgView.classList.remove('hidden');
+        if (upsellView) upsellView.classList.add('hidden');
+        if (msgBtn) msgBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#271d15] text-[#fcefc2] border border-[#ee914f]/40 shadow-sm flex items-center gap-2 cursor-pointer";
+        if (upsellBtn) upsellBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] flex items-center gap-2 cursor-pointer";
+        if (window.app && typeof app.renderChatList === 'function') app.renderChatList();
+      }
+    }
+
     function switchProTab(tabId) {
+      if (tabId === 'wallet') tabId = 'balance';
+      if (tabId === 'upsell') {
+        switchProTab('chat');
+        switchChatSubView('upsell');
+        return;
+      }
+      if (tabId === 'chat') {
+        switchChatSubView('messages');
+      }
       if (tabId === 'supplier' && window.app && !app.isSupplier()) {
         app.showToast('Acceso restringido: Se requiere el rol de Supplier.', 'error');
         switchProTab('find');
         return;
       }
-      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-upsell, #tab-wallet, #tab-profile, #tab-supplier, #tab-balance').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('#tab-find, #tab-myorders, #tab-chat, #tab-profile, #tab-supplier, #tab-balance').forEach(el => el.classList.add('hidden'));
       const activeTab = document.getElementById('tab-' + tabId);
       if (activeTab) activeTab.classList.remove('hidden');
 
-      ['find', 'myorders', 'chat', 'upsell', 'wallet', 'profile', 'balance'].forEach(t => {
+      ['find', 'myorders', 'chat', 'profile', 'balance'].forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
         if (btn) {
           if (t === tabId) {
-            btn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40";
+            btn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#261d15] text-[#fcefc2] border border-[#ee914f]/40 cursor-pointer";
           } else {
-            btn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f]";
+            btn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-stone-400 hover:text-white hover:bg-[#1a140f] cursor-pointer";
           }
         }
       });
@@ -613,10 +685,9 @@
       const titles = {
         find: 'Bolsa de Pedidos (Find Orders)',
         myorders: 'Mis Contratos (My Orders)',
-        chat: 'Centro de Mensajer\u00EDa (Multi Chat)',
-        upsell: 'Venta de Servicios Adicionales (50% Ganancia)',
-        wallet: 'Billetera y Cobros',
-        profile: 'Mi Perfil Pro (Configuraci\u00F3n & Datos de Pago)',
+        chat: 'Chat con Clientes & Ventas Extras',
+        profile: 'Mi Perfil Pro (Configuración & Datos de Pago)',
+        balance: 'Balance y Finanzas Pro',
         supplier: '\uD83D\uDCE6 Supplier - Publicar \u00D3rdenes Directas'
       };
       const titleEl = document.getElementById('pro-page-title');

@@ -7869,14 +7869,19 @@ class MythicApp {
     if (!container) return;
 
     container.innerHTML = `
-      <div class="glass-panel p-6 rounded-2xl border border-[#ee914f]/40 mb-6">
-        <div class="flex items-center gap-3 mb-2">
+      <div class="glass-panel p-6 rounded-2xl border border-[#ee914f]/40 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
           <i class="fa-solid fa-gem text-2xl text-[#ee914f]"></i>
           <div>
             <h3 class="text-base font-bold text-[#fcefc2] font-cinzel">Venta de Servicios Adicionales (50% Ganancia)</h3>
             <p class="text-xs text-stone-400">Ofrécele un servicio adicional a tu cliente activo. Si compra mediante tu recomendación, garantizas el <strong class="text-[#ee914f]">50% de la ganancia total</strong>.</p>
           </div>
         </div>
+        <a href="/" target="_blank" class="px-4 py-2.5 rounded-xl copper-gradient-bg font-bold text-xs flex items-center justify-center gap-2 text-stone-950 shadow-md hover:scale-[1.02] transition-all shrink-0 cursor-pointer">
+          <i class="fa-solid fa-store"></i>
+          <span>Ver Tienda como Pro</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
