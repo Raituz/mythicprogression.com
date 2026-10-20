@@ -955,8 +955,15 @@ class MythicApp {
               (cEmail && b.email && b.email.toLowerCase() === cEmail) ||
               (cUser && b.username && b.username.toLowerCase() === cUser)
             );
-            if (matched && matched.balance !== undefined) {
-              this.currentUser.balance = Number(matched.balance) || 0;
+            if (matched) {
+              if (matched.balance !== undefined) {
+                this.currentUser.balance = Number(matched.balance) || 0;
+              }
+              if (this.currentUser.avatar && !matched.avatar) {
+                matched.avatar = this.currentUser.avatar;
+              } else if (matched.avatar && !this.currentUser.avatar) {
+                this.currentUser.avatar = matched.avatar;
+              }
               this.saveUser();
               this.renderHeader();
             }
@@ -9640,7 +9647,10 @@ class MythicApp {
               <div class="text-[10px] text-stone-400 font-sans">Cliente Ext: <span class="text-stone-200 font-medium">${o.externalClientName}</span></div>
             ` : ''}
           ` : `
-            <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
+            <div class="flex items-center gap-2">
+              ${this.renderUserAvatarHtml(o.clientDiscord || o.clientName || o.clientId, 'w-6 h-6')}
+              <div class="font-semibold text-[#f3e8ff] text-xs">${o.clientName || 'Cliente'}</div>
+            </div>
           `}
           ${o.characterName ? `<div class="text-[10px] text-stone-300 font-mono mt-0.5">Char: <strong class="text-white">${o.characterName}</strong></div>` : ''}
           <div class="text-[10px] text-stone-400 font-mono-gaming mt-0.5">${o.clientDiscord || o.clientId || 'N/A'}</div>
@@ -9685,7 +9695,7 @@ class MythicApp {
               ${o.assignedBooster ? `
                 <div class="flex items-center justify-between gap-1.5 bg-emerald-950/70 border border-emerald-500/60 rounded-xl px-2.5 py-1.5 shadow-sm">
                   <div class="flex items-center gap-1.5 min-w-0">
-                    <i class="fa-solid fa-circle-check text-emerald-400 text-xs shrink-0"></i>
+                    ${this.renderUserAvatarHtml(o.assignedBooster, 'w-5 h-5')}
                     <span class="text-xs font-bold text-emerald-200 truncate">${o.assignedBooster.username || 'Booster Asignado'}</span>
                   </div>
                   <button onclick="app.adminUnassignBoosterOrder('${o.id}')" title="Quitar asignación y devolver a bolsa" class="text-rose-400 hover:text-rose-200 hover:bg-rose-950/80 p-1 rounded-lg cursor-pointer transition-all shrink-0">
@@ -11252,9 +11262,7 @@ class MythicApp {
       return `
       <tr class="hover:bg-[#190a33] transition-colors text-xs text-stone-300 border-b border-stone-800/40">
         <td class="py-4 px-5 font-bold text-white flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full ${avatarBg} border flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-            ${c.username ? c.username[0].toUpperCase() : (isSupplier ? 'S' : 'C')}
-          </div>
+          ${this.renderUserAvatarHtml(c, 'w-8 h-8')}
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-white text-sm leading-snug">${c.username}</span>
@@ -11420,9 +11428,7 @@ class MythicApp {
             </span>
           </td>
           <td class="py-4 px-5 font-bold text-white flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-[#28114d] border border-[#a855f7]/30 flex items-center justify-center text-xs text-[#f3e8ff] shrink-0 font-bold overflow-hidden shadow-inner">
-              ${b.avatar ? `<img src="${b.avatar}" class="w-full h-full object-cover">` : (b.username ? b.username[0].toUpperCase() : 'B')}
-            </div>
+            ${this.renderUserAvatarHtml(b, 'w-8 h-8')}
             <div>
               <div class="text-white text-sm font-bold flex items-center gap-1.5">
                 <span>${b.username}</span>
@@ -16055,6 +16061,111 @@ MythicApp.prototype.adminApplyManualBalanceAdjustment = function(targetIdentifie
 };
 
 // --------------------------------------------------------------------------
+// USER AVATAR RESOLVER & RENDERER (GLOBAL HELPER)
+// --------------------------------------------------------------------------
+MythicApp.prototype.getUserAvatar = function(target) {
+  if (!target) return '';
+
+  if (typeof target === 'string') {
+    const str = target.trim();
+    if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:')) return str;
+    const bMatch = (this.boosters || []).find(b => b && (
+      (b.discord_id && String(b.discord_id) === str) ||
+      (b.id && String(b.id) === str) ||
+      (b.username && b.username.toLowerCase() === str.toLowerCase())
+    ));
+    if (bMatch && bMatch.avatar) return bMatch.avatar;
+    const cMatch = (this.clients || []).find(c => c && (
+      (c.discordId && String(c.discordId) === str) ||
+      (c.id && String(c.id) === str) ||
+      (c.username && c.username.toLowerCase() === str.toLowerCase())
+    ));
+    if (cMatch && cMatch.avatar) return cMatch.avatar;
+    if (this.currentUser && (
+      (this.currentUser.discordId && String(this.currentUser.discordId) === str) ||
+      (this.currentUser.id && String(this.currentUser.id) === str) ||
+      (this.currentUser.username && this.currentUser.username.toLowerCase() === str.toLowerCase())
+    )) {
+      return this.currentUser.avatar || localStorage.getItem('mp_discord_avatar_backup') || '';
+    }
+    return '';
+  }
+
+  // 1. Direct avatar property
+  if (target.avatar && typeof target.avatar === 'string' && target.avatar.trim()) {
+    return target.avatar.trim();
+  }
+
+  const dId = String(target.discordId || target.discord_id || '').trim();
+  const uId = String(target.userId || target.id || '').trim();
+  const uName = (target.username || target.clientName || target.name || '').trim().toLowerCase();
+
+  // 2. Match with currently logged-in user
+  if (this.currentUser) {
+    const curDId = String(this.currentUser.discordId || this.currentUser.discord_id || '').trim();
+    const curUId = String(this.currentUser.id || '').trim();
+    const curName = (this.currentUser.username || '').trim().toLowerCase();
+    if (
+      (dId && curDId && (dId === curDId || dId.includes(curDId) || curDId.includes(dId))) ||
+      (uId && curUId && uId === curUId) ||
+      (uName && curName && uName === curName)
+    ) {
+      if (this.currentUser.avatar) return this.currentUser.avatar;
+      const backup = localStorage.getItem('mp_discord_avatar_backup');
+      if (backup) return backup;
+    }
+  }
+
+  // 3. Match in boosters
+  if (Array.isArray(this.boosters)) {
+    const bMatch = this.boosters.find(b => b && (
+      (dId && b.discord_id && (String(b.discord_id) === dId || String(b.discord_id).includes(dId) || dId.includes(String(b.discord_id)))) ||
+      (uId && (String(b.id) === uId || String(b.discord_id) === uId)) ||
+      (uName && b.username && b.username.trim().toLowerCase() === uName)
+    ));
+    if (bMatch && bMatch.avatar) return bMatch.avatar;
+  }
+
+  // 4. Match in clients
+  if (Array.isArray(this.clients)) {
+    const cMatch = this.clients.find(c => c && (
+      (dId && c.discordId && (String(c.discordId) === dId || String(c.discordId).includes(dId) || dId.includes(String(c.discordId)))) ||
+      (uId && (String(c.id) === uId || String(c.discordId) === uId)) ||
+      (uName && c.username && c.username.trim().toLowerCase() === uName)
+    ));
+    if (cMatch && cMatch.avatar) return cMatch.avatar;
+  }
+
+  // 5. Fallback for owner / Migui (permanent Discord ID)
+  if (dId === '443948776562884620' || uName === 'miguelb' || uName === 'migui') {
+    const backup = localStorage.getItem('mp_discord_avatar_backup');
+    if (backup) return backup;
+  }
+
+  return '';
+};
+
+MythicApp.prototype.renderUserAvatarHtml = function(target, sizeClass = 'w-8 h-8', extraClasses = '') {
+  const av = this.getUserAvatar(target);
+  const name = (typeof target === 'string' ? target : (target?.username || target?.clientName || target?.name || 'U')).trim();
+  const initial = (name.charAt(0) || 'U').toUpperCase();
+
+  if (av) {
+    return `
+      <div class="${sizeClass} rounded-full overflow-hidden shrink-0 border border-purple-500/30 bg-[#241042] flex items-center justify-center shadow-sm ${extraClasses}">
+        <img src="${av}" alt="${name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.className='${sizeClass} rounded-full bg-gradient-to-tr from-purple-800 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm border border-purple-500/20 ${extraClasses}'; this.parentElement.innerHTML='${initial}';">
+      </div>
+    `;
+  }
+
+  return `
+    <div class="${sizeClass} rounded-full bg-gradient-to-tr from-purple-800 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm border border-purple-500/20 ${extraClasses}">
+      ${initial}
+    </div>
+  `;
+};
+
+// --------------------------------------------------------------------------
 // ADMIN FINANCES VIEW & LEDGER RENDERING
 // --------------------------------------------------------------------------
 MythicApp.prototype.currentAdminFinancesView = 'accounts'; // 'accounts' or 'ledger'
@@ -16352,9 +16463,7 @@ MythicApp.prototype.renderAdminFinancesAccountsTable = function(users) {
       <tr class="border-b border-stone-800/60 hover:bg-[#1a0c30]/50 transition-colors">
         <td class="py-3 px-4">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-800 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-md">
-              ${(u.username || 'U').charAt(0).toUpperCase()}
-            </div>
+            ${this.renderUserAvatarHtml(u, 'w-9 h-9')}
             <div>
               <div class="font-bold text-white text-xs flex items-center gap-1.5">
                 <span>${u.username}</span>
@@ -16456,8 +16565,13 @@ MythicApp.prototype.renderAdminFinancesLedgerTable = function(ledger) {
         </td>
 
         <td class="py-3 px-4">
-          <div class="font-bold text-white text-xs">${m.username || 'Usuario'}</div>
-          <div class="text-[10px] text-stone-400 font-mono">${m.discordId ? 'Discord: ' + m.discordId : ''}</div>
+          <div class="flex items-center gap-2.5">
+            ${this.renderUserAvatarHtml(m, 'w-7 h-7')}
+            <div>
+              <div class="font-bold text-white text-xs">${m.username || 'Usuario'}</div>
+              <div class="text-[10px] text-stone-400 font-mono">${m.discordId ? 'Discord: ' + m.discordId : ''}</div>
+            </div>
+          </div>
         </td>
 
         <td class="py-3 px-4 whitespace-nowrap">
@@ -16647,9 +16761,7 @@ MythicApp.prototype.renderAdminFinancesWithdrawalsTable = function() {
         <!-- 2. BOOSTER -->
         <td class="py-3.5 px-4 align-top">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-800 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow">
-              ${(w.username || 'B').charAt(0).toUpperCase()}
-            </div>
+            ${this.renderUserAvatarHtml(w, 'w-8 h-8')}
             <div>
               <div class="font-bold text-white text-xs flex items-center gap-1.5">
                 <span>${w.username || 'Booster'}</span>
@@ -17570,6 +17682,7 @@ MythicApp.prototype.submitProWithdrawalRequest = function(form) {
     deadlineAt: deadlineAt.toISOString(),
     userId: u.discordId || u.id || u.username,
     username: u.username || 'Booster',
+    avatar: u.avatar || this.getUserAvatar(u) || '',
     discordId: u.discordId || u.discord_id || '',
     userRole: u.role || 'Booster',
     speed: speed, // 'STANDARD' | 'IMMEDIATE'
