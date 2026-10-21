@@ -266,9 +266,6 @@ class MythicApp {
       }
       this.orders = loadedOrders;
       if (ordersVersion !== MythicApp.ORDERS_VERSION) {
-        if (this.orders && this.orders.length > 0) {
-          this.saveOrders();
-        }
         localStorage.setItem('mp_orders_v', MythicApp.ORDERS_VERSION);
       }
 
@@ -715,6 +712,12 @@ class MythicApp {
         return;
       }
 
+      // DO NOT sync an outdated cold localStorage cache if Firestore real-time snapshot hasn't resolved yet
+      if (!this.firestoreOrdersLoaded && !deletedOrderId && (this.orders || []).length < 5) {
+        console.log('[Alwaysdata Sync] Postponing sync until Firestore initial snapshot loads.');
+        return;
+      }
+
       // Persistently maintain deleted order IDs in localStorage so they don't get lost across subsequent saves
       let storedDeleted = [];
       try {
@@ -864,6 +867,7 @@ class MythicApp {
 
       remoteOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       this.orders = remoteOrders;
+      this.firestoreOrdersLoaded = true;
       localStorage.setItem('mp_orders', JSON.stringify(remoteOrders));
 
       if (typeof this.renderProOrderFeed === 'function') this.renderProOrderFeed();
